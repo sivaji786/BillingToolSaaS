@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	
+	# If the request is for an actual file or directory, serve it directly
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	
+	# Otherwise, route through index.php
+	RewriteRule ^(.*)$ index.php/$1 [L]
+	
+	# Pass Authorization header
+	RewriteCond %{HTTP:Authorization} .
+	RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+	ErrorDocument 404 index.php
+</IfModule>
+

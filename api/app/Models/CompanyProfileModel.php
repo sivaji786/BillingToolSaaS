@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class CompanyProfileModel extends Model
+{
+    protected $table            = 'company_profiles';
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
+    protected $returnType       = 'array';
+    protected $useSoftDeletes   = false;
+    protected $protectFields    = true;
+    protected $allowedFields    = [
+        'name',
+        'vat_id',
+        'legal_organization_id',
+        'street',
+        'city',
+        'postal_code',
+        'country',
+        'email',
+        'phone',
+        'website',
+        'bank_iban',
+        'bank_bic',
+        'bank_account_name',
+        'logo_url',
+        'header_text',
+        'footer_text'
+    ];
+
+    protected bool $allowEmptyInserts = false;
+
+    // Dates
+    protected $useTimestamps = false;
+}

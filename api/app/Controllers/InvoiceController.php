@@ -1,0 +1,288 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Controllers\BaseController;
+use App\Models\InvoiceModel;
+use App\Models\InvoiceLineModel;
+use CodeIgniter\API\ResponseTrait;
+
+class InvoiceController extends BaseController
+{
+    use ResponseTrait;
+
+    public function index()
+    {
+        $model = new InvoiceModel();
+        
+        // Filtering
+        $search = $this->request->getGet('search');
+        if ($search) {
+            $model->groupStart()
+                ->like('invoice_number', $search)
+                ->orLike('buyer_name', $search)
+                ->orLike('seller_name', $search)
+                ->groupEnd();
+        }
+
+        $status = $this->request->getGet('status');
+        if ($status && $status !== 'all') {
+            $model->where('status', $status);
+        }
+
+        $dateFilter = $this->request->getGet('dateFilter');
+        if ($dateFilter && $dateFilter !== 'anyDate') {
+            $now = date('Y-m-d');
+            switch ($dateFilter) {
+                case 'last7Days':
+                    $model->where('issue_date >=', date('Y-m-d', strtotime('-7 days')));
+                    break;
+                case 'last30Days':
+                    $model->where('issue_date >=', date('Y-m-d', strtotime('-30 days')));
+                    break;
+                case 'last90Days':
+                    $model->where('issue_date >=', date('Y-m-d', strtotime('-90 days')));
+                    break;
+                case 'thisMonth':
+                    $model->where('issue_date >=', date('Y-m-01'));
+                    $model->where('issue_date <=', date('Y-m-t'));
+                    break;
+                case 'lastMonth':
+                    $model->where('issue_date >=', date('Y-m-01', strtotime('first day of last month')));
+                    $model->where('issue_date <=', date('Y-m-t', strtotime('last day of last month')));
+                    break;
+                case 'thisYear':
+                    $model->where('issue_date >=', date('Y-01-01'));
+                    $model->where('issue_date <=', date('Y-12-31'));
+                    break;
+            }
+        }
+
+        // Sorting
+        $sort = $this->request->getGet('sort') ?? 'dateDesc';
+        switch ($sort) {
+            case 'dateDesc':
+                $model->orderBy('issue_date', 'DESC');
+                break;
+            case 'dateAsc':
+                $model->orderBy('issue_date', 'ASC');
+                break;
+            case 'amountDesc':
+                $model->orderBy('payable_amount', 'DESC');
+                break;
+            case 'amountAsc':
+                $model->orderBy('payable_amount', 'ASC');
+                break;
+            case 'numberDesc':
+                $model->orderBy('invoice_number', 'DESC');
+                break;
+            case 'numberAsc':
+                $model->orderBy('invoice_number', 'ASC');
+                break;
+            default:
+                $model->orderBy('issue_date', 'DESC');
+        }
+
+        $invoices = $model->findAll();
+        
+        $transformed = array_map([$this, 'transformInvoice'], $invoices);
+        
+        return $this->respond($transformed);
+    }
+
+    public function show($id = null)
+    {
+        $model = new InvoiceModel();
+        $invoice = $model->find($id);
+        
+        if (!$invoice) {
+            return $this->failNotFound('Invoice not found');
+        }
+        
+        $transformed = $this->transformInvoice($invoice);
+        
+        // Fetch lines
+        $lineModel = new \App\Models\InvoiceLineModel();
+        $lines = $lineModel->where('invoice_id', $id)->findAll();
+        
+        // Transform lines
+        $transformed['lines'] = array_map([$this, 'transformLine'], $lines);
+        
+        return $this->respond($transformed);
+    }
+
+    private function transformLine($line)
+    {
+        return [
+            'id' => $line['id'],
+            'invoiceId' => $line['invoice_id'],
+            'description' => $line['description'],
+            'quantity' => (float)$line['quantity'],
+            'unitCode' => $line['unit_code'],
+            'unitPrice' => (float)$line['unit_price'],
+            'taxCategory' => $line['tax_category'],
+            'taxPercent' => (float)$line['tax_percent'],
+            'lineExtensionAmount' => (float)$line['line_extension_amount'],
+        ];
+    }
+
+    private function transformInvoice($invoice)
+    {
+        return [
+            'id' => $invoice['id'],
+            'invoiceNumber' => $invoice['invoice_number'],
+            'issueDate' => $invoice['issue_date'],
+            'dueDate' => $invoice['due_date'],
+            'currency' => $invoice['currency'],
+            'status' => $invoice['status'],
+            'payableAmount' => (float)$invoice['payable_amount'],
+            'seller' => [
+                'name' => $invoice['seller_name'],
+                'vatId' => $invoice['seller_vat_id'],
+                'address' => json_decode($invoice['seller_address_json'] ?? '{}', true),
+                'contactEmail' => $invoice['seller_email'] ?? null,
+                'contactPhone' => $invoice['seller_phone'] ?? null,
+            ],
+            'buyer' => [
+                'name' => $invoice['buyer_name'],
+                'vatId' => $invoice['buyer_vat_id'],
+                'address' => json_decode($invoice['buyer_address_json'] ?? '{}', true),
+                'contactEmail' => $invoice['buyer_email'] ?? null,
+                'contactPhone' => $invoice['buyer_phone'] ?? null,
+            ],
+            'lines' => [], // Default empty lines for list view
+            'taxTotals' => [], // Placeholder
+            'lineExtensionAmount' => 0, // Placeholder
+            'taxExclusiveAmount' => 0, // Placeholder
+            'taxInclusiveAmount' => 0, // Placeholder
+        ];
+    }
+
+    public function create()
+    {
+        $model = new InvoiceModel();
+        $lineModel = new InvoiceLineModel();
+        
+        $data = $this->request->getJSON(true);
+        
+        // Map frontend data to database columns
+        $dbData = $this->mapInvoiceData($data);
+        $dbData['created_by'] = 1; // TODO: Get from auth
+        
+        if ($model->insert($dbData)) {
+            $invoiceId = $model->getInsertID();
+            
+            // Insert lines
+            if (!empty($data['lines'])) {
+                foreach ($data['lines'] as $line) {
+                    $lineData = $this->mapLineData($line, $invoiceId);
+                    $lineModel->insert($lineData);
+                }
+            }
+            
+            return $this->respondCreated(['id' => $invoiceId, 'message' => 'Invoice created']);
+        }
+        
+        return $this->fail($model->errors());
+    }
+
+    public function update($id = null)
+    {
+        $model = new InvoiceModel();
+        $lineModel = new InvoiceLineModel();
+        
+        $data = $this->request->getJSON(true);
+        
+        // Check if invoice exists
+        if (!$model->find($id)) {
+            return $this->failNotFound('Invoice not found');
+        }
+        
+        // Map frontend data to database columns
+        $dbData = $this->mapInvoiceData($data);
+        
+        if ($model->update($id, $dbData)) {
+            // Update lines: Delete existing and insert new ones
+            // This is a simple strategy; for more complex scenarios, diffing might be better
+            $lineModel->where('invoice_id', $id)->delete();
+            
+            if (!empty($data['lines'])) {
+                foreach ($data['lines'] as $line) {
+                    $lineData = $this->mapLineData($line, $id);
+                    $lineModel->insert($lineData);
+                }
+            }
+            
+            return $this->respond(['id' => $id, 'message' => 'Invoice updated']);
+        }
+        
+        return $this->fail($model->errors());
+    }
+
+    public function delete($id = null)
+    {
+        $model = new InvoiceModel();
+        $lineModel = new InvoiceLineModel();
+        
+        if (!$model->find($id)) {
+            return $this->failNotFound('Invoice not found');
+        }
+        
+        // Delete lines first (though foreign key cascade might handle this)
+        $lineModel->where('invoice_id', $id)->delete();
+        
+        if ($model->delete($id)) {
+            return $this->respondDeleted(['id' => $id, 'message' => 'Invoice deleted']);
+        }
+        
+        return $this->fail($model->errors());
+    }
+
+    private function mapInvoiceData($data)
+    {
+        return [
+            'invoice_number' => $data['invoiceNumber'],
+            'issue_date' => $data['issueDate'],
+            'due_date' => $data['dueDate'] ?? null,
+            'currency' => $data['currency'],
+            'status' => $data['status'],
+            'seller_name' => $data['seller']['name'],
+            'seller_vat_id' => $data['seller']['vatId'] ?? null,
+            'seller_address_json' => json_encode($data['seller']['address']),
+            'seller_contact_json' => json_encode([
+                'email' => $data['seller']['contactEmail'] ?? null,
+                'phone' => $data['seller']['contactPhone'] ?? null,
+            ]),
+            'buyer_name' => $data['buyer']['name'],
+            'buyer_vat_id' => $data['buyer']['vatId'] ?? null,
+            'buyer_address_json' => json_encode($data['buyer']['address']),
+            'buyer_contact_json' => json_encode([
+                'email' => $data['buyer']['contactEmail'] ?? null,
+                'phone' => $data['buyer']['contactPhone'] ?? null,
+            ]),
+            'line_extension_amount' => $data['lineExtensionAmount'],
+            'tax_exclusive_amount' => $data['taxExclusiveAmount'],
+            'tax_inclusive_amount' => $data['taxInclusiveAmount'],
+            'payable_amount' => $data['payableAmount'],
+            'payment_terms_json' => isset($data['paymentTerms']) ? json_encode($data['paymentTerms']) : null,
+            'payment_means_json' => isset($data['paymentMeans']) ? json_encode($data['paymentMeans']) : null,
+            'note' => $data['note'] ?? null,
+            'signed' => $data['signed'] ?? 0,
+            'signature_date' => $data['signatureDate'] ?? null,
+        ];
+    }
+
+    private function mapLineData($line, $invoiceId)
+    {
+        return [
+            'invoice_id' => $invoiceId,
+            'description' => $line['description'],
+            'quantity' => $line['quantity'],
+            'unit_code' => $line['unitCode'],
+            'unit_price' => $line['unitPrice'],
+            'tax_category' => $line['taxCategory'],
+            'tax_percent' => $line['taxPercent'],
+            'line_extension_amount' => $line['quantity'] * $line['unitPrice'],
+        ];
+    }
+}

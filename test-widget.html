@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Test</title>
+    <link rel="stylesheet" href="public/widget/billing-tool.css">
+    <style>
+        body { font-family: sans-serif; padding: 50px; background-color: #f0f0f0; }
+        .hero { text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>Ticketing Widget Test Page</h1>
+        <p>This page simulates an external project using the centralized ticketing system.</p>
+    </div>
+
+    <!-- The widget will auto-initialize because of the data attributes -->
+    <script src="public/widget/ticketing-widget.umd.js" 
+            data-api-key="03e1f83ecb1246ba73c487daa5838c5e"
+            data-api-base-url="http://localhost:8080"></script>
+</body>
+</html>
