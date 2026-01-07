@@ -2,7 +2,7 @@ import { InvoiceTemplate } from '../../types/invoice';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { FileText, Plus, Edit, Trash2 } from 'lucide-react';
+import { FileText, Plus, Edit, Trash2, Layout } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface TemplateLibraryProps {
@@ -21,7 +21,7 @@ export function TemplateLibrary({
   onDeleteTemplate,
 }: TemplateLibraryProps) {
   const { t } = useLanguage();
-  
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -44,8 +44,8 @@ export function TemplateLibrary({
           <Card key={template.id} className="p-6 space-y-4 hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between">
               {template.logoUrl ? (
-                <img 
-                  src={template.logoUrl} 
+                <img
+                  src={template.logoUrl}
                   alt={template.name}
                   className="h-8 object-contain"
                 />
@@ -84,16 +84,28 @@ export function TemplateLibrary({
               >
                 {t('templates.useTemplate')}
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  if (template.id) {
+                    window.location.hash = `designLayout/${template.id}`;
+                  }
+                }}
+                title="Design Layout"
+              >
+                <Layout className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
                 size="icon"
                 onClick={() => onEditTemplate?.(template)}
                 title={t('common.edit')}
               >
                 <Edit className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="icon"
                 onClick={() => onDeleteTemplate?.(template)}
                 title={t('common.delete')}

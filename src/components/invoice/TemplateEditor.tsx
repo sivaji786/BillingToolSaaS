@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Separator } from '../ui/separator';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Layout as LayoutIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TemplateEditorProps {
@@ -492,16 +492,29 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
       </Card>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3">
-        <Button variant="outline" onClick={onCancel}>
-          {t('common.cancel')}
-        </Button>
+      <div className="flex items-center justify-between gap-3">
         <Button
-          onClick={handleSave}
-          className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white"
+          variant="outline"
+          onClick={() => {
+            window.location.hash = `designLayout/${template?.id || 'new'}`;
+          }}
+          className="gap-2"
         >
-          {t('common.save')}
+          <LayoutIcon className="h-4 w-4" />
+          Design Layout
         </Button>
+        <div className="flex-1" />
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={onCancel}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white"
+          >
+            {t('common.save')}
+          </Button>
+        </div>
       </div>
     </div>
   );

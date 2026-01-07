@@ -1,8 +1,9 @@
 import axios from 'axios';
-import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry } from '../types/invoice';
+import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry, AIPromptRequest, AIPromptResponse } from '../types/invoice';
+import { getApiBaseUrl } from '../utils/config';
 
-// Use environment variable for API URL, fallback to localhost for development
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+// Use runtime configuration for API URL (can be changed after build by installer)
+const API_URL = getApiBaseUrl();
 
 const api = axios.create({
     baseURL: API_URL,
@@ -107,3 +108,75 @@ export const invoiceTemplateService = {
         return response.data;
     },
 };
+
+export const aiInvoiceService = {
+    parseInvoicePrompt: async (request: AIPromptRequest) => {
+        const response = await api.post<AIPromptResponse>('/ai/parse-invoice', request);
+        return response.data;
+    },
+};
+
+export const companyTypeService = {
+    getAll: async () => {
+        const response = await api.get<import('../types/invoice').CompanyType[]>('/company-types');
+        return response.data;
+    },
+    create: async (data: any) => {
+        const response = await api.post('/company-types', data);
+        return response.data;
+    },
+    update: async (id: string, data: any) => {
+        const response = await api.put(`/company-types/${id}`, data);
+        return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/company-types/${id}`);
+        return response.data;
+    },
+};
+
+export const roleService = {
+    getAll: async (params?: { company_type_id?: string }) => {
+        const response = await api.get<any[]>('/roles', { params });
+        return response.data;
+    },
+    getById: async (id: string) => {
+        const response = await api.get<any>(`/roles/${id}`);
+        return response.data;
+    },
+    create: async (data: any) => {
+        const response = await api.post('/roles', data);
+        return response.data;
+    },
+    update: async (id: string, data: any) => {
+        const response = await api.put(`/roles/${id}`, data);
+        return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/roles/${id}`);
+        return response.data;
+    },
+};
+
+export const rightService = {
+    getAll: async (params?: { group_by_module?: boolean }) => {
+        const response = await api.get<any[]>('/rights', { params });
+        return response.data;
+    },
+};
+
+export const userService = {
+    getAll: async () => {
+        const response = await api.get<any[]>('/users');
+        return response.data;
+    },
+    create: async (data: any) => {
+        const response = await api.post('/users', data);
+        return response.data;
+    },
+    update: async (id: string, data: any) => {
+        const response = await api.put(`/users/${id}`, data);
+        return response.data;
+    },
+};
+

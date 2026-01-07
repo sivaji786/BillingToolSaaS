@@ -1,0 +1,622 @@
+
+{
+
+  "companies": [
+
+    {
+
+      "type": "Technology / Automation",
+
+      "core_business": "Hardware, firmware, cloud and SaaS development",
+
+      "departments": [
+
+        {
+
+          "name": "Management",
+
+          "roles": [
+
+            "Managing Director / CEO",
+
+            "COO",
+
+            "CTO",
+
+            "CFO"
+
+          ],
+
+          "headcount": 3
+
+        },
+
+        {
+
+          "name": "Engineering",
+
+          "roles": [
+
+            "Head of Engineering",
+
+            "Hardware Engineer",
+
+            "Embedded Systems Engineer",
+
+            "Test & Quality Engineer",
+
+            "PCB Designer"
+
+          ],
+
+          "headcount": 10
+
+        },
+
+        {
+
+          "name": "Software",
+
+          "roles": [
+
+            "Head of Software",
+
+            "Backend Developer",
+
+            "Frontend Developer",
+
+            "DevOps Engineer",
+
+            "QA Engineer"
+
+          ],
+
+          "headcount": 6
+
+        },
+
+        {
+
+          "name": "Sales & Marketing",
+
+          "roles": [
+
+            "Sales Manager",
+
+            "Marketing Specialist",
+
+            "Customer Support"
+
+          ],
+
+          "headcount": 3
+
+        },
+
+        {
+
+          "name": "Operations & Admin",
+
+          "roles": [
+
+            "Procurement Specialist",
+
+            "Logistics Coordinator",
+
+            "Accountant / HR"
+
+          ],
+
+          "headcount": 3
+
+        }
+
+      ]
+
+    },
+
+    {
+
+      "type": "Creative Agency / Media",
+
+      "core_business": "Brand design, campaigns, social media, web and video production",
+
+      "departments": [
+
+        {
+
+          "name": "Leadership",
+
+          "roles": ["Managing Director", "Creative Director"],
+
+          "headcount": 2
+
+        },
+
+        {
+
+          "name": "Creative",
+
+          "roles": [
+
+            "Art Director",
+
+            "Graphic Designer",
+
+            "Copywriter",
+
+            "Photographer",
+
+            "Videographer"
+
+          ],
+
+          "headcount": 10
+
+        },
+
+        {
+
+          "name": "Digital & Tech",
+
+          "roles": [
+
+            "Web Developer",
+
+            "UI Designer",
+
+            "SEO Specialist",
+
+            "Performance Marketing Specialist"
+
+          ],
+
+          "headcount": 5
+
+        },
+
+        {
+
+          "name": "Client Services",
+
+          "roles": ["Account Manager", "Project Manager", "PR Manager"],
+
+          "headcount": 5
+
+        },
+
+        {
+
+          "name": "Operations & Admin",
+
+          "roles": ["HR Manager", "Finance Officer", "Office Assistant"],
+
+          "headcount": 3
+
+        }
+
+      ]
+
+    },
+
+    {
+
+      "type": "Manufacturing / Production",
+
+      "core_business": "Production and distribution of physical goods",
+
+      "departments": [
+
+        {
+
+          "name": "Management",
+
+          "roles": ["Managing Director", "Plant Manager", "CFO"],
+
+          "headcount": 3
+
+        },
+
+        {
+
+          "name": "Production",
+
+          "roles": [
+
+            "Production Supervisor",
+
+            "Mechanical Technician",
+
+            "Electrical Technician"
+
+          ],
+
+          "headcount": 10
+
+        },
+
+        {
+
+          "name": "Quality & Maintenance",
+
+          "roles": ["Quality Engineer", "Maintenance Engineer"],
+
+          "headcount": 4
+
+        },
+
+        {
+
+          "name": "Supply Chain",
+
+          "roles": ["Procurement Officer", "Logistics Coordinator"],
+
+          "headcount": 3
+
+        },
+
+        {
+
+          "name": "Sales & Admin",
+
+          "roles": ["Sales Manager", "Customer Service", "Bookkeeper"],
+
+          "headcount": 5
+
+        }
+
+      ]
+
+    },
+
+    {
+
+      "type": "Software-as-a-Service (SaaS)",
+
+      "core_business": "Developing and scaling a cloud platform or app",
+
+      "departments": [
+
+        {
+
+          "name": "Leadership",
+
+          "roles": ["CEO", "CTO", "CFO"],
+
+          "headcount": 3
+
+        },
+
+        {
+
+          "name": "Engineering",
+
+          "roles": [
+
+            "Full-Stack Developer",
+
+            "Mobile Developer",
+
+            "DevOps Engineer",
+
+            "QA Engineer",
+
+            "AI Engineer"
+
+          ],
+
+          "headcount": 10
+
+        },
+
+        {
+
+          "name": "Product & UX",
+
+          "roles": ["Head of Product", "Product Manager", "UX Designer"],
+
+          "headcount": 3
+
+        },
+
+        {
+
+          "name": "Growth & Marketing",
+
+          "roles": [
+
+            "Marketing Manager",
+
+            "Content Specialist",
+
+            "Growth Hacker",
+
+            "Sales Representative",
+
+            "Customer Success Manager"
+
+          ],
+
+          "headcount": 5
+
+        },
+
+        {
+
+          "name": "Support & Admin",
+
+          "roles": ["HR Manager", "Finance Officer", "Office Assistant"],
+
+          "headcount": 4
+
+        }
+
+      ]
+
+    },
+
+    {
+
+      "type": "Construction / Building Automation",
+
+      "core_business": "Smart building systems, energy optimization and installations",
+
+      "departments": [
+
+        {
+
+          "name": "Management",
+
+          "roles": ["Managing Director", "Project Director", "CFO"],
+
+          "headcount": 3
+
+        },
+
+        {
+
+          "name": "Project & Engineering",
+
+          "roles": [
+
+            "Head of Engineering",
+
+            "Project Manager",
+
+            "Electrical Engineer",
+
+            "Technician / Installer",
+
+            "PLC Programmer",
+
+            "BIM Designer"
+
+          ],
+
+          "headcount": 12
+
+        },
+
+        {
+
+          "name": "Field Installation",
+
+          "roles": ["Installer", "Field Technician"],
+
+          "headcount": 5
+
+        },
+
+        {
+
+          "name": "Procurement & Logistics",
+
+          "roles": ["Procurement Officer", "Warehouse Coordinator"],
+
+          "headcount": 3
+
+        },
+
+        {
+
+          "name": "Admin & Finance",
+
+          "roles": ["HR Manager", "Bookkeeper"],
+
+          "headcount": 2
+
+        }
+
+      ]
+
+    },
+
+    {
+
+      "type": "Retail / E-Commerce",
+
+      "core_business": "Online or offline product sales and fulfillment",
+
+      "departments": [
+
+        {
+
+          "name": "Management",
+
+          "roles": ["Managing Director", "E-Commerce Manager"],
+
+          "headcount": 2
+
+        },
+
+        {
+
+          "name": "Operations & Warehouse",
+
+          "roles": ["Warehouse Staff", "Fulfillment Coordinator"],
+
+          "headcount": 10
+
+        },
+
+        {
+
+          "name": "Marketing & E-Commerce",
+
+          "roles": [
+
+            "Digital Marketing Specialist",
+
+            "Web Developer",
+
+            "Photographer",
+
+            "Content Creator"
+
+          ],
+
+          "headcount": 7
+
+        },
+
+        {
+
+          "name": "Support & Admin",
+
+          "roles": ["Customer Support", "Accountant", "HR"],
+
+          "headcount": 6
+
+        }
+
+      ]
+
+    },
+
+    {
+
+      "type": "Consulting / Professional Services",
+
+      "core_business": "Strategy, IT, finance or management consulting",
+
+      "departments": [
+
+        {
+
+          "name": "Partners & Management",
+
+          "roles": ["Managing Partner", "COO", "CFO"],
+
+          "headcount": 3
+
+        },
+
+        {
+
+          "name": "Consultants & Analysts",
+
+          "roles": [
+
+            "Senior Consultant",
+
+            "Consultant",
+
+            "Junior Consultant",
+
+            "Analyst"
+
+          ],
+
+          "headcount": 12
+
+        },
+
+        {
+
+          "name": "Sales & Marketing",
+
+          "roles": ["Business Development Manager", "Marketing Specialist"],
+
+          "headcount": 4
+
+        },
+
+        {
+
+          "name": "Operations & Admin",
+
+          "roles": ["HR Officer", "Office Manager", "Accountant"],
+
+          "headcount": 3
+
+        }
+
+      ]
+
+    },
+
+    {
+
+      "type": "Non-Profit / NGO",
+
+      "core_business": "Fundraising, research, and international cooperation projects",
+
+      "departments": [
+
+        {
+
+          "name": "Leadership",
+
+          "roles": ["Executive Director", "Program Director", "CFO"],
+
+          "headcount": 3
+
+        },
+
+        {
+
+          "name": "Programs & Field Operations",
+
+          "roles": ["Regional Coordinator", "Field Manager", "Research Officer"],
+
+          "headcount": 10
+
+        },
+
+        {
+
+          "name": "Fundraising & PR",
+
+          "roles": ["Fundraising Manager", "Grant Writer", "PR Officer"],
+
+          "headcount": 5
+
+        },
+
+        {
+
+          "name": "Admin & Finance",
+
+          "roles": ["Finance Officer", "HR Manager", "Administrative Assistant"],
+
+          "headcount": 4
+
+        },
+
+        {
+
+          "name": "Research & Partnerships",
+
+          "roles": ["Partnership Manager", "Liaison Officer"],
+
+          "headcount": 3
+
+        }
+
+      ]
+
+    }
+
+  ]
+
+}

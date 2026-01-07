@@ -37,6 +37,65 @@ class UserModel extends Model
     protected $afterUpdate    = [];
     protected $beforeFind     = [];
     protected $afterFind      = [];
-    protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+    /**
+     * Check if user has a specific right (permission).
+     *
+     * @param int|string $userId (ID or 'current' implicitly if we tracked it, but better explicit)
+     * @param string $rightCode
+     * @return bool
+     */
+    public function hasRight($userId, $rightCode)
+    {
+        $db = \Config\Database::connect();
+        
+        // 1. Check Super Admin Role
+        // Link: users -> user_roles -> roles where is_super_admin = 1
+        $builder = $db->table('user_roles');
+        $builder->join('roles', 'roles.id = user_roles.role_id');
+        $builder->where('user_roles.user_id', $userId);
+        $builder->where('roles.is_super_admin', 1);
+        if ($builder->countAllResults() > 0) {
+            return true;
+        }
+        
+        // 2. Check Specific Right
+        // Link: users -> user_roles -> roles -> role_rights -> rights where code = $rightCode
+        $builder = $db->table('user_roles');
+        $builder->join('roles', 'roles.id = user_roles.role_id');
+        $builder->join('role_rights', 'role_rights.role_id = roles.id');
+        $builder->join('rights', 'rights.id = role_rights.right_id');
+        $builder->where('user_roles.user_id', $userId);
+        $builder->where('rights.code', $rightCode);
+        
+        return $builder->countAllResults() > 0;
+    }
+
+    public function getRights($userId)
+    {
+        $db = \Config\Database::connect();
+        
+        // 1. Check Super Admin Role
+        $builder = $db->table('user_roles');
+        $builder->join('roles', 'roles.id = user_roles.role_id');
+        $builder->where('user_roles.user_id', $userId);
+        $builder->where('roles.is_super_admin', 1);
+        if ($builder->countAllResults() > 0) {
+            return ['*']; // Wildcard for super admin
+        }
+
+        // 2. Fetch all rights codes
+        $builder = $db->table('user_roles');
+        $builder->select('rights.code');
+        $builder->join('roles', 'roles.id = user_roles.role_id');
+        $builder->join('role_rights', 'role_rights.role_id = roles.id');
+        $builder->join('rights', 'rights.id = role_rights.right_id');
+        $builder->where('user_roles.user_id', $userId);
+        
+        $query = $builder->get();
+        $results = $query->getResultArray();
+        
+        return array_column($results, 'code');
+    }
 }

@@ -1,17 +1,24 @@
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry } from './types/invoice';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
-import { Login } from './components/screens/Login';
-import { Dashboard } from './components/screens/Dashboard';
-import { InvoiceEditor } from './components/screens/InvoiceEditor';
-import { InvoicePreview } from './components/screens/InvoicePreview';
-import { InvoiceList } from './components/screens/InvoiceList';
-import { TemplateLibrary } from './components/screens/TemplateLibrary';
-import { TemplateEditor } from './components/invoice/TemplateEditor';
-import { ActivityLog } from './components/screens/ActivityLog';
-import { Settings } from './components/screens/Settings';
+import { Loader2 } from 'lucide-react';
+
+// Lazy load screen components
+const Login = lazy(() => import('./components/screens/Login').then(module => ({ default: module.Login })));
+const Dashboard = lazy(() => import('./components/screens/Dashboard').then(module => ({ default: module.Dashboard })));
+const InvoiceEditor = lazy(() => import('./components/screens/InvoiceEditor').then(module => ({ default: module.InvoiceEditor })));
+const InvoicePreview = lazy(() => import('./components/screens/InvoicePreview').then(module => ({ default: module.InvoicePreview })));
+const InvoiceList = lazy(() => import('./components/screens/InvoiceList').then(module => ({ default: module.InvoiceList })));
+const TemplateLibrary = lazy(() => import('./components/screens/TemplateLibrary').then(module => ({ default: module.TemplateLibrary })));
+const TemplateEditor = lazy(() => import('./components/invoice/TemplateEditor').then(module => ({ default: module.TemplateEditor })));
+const DesignLayoutPage = lazy(() => import('./pages/DesignLayoutPage').then(module => ({ default: module.DesignLayoutPage })));
+const ActivityLog = lazy(() => import('./components/screens/ActivityLog').then(module => ({ default: module.ActivityLog })));
+const Settings = lazy(() => import('./components/screens/Settings').then(module => ({ default: module.Settings })));
+const AdminLayout = lazy(() => import('./components/screens/Admin/AdminLayout').then(module => ({ default: module.AdminLayout })));
+
 import { TicketingWidget } from './components/TicketingWidget';
+import { GlobalAIAssistant } from './components/GlobalAIAssistant';
 
 import { Toaster } from './components/ui/sonner';
 import { Button } from './components/ui/button';
@@ -22,6 +29,7 @@ import {
   Activity,
   Settings as SettingsIcon,
   LogOut,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   invoiceTemplateService,
@@ -32,8 +40,9 @@ import { calculateInvoiceTotals } from './utils/invoice-calculations';
 import { toast } from 'sonner';
 import { authService, invoiceService } from './services/api';
 import { useEffect } from 'react';
+import { hasPermissionSync } from './hooks/usePermission';
 
-type Screen = 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'activity' | 'settings';
+type Screen = 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -43,8 +52,12 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
-      if (hash && ['dashboard', 'invoices', 'templates', 'activity', 'settings'].includes(hash)) {
+      if (hash && ['dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki'].includes(hash)) {
         return hash as Screen;
+      }
+      // Handle parameterized routes like designLayout/123
+      if (hash.startsWith('designLayout/')) {
+        return 'designLayout';
       }
     }
     return 'dashboard';
@@ -63,13 +76,14 @@ function AppContent() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          await authService.me();
+          // Verify token and get fresh user data including rights
+          const userData = await authService.me();
+          localStorage.setItem('user', JSON.stringify(userData));
           setIsAuthenticated(true);
           loadData();
-
-          // Hash routing handled by initial state and event listener
         } catch (e) {
           localStorage.removeItem('token');
+          localStorage.removeItem('user');
         }
       }
       setIsCheckingAuth(false);
@@ -79,9 +93,36 @@ function AppContent() {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
       console.log('Hash changed:', hash);
-      if (hash && ['dashboard', 'invoices', 'templates', 'activity', 'settings'].includes(hash)) {
+      if (hash && ['dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki'].includes(hash)) {
         console.log('Setting screen from hash change:', hash);
         setCurrentScreen(hash as Screen);
+      } else if (hash.startsWith('designLayout/')) {
+        console.log('Setting screen to designLayout from parameterized route');
+        setCurrentScreen('designLayout');
+      } else if (hash.startsWith('editor?data=')) {
+        console.log('Setting screen to editor from parameterized route');
+        try {
+          const dataStr = hash.split('data=')[1];
+          const invoiceData = JSON.parse(decodeURIComponent(dataStr));
+          setCurrentInvoice(invoiceData);
+          setEditorMode('invoice');
+          setCurrentScreen('editor');
+        } catch (e) {
+          console.error('Failed to parse invoice data from URL', e);
+          toast.error('Failed to load invoice data');
+        }
+      } else if (hash.startsWith('preview?data=')) {
+        console.log('Setting screen to preview from parameterized route');
+        try {
+          const dataStr = hash.split('data=')[1];
+          const invoiceData = JSON.parse(decodeURIComponent(dataStr));
+          setCurrentInvoice(invoiceData);
+          setCurrentScreen('preview');
+        } catch (e) {
+          console.error('Failed to parse invoice data for preview', e);
+          toast.error('Failed to load invoice data');
+          setCurrentScreen('dashboard');
+        }
       } else if (!hash) {
         console.log('Empty hash, defaulting to dashboard');
         setCurrentScreen('dashboard');
@@ -94,7 +135,7 @@ function AppContent() {
 
   // Update hash when screen changes
   useEffect(() => {
-    if (['dashboard', 'invoices', 'templates', 'activity', 'settings'].includes(currentScreen)) {
+    if (['dashboard', 'invoices', 'templates', 'activity', 'settings', 'admin'].includes(currentScreen)) {
       if (window.location.hash.replace('#', '') !== currentScreen) {
         window.location.hash = currentScreen;
       }
@@ -445,7 +486,7 @@ function AppContent() {
               <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
                 <FileText className="h-6 w-6 text-white" />
               </div>
-              <div className="hidden md:block">
+              <div>
                 <h1 className="text-white font-bold text-lg leading-tight">{t('appName')}</h1>
                 <p className="text-xs text-white/80">
                   {t('appSubtitle')}
@@ -454,34 +495,62 @@ function AppContent() {
             </div>
 
             {/* Navigation Menu */}
-            <div className="flex-1 flex justify-center max-w-2xl overflow-x-auto no-scrollbar">
-              <div className="flex items-center p-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10">
+            <div className="flex-1 flex justify-center max-w-7xl overflow-x-auto no-scrollbar">
+              <nav className="flex items-center gap-6">
                 {[
                   { id: 'dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
-                  { id: 'invoices', icon: FileText, label: t('invoiceList.title') },
-                  { id: 'templates', icon: LayoutTemplate, label: t('nav.templates') },
-                  { id: 'activity', icon: Activity, label: t('nav.activity') },
-                  { id: 'settings', icon: SettingsIcon, label: t('nav.settings') },
-                ].map((item) => {
-                  const isActive = currentScreen === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setCurrentScreen(item.id as Screen)}
-                      className={`
-                        flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
+                  { id: 'invoices', icon: FileText, label: t('invoiceList.title'), permission: 'invoices.read' },
+                  { id: 'templates', icon: LayoutTemplate, label: t('nav.templates'), permission: 'company_profiles.read' },
+                  { id: 'activity', icon: Activity, label: t('nav.activity'), permission: 'audit_logs.read' },
+                  { id: 'admin', icon: ShieldAlert, label: 'Admin', permission: ['users.manage', 'roles.manage'] },
+                  { id: 'settings', icon: SettingsIcon, label: t('nav.settings'), permission: 'company_profiles.read' },
+                ]
+                  .filter(item => {
+                    if (!item.permission) return true;
+                    if (Array.isArray(item.permission)) return item.permission.some(p => hasPermissionSync(p));
+                    return hasPermissionSync(item.permission);
+                  })
+                  .map((item) => {
+                    const isActive = currentScreen === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setCurrentScreen(item.id as Screen)}
+                        className={`
+                        group relative flex items-center gap-2 px-4 py-2.5 text-sm font-semibold transition-all duration-300 whitespace-nowrap
                         ${isActive
-                          ? 'bg-white text-purple-700 shadow-lg'
-                          : 'text-white hover:bg-white/10'
-                        }
+                            ? 'text-white'
+                            : 'text-white/80 hover:text-white'
+                          }
                       `}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
+                      >
+                        {/* Active indicator - bottom border */}
+                        <div className={`
+                        absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full transition-all duration-300
+                        ${isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0 group-hover:opacity-50 group-hover:scale-x-75'}
+                      `} />
+
+                        {/* Hover background glow */}
+                        <div className={`
+                        absolute inset-0 rounded-lg bg-white/10 backdrop-blur-sm transition-all duration-300
+                        ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100'}
+                      `} />
+
+                        {/* Content */}
+                        <item.icon className={`
+                        h-4 w-4 relative z-10 transition-transform duration-300
+                        ${isActive ? 'scale-110' : 'group-hover:scale-105'}
+                      `} />
+                        <span className="relative z-10">{item.label}</span>
+
+                        {/* Active pill background */}
+                        {isActive && (
+                          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-white/5 rounded-lg border border-white/30 shadow-lg" />
+                        )}
+                      </button>
+                    );
+                  })}
+              </nav>
             </div>
 
             <div className="flex items-center gap-3 min-w-fit">
@@ -501,111 +570,127 @@ function AppContent() {
       </div>
 
       <div className="container mx-auto px-6 py-8">
-        {currentScreen === 'editor' && currentInvoice ? (
-          <InvoiceEditor
-            invoice={currentInvoice}
-            profile={profile}
-            onSave={handleSaveInvoice}
-            onBack={handleBackToDashboard}
-            onPreview={handlePreviewInvoice}
-            mode={editorMode}
-            templates={templates}
-            onLoadTemplate={(template) => {
-              const updatedInvoice = {
-                ...currentInvoice,
-                currency: template.defaultCurrency,
-                seller: {
-                  name: template.seller.name || currentInvoice.seller.name,
-                  vatId: template.seller.vatId || currentInvoice.seller.vatId,
-                  address: template.seller.address || currentInvoice.seller.address,
-                  contactEmail: currentInvoice.seller.contactEmail,
-                  contactPhone: currentInvoice.seller.contactPhone,
-                },
-                paymentTerms: template.defaultPaymentTerms,
-                lines: currentInvoice.lines.length > 0 ? currentInvoice.lines : [{
-                  id: '1',
-                  description: '',
-                  quantity: 1,
-                  unitCode: 'EA',
-                  unitPrice: 0,
-                  taxCategory: template.defaultTaxCategory as any,
-                  taxPercent: template.defaultTaxPercent,
-                }],
-              };
-              setCurrentInvoice(updatedInvoice);
-              toast.success(t('templates.templateLoaded') || 'Template loaded', {
-                description: template.name,
-              });
-            }}
-          />
-        ) : currentScreen === 'preview' && currentInvoice ? (
-          <InvoicePreview
-            invoice={currentInvoice}
-            onBack={handleBackToEditor}
-            onSave={handleSaveFromPreview}
-            template={templates.find(t => t.seller.name === currentInvoice.seller.name)}
-            profile={profile}
-          />
-        ) : currentScreen === 'templateEditor' ? (
-          <TemplateEditor
-            template={editingTemplate}
-            onSave={handleSaveTemplate}
-            onCancel={handleCancelTemplateEdit}
-          />
-        ) : (
-          <div>
-            {currentScreen === 'dashboard' && (
-              <Dashboard
-                invoices={invoices}
-                onNewInvoice={handleNewInvoice}
-                onOpenInvoice={handleOpenInvoice}
-              />
-            )}
-
-            {currentScreen === 'invoices' && (
-              <InvoiceList
-                onSelectInvoice={handleOpenInvoice}
-                onEditInvoice={handleOpenInvoice}
-              />
-            )}
-
-            {currentScreen === 'templates' && (
-              <TemplateLibrary
-                templates={templates}
-                onSelectTemplate={handleSelectTemplate}
-                onNewTemplate={handleNewTemplate}
-                onEditTemplate={handleEditTemplate}
-                onDeleteTemplate={handleDeleteTemplate}
-              />
-            )}
-
-            {currentScreen === 'activity' && <ActivityLog entries={logEntries} />}
-
-            {currentScreen === 'settings' && profile && (
-              <Settings
-                profile={profile}
-                onUpdateProfile={async (updatedProfile) => {
-                  try {
-                    if (updatedProfile.id) {
-                      await companyProfileService.update(updatedProfile.id, updatedProfile);
-                      setProfile(updatedProfile);
-                      toast.success(t('settings.settingsSaved') || 'Settings saved successfully');
-                    }
-                  } catch (error) {
-                    console.error('Failed to update profile:', error);
-                    toast.error(t('common.error') || 'Failed to save settings');
-                    throw error; // Re-throw to let Settings component know it failed
-                  }
-                }}
-              />
-            )}
+        <Suspense fallback={
+          <div className="flex h-[50vh] items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+              <p className="text-sm text-gray-500">Loading module...</p>
+            </div>
           </div>
-        )}
+        }>
+          {currentScreen === 'editor' && currentInvoice ? (
+            <InvoiceEditor
+              invoice={currentInvoice}
+              profile={profile}
+              onSave={handleSaveInvoice}
+              onBack={handleBackToDashboard}
+              onPreview={handlePreviewInvoice}
+              mode={editorMode}
+              templates={templates}
+              onLoadTemplate={(template) => {
+                const updatedInvoice = {
+                  ...currentInvoice,
+                  currency: template.defaultCurrency,
+                  seller: {
+                    name: template.seller.name || currentInvoice.seller.name,
+                    vatId: template.seller.vatId || currentInvoice.seller.vatId,
+                    address: template.seller.address || currentInvoice.seller.address,
+                    contactEmail: currentInvoice.seller.contactEmail,
+                    contactPhone: currentInvoice.seller.contactPhone,
+                  },
+                  paymentTerms: template.defaultPaymentTerms,
+                  lines: currentInvoice.lines.length > 0 ? currentInvoice.lines : [{
+                    id: '1',
+                    description: '',
+                    quantity: 1,
+                    unitCode: 'EA',
+                    unitPrice: 0,
+                    taxCategory: template.defaultTaxCategory as any,
+                    taxPercent: template.defaultTaxPercent,
+                  }],
+                };
+                setCurrentInvoice(updatedInvoice);
+                toast.success(t('templates.templateLoaded') || 'Template loaded', {
+                  description: template.name,
+                });
+              }}
+            />
+          ) : currentScreen === 'preview' && currentInvoice ? (
+            <InvoicePreview
+              invoice={currentInvoice}
+              onBack={handleBackToEditor}
+              onSave={handleSaveFromPreview}
+              template={templates.find(t => t.seller.name === currentInvoice.seller.name)}
+              profile={profile}
+            />
+          ) : currentScreen === 'templateEditor' ? (
+            <TemplateEditor
+              template={editingTemplate}
+              onSave={handleSaveTemplate}
+              onCancel={handleCancelTemplateEdit}
+            />
+          ) : currentScreen === 'designLayout' ? (
+            <DesignLayoutPage />
+          ) : (
+            <div>
+              {currentScreen === 'dashboard' && (
+                <Dashboard
+                  invoices={invoices}
+                  onNewInvoice={handleNewInvoice}
+                  onOpenInvoice={handleOpenInvoice}
+                />
+              )}
+
+              {currentScreen === 'invoices' && (
+                <InvoiceList
+                  onSelectInvoice={handleOpenInvoice}
+                  onEditInvoice={handleOpenInvoice}
+                />
+              )}
+
+              {currentScreen === 'templates' && (
+                <TemplateLibrary
+                  templates={templates}
+                  onSelectTemplate={handleSelectTemplate}
+                  onNewTemplate={handleNewTemplate}
+                  onEditTemplate={handleEditTemplate}
+                  onDeleteTemplate={handleDeleteTemplate}
+                />
+              )}
+
+              {currentScreen === 'activity' && <ActivityLog entries={logEntries} />}
+
+              {currentScreen === 'admin' && <AdminLayout />}
+
+              {currentScreen === 'settings' && profile && (
+                <Settings
+                  profile={profile}
+                  onUpdateProfile={async (updatedProfile) => {
+                    try {
+                      if (updatedProfile.id) {
+                        await companyProfileService.update(updatedProfile.id, updatedProfile);
+                        setProfile(updatedProfile);
+                        toast.success(t('settings.settingsSaved') || 'Settings saved successfully');
+                      }
+                    } catch (error) {
+                      console.error('Failed to update profile:', error);
+                      toast.error(t('common.error') || 'Failed to save settings');
+                      throw error; // Re-throw to let Settings component know it failed
+                    }
+                  }}
+                />
+              )}
+            </div>
+          )}
+        </Suspense>
       </div>
 
-      <TicketingWidget apiKey="03e1f83ecb1246ba73c487daa5838c5e" />
+      <GlobalAIAssistant
+        onGenerateInvoiceNumber={() => `INV-2025-${String(invoices.length + 1).padStart(5, '0')}`}
+      />
+      <TicketingWidget apiKey="billtool_test_key" apiBaseUrl="http://localhost:8081" />
       <Toaster />
-    </div>
+    </div >
   );
 }
 

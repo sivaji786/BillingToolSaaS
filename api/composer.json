@@ -12,7 +12,10 @@
     "require": {
         "php": "^8.1",
         "codeigniter4/framework": "^4.0",
-        "firebase/php-jwt": "^6.11"
+        "firebase/php-jwt": "^6.11",
+        "gemini-api-php/client": "^1.7",
+        "nyholm/psr7": "^1.8",
+        "symfony/http-client": "^7.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",
@@ -36,7 +39,10 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     },
     "scripts": {
         "test": "phpunit"

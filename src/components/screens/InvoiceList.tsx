@@ -4,6 +4,19 @@ import { Invoice } from '../../types/invoice';
 import { invoiceService } from '../../services/api';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+// import { hasPermissionSync } from '../../hooks/usePermission'; 
+
+const hasPermissionSync = (requiredRight: string): boolean => {
+  try {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return false;
+    const user = JSON.parse(userStr);
+    const rights = user.rights || [];
+    return rights.includes('*') || rights.includes(requiredRight);
+  } catch (e) {
+    return false;
+  }
+};
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import {
@@ -73,6 +86,7 @@ import {
 import { toast } from 'sonner';
 import { Card } from '../ui/card';
 
+
 interface InvoiceListProps {
   onSelectInvoice?: (invoice: Invoice) => void;
   onEditInvoice?: (invoice: Invoice) => void;
@@ -116,9 +130,8 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
       setInvoices(data);
     } catch (error) {
       toast.error(t('common.error'), {
-        description: 'Failed to fetch invoices',
+        description: t('invoiceList.fetchError'),
       });
-      console.error('Fetch error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +141,6 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
     fetchInvoices();
   }, [searchQuery, statusFilter, dateFilter, sortBy]);
 
-  // Filter and sort invoices
   // Filter and sort invoices
   // Note: Filtering and sorting are now handled by the backend, but we keep this for client-side pagination if needed
   // or we can remove it if backend handles pagination too.
@@ -176,7 +188,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
       setShowExportDialog(false);
     } catch (error) {
       toast.error(t('common.error'), {
-        description: 'Failed to export invoices',
+        description: t('invoiceList.exportError'),
       });
       console.error('Bulk export error:', error);
     }
@@ -212,8 +224,11 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
         ? { ...inv, status: newStatus, updatedAt: new Date().toISOString() }
         : inv
     ));
-    toast.success(t('invoiceList.statusChanged') || 'Status changed successfully', {
-      description: `${count} ${t('invoiceList.invoices') || 'invoices'} ${t('invoiceList.statusChangedTo') || 'changed to'} ${t(`status.${newStatus}`)}`,
+    toast.success(t('invoiceList.statusChanged'), {
+      description: t('invoiceList.statusChangedDesc', {
+        count: count.toString(),
+        status: t(`status.${newStatus}`)
+      }),
     });
     setSelectedInvoices(new Set());
     setShowStatusChangeDialog(false);
@@ -223,7 +238,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
     const newInvoice: Invoice = {
       ...invoice,
       id: Math.random().toString(36).substring(7),
-      invoiceNumber: `${invoice.invoiceNumber}-COPY`,
+      invoiceNumber: `${invoice.invoiceNumber} -COPY`,
       status: 'draft',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -245,7 +260,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
       await fetchInvoices();
     } catch (error) {
       toast.error(t('common.error'), {
-        description: `Failed to delete invoice ${invoice.invoiceNumber}`,
+        description: `Failed to delete invoice ${invoice.invoiceNumber} `,
       });
       console.error('Delete error:', error);
     } finally {
@@ -377,8 +392,8 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
       currency: currency,
     }).format(amount);
   };
-
   return (
+
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -459,12 +474,12 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
           <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">{t('invoiceList.from') || 'From'}:</label>
+                <label className="text-sm font-medium">{t('invoiceList.from')}:</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
                       <CalendarIcon className="h-4 w-4" />
-                      {customDateFrom ? customDateFrom.toLocaleDateString() : t('invoiceList.selectDate') || 'Select date'}
+                      {customDateFrom ? customDateFrom.toLocaleDateString() : t('invoiceList.selectDate')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -479,12 +494,12 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">{t('invoiceList.to') || 'To'}:</label>
+                <label className="text-sm font-medium">{t('invoiceList.to')}:</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
                       <CalendarIcon className="h-4 w-4" />
-                      {customDateTo ? customDateTo.toLocaleDateString() : t('invoiceList.selectDate') || 'Select date'}
+                      {customDateTo ? customDateTo.toLocaleDateString() : t('invoiceList.selectDate')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -509,7 +524,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
                   className="gap-2"
                 >
                   <X className="h-4 w-4" />
-                  {t('common.clear') || 'Clear'}
+                  {t('common.clear')}
                 </Button>
               )}
             </div>
@@ -545,7 +560,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
                 className="gap-2"
               >
                 <RefreshCw className="h-4 w-4" />
-                {t('invoiceList.changeStatus') || 'Change Status'}
+                {t('invoiceList.changeStatus')}
               </Button>
               <Button
                 variant="outline"
@@ -586,7 +601,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
               <TableHead>{t('editor.issueDate')}</TableHead>
               <TableHead>{t('dashboard.due')}</TableHead>
               <TableHead>{t('editor.amount')}</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t('editor.status')}</TableHead>
               <TableHead className="text-right">{t('invoiceList.actions')}</TableHead>
             </TableRow>
           </TableHeader>
@@ -596,7 +611,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
                 <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
                     <RefreshCw className="h-8 w-8 animate-spin text-purple-600" />
-                    <p className="text-sm text-gray-500">{t('common.loading') || 'Loading...'}</p>
+                    <p className="text-sm text-gray-500">{t('common.loading')}</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -663,13 +678,15 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
                           {t('editor.export')}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(invoice)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {t('common.delete')}
-                        </DropdownMenuItem>
+                        {hasPermissionSync('invoices.delete') && (
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(invoice)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {t('common.delete')}
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

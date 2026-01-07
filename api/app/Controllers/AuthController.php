@@ -42,13 +42,16 @@ class AuthController extends BaseController
 
         $token = JWT::encode($payload, $key, 'HS256');
 
+        $rights = $userModel->getRights($user['id']);
+
         return $this->respond([
             'token' => $token,
             'user' => [
                 'id' => $user['id'],
                 'name' => $user['name'],
                 'email' => $user['email'],
-                'role' => $user['role']
+                'role' => $user['role'],
+                'rights' => $rights
             ]
         ]);
     }
@@ -79,6 +82,7 @@ class AuthController extends BaseController
             }
 
             unset($user['password_hash']);
+            $user['rights'] = $userModel->getRights($user['id']);
             return $this->respond($user);
 
         } catch (\Exception $e) {

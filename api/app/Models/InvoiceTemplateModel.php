@@ -22,7 +22,8 @@ class InvoiceTemplateModel extends Model
         'default_payment_terms_json',
         'logo_url',
         'header_text',
-        'footer_text'
+        'footer_text',
+        'layout_json'
     ];
 
     protected bool $allowEmptyInserts = false;

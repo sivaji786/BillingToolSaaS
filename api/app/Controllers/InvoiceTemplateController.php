@@ -92,6 +92,7 @@ class InvoiceTemplateController extends BaseController
             'logo_url' => $data['logoUrl'] ?? null,
             'header_text' => $data['headerText'] ?? null,
             'footer_text' => $data['footerText'] ?? null,
+            'layout_json' => isset($data['layout']) ? json_encode($data['layout']) : null,
         ];
     }
 
@@ -109,6 +110,7 @@ class InvoiceTemplateController extends BaseController
             'logoUrl' => $template['logo_url'],
             'headerText' => $template['header_text'],
             'footerText' => $template['footer_text'],
+            'layout' => isset($template['layout_json']) ? json_decode($template['layout_json'], true) : [],
         ];
     }
 }

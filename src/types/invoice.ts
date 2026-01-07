@@ -88,6 +88,18 @@ export interface Invoice {
   createdBy?: string;
 }
 
+export interface TemplateLayoutElement {
+  id: string;
+  type: 'logo' | 'seller' | 'buyer' | 'dates' | 'items' | 'totals' | 'footer' | 'qr' | 'notes' | 'title' | 'header' | 'signature' | 'tax_summary';
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  visible: boolean;
+  zIndex?: number;
+  style?: Record<string, any>;
+}
+
 export interface ValidationError {
   field: string; // UI field identifier
   ublPath: string; // UBL element path (e.g., "Invoice/IssueDate")
@@ -108,6 +120,12 @@ export interface InvoiceTemplate {
   logoUrl?: string;
   headerText?: string;
   footerText?: string;
+  layout?: TemplateLayoutElement[];
+}
+
+export interface CompanyType {
+  id: number;
+  name: string;
 }
 
 export interface CompanyProfile {
@@ -127,6 +145,7 @@ export interface CompanyProfile {
   };
   headerText?: string;
   footerText?: string;
+  companyTypeId?: number;
 }
 
 export interface ExportOptions {
@@ -167,3 +186,28 @@ export const taxCategories = [
   { code: 'K', description: 'Intra-community supply' },
   { code: 'G', description: 'Free export' },
 ];
+
+// AI Assistant Types
+export interface AIPromptRequest {
+  prompt: string;
+  context?: 'create' | 'edit';
+  existingInvoice?: Partial<Invoice>;
+  parsedInvoice?: any;
+}
+
+export interface AIPromptResponse {
+  success: boolean;
+  invoice?: Invoice;
+  confidence?: number;
+  suggestions?: string[];
+  errors?: string[];
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  invoiceData?: Invoice;
+}
+

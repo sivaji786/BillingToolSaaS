@@ -28,7 +28,8 @@ class CompanyProfileModel extends Model
         'bank_account_name',
         'logo_url',
         'header_text',
-        'footer_text'
+        'footer_text',
+        'company_type_id'
     ];
 
     protected bool $allowEmptyInserts = false;

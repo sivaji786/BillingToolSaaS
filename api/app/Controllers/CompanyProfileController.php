@@ -43,6 +43,7 @@ class CompanyProfileController extends BaseController
             'bank_account_name' => $data['bankAccount']['accountName'] ?? null,
             'header_text' => $data['headerText'] ?? null,
             'footer_text' => $data['footerText'] ?? null,
+            'company_type_id' => $data['companyTypeId'] ?? null,
         ];
 
         if ($model->update($id, $dbData)) {
@@ -76,6 +77,7 @@ class CompanyProfileController extends BaseController
             ],
             'headerText' => $profile['header_text'] ?? null,
             'footerText' => $profile['footer_text'] ?? null,
+            'companyTypeId' => $profile['company_type_id'] ?? null,
         ];
     }
 }

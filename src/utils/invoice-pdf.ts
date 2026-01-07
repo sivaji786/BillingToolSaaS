@@ -1,5 +1,6 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import type { jsPDF } from 'jspdf';
+// import autoTable from 'jspdf-autotable'; // Dynamic import used
+// import html2canvas from 'html2canvas'; // Dynamic import used
 import { Invoice, InvoiceTemplate, CompanyProfile } from '../types/invoice';
 import { formatCurrency, formatDate } from './invoice-calculations';
 import { getQRCodeDataURL } from '../components/invoice/InvoiceQRCode';
@@ -9,20 +10,29 @@ export async function generateInvoicePDF(
   template?: InvoiceTemplate,
   profile?: CompanyProfile | null
 ): Promise<void> {
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 20;
-  let yPosition = margin;
+  // Dynamic imports for performance
+  const { default: jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
 
-  // Colors matching the purple theme
-  const primaryColor: [number, number, number] = [139, 92, 246]; // Purple
-  const darkGray: [number, number, number] = [55, 65, 81];
-  const lightGray: [number, number, number] = [156, 163, 175];
+  // Use points (pt) for consistency with the editor's 72 DPI canvas
+  const doc = new jsPDF({
+    unit: 'pt',
+    format: 'a4',
+  });
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  // margin removed
+
+  // Colors - using black for everything except header/footer
+  const black: [number, number, number] = [0, 0, 0]; // #000000
+  const lightGray: [number, number, number] = [156, 163, 175]; // Only for header/footer
+
+  const layout = template?.layout && template.layout.length > 0 ? template.layout : undefined;
 
   // Helper values
   const logoUrl = template?.logoUrl || profile?.logoUrl;
-  const headerText = template?.headerText || (profile?.headerText ? stripHtml(profile.headerText) : undefined);
-
+  const headerText = template?.headerText || profile?.headerText;
 
   // Fallback payment means
   const effectivePaymentMeans = invoice.paymentMeans?.iban ? invoice.paymentMeans : (profile?.bankAccount ? {
@@ -32,371 +42,362 @@ export async function generateInvoicePDF(
     accountName: profile.bankAccount.accountName,
   } : undefined);
 
-  // Logo
-  if (logoUrl) {
+  // Function to get element position
+  const getPos = (type: string, defaultX: number, defaultY: number, defaultW: number, defaultH: number) => {
+    if (layout) {
+      const el = layout.find(e => e.type === type);
+      if (el) {
+        if (el.visible) {
+          return { x: el.x, y: el.y, w: el.w, h: el.h, visible: true, fromLayout: true };
+        } else {
+          return { x: 0, y: 0, w: 0, h: 0, visible: false, fromLayout: true };
+        }
+      }
+    }
+    return { x: defaultX, y: defaultY, w: defaultW, h: defaultH, visible: true, fromLayout: false };
+  };
+
+  // 1. Logo (max 58px height to fit in 60px container with 2px padding)
+  const logoPos = getPos('logo', 20, 20, 170, 58);
+  if (logoUrl && logoPos.visible) {
     try {
-      // Try to load and add logo
       const img = await loadImage(logoUrl);
-      const logoHeight = 20;
-      const logoWidth = (img.width / img.height) * logoHeight;
-      doc.addImage(img, 'PNG', pageWidth / 2 - logoWidth / 2, yPosition, logoWidth, logoHeight);
-      yPosition += logoHeight + 10;
+      const aspectRatio = img.width / img.height;
+      let renderW = logoPos.w;
+      let renderH = logoPos.w / aspectRatio;
+      if (renderH > logoPos.h) {
+        renderH = logoPos.h;
+        renderW = renderH * aspectRatio;
+      }
+      doc.addImage(img, 'PNG', logoPos.x, logoPos.y, renderW, renderH);
     } catch (error) {
       console.warn('Could not load logo:', error);
     }
   }
 
-  // Header Text
-  if (headerText) {
-    doc.setFontSize(8);
-    doc.setTextColor(...lightGray);
-    const headerLines = doc.splitTextToSize(headerText, pageWidth - 2 * margin);
-    doc.text(headerLines, pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += headerLines.length * 4 + 10;
-
-    // Line separator
-    doc.setDrawColor(...lightGray);
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 10;
+  // 1.5 Header Text (max 58px height to fit in 60px container with 2px padding)
+  const headerPos = getPos('header', 200, 20, 375, 58);
+  if (headerText && headerPos.visible) {
+    // Determine the alignment from the HTML if possible, or default to left for header
+    await renderHtmlContent(doc, headerText, headerPos.x, headerPos.y, headerPos.w, lightGray);
   }
 
-  // Invoice Title and Number
-  doc.setFontSize(15);
-  doc.setTextColor(...primaryColor);
-  const title = profile?.name ? profile.name : 'INVOICE';
-  doc.text(title, margin, yPosition);
+  // 2. Title and Invoice Number
+  const titlePos = getPos('title', 20, 90, 200, 40);
+  if (titlePos.visible) {
+    doc.setFontSize(15);
+    doc.setTextColor(...black);
+    const title = profile?.name ? profile.name : 'INVOICE';
+    doc.text(title, titlePos.x, titlePos.y + 15);
 
-  doc.setFontSize(11);
-  doc.setTextColor(...darkGray);
-  doc.text(invoice.invoiceNumber, margin, yPosition + 8);
-
-  // Dates (right aligned)
-  doc.setFontSize(9);
-  doc.setTextColor(...lightGray);
-  doc.text('Issue Date:', pageWidth - margin - 60, yPosition);
-  doc.setTextColor(...darkGray);
-  doc.text(formatDate(invoice.issueDate), pageWidth - margin, yPosition, { align: 'right' });
-
-  if (invoice.dueDate) {
-    yPosition += 6;
-    doc.setTextColor(...lightGray);
-    doc.text('Due Date:', pageWidth - margin - 60, yPosition);
-    doc.setTextColor(...darkGray);
-    doc.text(formatDate(invoice.dueDate), pageWidth - margin, yPosition, { align: 'right' });
+    doc.setFontSize(11);
+    doc.setTextColor(...black);
+    doc.text(invoice.invoiceNumber, titlePos.x, titlePos.y + 30);
   }
 
-  yPosition += 20;
+  // 3. Dates
+  const datesPos = getPos('dates', 380, 90, 20, 60);
+  if (datesPos.visible) {
+    doc.setFontSize(9);
+    doc.setTextColor(...black);
+    doc.text('Issue Date: ' + formatDate(invoice.issueDate), datesPos.x, datesPos.y + 10);
 
-  // Parties Information
-  const leftColX = margin;
-  const rightColX = pageWidth / 2 + 10;
-
-  // From (Seller)
-  doc.setFontSize(9);
-  doc.setTextColor(...lightGray);
-  doc.text('From', leftColX, yPosition);
-  doc.text('Bill To', rightColX, yPosition);
-  yPosition += 6;
-
-  doc.setFontSize(10);
-  doc.setTextColor(...darkGray);
-  doc.text(invoice.seller.name, leftColX, yPosition);
-  doc.text(invoice.buyer.name, rightColX, yPosition);
-  yPosition += 5;
-
-  doc.setFontSize(9);
-  if (invoice.seller.vatId) {
-    doc.setTextColor(...lightGray);
-    doc.text(`VAT: ${invoice.seller.vatId}`, leftColX, yPosition);
+    if (invoice.dueDate) {
+      doc.setTextColor(...black);
+      doc.text('Due Date: ' + formatDate(invoice.dueDate), datesPos.x, datesPos.y + 25);
+    }
   }
-  if (invoice.buyer.vatId) {
-    doc.setTextColor(...lightGray);
-    doc.text(`VAT: ${invoice.buyer.vatId}`, rightColX, yPosition);
-  }
-  yPosition += 6;
 
-  // Addresses
-  doc.setTextColor(...darkGray);
-  doc.text(invoice.seller.address.street, leftColX, yPosition);
-  doc.text(invoice.buyer.address.street, rightColX, yPosition);
-  yPosition += 5;
-
-  doc.text(
-    `${invoice.seller.address.postalCode} ${invoice.seller.address.city}`,
-    leftColX,
-    yPosition
-  );
-  doc.text(
-    `${invoice.buyer.address.postalCode} ${invoice.buyer.address.city}`,
-    rightColX,
-    yPosition
-  );
-  yPosition += 5;
-
-  doc.text(invoice.seller.address.country, leftColX, yPosition);
-  doc.text(invoice.buyer.address.country, rightColX, yPosition);
-  yPosition += 15;
-
-  // Line Items Table
-  const tableData = invoice.lines.map((line, index) => {
-    const lineTotal = line.quantity * line.unitPrice;
-    return [
-      (index + 1).toString(),
-      line.description,
-      line.quantity.toString(),
-      formatCurrency(line.unitPrice, invoice.currency),
-      `${line.taxPercent}%`,
-      formatCurrency(lineTotal, invoice.currency),
-    ];
-  });
-
-  autoTable(doc, {
-    startY: yPosition,
-    head: [['#', 'Description', 'Qty', 'Unit Price', 'Tax', 'Amount']],
-    body: tableData,
-    theme: 'plain',
-    headStyles: {
-      fillColor: [245, 243, 255], // Light purple
-      textColor: [...primaryColor],
-      fontSize: 9,
-      fontStyle: 'bold',
-      cellPadding: 4,
-    },
-    bodyStyles: {
-      fontSize: 9,
-      textColor: [...darkGray],
-      cellPadding: 4,
-    },
-    columnStyles: {
-      0: { cellWidth: 20, halign: 'center' },
-      1: { cellWidth: 'auto' },
-      2: { cellWidth: 20, halign: 'right' },
-      3: { cellWidth: 30, halign: 'right' },
-      4: { cellWidth: 20, halign: 'right' },
-      5: { cellWidth: 30, halign: 'right' },
-    },
-    margin: { left: margin, right: margin },
-  });
-
-  yPosition = (doc as any).lastAutoTable.finalY + 10;
-
-  // Totals
-  const totalsX = pageWidth - margin - 60;
-  const valuesX = pageWidth - margin;
-
-  doc.setFontSize(9);
-  doc.setTextColor(...lightGray);
-  doc.text('Subtotal:', totalsX, yPosition);
-  doc.setTextColor(...darkGray);
-  doc.text(formatCurrency(invoice.lineExtensionAmount, invoice.currency), valuesX, yPosition, {
-    align: 'right',
-  });
-  yPosition += 6;
-
-  // Tax breakdown
-  invoice.taxTotals.forEach((tax) => {
-    doc.setTextColor(...lightGray);
-    doc.text(`${tax.taxType} (${tax.taxPercent}%):`, totalsX, yPosition);
-    doc.setTextColor(...darkGray);
-    doc.text(formatCurrency(tax.taxAmount, invoice.currency), valuesX, yPosition, {
-      align: 'right',
-    });
-    yPosition += 6;
-  });
-
-  yPosition += 6;
-
-  doc.setFontSize(11);
-  doc.setTextColor(...darkGray);
-  doc.text('Total:', totalsX, yPosition);
-  doc.setTextColor(...primaryColor);
-  doc.text(formatCurrency(invoice.payableAmount, invoice.currency), valuesX, yPosition, {
-    align: 'right',
-  });
-  yPosition += 15;
-
-  // Notes
-  if (invoice.note) {
+  // 4. Seller Info
+  const sellerPos = getPos('seller', 20, 160, 260, 100);
+  if (sellerPos.visible) {
+    let curY = sellerPos.y + 10;
     doc.setFontSize(9);
     doc.setTextColor(...lightGray);
-    doc.text('Notes:', margin, yPosition);
-    yPosition += 5;
+    doc.text('From', sellerPos.x, curY);
+    curY += 12;
 
-    doc.setTextColor(...darkGray);
-    const noteLines = doc.splitTextToSize(invoice.note, pageWidth - 2 * margin);
-    doc.text(noteLines, margin, yPosition);
-    yPosition += noteLines.length * 5 + 10;
-  }
+    doc.setFontSize(10);
+    doc.setTextColor(...black);
+    doc.text(invoice.seller.name, sellerPos.x, curY);
+    curY += 10;
 
-  // Payment Terms and Info Section
-  const paymentSectionStartY = yPosition;
-  let leftColumnY = paymentSectionStartY;
-
-  // Payment Terms (Left Column)
-  if (invoice.paymentTerms?.note) {
     doc.setFontSize(9);
-    doc.setTextColor(...lightGray);
-    doc.text('Payment Terms:', margin, leftColumnY);
-    leftColumnY += 5;
-
-    doc.setTextColor(...darkGray);
-    const termsLines = doc.splitTextToSize(invoice.paymentTerms.note, pageWidth / 2 - margin);
-    doc.text(termsLines, margin, leftColumnY);
-    leftColumnY += termsLines.length * 5 + 10;
-  }
-
-  // Payment Information (Left Column)
-  if (effectivePaymentMeans?.iban) {
-    doc.setFontSize(9);
-    doc.setTextColor(...lightGray);
-    doc.text('Payment Information:', margin, leftColumnY);
-    leftColumnY += 5;
-
-    doc.setTextColor(...darkGray);
-    doc.text(`IBAN: ${effectivePaymentMeans.iban}`, margin, leftColumnY);
-    leftColumnY += 5;
-
-    if (effectivePaymentMeans.bic) {
-      doc.text(`BIC: ${effectivePaymentMeans.bic}`, margin, leftColumnY);
-      leftColumnY += 5;
-    }
-    if (effectivePaymentMeans.accountName) {
-      doc.text(`Account: ${effectivePaymentMeans.accountName}`, margin, leftColumnY);
-      leftColumnY += 5;
-    }
-  }
-
-  // QR Code (Right Column)
-  let rightColumnY = paymentSectionStartY;
-  if (effectivePaymentMeans?.iban) {
-    try {
-      // Create a temporary invoice object with the effective payment means for QR code generation
-      const invoiceForQR = { ...invoice, paymentMeans: effectivePaymentMeans };
-      const qrCodeDataURL = await getQRCodeDataURL(invoiceForQR, undefined, 200);
-
-      if (qrCodeDataURL) {
-        const qrCodeSize = 35;
-        // Position QR code on the right side
-        const qrCodeX = pageWidth - margin - qrCodeSize;
-
-        // Check if we need to check page bounds (less likely here as we usually have space, but good practice)
-        // For simplicity reusing current page logic as this is a specific section
-
-        doc.addImage(qrCodeDataURL, 'PNG', qrCodeX, rightColumnY, qrCodeSize, qrCodeSize);
-        rightColumnY += qrCodeSize + 5;
-
-        // Add label below QR code
-        doc.setFontSize(8);
-        doc.setTextColor(...lightGray);
-        doc.text('Scan to pay', qrCodeX + qrCodeSize / 2, rightColumnY, { align: 'center' });
-        rightColumnY += 5;
-
-        // Add QR code standard info
-        const country = invoice.seller.address.country;
-        let qrStandard = 'EPC QR Code';
-        if (country === 'CH' || country === 'LI') {
-          qrStandard = 'Swiss QR Invoice';
-        } else if (country === 'DE') {
-          qrStandard = 'GiroCode';
-        }
-        doc.setFontSize(7);
-        doc.text(qrStandard, qrCodeX + qrCodeSize / 2, rightColumnY, { align: 'center' });
-        rightColumnY += 5;
-      }
-    } catch (error) {
-      console.warn('Could not add QR code to PDF:', error);
-    }
-  }
-
-  // Update main yPosition to the maximum of both columns
-  yPosition = Math.max(leftColumnY, rightColumnY) + 15;
-
-  // Footer
-  const rawFooterText = template?.footerText || profile?.footerText;
-
-  if (rawFooterText) {
-    // Check if we need a new page
-    const footerHeight = 20;
-    if (yPosition + footerHeight > doc.internal.pageSize.getHeight() - margin) {
-      doc.addPage();
-      yPosition = margin;
-    } else {
-      // Add some space before footer
-      yPosition += 10;
-    }
-
-    // Line separator
-    doc.setDrawColor(...lightGray);
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 8;
-
-    // Handle Footer Images
-    // Use raw HTML content here
-    console.log('Processing footer text for images...');
-    const footerHtml = rawFooterText;
-    const imgSources: string[] = [];
-    const div = document.createElement('div');
-    div.innerHTML = footerHtml;
-    const imgs = div.getElementsByTagName('img');
-    console.log(`Found ${imgs.length} images in footer HTML`);
-    for (let i = 0; i < imgs.length; i++) {
-      imgSources.push(imgs[i].src);
-    }
-
-    if (imgSources.length > 0) {
-      try {
-        console.log('Loading footer images...', imgSources);
-        // Load all images first
-        const imageElements = await Promise.all(imgSources.map(src => loadImage(src)));
-        console.log(`Loaded ${imageElements.length} images successfully`);
-
-        let currentX = margin;
-        const availableWidth = pageWidth - 2 * margin;
-
-        imageElements.forEach((img, i) => {
-          // Convert pixels to a reasonable PDF size
-          // Apply a multiplier to make images visible (0.25 means 100px image = 25 PDF points)
-          const pixelToPdfMultiplier = 0.25;
-
-          let imgWidth = img.width * pixelToPdfMultiplier;
-          let imgHeight = img.height * pixelToPdfMultiplier;
-
-          // If image is too wide, scale it down to fit available width
-          if (imgWidth > availableWidth) {
-            const scaleFactor = availableWidth / imgWidth;
-            imgWidth = availableWidth;
-            imgHeight = imgHeight * scaleFactor;
-          }
-
-          console.log(`Adding image ${i} to PDF: original=${img.width}x${img.height}px, PDF size=${imgWidth.toFixed(1)}x${imgHeight.toFixed(1)}pt at x=${currentX}, y=${yPosition}`);
-
-          // Determine format from src if data url
-          let format = 'PNG';
-          if (img.src.startsWith('data:image/jpeg')) format = 'JPEG';
-          else if (img.src.startsWith('data:image/webp')) format = 'WEBP';
-
-          doc.addImage(img, format, currentX, yPosition, imgWidth, imgHeight);
-          currentX += imgWidth + 5;
-        });
-
-        yPosition += 50; // Space for images
-      } catch (error) {
-        console.error('Could not load footer images:', error);
-      }
-    } else {
-      console.log('No image sources extracted from footer HTML');
-    }
-
-    // Render plain text if available
-    const footerPlainText = stripHtml(rawFooterText);
-    if (footerPlainText.trim()) {
-      doc.setFontSize(7);
+    if (invoice.seller.vatId) {
       doc.setTextColor(...lightGray);
-      const footerLines = doc.splitTextToSize(footerPlainText, pageWidth - 2 * margin);
-      doc.text(footerLines, pageWidth / 2, yPosition, { align: 'center' });
+      doc.text(`VAT: ${invoice.seller.vatId}`, sellerPos.x, curY);
+      curY += 10;
     }
+
+    doc.setTextColor(...black);
+    doc.text(invoice.seller.address.street, sellerPos.x, curY);
+    curY += 10;
+    doc.text(`${invoice.seller.address.postalCode} ${invoice.seller.address.city}`, sellerPos.x, curY);
+    curY += 10;
+    doc.text(invoice.seller.address.country, sellerPos.x, curY);
+  }
+
+  // 5. Buyer Info
+  const buyerPos = getPos('buyer', 310, 160, 260, 100);
+  if (buyerPos.visible) {
+    let curY = buyerPos.y + 10;
+    doc.setFontSize(9);
+    doc.setTextColor(...lightGray);
+    doc.text('Bill To', buyerPos.x, curY);
+    curY += 12;
+
+    doc.setFontSize(10);
+    doc.setTextColor(...black);
+    doc.text(invoice.buyer.name, buyerPos.x, curY);
+    curY += 10;
+
+    doc.setFontSize(9);
+    if (invoice.buyer.vatId) {
+      doc.setTextColor(...lightGray);
+      doc.text(`VAT: ${invoice.buyer.vatId}`, buyerPos.x, curY);
+      curY += 10;
+    }
+
+    doc.setTextColor(...black);
+    doc.text(invoice.buyer.address.street, buyerPos.x, curY);
+    curY += 10;
+    doc.text(`${invoice.buyer.address.postalCode} ${invoice.buyer.address.city}`, buyerPos.x, curY);
+    curY += 10;
+    doc.text(invoice.buyer.address.country, buyerPos.x, curY);
+  }
+
+  // Track Y position for dynamic flow
+  // Estimate end of header section if we need to flow the table
+  let currentY = 280; // Start position for line items
+
+  // 6. Items Table
+  const itemsPos = getPos('items', 20, 280, 555, 300);
+
+  if (itemsPos.visible) {
+    // If using default layout, flow after header. If custom, respect Y (unless overflow handled by autoTable)
+    const tableStartY = itemsPos.fromLayout ? itemsPos.y : Math.max(itemsPos.y, currentY + 2);
+
+    const tableData = invoice.lines.map((line, index) => {
+      const lineTotal = line.quantity * line.unitPrice;
+      return [
+        (index + 1).toString(),
+        line.description,
+        line.quantity.toString(),
+        formatCurrency(line.unitPrice, invoice.currency),
+        `${line.taxPercent}%`,
+        formatCurrency(lineTotal, invoice.currency),
+      ];
+    });
+
+    autoTable(doc, {
+      startY: tableStartY,
+      head: [['#', 'Description', 'Qty', 'Unit Price', 'Tax', 'Amount']],
+      body: tableData,
+      theme: 'grid',
+      styles: {
+        lineColor: lightGray, // Light gray borders
+        lineWidth: 0.5,
+      },
+      headStyles: {
+        fillColor: [255, 255, 255], // White background
+        textColor: [...black],
+        fontSize: 9,
+        fontStyle: 'bold',
+        cellPadding: 4,
+      },
+      bodyStyles: {
+        fontSize: 9,
+        textColor: [...black],
+        lineColor: lightGray, // Light gray borders
+        lineWidth: 0.5,
+        cellPadding: 4,
+      },
+      columnStyles: {
+        0: { cellWidth: 20, halign: 'center' },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 60, halign: 'right' },
+        4: { cellWidth: 30, halign: 'right' },
+        5: { cellWidth: 60, halign: 'right' },
+      },
+      margin: { left: itemsPos.x, right: pageWidth - (itemsPos.x + itemsPos.w) },
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 2;
+  }
+
+  // getRenderY function removed - now using direct currentY positioning for all elements
+
+  // 7. Totals (dynamic positioning based on currentY)
+  const totalsPos = getPos('totals', 350, currentY, 225, 120);
+  if (totalsPos.visible) {
+    let curY = currentY + 15;
+    const labelX = totalsPos.x;
+    const valueX = totalsPos.x + totalsPos.w;
+
+    doc.setFontSize(9);
+    doc.setTextColor(...lightGray);
+    doc.text('Subtotal:', labelX, curY);
+    doc.setTextColor(...black);
+    doc.text(formatCurrency(invoice.lineExtensionAmount, invoice.currency), valueX, curY, { align: 'right' });
+    curY += 12;
+
+    invoice.taxTotals.forEach((tax) => {
+      doc.setTextColor(...lightGray);
+      doc.text(`${tax.taxType} (${tax.taxPercent}%):`, labelX, curY);
+      doc.setTextColor(...black);
+      doc.text(formatCurrency(tax.taxAmount, invoice.currency), valueX, curY, { align: 'right' });
+      curY += 12;
+    });
+
+    curY += 5;
+    doc.setFontSize(11);
+    doc.setTextColor(...black);
+    doc.text('Total:', labelX, curY);
+    doc.setTextColor(...black);
+    doc.text(formatCurrency(invoice.payableAmount, invoice.currency), valueX, curY, { align: 'right' });
+
+    currentY = curY + 2;
+  }
+
+  // 8. Notes (dynamic positioning based on currentY)
+  const notesPos = getPos('notes', 20, currentY, 320, 80);
+  if (invoice.note && notesPos.visible) {
+    doc.setFontSize(9);
+    doc.setTextColor(...lightGray);
+    doc.text('Notes:', notesPos.x, currentY + 30);
+
+    doc.setTextColor(...black);
+    const noteLines = doc.splitTextToSize(invoice.note, notesPos.w);
+    doc.text(noteLines, notesPos.x, currentY + 42);
+
+    // Update currentY based on actual note height
+    const noteHeight = noteLines.length * 12 + 22;
+    currentY = currentY + noteHeight + 2;
+  }
+
+  // 9. Payment Info and QR Code (dynamic positioning based on currentY)
+  const qrPos = getPos('qr', 480, currentY, 120, 120);
+  const paymentInfoVisible = !!(invoice.paymentTerms?.note || effectivePaymentMeans?.iban);
+
+  if (paymentInfoVisible || qrPos.visible) {
+    // Use fixed height for payment section
+    const paymentSectionHeight = 120; // Fixed height for payment info + QR code
+    const paymentSpacing = 2; // Minimal spacing
+
+    // Check if section fits on current page
+    const sectionStartY = currentY + paymentSpacing;
+    const sectionEndY = sectionStartY + paymentSectionHeight;
+
+    let renderY = sectionStartY;
+
+    // Only add new page if section truly doesn't fit
+    if (sectionEndY > pageHeight - 80) {
+      doc.addPage();
+      renderY = 50;
+      currentY = 50;
+    }
+
+    // A. Payment Terms and Bank Info (Left of QR)
+    if (paymentInfoVisible) {
+      let textY = renderY + 10;
+      const textX = 20;
+      const textWidth = qrPos.x - textX - 20;
+
+      if (invoice.paymentTerms?.note) {
+        doc.setFontSize(9);
+        doc.setTextColor(...lightGray);
+        doc.text('Payment Terms:', textX, textY);
+        textY += 12;
+        doc.setTextColor(...black);
+        const termLines = doc.splitTextToSize(invoice.paymentTerms.note, textWidth);
+        doc.text(termLines, textX, textY);
+        textY += (termLines.length * 10) + 5;
+      }
+
+      if (effectivePaymentMeans?.iban) {
+        doc.setFontSize(9);
+        doc.setTextColor(...lightGray);
+        doc.text('Payment Information:', textX, textY);
+        textY += 12;
+        doc.setTextColor(...black);
+        doc.text(`IBAN: ${effectivePaymentMeans.iban}`, textX, textY);
+        textY += 10;
+        if (effectivePaymentMeans.bic) {
+          doc.text(`BIC: ${effectivePaymentMeans.bic}`, textX, textY);
+          textY += 10;
+        }
+        if (effectivePaymentMeans.accountName) {
+          doc.text(`Account: ${effectivePaymentMeans.accountName}`, textX, textY);
+          textY += 10;
+        }
+      }
+    }
+
+    // B. QR Code (Right Side)
+    if (effectivePaymentMeans?.iban && qrPos.visible) {
+      try {
+        const invoiceForQR = { ...invoice, paymentMeans: effectivePaymentMeans };
+        const qrCodeDataURL = await getQRCodeDataURL(invoiceForQR, undefined, 200);
+
+        if (qrCodeDataURL) {
+          doc.addImage(qrCodeDataURL, 'PNG', qrPos.x, renderY, qrPos.w, qrPos.w);
+
+          doc.setFontSize(8);
+          doc.setTextColor(...lightGray);
+          doc.text('Scan to pay', qrPos.x + (qrPos.w * 0.9) / 2, renderY + (qrPos.w * 0.9) + 10, { align: 'center' });
+
+          const country = invoice.seller.address.country;
+          let qrStandard = 'EPC QR Code';
+          if (country === 'CH' || country === 'LI') qrStandard = 'Swiss QR Invoice';
+          else if (country === 'DE') qrStandard = 'GiroCode';
+
+          doc.setFontSize(7);
+          doc.text(qrStandard, qrPos.x + (qrPos.w * 0.9) / 2, renderY + (qrPos.w * 0.9) + 20, { align: 'center' });
+        }
+      } catch (error) {
+        console.warn('Could not add QR code to PDF:', error);
+      }
+    }
+
+    currentY = renderY + paymentSectionHeight;
+  }
+
+  // 10. Footer
+  const footerPos = getPos('footer', 20, 680, 595, 60);
+  console.log('--- Footer Rendering Start ---', { footerPos_y: footerPos.y, content_currentY: currentY });
+  const rawFooterText = template?.footerText || profile?.footerText;
+  if (rawFooterText && footerPos.visible) {
+    // Simple approach: place footer after content with some spacing
+    // Use fixed height for footer area
+    const footerSpacing = 2; // Minimal spacing before footer
+    const footerHeight = 60; // Fixed height for footer content
+
+    // Check if we need a new page
+    const footerStartY = footerPos.y + footerSpacing;
+    const footerEndY = footerStartY + footerHeight;
+    const pageBottomMargin = 50; // Leave space for page numbers
+
+    let renderY = footerStartY;
+
+    // Only add new page if footer truly doesn't fit
+    if (footerEndY > pageHeight - pageBottomMargin) {
+      doc.addPage();
+      renderY = 50; // Start near top of new page
+      currentY = 50;
+    }
+
+    // Draw separator line
+    doc.setDrawColor(...lightGray);
+    doc.setLineWidth(0.5);
+    doc.line(footerPos.x, renderY, footerPos.x + footerPos.w, renderY);
+
+    // Render footer content
+    const footerContentY = renderY + 10;
+    const renderedH = await renderHtmlContent(doc, rawFooterText, footerPos.x, footerContentY, footerPos.w);
+
+    currentY = footerContentY + renderedH + 10;
+    console.log('--- Footer Rendering End ---', { footer_finalY: currentY });
   }
 
   // Add Page Numbers
@@ -408,13 +409,95 @@ export async function generateInvoicePDF(
     doc.text(
       `Page ${i} of ${pageCount}`,
       pageWidth / 2,
-      doc.internal.pageSize.getHeight() - 10,
+      pageHeight - 12,
       { align: 'center' }
     );
   }
 
   // Save the PDF
   doc.save(`${invoice.invoiceNumber}.pdf`);
+}
+
+/**
+ * Renders HTML content (rich text with images) to a jsPDF instance
+ * by temporarily rendering to a hidden DOM element and capturing it.
+ */
+async function renderHtmlContent(
+  doc: jsPDF,
+  html: string,
+  x: number,
+  y: number,
+  width: number,
+  defaultColor: [number, number, number] = [156, 163, 175] // lightGray
+): Promise<number> {
+  if (!html || !html.trim()) return 0;
+
+  try {
+    const { default: html2canvas } = await import('html2canvas');
+
+    const container = document.createElement('div');
+    // Use a scaling factor to match PDF points/pixels
+    container.style.width = width + 'pt';
+    container.style.position = 'fixed';
+    container.style.left = '-10000px';
+    container.style.top = '0';
+    container.className = 'richtext-pdf-render';
+
+    // Set basic styles to approximate PDF look
+    container.style.fontSize = '9pt'; // Increased from 8pt for better visibility
+    container.style.lineHeight = '1.4';
+    container.style.color = `rgb(${defaultColor.join(',')})`;
+    container.style.fontFamily = 'Arial, sans-serif';
+    container.style.textAlign = 'center';
+    container.style.padding = '5px';
+
+    container.innerHTML = html;
+
+    // Ensure images have cross-origin or are base64
+    const images = container.querySelectorAll('img');
+    images.forEach(img => {
+      img.style.maxWidth = '100%'; // Allow image to fill container width
+      img.style.height = 'auto';
+      img.style.display = 'block';
+      img.style.margin = '5px auto';
+    });
+
+    document.body.appendChild(container);
+
+    // Wait a bit for images to load
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const canvas = await html2canvas(container, {
+      scale: 2, // High resolution for PDF
+      backgroundColor: null,
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const renderedWidth = width;
+    const renderedHeight = (canvas.height * renderedWidth) / canvas.width;
+
+    doc.addImage(imgData, 'PNG', x, y, renderedWidth, renderedHeight);
+
+    document.body.removeChild(container);
+    return renderedHeight;
+  } catch (error) {
+    console.warn('Could not render HTML content for PDF, falling back to plain text:', error);
+
+    // Fallback: render as plain text if html2canvas fails
+    const plainText = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (plainText) {
+      doc.setFontSize(9);
+      doc.setTextColor(...defaultColor);
+      const lines = doc.splitTextToSize(plainText, width);
+      doc.text(lines, x + width / 2, y, { align: 'center' });
+      return lines.length * 12; // Approximate height
+    }
+
+    return 0;
+  }
 }
 
 // Helper function to load images
@@ -426,10 +509,4 @@ function loadImage(url: string): Promise<HTMLImageElement> {
     img.onerror = reject;
     img.src = url;
   });
-}
-
-function stripHtml(html: string): string {
-  const tmp = document.createElement('DIV');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
 }

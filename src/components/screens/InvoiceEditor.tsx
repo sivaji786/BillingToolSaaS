@@ -42,6 +42,7 @@ import { validateInvoice, isInvoiceValid } from '../../utils/invoice-validation'
 import { useLanguage } from '../../contexts/LanguageContext';
 import { toast } from 'sonner';
 
+
 interface InvoiceEditorProps {
   invoice: Invoice;
   onSave: (invoice: Invoice) => void;

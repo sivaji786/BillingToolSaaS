@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { CompanyProfile } from '../../types/invoice';
+import { CompanyProfile, CompanyType } from '../../types/invoice';
+import { companyTypeService } from '../../services/api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -20,6 +22,19 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
   const { t } = useLanguage();
   const [editedProfile, setEditedProfile] = useState<CompanyProfile>(profile);
   const [isSaving, setIsSaving] = useState(false);
+  const [companyTypes, setCompanyTypes] = useState<CompanyType[]>([]);
+
+  useEffect(() => {
+    const fetchTypes = async () => {
+      try {
+        const types = await companyTypeService.getAll();
+        setCompanyTypes(types);
+      } catch (e) {
+        console.error('Failed to fetch company types', e);
+      }
+    };
+    fetchTypes();
+  }, []);
 
   // Sync state with prop if profile changes (e.g. after save or re-fetch)
   useEffect(() => {
@@ -56,6 +71,11 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
           ...editedProfile.bankAccount!,
           [bankField]: value,
         },
+      });
+    } else if (field === 'companyTypeId') {
+      setEditedProfile({
+        ...editedProfile,
+        companyTypeId: parseInt(value),
       });
     } else {
       setEditedProfile({
@@ -110,6 +130,28 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
             </div>
 
             <Separator />
+
+            <div className="space-y-4 mb-6">
+              <Label htmlFor="company-type">Company Type</Label>
+              <Select
+                value={editedProfile.companyTypeId?.toString()}
+                onValueChange={(value) => handleChange('companyTypeId', value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select company type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companyTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id.toString()}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Determines available roles and permissions structure.
+              </p>
+            </div>
 
             <div className="grid grid-cols-2 gap-6">
               <div>

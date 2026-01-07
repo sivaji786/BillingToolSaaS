@@ -58,7 +58,8 @@ export function Login({ onLogin }: LoginProps) {
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-12">
         <div className="w-full max-w-md space-y-8">
           {/* Language Switcher */}
-          <div className="flex justify-end">
+          {/* Language Switcher and Wiki Link */}
+          <div className="flex justify-end gap-2 items-center mb-6">
             <LanguageSwitcher variant="login" />
           </div>
 
@@ -184,6 +185,6 @@ export function Login({ onLogin }: LoginProps) {
           animation-delay: 4s;
         }
       `}</style>
-    </div>
+    </div >
   );
 }

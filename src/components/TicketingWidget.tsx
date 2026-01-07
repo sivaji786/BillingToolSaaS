@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { MessageSquarePlus, X, Loader2, Pencil, Eraser, Trash2, Hand, Square, Circle, ArrowUpRight, Undo2, Redo2 } from 'lucide-react';
-import axios from 'axios';
+
 import { toast } from 'sonner';
 import { toPng } from 'html-to-image';
+import { createTicket } from '../services/ticketService';
 
 interface TicketingWidgetProps {
     apiKey: string;
@@ -284,11 +285,9 @@ export function TicketingWidget({ apiKey, apiBaseUrl }: TicketingWidgetProps) {
                 user_id: userId
             };
 
-            const baseUrl = apiBaseUrl || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-            await axios.post(`${baseUrl}/tickets`, postData, {
-                headers: {
-                    'X-API-Key': apiKey
-                }
+            await createTicket(postData, {
+                apiKey,
+                baseUrl: apiBaseUrl
             });
             toast.success('Ticket submitted successfully!');
             handleClose();

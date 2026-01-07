@@ -3,7 +3,6 @@ import { Invoice, InvoiceTemplate, InvoiceLine, CompanyProfile } from '../../typ
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { ScrollArea } from '../ui/scroll-area';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import {
@@ -341,7 +340,7 @@ export function InvoicePreview({ invoice, onBack, onSave, template, profile }: I
         description: t('previewModal.generatingPdf') || 'Generating PDF...',
       });
 
-      // Pass profile to PDF generator
+      // Use the original PDF generator that matches the preview
       await generateInvoicePDF(editedInvoice, template, profile);
 
       toast.dismiss(toastId);
@@ -439,421 +438,419 @@ export function InvoicePreview({ invoice, onBack, onSave, template, profile }: I
 
           <TabsContent value="pdf" className="mt-0">
             <div className="border rounded-lg bg-white shadow-inner">
-              <ScrollArea className="h-[calc(100vh-300px)]">
-                <div className="p-12">
-                  {/* PDF-style invoice preview */}
-                  <div className="max-w-4xl mx-auto space-y-12 bg-white">
-                    {/* Logo & Header */}
-                    {logoUrl && (
-                      <div className="flex justify-center pb-6 border-b border-purple-100">
-                        <img
-                          src={logoUrl}
-                          alt="Company Logo"
-                          className="h-16 object-contain"
-                        />
-                      </div>
-                    )}
-
-                    {headerText && (
-                      <div
-                        className="text-center text-sm text-gray-600 pb-6 border-b border-purple-100"
-                        dangerouslySetInnerHTML={{ __html: headerText }}
+              <div className="p-12">
+                {/* PDF-style invoice preview */}
+                <div className="max-w-4xl mx-auto space-y-12 bg-white">
+                  {/* Logo & Header */}
+                  {logoUrl && (
+                    <div className="flex justify-center pb-6 border-b border-purple-100">
+                      <img
+                        src={logoUrl}
+                        alt="Company Logo"
+                        className="h-16 object-contain"
                       />
-                    )}
-
-                    {/* Footer Text (moved from original position to here, as per instruction context) */}
-
-
-                    {/* Header */}
-                    <div className="flex justify-between items-start pb-8 border-b-2 border-purple-200">
-                      <div>
-                        <h1 className="text-primary text-4xl">{editedInvoice.seller.name}</h1>
-                        <div className="mt-3 text-lg">
-                          {renderEditableField(
-                            'invoiceNumber',
-                            editedInvoice.invoiceNumber,
-                            (value: string) => handleFieldChange('invoiceNumber', value)
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right space-y-3">
-                        <div>
-                          <p className="text-sm text-muted-foreground">{t('previewModal.issueDate')}</p>
-                          <div className="text-lg">
-                            {renderEditableField(
-                              'issueDate',
-                              editedInvoice.issueDate,
-                              (value: string) => handleFieldChange('issueDate', value)
-                            )}
-                          </div>
-                        </div>
-                        {editedInvoice.dueDate && (
-                          <div>
-                            <p className="text-sm text-muted-foreground">{t('previewModal.dueDate')}</p>
-                            <div className="text-lg">
-                              {renderEditableField(
-                                'dueDate',
-                                editedInvoice.dueDate,
-                                (value: string) => handleFieldChange('dueDate', value)
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
                     </div>
+                  )}
 
-                    {/* Parties */}
-                    <div className="grid grid-cols-2 gap-12">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-3">{t('previewModal.from')}</p>
-                        <div className="space-y-1">
-                          <div className="text-lg">
-                            {renderEditableField(
-                              'seller.name',
-                              editedInvoice.seller.name,
-                              (value: string) => handleFieldChange('seller.name', value)
-                            )}
-                          </div>
-                          {editedInvoice.seller.vatId && (
-                            <div className="text-sm">
-                              {t('previewModal.vat')}:{' '}
-                              {renderEditableField(
-                                'seller.vatId',
-                                editedInvoice.seller.vatId,
-                                (value: string) => handleFieldChange('seller.vatId', value),
-                                'inline-block'
-                              )}
-                            </div>
-                          )}
-                          <div className="mt-3 text-sm space-y-0.5">
-                            {renderEditableField(
-                              'seller.address.street',
-                              editedInvoice.seller.address.street,
-                              (value: string) => handleFieldChange('seller.address.street', value),
-                              'block'
-                            )}
-                            <div>
-                              {renderEditableField(
-                                'seller.address.postalCode',
-                                editedInvoice.seller.address.postalCode,
-                                (value: string) => handleFieldChange('seller.address.postalCode', value),
-                                'inline-block mr-2'
-                              )}
-                              {renderEditableField(
-                                'seller.address.city',
-                                editedInvoice.seller.address.city,
-                                (value: string) => handleFieldChange('seller.address.city', value),
-                                'inline-block'
-                              )}
-                            </div>
-                            {renderEditableField(
-                              'seller.address.country',
-                              editedInvoice.seller.address.country,
-                              (value: string) => handleFieldChange('seller.address.country', value),
-                              'block'
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-3">{t('previewModal.billTo')}</p>
-                        <div className="space-y-1">
-                          <div className="text-lg">
-                            {renderEditableField(
-                              'buyer.name',
-                              editedInvoice.buyer.name,
-                              (value: string) => handleFieldChange('buyer.name', value)
-                            )}
-                          </div>
-                          {editedInvoice.buyer.vatId && (
-                            <div className="text-sm">
-                              {t('previewModal.vat')}:{' '}
-                              {renderEditableField(
-                                'buyer.vatId',
-                                editedInvoice.buyer.vatId,
-                                (value: string) => handleFieldChange('buyer.vatId', value),
-                                'inline-block'
-                              )}
-                            </div>
-                          )}
-                          <div className="mt-3 text-sm space-y-0.5">
-                            {renderEditableField(
-                              'buyer.address.street',
-                              editedInvoice.buyer.address.street,
-                              (value: string) => handleFieldChange('buyer.address.street', value),
-                              'block'
-                            )}
-                            <div>
-                              {renderEditableField(
-                                'buyer.address.postalCode',
-                                editedInvoice.buyer.address.postalCode,
-                                (value: string) => handleFieldChange('buyer.address.postalCode', value),
-                                'inline-block mr-2'
-                              )}
-                              {renderEditableField(
-                                'buyer.address.city',
-                                editedInvoice.buyer.address.city,
-                                (value: string) => handleFieldChange('buyer.address.city', value),
-                                'inline-block'
-                              )}
-                            </div>
-                            {renderEditableField(
-                              'buyer.address.country',
-                              editedInvoice.buyer.address.country,
-                              (value: string) => handleFieldChange('buyer.address.country', value),
-                              'block'
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  {headerText && (
+                    <div
+                      className="text-center text-sm text-gray-600 pb-6 border-b border-purple-100"
+                      dangerouslySetInnerHTML={{ __html: headerText }}
+                    />
+                  )}
 
-                    {/* Line Items */}
+                  {/* Footer Text (moved from original position to here, as per instruction context) */}
+
+
+                  {/* Header */}
+                  <div className="flex justify-between items-start pb-8 border-b-2 border-purple-200">
                     <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg">{t('previewModal.items')}</h3>
-                      </div>
-
-                      <div className="border rounded-lg overflow-hidden">
-                        <table className="w-full">
-                          <thead className="bg-purple-50 dark:bg-purple-950">
-                            <tr>
-                              <th className="text-center p-3 text-sm w-10">#</th>
-                              <th className="text-left p-3 text-sm">{t('previewModal.colDescription')}</th>
-                              <th className="text-right p-3 text-sm">{t('previewModal.quantity')}</th>
-                              <th className="text-right p-3 text-sm">{t('previewModal.unitPrice')}</th>
-                              <th className="text-right p-3 text-sm">{t('previewModal.tax')}</th>
-                              <th className="text-right p-3 text-sm">{t('previewModal.amount')}</th>
-                              <th className="w-10"></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {editedInvoice.lines.map((line, index) => {
-                              const lineTotal = line.quantity * line.unitPrice;
-                              return (
-                                <tr key={line.id} className="border-t hover:bg-gray-50 dark:hover:bg-gray-900">
-                                  <td className="p-3 text-center text-muted-foreground">
-                                    {index + 1}
-                                  </td>
-                                  <td className="p-3">
-                                    {editingField === `line.${line.id}.description` ? (
-                                      <Textarea
-                                        value={line.description}
-                                        onChange={(e) =>
-                                          handleLineChange(line.id, 'description', e.target.value)
-                                        }
-                                        onBlur={handleBlur}
-                                        autoFocus
-                                        className="min-h-[60px]"
-                                      />
-                                    ) : (
-                                      <div
-                                        onDoubleClick={() =>
-                                          handleDoubleClick(`line.${line.id}.description`)
-                                        }
-                                        className="cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950 rounded px-1 transition-colors group relative min-h-[40px]"
-                                        title="Double-click to edit"
-                                      >
-                                        {line.description || (
-                                          <span className="text-gray-400 italic">Double-click to add</span>
-                                        )}
-                                        <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-50 text-purple-600" />
-                                      </div>
-                                    )}
-                                  </td>
-                                  <td className="p-3 text-right">
-                                    {editingField === `line.${line.id}.quantity` ? (
-                                      <Input
-                                        type="number"
-                                        value={line.quantity}
-                                        onChange={(e) =>
-                                          handleLineChange(
-                                            line.id,
-                                            'quantity',
-                                            parseFloat(e.target.value) || 0
-                                          )
-                                        }
-                                        onBlur={handleBlur}
-                                        autoFocus
-                                        className="text-right"
-                                      />
-                                    ) : (
-                                      <div
-                                        onDoubleClick={() =>
-                                          handleDoubleClick(`line.${line.id}.quantity`)
-                                        }
-                                        className="cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950 rounded px-1 transition-colors group relative"
-                                        title="Double-click to edit"
-                                      >
-                                        {line.quantity}
-                                        <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-50 text-purple-600" />
-                                      </div>
-                                    )}
-                                  </td>
-                                  <td className="p-3 text-right">
-                                    {editingField === `line.${line.id}.unitPrice` ? (
-                                      <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={line.unitPrice}
-                                        onChange={(e) =>
-                                          handleLineChange(
-                                            line.id,
-                                            'unitPrice',
-                                            parseFloat(e.target.value) || 0
-                                          )
-                                        }
-                                        onBlur={handleBlur}
-                                        autoFocus
-                                        className="text-right"
-                                      />
-                                    ) : (
-                                      <div
-                                        onDoubleClick={() =>
-                                          handleDoubleClick(`line.${line.id}.unitPrice`)
-                                        }
-                                        className="cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950 rounded px-1 transition-colors group relative"
-                                        title="Double-click to edit"
-                                      >
-                                        {formatCurrency(line.unitPrice, editedInvoice.currency)}
-                                        <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-50 text-purple-600" />
-                                      </div>
-                                    )}
-                                  </td>
-                                  <td className="p-3 text-right text-sm">
-                                    {line.taxPercent}%
-                                  </td>
-                                  <td className="p-3 text-right">
-                                    {formatCurrency(lineTotal, editedInvoice.currency)}
-                                  </td>
-                                  <td className="p-3">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleRemoveLine(line.id)}
-                                      className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="mt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleAddLine}
-                          className="gap-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          {t('editor.addLine') || 'Add Line'}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Totals */}
-                    <div className="flex justify-end">
-                      <div className="w-80 space-y-3">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">{t('previewModal.subtotal')}</span>
-                          <span>{formatCurrency(calculated.lineExtensionAmount, editedInvoice.currency)}</span>
-                        </div>
-                        {calculated.taxTotals.map((tax, index) => (
-                          <div key={index} className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">
-                              {tax.taxType} ({tax.taxPercent}%)
-                            </span>
-                            <span>{formatCurrency(tax.taxAmount, editedInvoice.currency)}</span>
-                          </div>
-                        ))}
-                        <div className="border-t-2 border-purple-200 pt-3 flex justify-between text-lg">
-                          <span>{t('previewModal.total')}</span>
-                          <span className="text-primary">
-                            {formatCurrency(calculated.payableAmount, editedInvoice.currency)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Notes */}
-                    {editedInvoice.note && (
-                      <div className="border-t pt-6">
-                        <p className="text-sm text-muted-foreground mb-2">{t('previewModal.notes')}</p>
+                      <h1 className="text-primary text-4xl">{editedInvoice.seller.name}</h1>
+                      <div className="mt-3 text-lg">
                         {renderEditableField(
-                          'note',
-                          editedInvoice.note,
-                          (value: string) => handleFieldChange('note', value),
-                          'text-sm',
-                          true
+                          'invoiceNumber',
+                          editedInvoice.invoiceNumber,
+                          (value: string) => handleFieldChange('invoiceNumber', value)
                         )}
                       </div>
-                    )}
-
-                    {/* Payment Terms and QR Code Section */}
-                    {(editedInvoice.paymentTerms?.note || effectiveInvoice.paymentMeans?.iban) && (
-                      <div className="border-t pt-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                          {/* Payment Terms - Left Side */}
-                          <div>
-                            {editedInvoice.paymentTerms?.note && (
-                              <div className="mb-4">
-                                <p className="text-sm text-muted-foreground mb-2">{t('previewModal.paymentTerms')}</p>
-                                <p className="text-sm">{editedInvoice.paymentTerms.note}</p>
-                              </div>
-                            )}
-
-                            {/* Payment Info Text */}
-                            {effectiveInvoice.paymentMeans?.iban && (
-                              <div>
-                                <p className="text-sm text-muted-foreground mb-2">{t('previewModal.paymentInfo') || 'Payment Information'}</p>
-                                <p className="text-sm">IBAN: {effectiveInvoice.paymentMeans.iban}</p>
-                                {effectiveInvoice.paymentMeans.bic && (
-                                  <p className="text-sm">BIC: {effectiveInvoice.paymentMeans.bic}</p>
-                                )}
-                                {effectiveInvoice.paymentMeans.accountName && (
-                                  <p className="text-sm">Account: {effectiveInvoice.paymentMeans.accountName}</p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* QR Code - Right Side */}
-                          {effectiveInvoice.paymentMeans?.iban && (
-                            <div className="flex justify-center md:justify-end">
-                              <InvoiceQRCode
-                                invoice={effectiveInvoice}
-                                size={200}
-                                showLabel={true}
-                              />
-                            </div>
+                    </div>
+                    <div className="text-right space-y-3">
+                      <div>
+                        <p className="text-sm text-muted-foreground">{t('previewModal.issueDate')}</p>
+                        <div className="text-lg">
+                          {renderEditableField(
+                            'issueDate',
+                            editedInvoice.issueDate,
+                            (value: string) => handleFieldChange('issueDate', value)
                           )}
                         </div>
                       </div>
-                    )}
-
-                    {/* Footer */}
-                    {footerText && (
-                      <div
-                        className="border-t pt-6 text-xs text-gray-600 text-center"
-                        dangerouslySetInnerHTML={{ __html: footerText }}
-                      />
-                    )}
+                      {editedInvoice.dueDate && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">{t('previewModal.dueDate')}</p>
+                          <div className="text-lg">
+                            {renderEditableField(
+                              'dueDate',
+                              editedInvoice.dueDate,
+                              (value: string) => handleFieldChange('dueDate', value)
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Parties */}
+                  <div className="grid grid-cols-2 gap-12">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-3">{t('previewModal.from')}</p>
+                      <div className="space-y-1">
+                        <div className="text-lg">
+                          {renderEditableField(
+                            'seller.name',
+                            editedInvoice.seller.name,
+                            (value: string) => handleFieldChange('seller.name', value)
+                          )}
+                        </div>
+                        {editedInvoice.seller.vatId && (
+                          <div className="text-sm">
+                            {t('previewModal.vat')}:{' '}
+                            {renderEditableField(
+                              'seller.vatId',
+                              editedInvoice.seller.vatId,
+                              (value: string) => handleFieldChange('seller.vatId', value),
+                              'inline-block'
+                            )}
+                          </div>
+                        )}
+                        <div className="mt-3 text-sm space-y-0.5">
+                          {renderEditableField(
+                            'seller.address.street',
+                            editedInvoice.seller.address.street,
+                            (value: string) => handleFieldChange('seller.address.street', value),
+                            'block'
+                          )}
+                          <div>
+                            {renderEditableField(
+                              'seller.address.postalCode',
+                              editedInvoice.seller.address.postalCode,
+                              (value: string) => handleFieldChange('seller.address.postalCode', value),
+                              'inline-block mr-2'
+                            )}
+                            {renderEditableField(
+                              'seller.address.city',
+                              editedInvoice.seller.address.city,
+                              (value: string) => handleFieldChange('seller.address.city', value),
+                              'inline-block'
+                            )}
+                          </div>
+                          {renderEditableField(
+                            'seller.address.country',
+                            editedInvoice.seller.address.country,
+                            (value: string) => handleFieldChange('seller.address.country', value),
+                            'block'
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-3">{t('previewModal.billTo')}</p>
+                      <div className="space-y-1">
+                        <div className="text-lg">
+                          {renderEditableField(
+                            'buyer.name',
+                            editedInvoice.buyer.name,
+                            (value: string) => handleFieldChange('buyer.name', value)
+                          )}
+                        </div>
+                        {editedInvoice.buyer.vatId && (
+                          <div className="text-sm">
+                            {t('previewModal.vat')}:{' '}
+                            {renderEditableField(
+                              'buyer.vatId',
+                              editedInvoice.buyer.vatId,
+                              (value: string) => handleFieldChange('buyer.vatId', value),
+                              'inline-block'
+                            )}
+                          </div>
+                        )}
+                        <div className="mt-3 text-sm space-y-0.5">
+                          {renderEditableField(
+                            'buyer.address.street',
+                            editedInvoice.buyer.address.street,
+                            (value: string) => handleFieldChange('buyer.address.street', value),
+                            'block'
+                          )}
+                          <div>
+                            {renderEditableField(
+                              'buyer.address.postalCode',
+                              editedInvoice.buyer.address.postalCode,
+                              (value: string) => handleFieldChange('buyer.address.postalCode', value),
+                              'inline-block mr-2'
+                            )}
+                            {renderEditableField(
+                              'buyer.address.city',
+                              editedInvoice.buyer.address.city,
+                              (value: string) => handleFieldChange('buyer.address.city', value),
+                              'inline-block'
+                            )}
+                          </div>
+                          {renderEditableField(
+                            'buyer.address.country',
+                            editedInvoice.buyer.address.country,
+                            (value: string) => handleFieldChange('buyer.address.country', value),
+                            'block'
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Line Items */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg">{t('previewModal.items')}</h3>
+                    </div>
+
+                    <div className="border rounded-lg overflow-hidden">
+                      <table className="w-full">
+                        <thead className="bg-purple-50 dark:bg-purple-950">
+                          <tr>
+                            <th className="text-center p-3 text-sm w-10">#</th>
+                            <th className="text-left p-3 text-sm">{t('previewModal.colDescription')}</th>
+                            <th className="text-right p-3 text-sm">{t('previewModal.quantity')}</th>
+                            <th className="text-right p-3 text-sm">{t('previewModal.unitPrice')}</th>
+                            <th className="text-right p-3 text-sm">{t('previewModal.tax')}</th>
+                            <th className="text-right p-3 text-sm">{t('previewModal.amount')}</th>
+                            <th className="w-10"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {editedInvoice.lines.map((line, index) => {
+                            const lineTotal = line.quantity * line.unitPrice;
+                            return (
+                              <tr key={line.id} className="border-t hover:bg-gray-50 dark:hover:bg-gray-900">
+                                <td className="p-3 text-center text-muted-foreground">
+                                  {index + 1}
+                                </td>
+                                <td className="p-3">
+                                  {editingField === `line.${line.id}.description` ? (
+                                    <Textarea
+                                      value={line.description}
+                                      onChange={(e) =>
+                                        handleLineChange(line.id, 'description', e.target.value)
+                                      }
+                                      onBlur={handleBlur}
+                                      autoFocus
+                                      className="min-h-[60px]"
+                                    />
+                                  ) : (
+                                    <div
+                                      onDoubleClick={() =>
+                                        handleDoubleClick(`line.${line.id}.description`)
+                                      }
+                                      className="cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950 rounded px-1 transition-colors group relative min-h-[40px]"
+                                      title="Double-click to edit"
+                                    >
+                                      {line.description || (
+                                        <span className="text-gray-400 italic">Double-click to add</span>
+                                      )}
+                                      <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-50 text-purple-600" />
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-3 text-right">
+                                  {editingField === `line.${line.id}.quantity` ? (
+                                    <Input
+                                      type="number"
+                                      value={line.quantity}
+                                      onChange={(e) =>
+                                        handleLineChange(
+                                          line.id,
+                                          'quantity',
+                                          parseFloat(e.target.value) || 0
+                                        )
+                                      }
+                                      onBlur={handleBlur}
+                                      autoFocus
+                                      className="text-right"
+                                    />
+                                  ) : (
+                                    <div
+                                      onDoubleClick={() =>
+                                        handleDoubleClick(`line.${line.id}.quantity`)
+                                      }
+                                      className="cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950 rounded px-1 transition-colors group relative"
+                                      title="Double-click to edit"
+                                    >
+                                      {line.quantity}
+                                      <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-50 text-purple-600" />
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-3 text-right">
+                                  {editingField === `line.${line.id}.unitPrice` ? (
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={line.unitPrice}
+                                      onChange={(e) =>
+                                        handleLineChange(
+                                          line.id,
+                                          'unitPrice',
+                                          parseFloat(e.target.value) || 0
+                                        )
+                                      }
+                                      onBlur={handleBlur}
+                                      autoFocus
+                                      className="text-right"
+                                    />
+                                  ) : (
+                                    <div
+                                      onDoubleClick={() =>
+                                        handleDoubleClick(`line.${line.id}.unitPrice`)
+                                      }
+                                      className="cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950 rounded px-1 transition-colors group relative"
+                                      title="Double-click to edit"
+                                    >
+                                      {formatCurrency(line.unitPrice, editedInvoice.currency)}
+                                      <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-50 text-purple-600" />
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-3 text-right text-sm">
+                                  {line.taxPercent}%
+                                </td>
+                                <td className="p-3 text-right">
+                                  {formatCurrency(lineTotal, editedInvoice.currency)}
+                                </td>
+                                <td className="p-3">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleRemoveLine(line.id)}
+                                    className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddLine}
+                        className="gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        {t('editor.addLine') || 'Add Line'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Totals */}
+                  <div className="flex justify-end">
+                    <div className="w-80 space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{t('previewModal.subtotal')}</span>
+                        <span>{formatCurrency(calculated.lineExtensionAmount, editedInvoice.currency)}</span>
+                      </div>
+                      {calculated.taxTotals.map((tax, index) => (
+                        <div key={index} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {tax.taxType} ({tax.taxPercent}%)
+                          </span>
+                          <span>{formatCurrency(tax.taxAmount, editedInvoice.currency)}</span>
+                        </div>
+                      ))}
+                      <div className="border-t-2 border-purple-200 pt-3 flex justify-between text-lg">
+                        <span>{t('previewModal.total')}</span>
+                        <span className="text-primary">
+                          {formatCurrency(calculated.payableAmount, editedInvoice.currency)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  {editedInvoice.note && (
+                    <div className="border-t pt-6">
+                      <p className="text-sm text-muted-foreground mb-2">{t('previewModal.notes')}</p>
+                      {renderEditableField(
+                        'note',
+                        editedInvoice.note,
+                        (value: string) => handleFieldChange('note', value),
+                        'text-sm',
+                        true
+                      )}
+                    </div>
+                  )}
+
+                  {/* Payment Terms and QR Code Section */}
+                  {(editedInvoice.paymentTerms?.note || effectiveInvoice.paymentMeans?.iban) && (
+                    <div className="border-t pt-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                        {/* Payment Terms - Left Side */}
+                        <div>
+                          {editedInvoice.paymentTerms?.note && (
+                            <div className="mb-4">
+                              <p className="text-sm text-muted-foreground mb-2">{t('previewModal.paymentTerms')}</p>
+                              <p className="text-sm">{editedInvoice.paymentTerms.note}</p>
+                            </div>
+                          )}
+
+                          {/* Payment Info Text */}
+                          {effectiveInvoice.paymentMeans?.iban && (
+                            <div>
+                              <p className="text-sm text-muted-foreground mb-2">{t('previewModal.paymentInfo') || 'Payment Information'}</p>
+                              <p className="text-sm">IBAN: {effectiveInvoice.paymentMeans.iban}</p>
+                              {effectiveInvoice.paymentMeans.bic && (
+                                <p className="text-sm">BIC: {effectiveInvoice.paymentMeans.bic}</p>
+                              )}
+                              {effectiveInvoice.paymentMeans.accountName && (
+                                <p className="text-sm">Account: {effectiveInvoice.paymentMeans.accountName}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* QR Code - Right Side */}
+                        {effectiveInvoice.paymentMeans?.iban && (
+                          <div className="flex justify-center md:justify-end">
+                            <InvoiceQRCode
+                              invoice={effectiveInvoice}
+                              size={200}
+                              showLabel={true}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  {footerText && (
+                    <div
+                      className="border-t pt-6 text-xs text-gray-600 text-center"
+                      dangerouslySetInnerHTML={{ __html: footerText }}
+                    />
+                  )}
                 </div>
-              </ScrollArea>
+              </div>
             </div>
           </TabsContent>
 
           <TabsContent value="ubl" className="mt-0">
-            <ScrollArea className="h-[calc(100vh-300px)] border rounded-lg bg-gray-50 dark:bg-gray-950">
+            <div className="border rounded-lg bg-gray-50 dark:bg-gray-950">
               <pre className="p-6 text-xs">
                 {generateUBL()}
               </pre>
-            </ScrollArea>
+            </div>
           </TabsContent>
         </Tabs>
       </Card>
