@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { InvoiceLine, unitCodes, taxCategories } from '../../types/invoice';
 import { Input } from '../ui/input';
@@ -25,7 +25,7 @@ interface LineItemRowProps {
   onDelete: () => void;
 }
 
-export function LineItemRow({ line, currency, index, onUpdate, onDelete }: LineItemRowProps) {
+export const LineItemRow = memo(function LineItemRow({ line, currency, index, onUpdate, onDelete }: LineItemRowProps) {
   const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -34,7 +34,7 @@ export function LineItemRow({ line, currency, index, onUpdate, onDelete }: LineI
   const [priceInput, setPriceInput] = useState((line.unitPrice || 0).toString());
   const [taxInput, setTaxInput] = useState((line.taxPercent || 0).toString());
 
-  // Sync local state when props change (e.g. from calculation updates or initial load)
+  // Sync local state when props change
   useEffect(() => {
     setQtyInput((line.quantity || 0).toString());
   }, [line.quantity]);
@@ -256,4 +256,4 @@ export function LineItemRow({ line, currency, index, onUpdate, onDelete }: LineI
       )}
     </div>
   );
-}
+});

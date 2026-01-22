@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use CodeIgniter\Model;
+use App\Models\BaseModel;
 
-class ProjectModel extends Model
+class ProjectModel extends BaseModel
 {
     protected $table            = 'projects';
     protected $primaryKey       = 'id';
@@ -12,7 +12,7 @@ class ProjectModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['name', 'api_key', 'created_at', 'updated_at'];
+    protected $allowedFields    = ['tenant_id', 'name', 'api_key', 'created_at', 'updated_at'];
 
     // Dates
     protected $useTimestamps = true;

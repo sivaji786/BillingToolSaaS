@@ -28,26 +28,28 @@ class RbacFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
-        // 1. Extract and Validate JWT Token
-        $key = getenv('JWT_SECRET') ?: 'billing_tool_secret_key';
-        $header = $request->getHeaderLine('Authorization');
-        $token = null;
+        $session = session();
+        $userId = $session->get('userId');
 
-        if (!empty($header)) {
-            if (preg_match('/Bearer\s(\S+)/', $header, $matches)) {
+        // 1. Check Authentication (should be handled by HybridAuthFilter, but double check)
+        if (!$userId) {
+            // Fallback: Check for JWT in header (in case HybridAuthFilter didn't run or failed)
+            $key = getenv('JWT_SECRET') ?: 'billing_tool_secret_key';
+            $header = $request->getHeaderLine('Authorization');
+            
+            if (!empty($header) && preg_match('/Bearer\s(\S+)/', $header, $matches)) {
                 $token = $matches[1];
+                try {
+                    $decoded = JWT::decode($token, new Key($key, 'HS256'));
+                    $userId = $decoded->uid ?? $decoded->user_id; // Handle both key formats
+                } catch (\Exception $e) {
+                     return response()->setJSON(['error' => 'Invalid token'])->setStatusCode(401);
+                }
             }
         }
 
-        if (!$token) {
-            return response()->setJSON(['error' => 'Token required'])->setStatusCode(401);
-        }
-
-        try {
-            $decoded = JWT::decode($token, new Key($key, 'HS256'));
-            $userId = $decoded->uid;
-        } catch (\Exception $e) {
-            return response()->setJSON(['error' => 'Invalid token'])->setStatusCode(401);
+        if (!$userId) {
+             return response()->setJSON(['error' => 'Authentication required'])->setStatusCode(401);
         }
         
         // 2. Check Permissions if arguments provided

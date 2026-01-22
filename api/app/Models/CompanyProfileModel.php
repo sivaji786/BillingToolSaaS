@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
-use CodeIgniter\Model;
+use App\Models\BaseModel;
 
-class CompanyProfileModel extends Model
+class CompanyProfileModel extends BaseModel
 {
+    use \App\Traits\TenantScope;
+
     protected $table            = 'company_profiles';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
@@ -13,6 +15,7 @@ class CompanyProfileModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'tenant_id',
         'name',
         'vat_id',
         'legal_organization_id',

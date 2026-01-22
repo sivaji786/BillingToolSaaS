@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use CodeIgniter\Model;
+use App\Models\BaseModel;
 
-class InvoiceTemplateModel extends Model
+class InvoiceTemplateModel extends BaseModel
 {
     protected $table            = 'invoice_templates';
     protected $primaryKey       = 'id';
@@ -13,6 +13,7 @@ class InvoiceTemplateModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'tenant_id',
         'name',
         'description',
         'seller_json',

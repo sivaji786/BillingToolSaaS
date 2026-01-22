@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use CodeIgniter\Model;
+use App\Models\BaseModel;
 
-class TicketModel extends Model
+class TicketModel extends BaseModel
 {
     protected $table            = 'tickets';
     protected $primaryKey       = 'id';
@@ -12,7 +12,7 @@ class TicketModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['user_id', 'project_id', 'subject', 'description', 'priority', 'status', 'domain', 'page', 'client_ip', 'screenshot_path', 'created_at', 'updated_at'];
+    protected $allowedFields    = ['tenant_id', 'user_id', 'project_id', 'subject', 'description', 'priority', 'status', 'domain', 'page', 'client_ip', 'screenshot_path', 'created_at', 'updated_at'];
 
     // Dates
     protected $useTimestamps = true;

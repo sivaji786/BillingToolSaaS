@@ -19,6 +19,7 @@ const hasPermissionSync = (requiredRight: string): boolean => {
 };
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
+import { memo } from 'react';
 import {
   Table,
   TableBody,
@@ -627,70 +628,21 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
               </TableRow>
             ) : (
               paginatedInvoices.map((invoice) => (
-                <TableRow key={invoice.id || Math.random()} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <TableCell>
-                    <Checkbox
-                      checked={invoice.id ? selectedInvoices.has(invoice.id) : false}
-                      onCheckedChange={() => handleSelectInvoice(invoice.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <button
-                      onClick={() => onSelectInvoice?.(invoice)}
-                      className="font-medium text-purple-600 hover:text-purple-700 hover:underline"
-                    >
-                      {invoice.invoiceNumber}
-                    </button>
-                  </TableCell>
-                  <TableCell>{invoice.buyer.name}</TableCell>
-                  <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '—'}
-                  </TableCell>
-                  <TableCell>{formatCurrency(invoice.payableAmount, invoice.currency)}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(invoice.status || 'draft')}>
-                      {t(`status.${invoice.status || 'draft'}`)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onSelectInvoice?.(invoice)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          {t('invoiceList.view')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEditInvoice?.(invoice)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          {t('common.edit')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDuplicate(invoice)}>
-                          <Copy className="h-4 w-4 mr-2" />
-                          {t('invoiceList.duplicate')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleExportInvoice(invoice)}>
-                          <Download className="h-4 w-4 mr-2" />
-                          {t('editor.export')}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {hasPermissionSync('invoices.delete') && (
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(invoice)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            {t('common.delete')}
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
+                <InvoiceRow
+                  key={invoice.id || Math.random()}
+                  invoice={invoice}
+                  t={t}
+                  isSelected={invoice.id ? selectedInvoices.has(invoice.id) : false}
+                  onSelect={(id) => handleSelectInvoice(id)}
+                  onView={() => onSelectInvoice?.(invoice)}
+                  onEdit={() => onEditInvoice?.(invoice)}
+                  onDuplicate={() => handleDuplicate(invoice)}
+                  onExport={() => handleExportInvoice(invoice)}
+                  onDelete={() => handleDelete(invoice)}
+                  hasDeletePermission={hasPermissionSync('invoices.delete')}
+                  getStatusBadgeVariant={getStatusBadgeVariant}
+                  formatCurrency={formatCurrency}
+                />
               ))
             )}
           </TableBody>
@@ -1000,3 +952,98 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
     </div>
   );
 }
+
+const InvoiceRow = memo(({
+  invoice,
+  t,
+  isSelected,
+  onSelect,
+  onView,
+  onEdit,
+  onDuplicate,
+  onExport,
+  onDelete,
+  hasDeletePermission,
+  getStatusBadgeVariant,
+  formatCurrency
+}: {
+  invoice: Invoice;
+  t: (key: string) => string;
+  isSelected: boolean;
+  onSelect: (id: string | undefined) => void;
+  onView: () => void;
+  onEdit: () => void;
+  onDuplicate: () => void;
+  onExport: () => void;
+  onDelete: () => void;
+  hasDeletePermission: boolean;
+  getStatusBadgeVariant: (status: string) => any;
+  formatCurrency: (amount: number, currency: string) => string;
+}) => {
+  return (
+    <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+      <TableCell>
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={() => onSelect(invoice.id)}
+        />
+      </TableCell>
+      <TableCell>
+        <button
+          onClick={onView}
+          className="font-medium text-purple-600 hover:text-purple-700 hover:underline"
+        >
+          {invoice.invoiceNumber}
+        </button>
+      </TableCell>
+      <TableCell>{invoice.buyer.name}</TableCell>
+      <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
+      <TableCell>
+        {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '—'}
+      </TableCell>
+      <TableCell>{formatCurrency(invoice.payableAmount, invoice.currency)}</TableCell>
+      <TableCell>
+        <Badge variant={getStatusBadgeVariant(invoice.status || 'draft')}>
+          {t(`status.${invoice.status || 'draft'}`)}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onView}>
+              <Eye className="h-4 w-4 mr-2" />
+              {t('invoiceList.view')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>
+              <Edit className="h-4 w-4 mr-2" />
+              {t('common.edit')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onDuplicate}>
+              <Copy className="h-4 w-4 mr-2" />
+              {t('invoiceList.duplicate')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onExport}>
+              <Download className="h-4 w-4 mr-2" />
+              {t('editor.export')}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {hasDeletePermission && (
+              <DropdownMenuItem
+                onClick={onDelete}
+                className="text-red-600"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {t('common.delete')}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
+});

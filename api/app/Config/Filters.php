@@ -30,11 +30,12 @@ class Filters extends BaseFilters
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
-        'cors'          => Cors::class,
+        'cors'          => \App\Filters\CorsFilter::class,
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'rbac'          => \App\Filters\RbacFilter::class,
+        'hybridauth'    => \App\Filters\HybridAuthFilter::class,  // Unified auth for all portals
     ];
 
     /**
@@ -73,14 +74,11 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'cors',
-            // 'honeypot',
-            // 'csrf',
-            // 'invalidchars',
+            'cors',  // CORS must run first for all routes
+            // All other filters applied per-route
         ],
         'after' => [
-            // 'honeypot',
-            // 'secureheaders',
+            'cors',  // Add CORS headers to all responses
         ],
     ];
 

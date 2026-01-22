@@ -34,7 +34,7 @@ export function DesignLayoutPage() {
                         name: '',
                         address: { street: '', city: '', postalCode: '', country: '' }
                     },
-                    defaultCurrency: 'USD',
+                    defaultCurrency: 'EUR',
                     defaultTaxCategory: 'Standard',
                     defaultTaxPercent: 0,
                     defaultPaymentTerms: {},

@@ -43,7 +43,7 @@ export const hasPermissionSync = (requiredRight: string): boolean => {
         const user = JSON.parse(userStr);
         const rights = user.rights || [];
 
-        return rights.includes('*') || rights.includes(requiredRight);
+        return user.role === 'admin' || rights.includes('*') || rights.includes(requiredRight);
     } catch (e) {
         return false;
     }

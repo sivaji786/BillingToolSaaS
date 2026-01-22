@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { FileText, Mail, Lock, Sparkles } from 'lucide-react';
+import { FileText, Mail, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 
@@ -33,15 +33,7 @@ export function Login({ onLogin }: LoginProps) {
     }
   };
 
-  const handleAdminLogin = () => {
-    const adminEmail = 'admin@medianet-home.de';
-    const adminPass = 'password';
-    setEmail(adminEmail);
-    setPassword(adminPass);
-    setIsLoading(true);
 
-    onLogin(adminEmail, adminPass);
-  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -124,28 +116,6 @@ export function Login({ onLogin }: LoginProps) {
                   disabled={isLoading}
                 >
                   {isLoading ? t('login.loggingIn') : t('login.signIn')}
-                </Button>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">
-                      OR
-                    </span>
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-2 border-purple-200 hover:border-purple-300 hover:bg-purple-50"
-                  onClick={handleAdminLogin}
-                  disabled={isLoading}
-                >
-                  <Sparkles className="mr-2 h-4 w-4 text-purple-600" />
-                  Login as Admin
                 </Button>
               </form>
             </CardContent>

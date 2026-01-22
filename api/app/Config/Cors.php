@@ -47,7 +47,11 @@ class Cors extends BaseConfig
          * E.g.:
          *   - ['https://\w+\.example\.com']
          */
-        'allowedOriginsPatterns' => [],
+        'allowedOriginsPatterns' => [
+            'http://.*\.localhost:\d+', // Allow any subdomain on localhost with any port
+            'http://techflow\.localhost:\d+', // Explicitly allow techflow
+            'http://.*\.billingtool\.local:\d+', // Allow custom local domains
+        ],
 
         /**
          * Weather to send the `Access-Control-Allow-Credentials` header.
@@ -108,8 +112,10 @@ class Cors extends BaseConfig
      */
     public function __construct()
     {
-        // Set allowedOrigins from environment variable
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
-        $this->default['allowedOrigins'] = array_filter(explode(',', $frontendUrl));
+        // Only override if FRONTEND_URL is explicitly set
+        $frontendUrl = env('FRONTEND_URL');
+        if ($frontendUrl) {
+            $this->default['allowedOrigins'] = array_filter(explode(',', $frontendUrl));
+        }
     }
 }

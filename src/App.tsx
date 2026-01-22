@@ -1,5 +1,6 @@
-import { useState, Suspense, lazy } from 'react';
-import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry } from './types/invoice';
+import { useState, Suspense, lazy, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Invoice, InvoiceTemplate } from './types/invoice';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { Loader2 } from 'lucide-react';
@@ -16,21 +17,48 @@ const DesignLayoutPage = lazy(() => import('./pages/DesignLayoutPage').then(modu
 const ActivityLog = lazy(() => import('./components/screens/ActivityLog').then(module => ({ default: module.ActivityLog })));
 const Settings = lazy(() => import('./components/screens/Settings').then(module => ({ default: module.Settings })));
 const AdminLayout = lazy(() => import('./components/screens/Admin/AdminLayout').then(module => ({ default: module.AdminLayout })));
+const Signup = lazy(() => import('./components/screens/Signup').then(module => ({ default: module.Signup })));
+const Billing = lazy(() => import('./components/screens/Billing').then(module => ({ default: module.Billing })));
+const LandingPage = lazy(() => import('./components/screens/LandingPage').then(module => ({ default: module.LandingPage })));
+
+// Admin Portal Components
+const SALogin = lazy(() => import('./components/screens/Admin/SALogin').then(module => ({ default: module.SALogin })));
+const SAdashboard = lazy(() => import('./components/screens/Admin/SAdashboard').then(module => ({ default: module.SAdashboard })));
+const SApackages = lazy(() => import('./components/screens/Admin/SApackages').then(module => ({ default: module.SApackages })));
+const SAPackageForm = lazy(() => import('./components/screens/Admin/SAPackageForm').then(module => ({ default: module.SAPackageForm })));
+const SAASusers = lazy(() => import('./components/screens/Admin/SAASusers').then(module => ({ default: module.SAASusers })));
+const SAUserDetails = lazy(() => import('./components/screens/Admin/SAUserDetails').then(module => ({ default: module.SAUserDetails })));
+const SAbilling = lazy(() => import('./components/screens/Admin/SAbilling').then(module => ({ default: module.SAbilling })));
+const SAusage = lazy(() => import('./components/screens/Admin/SAusage').then(module => ({ default: module.SAusage })));
+const SAsettings = lazy(() => import('./components/screens/Admin/SAsettings').then(module => ({ default: module.SAsettings })));
+
+// Customer Portal Components
+const CustomerLayout = lazy(() => import('./components/layouts/CustomerLayout').then(module => ({ default: module.CustomerLayout })));
+const CustomerDashboard = lazy(() => import('./components/screens/Customer/Dashboard').then(module => ({ default: module.CustomerDashboard })));
+const CustomerInvoices = lazy(() => import('./components/screens/Customer/Invoices').then(module => ({ default: module.CustomerInvoices })));
+const CustomerSettings = lazy(() => import('./components/screens/Customer/Settings').then(module => ({ default: module.CustomerSettings })));
 
 import { TicketingWidget } from './components/TicketingWidget';
 import { GlobalAIAssistant } from './components/GlobalAIAssistant';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from './components/ui/sidebar';
+import { AppSidebar } from './components/layout/AppSidebar';
+import { Separator } from './components/ui/separator';
+import { QueryProvider } from './providers/QueryProvider';
+import { useAdminStore } from './stores/adminStore';
+import { useAuthStore } from './stores/authStore';
+import { AdminLayout as AdminLayoutWrapper } from './components/admin/AdminLayout';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "./components/ui/breadcrumb"
 
 import { Toaster } from './components/ui/sonner';
-import { Button } from './components/ui/button';
-import {
-  LayoutDashboard,
-  FileText,
-  LayoutTemplate,
-  Activity,
-  Settings as SettingsIcon,
-  LogOut,
-  ShieldAlert,
-} from 'lucide-react';
+// Button removed as unused
+// Unused imports removed
 import {
   invoiceTemplateService,
   companyProfileService,
@@ -39,10 +67,9 @@ import {
 import { calculateInvoiceTotals } from './utils/invoice-calculations';
 import { toast } from 'sonner';
 import { authService, invoiceService } from './services/api';
-import { useEffect } from 'react';
-import { hasPermissionSync } from './hooks/usePermission';
+// hasPermissionSync removed
 
-type Screen = 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'customer-dashboard' | 'customer-invoices' | 'customer-create-invoice' | 'customer-settings' | 'customer-subscription';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -52,7 +79,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
-      if (hash && ['dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki'].includes(hash)) {
+      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki', 'signup', 'customer-dashboard', 'customer-invoices', 'customer-create-invoice', 'customer-settings', 'customer-subscription'].includes(hash)) {
         return hash as Screen;
       }
       // Handle parameterized routes like designLayout/123
@@ -60,16 +87,14 @@ function AppContent() {
         return 'designLayout';
       }
     }
-    return 'dashboard';
+    return 'landing';
   });
   const [previousScreen, setPreviousScreen] = useState<Screen>('dashboard');
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
-  const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
-  const [profile, setProfile] = useState<CompanyProfile | null>(null);
-  const [logEntries, setLogEntries] = useState<AuditLogEntry[]>([]);
+  const [user, setUser] = useState<any>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('invoice');
   const [editingTemplate, setEditingTemplate] = useState<InvoiceTemplate | undefined>(undefined);
+  const [selectedPlan, setSelectedPlan] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -79,8 +104,24 @@ function AppContent() {
           // Verify token and get fresh user data including rights
           const userData = await authService.me();
           localStorage.setItem('user', JSON.stringify(userData));
+          setUser(userData);
           setIsAuthenticated(true);
-          loadData();
+          // Update useAuthStore for customer components
+          if (userData.tenant) {
+            useAuthStore.getState().login(token, userData, userData.tenant);
+          } else if (userData.tenant_id) {
+            // Fallback for when tenant object isn't fully nested
+            useAuthStore.getState().login(token, userData, userData.tenant || {} as any);
+          }
+
+          // If we were on landing or login, go to dashboard
+          if (currentScreen === 'landing' || currentScreen === 'login') {
+            if (userData.tenant_id || userData.tenant) {
+              setCurrentScreen('customer-dashboard');
+            } else {
+              setCurrentScreen('dashboard');
+            }
+          }
         } catch (e) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
@@ -93,7 +134,10 @@ function AppContent() {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
       console.log('Hash changed:', hash);
-      if (hash && ['dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki'].includes(hash)) {
+      if (hash && [
+        'landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki', 'signup',
+        'customer-dashboard', 'customer-invoices', 'customer-create-invoice', 'customer-settings', 'customer-subscription'
+      ].includes(hash)) {
         console.log('Setting screen from hash change:', hash);
         setCurrentScreen(hash as Screen);
       } else if (hash.startsWith('designLayout/')) {
@@ -135,35 +179,60 @@ function AppContent() {
 
   // Update hash when screen changes
   useEffect(() => {
-    if (['dashboard', 'invoices', 'templates', 'activity', 'settings', 'admin'].includes(currentScreen)) {
+    if ([
+      'dashboard', 'invoices', 'templates', 'activity', 'settings', 'admin',
+      'customer-dashboard', 'customer-invoices', 'customer-settings', 'customer-subscription'
+    ].includes(currentScreen)) {
       if (window.location.hash.replace('#', '') !== currentScreen) {
         window.location.hash = currentScreen;
       }
     }
   }, [currentScreen]);
 
-  const loadData = async () => {
-    try {
-      const [invoicesData, templatesData, profilesData, logsData] = await Promise.all([
-        invoiceService.getAll(),
-        invoiceTemplateService.getAll(),
-        companyProfileService.getAll(),
-        auditLogService.getAll(),
-      ]);
-      setInvoices(invoicesData);
-      setTemplates(templatesData);
-      setProfile(profilesData[0] || null);
-      setLogEntries(logsData);
-    } catch (error) {
-      toast.error('Failed to load data');
-    }
-  };
+  // React Query for data fetching
+  const { data: invoices = [], refetch: refetchInvoices } = useQuery({
+    queryKey: ['invoices'],
+    queryFn: () => invoiceService.getAll(),
+    enabled: isAuthenticated
+  });
+
+  const { data: templates = [], refetch: refetchTemplates } = useQuery({
+    queryKey: ['templates'],
+    queryFn: () => invoiceTemplateService.getAll(),
+    enabled: isAuthenticated
+  });
+
+  const { data: companyProfiles = [], refetch: refetchProfile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: () => companyProfileService.getAll(),
+    enabled: isAuthenticated
+  });
+
+  const { data: logEntries = [] } = useQuery({
+    queryKey: ['audit-logs'],
+    queryFn: () => auditLogService.getAll(),
+    enabled: isAuthenticated
+  });
+
+  const profile = companyProfiles[0] || null;
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      await authService.login(email, password);
+      const data = await authService.login(email, password);
       setIsAuthenticated(true);
-      loadData();
+      setUser(data.user);
+
+      // Update useAuthStore for customer components
+      if (data.tenant) {
+        useAuthStore.getState().login(data.token, data.user, data.tenant);
+      }
+
+      // Determine which dashboard to show
+      if (data.tenant || data.user?.tenant_id) {
+        setCurrentScreen('customer-dashboard');
+      } else {
+        setCurrentScreen('dashboard');
+      }
     } catch (error) {
       toast.error(t('login.failed') || 'Login failed');
     }
@@ -171,6 +240,7 @@ function AppContent() {
 
   const handleLogout = () => {
     authService.logout();
+    useAuthStore.getState().logout();
     setIsAuthenticated(false);
     setCurrentScreen('dashboard');
     setCurrentInvoice(null);
@@ -258,23 +328,31 @@ function AppContent() {
         defaultPaymentTerms: invoice.paymentTerms,
       };
 
-      setTemplates([newTemplate, ...templates]);
-      toast.success(t('templates.templateSaved') || 'Template saved', {
-        description: t('templates.templateSavedDesc') || 'Template has been saved to your library',
-      });
-      setCurrentScreen('templates');
-      setCurrentInvoice(null);
+      const saveTemplate = async () => {
+        try {
+          await invoiceTemplateService.create(newTemplate);
+          refetchTemplates();
+          toast.success(t('templates.templateSaved') || 'Template saved', {
+            description: t('templates.templateSavedDesc') || 'Template has been saved to your library',
+          });
+          setCurrentScreen('templates');
+          setCurrentInvoice(null);
+        } catch (error) {
+          console.error('Failed to save template:', error);
+          toast.error(t('common.error') || 'Failed to save template');
+        }
+      };
+      saveTemplate();
     } else {
       // Save as invoice
       const calculated = calculateInvoiceTotals(invoice);
 
       const savePromise = async () => {
         try {
-          let savedInvoice: Invoice;
+          let savedInvoice: Invoice = calculated;
           if (calculated.id && !calculated.id.startsWith('new_')) {
             // Update existing
             await invoiceService.update(calculated.id, calculated);
-            savedInvoice = calculated;
           } else {
             // Create new
             // Remove temporary ID
@@ -283,14 +361,7 @@ function AppContent() {
             savedInvoice = { ...calculated, id: response.id };
           }
 
-          const existingIndex = invoices.findIndex((inv) => inv.id === savedInvoice.id);
-          if (existingIndex >= 0) {
-            const newInvoices = [...invoices];
-            newInvoices[existingIndex] = savedInvoice;
-            setInvoices(newInvoices);
-          } else {
-            setInvoices([savedInvoice, ...invoices]);
-          }
+          refetchInvoices();
 
           setCurrentInvoice(savedInvoice);
           toast.success(t('editor.invoiceSaved') || 'Invoice saved successfully');
@@ -378,16 +449,7 @@ function AppContent() {
     try {
       if (calculated.id && !calculated.id.startsWith('new_')) {
         await invoiceService.update(calculated.id, calculated);
-
-        const existingIndex = invoices.findIndex((inv) => inv.id === calculated.id);
-        if (existingIndex >= 0) {
-          const newInvoices = [...invoices];
-          newInvoices[existingIndex] = calculated;
-          setInvoices(newInvoices);
-        } else {
-          setInvoices([calculated, ...invoices]);
-        }
-
+        refetchInvoices();
         setCurrentInvoice(calculated);
         toast.success(t('common.saved'), {
           description: t('invoiceList.invoiceUpdated') || 'Invoice updated successfully',
@@ -423,8 +485,7 @@ function AppContent() {
         });
       }
       // Reload templates from API
-      const templatesData = await invoiceTemplateService.getAll();
-      setTemplates(templatesData);
+      refetchTemplates();
       setCurrentScreen('templates');
       setEditingTemplate(undefined);
     } catch (error) {
@@ -446,8 +507,7 @@ function AppContent() {
         description: template.name,
       });
       // Reload templates from API
-      const templatesData = await invoiceTemplateService.getAll();
-      setTemplates(templatesData);
+      refetchTemplates();
     } catch (error) {
       toast.error('Failed to delete template');
       console.error('Template delete error:', error);
@@ -468,236 +528,393 @@ function AppContent() {
   }
 
   // Show login screen if not authenticated
+  // Show login/signup/landing if not authenticated
   if (!isAuthenticated) {
+    if (currentScreen === 'signup') {
+      return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+          <Signup initialPlan={selectedPlan} />
+          <Toaster />
+        </Suspense>
+      );
+    }
+
+    if (currentScreen === 'login') {
+      return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+          <Login onLogin={handleLogin} />
+          <Toaster />
+        </Suspense>
+      );
+    }
+
     return (
-      <>
-        <Login onLogin={handleLogin} />
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <LandingPage
+          onLogin={() => setCurrentScreen('login')}
+          onSignup={(planId) => {
+            setSelectedPlan(planId);
+            setCurrentScreen('signup');
+          }}
+        />
         <Toaster />
-      </>
+      </Suspense>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 shadow-lg sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-fit">
-              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
-                <FileText className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-white font-bold text-lg leading-tight">{t('appName')}</h1>
-                <p className="text-xs text-white/80">
-                  {t('appSubtitle')}
-                </p>
-              </div>
-            </div>
-
-            {/* Navigation Menu */}
-            <div className="flex-1 flex justify-center max-w-7xl overflow-x-auto no-scrollbar">
-              <nav className="flex items-center gap-6">
-                {[
-                  { id: 'dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
-                  { id: 'invoices', icon: FileText, label: t('invoiceList.title'), permission: 'invoices.read' },
-                  { id: 'templates', icon: LayoutTemplate, label: t('nav.templates'), permission: 'company_profiles.read' },
-                  { id: 'activity', icon: Activity, label: t('nav.activity'), permission: 'audit_logs.read' },
-                  { id: 'admin', icon: ShieldAlert, label: 'Admin', permission: ['users.manage', 'roles.manage'] },
-                  { id: 'settings', icon: SettingsIcon, label: t('nav.settings'), permission: 'company_profiles.read' },
-                ]
-                  .filter(item => {
-                    if (!item.permission) return true;
-                    if (Array.isArray(item.permission)) return item.permission.some(p => hasPermissionSync(p));
-                    return hasPermissionSync(item.permission);
-                  })
-                  .map((item) => {
-                    const isActive = currentScreen === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => setCurrentScreen(item.id as Screen)}
-                        className={`
-                        group relative flex items-center gap-2 px-4 py-2.5 text-sm font-semibold transition-all duration-300 whitespace-nowrap
-                        ${isActive
-                            ? 'text-white'
-                            : 'text-white/80 hover:text-white'
-                          }
-                      `}
-                      >
-                        {/* Active indicator - bottom border */}
-                        <div className={`
-                        absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full transition-all duration-300
-                        ${isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0 group-hover:opacity-50 group-hover:scale-x-75'}
-                      `} />
-
-                        {/* Hover background glow */}
-                        <div className={`
-                        absolute inset-0 rounded-lg bg-white/10 backdrop-blur-sm transition-all duration-300
-                        ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100'}
-                      `} />
-
-                        {/* Content */}
-                        <item.icon className={`
-                        h-4 w-4 relative z-10 transition-transform duration-300
-                        ${isActive ? 'scale-110' : 'group-hover:scale-105'}
-                      `} />
-                        <span className="relative z-10">{item.label}</span>
-
-                        {/* Active pill background */}
-                        {isActive && (
-                          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-white/5 rounded-lg border border-white/30 shadow-lg" />
-                        )}
-                      </button>
-                    );
-                  })}
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-3 min-w-fit">
-              <LanguageSwitcher />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm"
-              >
-                <LogOut className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">{t('logout')}</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-6 py-8">
-        <Suspense fallback={
-          <div className="flex h-[50vh] items-center justify-center">
-            <div className="flex flex-col items-center gap-2">
-              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-              <p className="text-sm text-gray-500">Loading module...</p>
-            </div>
-          </div>
-        }>
-          {currentScreen === 'editor' && currentInvoice ? (
-            <InvoiceEditor
-              invoice={currentInvoice}
-              profile={profile}
-              onSave={handleSaveInvoice}
-              onBack={handleBackToDashboard}
-              onPreview={handlePreviewInvoice}
-              mode={editorMode}
-              templates={templates}
-              onLoadTemplate={(template) => {
-                const updatedInvoice = {
-                  ...currentInvoice,
-                  currency: template.defaultCurrency,
-                  seller: {
-                    name: template.seller.name || currentInvoice.seller.name,
-                    vatId: template.seller.vatId || currentInvoice.seller.vatId,
-                    address: template.seller.address || currentInvoice.seller.address,
-                    contactEmail: currentInvoice.seller.contactEmail,
-                    contactPhone: currentInvoice.seller.contactPhone,
-                  },
-                  paymentTerms: template.defaultPaymentTerms,
-                  lines: currentInvoice.lines.length > 0 ? currentInvoice.lines : [{
-                    id: '1',
-                    description: '',
-                    quantity: 1,
-                    unitCode: 'EA',
-                    unitPrice: 0,
-                    taxCategory: template.defaultTaxCategory as any,
-                    taxPercent: template.defaultTaxPercent,
-                  }],
-                };
-                setCurrentInvoice(updatedInvoice);
-                toast.success(t('templates.templateLoaded') || 'Template loaded', {
-                  description: template.name,
-                });
-              }}
-            />
-          ) : currentScreen === 'preview' && currentInvoice ? (
-            <InvoicePreview
-              invoice={currentInvoice}
-              onBack={handleBackToEditor}
-              onSave={handleSaveFromPreview}
-              template={templates.find(t => t.seller.name === currentInvoice.seller.name)}
-              profile={profile}
-            />
-          ) : currentScreen === 'templateEditor' ? (
-            <TemplateEditor
-              template={editingTemplate}
-              onSave={handleSaveTemplate}
-              onCancel={handleCancelTemplateEdit}
-            />
-          ) : currentScreen === 'designLayout' ? (
-            <DesignLayoutPage />
-          ) : (
-            <div>
-              {currentScreen === 'dashboard' && (
-                <Dashboard
-                  invoices={invoices}
-                  onNewInvoice={handleNewInvoice}
-                  onOpenInvoice={handleOpenInvoice}
-                />
-              )}
-
-              {currentScreen === 'invoices' && (
-                <InvoiceList
-                  onSelectInvoice={handleOpenInvoice}
-                  onEditInvoice={handleOpenInvoice}
-                />
-              )}
-
-              {currentScreen === 'templates' && (
-                <TemplateLibrary
-                  templates={templates}
-                  onSelectTemplate={handleSelectTemplate}
-                  onNewTemplate={handleNewTemplate}
-                  onEditTemplate={handleEditTemplate}
-                  onDeleteTemplate={handleDeleteTemplate}
-                />
-              )}
-
-              {currentScreen === 'activity' && <ActivityLog entries={logEntries} />}
-
-              {currentScreen === 'admin' && <AdminLayout />}
-
-              {currentScreen === 'settings' && profile && (
-                <Settings
-                  profile={profile}
-                  onUpdateProfile={async (updatedProfile) => {
-                    try {
-                      if (updatedProfile.id) {
-                        await companyProfileService.update(updatedProfile.id, updatedProfile);
-                        setProfile(updatedProfile);
-                        toast.success(t('settings.settingsSaved') || 'Settings saved successfully');
-                      }
-                    } catch (error) {
-                      console.error('Failed to update profile:', error);
-                      toast.error(t('common.error') || 'Failed to save settings');
-                      throw error; // Re-throw to let Settings component know it failed
-                    }
-                  }}
-                />
-              )}
-            </div>
-          )}
-        </Suspense>
-      </div>
-
-      <GlobalAIAssistant
-        onGenerateInvoiceNumber={() => `INV-2025-${String(invoices.length + 1).padStart(5, '0')}`}
+    <SidebarProvider>
+      <AppSidebar
+        currentScreen={currentScreen}
+        onNavigate={(screen) => setCurrentScreen(screen as Screen)}
+        onLogout={handleLogout}
+        user={user}
+        profile={profile}
+        side="left"
+        variant="sidebar"
+        collapsible="icon"
       />
-      <TicketingWidget apiKey="billtool_test_key" apiBaseUrl="http://localhost:8081" />
-      <Toaster />
-    </div >
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-data-[collapsible=icon]:h-16 sticky top-0 bg-purple-600 text-white z-10 shadow-md">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1 text-white hover:bg-white/10 hover:text-white" />
+            <Separator orientation="vertical" className="mr-2 h-4 bg-white/30" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#" onClick={() => setCurrentScreen('dashboard')} className="text-white/90 hover:text-white">
+                    {t('appName')}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="capitalize text-white font-semibold">{currentScreen === 'invoices' ? 'Invoices' : currentScreen}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+          <div className="ml-auto flex items-center gap-4">
+            <LanguageSwitcher />
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <Suspense fallback={
+            <div className="flex h-[50vh] items-center justify-center">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                <p className="text-sm text-gray-500">Loading module...</p>
+              </div>
+            </div>
+          }>
+            {currentScreen === 'editor' && currentInvoice ? (
+              <InvoiceEditor
+                invoice={currentInvoice}
+                profile={profile}
+                onSave={handleSaveInvoice}
+                onBack={handleBackToDashboard}
+                onPreview={handlePreviewInvoice}
+                mode={editorMode}
+                templates={templates}
+                onLoadTemplate={(template) => {
+                  const updatedInvoice = {
+                    ...currentInvoice,
+                    currency: template.defaultCurrency,
+                    seller: {
+                      name: template.seller.name || currentInvoice.seller.name,
+                      vatId: template.seller.vatId || currentInvoice.seller.vatId,
+                      address: template.seller.address || currentInvoice.seller.address,
+                      contactEmail: currentInvoice.seller.contactEmail,
+                      contactPhone: currentInvoice.seller.contactPhone,
+                    },
+                    paymentTerms: template.defaultPaymentTerms,
+                    lines: currentInvoice.lines.length > 0 ? currentInvoice.lines : [{
+                      id: '1',
+                      description: '',
+                      quantity: 1,
+                      unitCode: 'EA',
+                      unitPrice: 0,
+                      taxCategory: template.defaultTaxCategory as any,
+                      taxPercent: template.defaultTaxPercent,
+                    }],
+                  };
+                  setCurrentInvoice(updatedInvoice);
+                  toast.success(t('templates.templateLoaded') || 'Template loaded', {
+                    description: template.name,
+                  });
+                }}
+              />
+            ) : currentScreen === 'preview' && currentInvoice ? (
+              <InvoicePreview
+                invoice={currentInvoice}
+                onBack={handleBackToEditor}
+                onSave={handleSaveFromPreview}
+                template={templates.find(t => t.seller.name === currentInvoice.seller.name)}
+                profile={profile}
+              />
+            ) : currentScreen === 'templateEditor' ? (
+              <TemplateEditor
+                template={editingTemplate}
+                onSave={handleSaveTemplate}
+                onCancel={handleCancelTemplateEdit}
+              />
+            ) : currentScreen === 'designLayout' ? (
+              <DesignLayoutPage />
+            ) : (
+              <div>
+                {currentScreen === 'dashboard' && (
+                  <Dashboard
+                    invoices={invoices}
+                    onNewInvoice={handleNewInvoice}
+                    onOpenInvoice={handleOpenInvoice}
+                  />
+                )}
+
+                {currentScreen === 'invoices' && (
+                  <InvoiceList
+                    onSelectInvoice={handleOpenInvoice}
+                    onEditInvoice={handleOpenInvoice}
+                  />
+                )}
+
+                {currentScreen === 'templates' && (
+                  <TemplateLibrary
+                    templates={templates}
+                    onSelectTemplate={handleSelectTemplate}
+                    onNewTemplate={handleNewTemplate}
+                    onEditTemplate={handleEditTemplate}
+                    onDeleteTemplate={handleDeleteTemplate}
+                  />
+                )}
+
+                {currentScreen === 'activity' && <ActivityLog entries={logEntries} />}
+
+                {currentScreen === 'admin' && <AdminLayout />}
+
+                {currentScreen === 'settings' && profile && (
+                  <Settings
+                    profile={profile}
+                    onUpdateProfile={async (updatedProfile) => {
+                      try {
+                        if (updatedProfile.id) {
+                          await companyProfileService.update(updatedProfile.id, updatedProfile);
+                          refetchProfile();
+                          toast.success(t('settings.settingsSaved') || 'Settings saved successfully');
+                        }
+                      } catch (error) {
+                        console.error('Failed to update profile:', error);
+                        toast.error(t('common.error') || 'Failed to save settings');
+                        throw error; // Re-throw to let Settings component know it failed
+                      }
+                    }}
+                  />
+                )}
+
+                {currentScreen === 'billing' && <Billing />}
+
+                {/* Customer Portal */}
+                {(currentScreen === 'customer-dashboard' || currentScreen === 'customer-invoices' || currentScreen === 'customer-create-invoice' || currentScreen === 'customer-settings' || currentScreen === 'customer-subscription') && (
+                  <CustomerLayout
+                    currentScreen={currentScreen.replace('customer-', '')}
+                    onNavigate={(screen) => {
+                      if (screen === 'create-invoice') {
+                        // Initialize new invoice for customer
+                        const newInvoice: Invoice = {
+                          id: `new_${Date.now()}`,
+                          invoiceNumber: `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`,
+                          issueDate: new Date().toISOString().split('T')[0],
+                          currency: 'EUR',
+                          seller: {
+                            name: profile?.name || '',
+                            vatId: profile?.vatId || '',
+                            legalOrganizationId: profile?.legalOrganizationId,
+                            address: profile?.address || { street: '', city: '', postalCode: '', country: '' },
+                            contactEmail: profile?.email,
+                            contactPhone: profile?.phone,
+                          },
+                          buyer: { name: '', address: { street: '', city: '', postalCode: '', country: '' } },
+                          lines: [],
+                          taxTotals: [],
+                          lineExtensionAmount: 0,
+                          taxExclusiveAmount: 0,
+                          taxInclusiveAmount: 0,
+                          payableAmount: 0,
+                          status: 'draft',
+                          signed: false,
+                          createdAt: new Date().toISOString(),
+                          updatedAt: new Date().toISOString(),
+                        };
+                        setCurrentInvoice(newInvoice);
+                        setEditorMode('invoice');
+                        setCurrentScreen('customer-create-invoice');
+                      } else {
+                        setCurrentScreen(`customer-${screen}` as Screen);
+                      }
+                    }}
+                  >
+                    {currentScreen === 'customer-dashboard' && <CustomerDashboard onNavigate={(screen) => setCurrentScreen(`customer-${screen}` as Screen)} />}
+                    {currentScreen === 'customer-invoices' && <CustomerInvoices onNavigate={(screen) => setCurrentScreen(`customer-${screen}` as Screen)} />}
+                    {currentScreen === 'customer-create-invoice' && currentInvoice && (
+                      <InvoiceEditor
+                        invoice={currentInvoice}
+                        profile={profile}
+                        onSave={handleSaveInvoice}
+                        onBack={() => setCurrentScreen('customer-dashboard')}
+                        onPreview={handlePreviewInvoice}
+                        mode={editorMode}
+                        templates={templates}
+                        onLoadTemplate={(template) => {
+                          const updatedInvoice = {
+                            ...currentInvoice,
+                            currency: template.defaultCurrency,
+                            seller: {
+                              name: template.seller.name || currentInvoice.seller.name,
+                              vatId: template.seller.vatId || currentInvoice.seller.vatId,
+                              address: template.seller.address || currentInvoice.seller.address,
+                              contactEmail: currentInvoice.seller.contactEmail,
+                              contactPhone: currentInvoice.seller.contactPhone,
+                            },
+                            paymentTerms: template.defaultPaymentTerms,
+                            lines: currentInvoice.lines.length > 0 ? currentInvoice.lines : [{
+                              id: '1',
+                              description: '',
+                              quantity: 1,
+                              unitCode: 'EA',
+                              unitPrice: 0,
+                              taxCategory: template.defaultTaxCategory as any,
+                              taxPercent: template.defaultTaxPercent,
+                            }],
+                          };
+                          setCurrentInvoice(updatedInvoice);
+                          toast.success(t('templates.templateLoaded') || 'Template loaded', {
+                            description: template.name,
+                          });
+                        }}
+                      />
+                    )}
+                    {currentScreen === 'customer-settings' && <CustomerSettings onNavigate={(screen) => setCurrentScreen(`customer-${screen}` as Screen)} />}
+                    {currentScreen === 'customer-subscription' && <div className="text-center py-12"><h2 className="text-2xl font-bold">Subscription Management</h2><p className="text-muted-foreground mt-2">Coming soon</p></div>}
+                  </CustomerLayout>
+                )}
+              </div>
+            )}
+          </Suspense>
+        </div>
+
+        <GlobalAIAssistant
+          onGenerateInvoiceNumber={() => `INV-2025-${String(invoices.length + 1).padStart(5, '0')}`}
+        />
+        <TicketingWidget apiKey="billtool_test_key" apiBaseUrl="http://localhost:8081" />
+        <Toaster />
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <QueryProvider>
+      <LanguageProvider>
+        <AdminPortalRouter />
+      </LanguageProvider>
+    </QueryProvider>
   );
 }
+
+// Admin Portal Router - handles admin routes separately
+function AdminPortalRouter() {
+  const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
+      // Check if it's an admin route
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings'].includes(hash)) {
+        return hash as Screen;
+      }
+    }
+    return 'landing';
+  });
+
+  const [navigationParams, setNavigationParams] = useState<{ packageId?: string; userId?: string }>({});
+
+  const { isAuthenticated: isAdminAuth } = useAdminStore();
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings'].includes(hash)) {
+        setCurrentScreen(hash as Screen);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleNavigate = (screen: string, params?: { packageId?: string; userId?: string }) => {
+    setCurrentScreen(screen as Screen);
+    setNavigationParams(params || {});
+    window.location.hash = `#/${screen}`;
+  };
+
+  // Admin Portal Routes
+  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings'].includes(currentScreen);
+
+  if (isAdminRoute) {
+    // Show admin login if not authenticated
+    if (!isAdminAuth && currentScreen !== 'SALogin') {
+      window.location.hash = '#/SALogin';
+      return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+          <SALogin onLoginSuccess={() => setCurrentScreen('SAdashboard')} />
+          <Toaster />
+        </Suspense>
+      );
+    }
+
+    if (currentScreen === 'SALogin') {
+      return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+          <SALogin onLoginSuccess={() => {
+            setCurrentScreen('SAdashboard');
+            window.location.hash = '#/SAdashboard';
+          }} />
+          <Toaster />
+        </Suspense>
+      );
+    }
+
+    // Admin Portal Layout
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <AdminLayoutWrapper
+          currentScreen={currentScreen}
+          onNavigate={(screen) => {
+            setCurrentScreen(screen as Screen);
+            window.location.hash = `#/${screen}`;
+          }}
+          onLogout={() => {
+            useAdminStore.getState().logout();
+            setCurrentScreen('SALogin');
+            window.location.hash = '#/SALogin';
+          }}
+        >
+          {currentScreen === 'SAdashboard' && <SAdashboard onNavigate={(screen) => {
+            setCurrentScreen(screen as Screen);
+            window.location.hash = `#/${screen}`;
+          }} />}
+          {currentScreen === 'SApackages' && <SApackages onNavigate={handleNavigate} />}
+          {currentScreen === 'SAPackageForm' && <SAPackageForm packageId={navigationParams.packageId} onNavigate={handleNavigate} />}
+          {currentScreen === 'SAASusers' && <SAASusers onNavigate={handleNavigate} />}
+          {currentScreen === 'SAUserDetails' && <SAUserDetails userId={navigationParams.userId || ''} onNavigate={handleNavigate} />}
+          {currentScreen === 'SAbilling' && <SAbilling />}
+          {currentScreen === 'SAusage' && <SAusage />}
+          {currentScreen === 'SAsettings' && <SAsettings />}
+        </AdminLayoutWrapper>
+        <Toaster />
+      </Suspense>
+    );
+  }
+
+  // Regular app routes
+  return <AppContent />;
+}
+

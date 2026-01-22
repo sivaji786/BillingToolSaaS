@@ -22,11 +22,16 @@ export async function generateInvoicePDF(
 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  // margin removed
+  const margin = 40;
 
-  // Colors - using black for everything except header/footer
-  const black: [number, number, number] = [0, 0, 0]; // #000000
-  const lightGray: [number, number, number] = [156, 163, 175]; // Only for header/footer
+  // Branding Colors (Matches ShadCDN Violet/Purple theme)
+  const colors = {
+    primary: [124, 58, 237] as [number, number, number], // Violet 600 (#7c3aed)
+    secondary: [139, 92, 246] as [number, number, number], // Violet 500
+    text: [15, 23, 42] as [number, number, number], // Slate 900
+    textMuted: [100, 116, 139] as [number, number, number], // Slate 500
+    border: [226, 232, 240] as [number, number, number], // Slate 200
+  };
 
   const layout = template?.layout && template.layout.length > 0 ? template.layout : undefined;
 
@@ -42,7 +47,12 @@ export async function generateInvoicePDF(
     accountName: profile.bankAccount.accountName,
   } : undefined);
 
-  // Function to get element position
+  // --- Header Decoration ---
+  // Top purple accent line (simulating the gradient)
+  doc.setFillColor(...colors.primary);
+  doc.rect(0, 0, pageWidth, 6, 'F');
+
+  // Helper function for layout positioning
   const getPos = (type: string, defaultX: number, defaultY: number, defaultW: number, defaultH: number) => {
     if (layout) {
       const el = layout.find(e => e.type === type);
@@ -57,8 +67,8 @@ export async function generateInvoicePDF(
     return { x: defaultX, y: defaultY, w: defaultW, h: defaultH, visible: true, fromLayout: false };
   };
 
-  // 1. Logo (max 58px height to fit in 60px container with 2px padding)
-  const logoPos = getPos('logo', 20, 20, 170, 58);
+  // 1. Logo
+  const logoPos = getPos('logo', margin, 30, 150, 60);
   if (logoUrl && logoPos.visible) {
     try {
       const img = await loadImage(logoUrl);
@@ -75,107 +85,104 @@ export async function generateInvoicePDF(
     }
   }
 
-  // 1.5 Header Text (max 58px height to fit in 60px container with 2px padding)
-  const headerPos = getPos('header', 200, 20, 375, 58);
+  // 1.5 Header Text (Company Info usually centered or right)
+  const headerPos = getPos('header', pageWidth - margin - 250, 30, 250, 60);
   if (headerText && headerPos.visible) {
-    // Determine the alignment from the HTML if possible, or default to left for header
-    await renderHtmlContent(doc, headerText, headerPos.x, headerPos.y, headerPos.w, lightGray);
+    // Render HTML header text
+    await renderHtmlContent(doc, headerText, headerPos.x, headerPos.y, headerPos.w, colors.textMuted);
   }
 
-  // 2. Title and Invoice Number
-  const titlePos = getPos('title', 20, 90, 200, 40);
+  // 2. Invoice Title & Number
+  const titlePos = getPos('title', margin, 110, 300, 50);
   if (titlePos.visible) {
-    doc.setFontSize(15);
-    doc.setTextColor(...black);
-    const title = profile?.name ? profile.name : 'INVOICE';
-    doc.text(title, titlePos.x, titlePos.y + 15);
+    // Seller Name Large
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...colors.primary);
+    const sellerName = invoice.seller.name || profile?.name || 'INVOICE';
+    doc.text(sellerName, titlePos.x, titlePos.y + 20);
 
-    doc.setFontSize(11);
-    doc.setTextColor(...black);
-    doc.text(invoice.invoiceNumber, titlePos.x, titlePos.y + 30);
+    // Invoice Number
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...colors.text);
+    doc.text(invoice.invoiceNumber, titlePos.x, titlePos.y + 45);
   }
 
-  // 3. Dates
-  const datesPos = getPos('dates', 380, 90, 20, 60);
+  // 3. Dates (Right Aligned)
+  const datesPos = getPos('dates', pageWidth - margin - 150, 110, 150, 60);
   if (datesPos.visible) {
-    doc.setFontSize(9);
-    doc.setTextColor(...black);
-    doc.text('Issue Date: ' + formatDate(invoice.issueDate), datesPos.x, datesPos.y + 10);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+
+    let curY = datesPos.y + 15;
+
+    doc.setTextColor(...colors.textMuted);
+    doc.text('Issue Date', datesPos.x, curY);
+    doc.setTextColor(...colors.text);
+    doc.text(formatDate(invoice.issueDate), pageWidth - margin, curY, { align: 'right' });
 
     if (invoice.dueDate) {
-      doc.setTextColor(...black);
-      doc.text('Due Date: ' + formatDate(invoice.dueDate), datesPos.x, datesPos.y + 25);
+      curY += 15;
+      doc.setTextColor(...colors.textMuted);
+      doc.text('Due Date', datesPos.x, curY);
+      doc.setTextColor(...colors.text);
+      doc.text(formatDate(invoice.dueDate), pageWidth - margin, curY, { align: 'right' });
     }
   }
 
-  // 4. Seller Info
-  const sellerPos = getPos('seller', 20, 160, 260, 100);
-  if (sellerPos.visible) {
-    let curY = sellerPos.y + 10;
-    doc.setFontSize(9);
-    doc.setTextColor(...lightGray);
-    doc.text('From', sellerPos.x, curY);
-    curY += 12;
+  // Separator Line
+  doc.setDrawColor(...colors.border);
+  doc.setLineWidth(1);
+  doc.line(margin, 175, pageWidth - margin, 175);
+
+  // 4. Seller and Buyer (Grid Layout)
+  const sellerPos = getPos('seller', margin, 190, 250, 100);
+  const buyerPos = getPos('buyer', pageWidth / 2 + 20, 190, 250, 100);
+
+  // Helper to render address
+  const renderAddress = (title: string, data: any, x: number, y: number) => {
+    let curY = y + 10;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...colors.textMuted);
+    doc.text(title, x, curY);
+    curY += 15;
 
     doc.setFontSize(10);
-    doc.setTextColor(...black);
-    doc.text(invoice.seller.name, sellerPos.x, curY);
-    curY += 10;
-
-    doc.setFontSize(9);
-    if (invoice.seller.vatId) {
-      doc.setTextColor(...lightGray);
-      doc.text(`VAT: ${invoice.seller.vatId}`, sellerPos.x, curY);
-      curY += 10;
-    }
-
-    doc.setTextColor(...black);
-    doc.text(invoice.seller.address.street, sellerPos.x, curY);
-    curY += 10;
-    doc.text(`${invoice.seller.address.postalCode} ${invoice.seller.address.city}`, sellerPos.x, curY);
-    curY += 10;
-    doc.text(invoice.seller.address.country, sellerPos.x, curY);
-  }
-
-  // 5. Buyer Info
-  const buyerPos = getPos('buyer', 310, 160, 260, 100);
-  if (buyerPos.visible) {
-    let curY = buyerPos.y + 10;
-    doc.setFontSize(9);
-    doc.setTextColor(...lightGray);
-    doc.text('Bill To', buyerPos.x, curY);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...colors.text);
+    doc.text(data.name, x, curY);
     curY += 12;
 
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.setTextColor(...black);
-    doc.text(invoice.buyer.name, buyerPos.x, curY);
-    curY += 10;
+    doc.setTextColor(...colors.text);
 
-    doc.setFontSize(9);
-    if (invoice.buyer.vatId) {
-      doc.setTextColor(...lightGray);
-      doc.text(`VAT: ${invoice.buyer.vatId}`, buyerPos.x, curY);
-      curY += 10;
+    if (data.vatId) {
+      doc.setTextColor(...colors.textMuted);
+      doc.text(`VAT: ${data.vatId}`, x, curY);
+      doc.setTextColor(...colors.text);
+      curY += 12;
     }
 
-    doc.setTextColor(...black);
-    doc.text(invoice.buyer.address.street, buyerPos.x, curY);
-    curY += 10;
-    doc.text(`${invoice.buyer.address.postalCode} ${invoice.buyer.address.city}`, buyerPos.x, curY);
-    curY += 10;
-    doc.text(invoice.buyer.address.country, buyerPos.x, curY);
-  }
+    doc.text(data.address.street, x, curY);
+    curY += 12;
+    doc.text(`${data.address.postalCode} ${data.address.city}`, x, curY);
+    curY += 12;
+    doc.text(data.address.country, x, curY);
+  };
 
-  // Track Y position for dynamic flow
-  // Estimate end of header section if we need to flow the table
-  let currentY = 280; // Start position for line items
+  if (sellerPos.visible) renderAddress('From', invoice.seller, sellerPos.x, sellerPos.y);
+  if (buyerPos.visible) renderAddress('Bill To', invoice.buyer, buyerPos.x, buyerPos.y);
 
-  // 6. Items Table
-  const itemsPos = getPos('items', 20, 280, 555, 300);
+
+  // 5. Line Items Table
+  let currentY = 320;
+  const itemsPos = getPos('items', margin, 320, pageWidth - (margin * 2), 300);
 
   if (itemsPos.visible) {
-    // If using default layout, flow after header. If custom, respect Y (unless overflow handled by autoTable)
-    const tableStartY = itemsPos.fromLayout ? itemsPos.y : Math.max(itemsPos.y, currentY + 2);
+    const tableStartY = itemsPos.fromLayout ? itemsPos.y : Math.max(itemsPos.y, currentY);
 
     const tableData = invoice.lines.map((line, index) => {
       const lineTotal = line.quantity * line.unitPrice;
@@ -195,226 +202,171 @@ export async function generateInvoicePDF(
       body: tableData,
       theme: 'grid',
       styles: {
-        lineColor: lightGray, // Light gray borders
+        font: 'helvetica',
+        fontSize: 9,
+        cellPadding: 8,
+        lineColor: colors.border,
         lineWidth: 0.5,
+        textColor: colors.text,
       },
       headStyles: {
-        fillColor: [255, 255, 255], // White background
-        textColor: [...black],
-        fontSize: 9,
+        fillColor: colors.primary, // Purple Header
+        textColor: [255, 255, 255],
         fontStyle: 'bold',
-        cellPadding: 4,
-      },
-      bodyStyles: {
         fontSize: 9,
-        textColor: [...black],
-        lineColor: lightGray, // Light gray borders
-        lineWidth: 0.5,
-        cellPadding: 4,
+        halign: 'left',
       },
       columnStyles: {
-        0: { cellWidth: 20, halign: 'center' },
-        1: { cellWidth: 'auto' },
-        2: { cellWidth: 30, halign: 'right' },
-        3: { cellWidth: 60, halign: 'right' },
-        4: { cellWidth: 30, halign: 'right' },
-        5: { cellWidth: 60, halign: 'right' },
+        0: { cellWidth: 30, halign: 'center', textColor: colors.textMuted },
+        1: { cellWidth: 'auto' }, // Description
+        2: { cellWidth: 40, halign: 'right' },
+        3: { cellWidth: 70, halign: 'right' },
+        4: { cellWidth: 40, halign: 'right' },
+        5: { cellWidth: 70, halign: 'right', fontStyle: 'bold' },
       },
-      margin: { left: itemsPos.x, right: pageWidth - (itemsPos.x + itemsPos.w) },
+      margin: { left: margin, right: margin },
+      didDrawPage: (data) => {
+        // Footer page numbers could go here
+      }
     });
 
-    currentY = (doc as any).lastAutoTable.finalY + 2;
+    currentY = (doc as any).lastAutoTable.finalY + 20;
   }
 
-  // getRenderY function removed - now using direct currentY positioning for all elements
-
-  // 7. Totals (dynamic positioning based on currentY)
-  const totalsPos = getPos('totals', 350, currentY, 225, 120);
+  // 6. Totals Section
+  const totalsPos = getPos('totals', pageWidth - margin - 220, currentY, 220, 100);
   if (totalsPos.visible) {
-    let curY = currentY + 15;
+    let curY = currentY;
     const labelX = totalsPos.x;
-    const valueX = totalsPos.x + totalsPos.w;
+    const valueX = pageWidth - margin;
 
-    doc.setFontSize(9);
-    doc.setTextColor(...lightGray);
-    doc.text('Subtotal:', labelX, curY);
-    doc.setTextColor(...black);
-    doc.text(formatCurrency(invoice.lineExtensionAmount, invoice.currency), valueX, curY, { align: 'right' });
-    curY += 12;
+    const printRow = (label: string, value: string, isTotal = false) => {
+      doc.setFontSize(isTotal ? 12 : 10);
+      doc.setFont('helvetica', isTotal ? 'bold' : 'normal');
+      const color = isTotal ? colors.primary : colors.textMuted;
+      doc.setTextColor(...color);
+      doc.text(label, labelX, curY);
+
+      doc.setTextColor(...colors.text);
+      if (isTotal) {
+        doc.setTextColor(...colors.primary);
+        doc.setFontSize(14); // Larger total
+      }
+      doc.text(value, valueX, curY, { align: 'right' });
+      curY += isTotal ? 20 : 15;
+    };
+
+    printRow('Subtotal', formatCurrency(invoice.lineExtensionAmount, invoice.currency));
 
     invoice.taxTotals.forEach((tax) => {
-      doc.setTextColor(...lightGray);
-      doc.text(`${tax.taxType} (${tax.taxPercent}%):`, labelX, curY);
-      doc.setTextColor(...black);
-      doc.text(formatCurrency(tax.taxAmount, invoice.currency), valueX, curY, { align: 'right' });
-      curY += 12;
+      printRow(`${tax.taxType} (${tax.taxPercent}%)`, formatCurrency(tax.taxAmount, invoice.currency));
     });
 
-    curY += 5;
-    doc.setFontSize(11);
-    doc.setTextColor(...black);
-    doc.text('Total:', labelX, curY);
-    doc.setTextColor(...black);
-    doc.text(formatCurrency(invoice.payableAmount, invoice.currency), valueX, curY, { align: 'right' });
+    // Divider
+    doc.setLineWidth(1);
+    doc.setDrawColor(...colors.border);
+    doc.line(labelX, curY - 5, valueX, curY - 5);
+    curY += 10;
 
-    currentY = curY + 2;
+    printRow('Total', formatCurrency(invoice.payableAmount, invoice.currency), true);
+
+    currentY = Math.max(currentY, curY + 10);
   }
 
-  // 8. Notes (dynamic positioning based on currentY)
-  const notesPos = getPos('notes', 20, currentY, 320, 80);
+  // 7. Notes & Terms
+  const notesPos = getPos('notes', margin, currentY, 300, 80);
   if (invoice.note && notesPos.visible) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...colors.textMuted);
+    doc.text('Notes', margin, currentY);
+
     doc.setFontSize(9);
-    doc.setTextColor(...lightGray);
-    doc.text('Notes:', notesPos.x, currentY + 30);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...colors.text);
+    const lines = doc.splitTextToSize(invoice.note, 300);
+    doc.text(lines, margin, currentY + 15);
 
-    doc.setTextColor(...black);
-    const noteLines = doc.splitTextToSize(invoice.note, notesPos.w);
-    doc.text(noteLines, notesPos.x, currentY + 42);
-
-    // Update currentY based on actual note height
-    const noteHeight = noteLines.length * 12 + 22;
-    currentY = currentY + noteHeight + 2;
+    currentY += (lines.length * 12) + 20;
   }
 
-  // 9. Payment Info and QR Code (dynamic positioning based on currentY)
-  const qrPos = getPos('qr', 480, currentY, 120, 120);
+  // 8. Payment & QR (Bottom Area)
+  const qrPos = getPos('qr', pageWidth - margin - 100, currentY, 100, 100);
   const paymentInfoVisible = !!(invoice.paymentTerms?.note || effectivePaymentMeans?.iban);
 
-  if (paymentInfoVisible || qrPos.visible) {
-    // Use fixed height for payment section
-    const paymentSectionHeight = 120; // Fixed height for payment info + QR code
-    const paymentSpacing = 2; // Minimal spacing
-
-    // Check if section fits on current page
-    const sectionStartY = currentY + paymentSpacing;
-    const sectionEndY = sectionStartY + paymentSectionHeight;
-
-    let renderY = sectionStartY;
-
-    // Only add new page if section truly doesn't fit
-    if (sectionEndY > pageHeight - 80) {
-      doc.addPage();
-      renderY = 50;
-      currentY = 50;
-    }
-
-    // A. Payment Terms and Bank Info (Left of QR)
-    if (paymentInfoVisible) {
-      let textY = renderY + 10;
-      const textX = 20;
-      const textWidth = qrPos.x - textX - 20;
-
-      if (invoice.paymentTerms?.note) {
-        doc.setFontSize(9);
-        doc.setTextColor(...lightGray);
-        doc.text('Payment Terms:', textX, textY);
-        textY += 12;
-        doc.setTextColor(...black);
-        const termLines = doc.splitTextToSize(invoice.paymentTerms.note, textWidth);
-        doc.text(termLines, textX, textY);
-        textY += (termLines.length * 10) + 5;
-      }
-
-      if (effectivePaymentMeans?.iban) {
-        doc.setFontSize(9);
-        doc.setTextColor(...lightGray);
-        doc.text('Payment Information:', textX, textY);
-        textY += 12;
-        doc.setTextColor(...black);
-        doc.text(`IBAN: ${effectivePaymentMeans.iban}`, textX, textY);
-        textY += 10;
-        if (effectivePaymentMeans.bic) {
-          doc.text(`BIC: ${effectivePaymentMeans.bic}`, textX, textY);
-          textY += 10;
-        }
-        if (effectivePaymentMeans.accountName) {
-          doc.text(`Account: ${effectivePaymentMeans.accountName}`, textX, textY);
-          textY += 10;
-        }
-      }
-    }
-
-    // B. QR Code (Right Side)
-    if (effectivePaymentMeans?.iban && qrPos.visible) {
-      try {
-        const invoiceForQR = { ...invoice, paymentMeans: effectivePaymentMeans };
-        const qrCodeDataURL = await getQRCodeDataURL(invoiceForQR, undefined, 200);
-
-        if (qrCodeDataURL) {
-          doc.addImage(qrCodeDataURL, 'PNG', qrPos.x, renderY, qrPos.w, qrPos.w);
-
-          doc.setFontSize(8);
-          doc.setTextColor(...lightGray);
-          doc.text('Scan to pay', qrPos.x + (qrPos.w * 0.9) / 2, renderY + (qrPos.w * 0.9) + 10, { align: 'center' });
-
-          const country = invoice.seller.address.country;
-          let qrStandard = 'EPC QR Code';
-          if (country === 'CH' || country === 'LI') qrStandard = 'Swiss QR Invoice';
-          else if (country === 'DE') qrStandard = 'GiroCode';
-
-          doc.setFontSize(7);
-          doc.text(qrStandard, qrPos.x + (qrPos.w * 0.9) / 2, renderY + (qrPos.w * 0.9) + 20, { align: 'center' });
-        }
-      } catch (error) {
-        console.warn('Could not add QR code to PDF:', error);
-      }
-    }
-
-    currentY = renderY + paymentSectionHeight;
+  // Ensure we don't run off page
+  if (currentY > pageHeight - 150) {
+    doc.addPage();
+    currentY = 50;
   }
 
-  // 10. Footer
-  const footerPos = getPos('footer', 20, 680, 595, 60);
-  console.log('--- Footer Rendering Start ---', { footerPos_y: footerPos.y, content_currentY: currentY });
-  const rawFooterText = template?.footerText || profile?.footerText;
-  if (rawFooterText && footerPos.visible) {
-    // Simple approach: place footer after content with some spacing
-    // Use fixed height for footer area
-    const footerSpacing = 2; // Minimal spacing before footer
-    const footerHeight = 60; // Fixed height for footer content
+  if (paymentInfoVisible) {
+    const startY = currentY;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...colors.textMuted);
+    doc.text('Payment Information', margin, startY);
 
-    // Check if we need a new page
-    const footerStartY = footerPos.y + footerSpacing;
-    const footerEndY = footerStartY + footerHeight;
-    const pageBottomMargin = 50; // Leave space for page numbers
+    let textY = startY + 15;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...colors.text);
 
-    let renderY = footerStartY;
-
-    // Only add new page if footer truly doesn't fit
-    if (footerEndY > pageHeight - pageBottomMargin) {
-      doc.addPage();
-      renderY = 50; // Start near top of new page
-      currentY = 50;
+    if (invoice.paymentTerms?.note) {
+      const lines = doc.splitTextToSize(invoice.paymentTerms.note, 300);
+      doc.text(lines, margin, textY);
+      textY += (lines.length * 11) + 5;
     }
 
-    // Draw separator line
-    doc.setDrawColor(...lightGray);
-    doc.setLineWidth(0.5);
-    doc.line(footerPos.x, renderY, footerPos.x + footerPos.w, renderY);
-
-    // Render footer content
-    const footerContentY = renderY + 10;
-    const renderedH = await renderHtmlContent(doc, rawFooterText, footerPos.x, footerContentY, footerPos.w);
-
-    currentY = footerContentY + renderedH + 10;
-    console.log('--- Footer Rendering End ---', { footer_finalY: currentY });
+    if (effectivePaymentMeans?.iban) {
+      doc.text(`IBAN: ${effectivePaymentMeans.iban}`, margin, textY);
+      textY += 11;
+      if (effectivePaymentMeans.bic) {
+        doc.text(`BIC: ${effectivePaymentMeans.bic}`, margin, textY);
+        textY += 11;
+      }
+      if (effectivePaymentMeans.accountName) {
+        doc.text(`Account: ${effectivePaymentMeans.accountName}`, margin, textY);
+      }
+    }
   }
 
-  // Add Page Numbers
+  if (effectivePaymentMeans?.iban && qrPos.visible) {
+    try {
+      const qrSize = 80;
+      const invoiceForQR = { ...invoice, paymentMeans: effectivePaymentMeans };
+      const qrCodeDataURL = await getQRCodeDataURL(invoiceForQR, undefined, 200);
+      if (qrCodeDataURL) {
+        doc.addImage(qrCodeDataURL, 'PNG', pageWidth - margin - qrSize - 10, currentY, qrSize, qrSize);
+        doc.setFontSize(8);
+        doc.setTextColor(...colors.textMuted);
+        doc.text('Scan to Pay', pageWidth - margin - (qrSize / 2) - 10, currentY + qrSize + 10, { align: 'center' });
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  // 9. Footer
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
-    doc.setTextColor(...lightGray);
-    doc.text(
-      `Page ${i} of ${pageCount}`,
-      pageWidth / 2,
-      pageHeight - 12,
-      { align: 'center' }
-    );
+    doc.setTextColor(...colors.textMuted);
+
+    // Bottom line
+    doc.setDrawColor(...colors.border);
+    doc.line(margin, pageHeight - 40, pageWidth - margin, pageHeight - 40);
+
+    const footerText = `Page ${i} of ${pageCount}`;
+    doc.text(footerText, pageWidth / 2, pageHeight - 25, { align: 'center' });
+
+    // Add company footer text if it exists
+    if (headerText) { // Reuse header text logic or profile text for footer?
+      // Optional: add small copyright or company info
+    }
   }
 
-  // Save the PDF
   doc.save(`${invoice.invoiceNumber}.pdf`);
 }
 

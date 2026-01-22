@@ -28,19 +28,18 @@ class AuthController extends BaseController
             return $this->fail('Invalid password');
         }
 
-        $key = getenv('JWT_SECRET') ?: 'billing_tool_secret_key';
-        $payload = [
-            'iss' => 'billing-tool-api',
-            'aud' => 'billing-tool-client',
-            'iat' => time(),
-            'nbf' => time(),
-            'exp' => time() + 3600, // 1 hour
-            'uid' => $user['id'],
-            'email' => $user['email'],
-            'role' => $user['role']
-        ];
+        $appConfig = config('App');
+        $tenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
+        $tenantId = $tenant ? $tenant['id'] : $user['tenant_id'];
 
-        $token = JWT::encode($payload, $key, 'HS256');
+        // Generate ADMIN token (type='admin')
+        $token = \App\Helpers\JWTHelper::generateToken(
+            $user['id'], 
+            $tenantId, 
+            $user['email'], 
+            $user['name'],
+            'admin'  // Mark as admin token
+        );
 
         $rights = $userModel->getRights($user['id']);
 
@@ -51,15 +50,24 @@ class AuthController extends BaseController
                 'name' => $user['name'],
                 'email' => $user['email'],
                 'role' => $user['role'],
-                'rights' => $rights
-            ]
+                'tenant_id' => $tenantId,
+                'rights' => $rights,
+                'type' => 'admin'  // Include type in response
+            ],
+            'tenant' => $tenant // Optional: return full tenant info
         ]);
     }
 
     public function me()
     {
-        $key = getenv('JWT_SECRET') ?: 'billing_tool_secret_key';
+        $key = \App\Helpers\JWTHelper::getSecretKey();
         $header = $this->request->getHeaderLine('Authorization');
+        
+        // Shared hosting workaround: check X-Authorization if Authorization is stripped
+        if (empty($header)) {
+            $header = $this->request->getHeaderLine('X-Authorization');
+        }
+
         $token = null;
 
         if (!empty($header)) {
@@ -75,7 +83,15 @@ class AuthController extends BaseController
         try {
             $decoded = JWT::decode($token, new Key($key, 'HS256'));
             $userModel = new UserModel();
-            $user = $userModel->find($decoded->uid);
+            
+            // Fix: Check for both 'uid' and 'user_id' in payload
+            $userId = $decoded->uid ?? $decoded->user_id ?? null;
+            
+            if (!$userId) {
+                return $this->failUnauthorized('Invalid token payload');
+            }
+            
+            $user = $userModel->find($userId);
             
             if (!$user) {
                 return $this->failNotFound('User not found');

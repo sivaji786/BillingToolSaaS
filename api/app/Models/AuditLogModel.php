@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use CodeIgniter\Model;
+use App\Models\BaseModel;
 
-class AuditLogModel extends Model
+class AuditLogModel extends BaseModel
 {
     protected $table            = 'audit_logs';
     protected $primaryKey       = 'id';
@@ -13,6 +13,7 @@ class AuditLogModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'tenant_id',
         'timestamp',
         'action',
         'invoice_number',

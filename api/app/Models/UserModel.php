@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
-use CodeIgniter\Model;
+use App\Models\BaseModel;
 
-class UserModel extends Model
+class UserModel extends BaseModel
 {
+    use \App\Traits\TenantScope;
+
     protected $table            = 'users';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['email', 'password_hash', 'name', 'role'];
+    protected $allowedFields    = ['tenant_id', 'email', 'password', 'password_hash', 'name', 'role'];
 
     protected bool $allowEmptyInserts = false;
 
@@ -31,13 +33,67 @@ class UserModel extends Model
 
     // Callbacks
     protected $allowCallbacks = true;
-    protected $beforeInsert   = [];
+    protected $beforeInsert   = ['hashPassword'];
+    protected $beforeUpdate   = ['hashPassword'];
     protected $afterInsert    = [];
-    protected $beforeUpdate   = [];
     protected $afterUpdate    = [];
-    protected $beforeFind     = [];
     protected $afterFind      = [];
     protected $afterDelete    = [];
+
+    /**
+     * Hash password before insert/update
+     */
+    protected function hashPassword(array $data)
+    {
+        if (isset($data['data']['password'])) {
+            $data['data']['password_hash'] = password_hash($data['data']['password'], PASSWORD_DEFAULT);
+            unset($data['data']['password']);
+        }
+        return $data;
+    }
+
+    /**
+     * Find user by email
+     */
+    public function findByEmail($email)
+    {
+        return $this->where('email', $email)->first();
+    }
+
+    /**
+     * Verify password
+     */
+    public function verifyPassword($email, $password)
+    {
+        $user = $this->findByEmail($email);
+        
+        if (!$user) {
+            return false;
+        }
+
+        return password_verify($password, $user['password_hash']);
+    }
+
+    /**
+     * Authenticate user and return user data
+     */
+    public function authenticate($email, $password)
+    {
+        $user = $this->findByEmail($email);
+        
+        if (!$user) {
+            return null;
+        }
+
+        if (!password_verify($password, $user['password_hash'])) {
+            return null;
+        }
+
+        // Remove password hash from returned data
+        unset($user['password_hash']);
+        
+        return $user;
+    }
 
     /**
      * Check if user has a specific right (permission).

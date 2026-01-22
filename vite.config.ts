@@ -56,6 +56,39 @@ export default defineConfig({
   build: {
     target: 'esnext',
     outDir: 'build',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@radix-ui')) {
+              return 'vendor-ui';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('recharts')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('@tiptap')) {
+              return 'vendor-editor';
+            }
+            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('html-to-image')) {
+              return 'vendor-pdf-tools';
+            }
+            if (id.includes('@google/generative-ai')) {
+              return 'vendor-ai';
+            }
+            if (id.includes('date-fns')) {
+              return 'vendor-dates';
+            }
+            return 'vendor';
+          }
+          if (id.includes('src/components/ui')) {
+            return 'ui-kit';
+          }
+        }
+      }
+    }
   },
   server: {
     port: 3000,

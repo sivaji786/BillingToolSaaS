@@ -1,0 +1,168 @@
+<?php
+
+namespace App\Controllers;
+
+use CodeIgniter\RESTful\ResourceController;
+use CodeIgniter\API\ResponseTrait;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
+class AdminAuth extends ResourceController
+{
+    use ResponseTrait;
+
+    protected $modelName = 'App\Models\AdminUserModel';
+    protected $format = 'json';
+
+    /**
+     * Admin Login
+     * POST /api/admin/auth/login
+     */
+    public function login()
+    {
+        // Set CORS headers
+        $this->response->setHeader('Access-Control-Allow-Origin', '*');
+        $this->response->setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        $this->response->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        
+        $rules = [
+            'email' => 'required|valid_email',
+            'password' => 'required|min_length[6]',
+        ];
+
+        if (!$this->validate($rules)) {
+            return $this->failValidationErrors($this->validator->getErrors());
+        }
+
+        $email = $this->request->getVar('email');
+        $password = $this->request->getVar('password');
+
+        // For demo purposes, accept demo credentials
+        if ($email === 'admin@demo.com' && $password === 'admin123') {
+            $user = [
+                'id' => '1',
+                'name' => 'Demo Admin',
+                'email' => 'admin@demo.com',
+                'role' => 'super_admin',
+                'createdAt' => date('Y-m-d H:i:s'),
+                'lastLogin' => date('Y-m-d H:i:s'),
+            ];
+
+            $token = $this->generateToken($user);
+
+            return $this->respond([
+                'success' => true,
+                'data' => [
+                    'user' => $user,
+                    'token' => $token,
+                ],
+                'message' => 'Login successful',
+            ]);
+        }
+
+        return $this->failUnauthorized('Invalid credentials');
+    }
+
+    /**
+     * Get current admin user
+     * GET /api/admin/auth/me
+     */
+    public function me()
+    {
+        $user = $this->getAuthenticatedUser();
+        
+        if (!$user) {
+            return $this->failUnauthorized('Unauthorized');
+        }
+
+        return $this->respond([
+            'success' => true,
+            'data' => $user,
+        ]);
+    }
+
+    /**
+     * Logout
+     * POST /api/admin/auth/logout
+     */
+    public function logout()
+    {
+        return $this->respond([
+            'success' => true,
+            'message' => 'Logged out successfully',
+        ]);
+    }
+
+    /**
+     * Refresh token
+     * POST /api/admin/auth/refresh
+     */
+    public function refresh()
+    {
+        $user = $this->getAuthenticatedUser();
+        
+        if (!$user) {
+            return $this->failUnauthorized('Unauthorized');
+        }
+
+        $token = $this->generateToken($user);
+
+        return $this->respond([
+            'success' => true,
+            'data' => [
+                'token' => $token,
+            ],
+        ]);
+    }
+
+    /**
+     * Generate JWT token
+     */
+    private function generateToken($user)
+    {
+        $key = getenv('JWT_SECRET') ?: 'your-secret-key-change-this-in-production';
+        $payload = [
+            'iss' => base_url(),
+            'aud' => base_url(),
+            'iat' => time(),
+            'exp' => time() + (60 * 60 * 24), // 24 hours
+            'data' => [
+                'id' => $user['id'],
+                'email' => $user['email'],
+                'role' => $user['role'],
+            ],
+        ];
+
+        return JWT::encode($payload, $key, 'HS256');
+    }
+
+    /**
+     * Get authenticated user from token
+     */
+    private function getAuthenticatedUser()
+    {
+        $authHeader = $this->request->getHeaderLine('Authorization');
+        
+        if (!$authHeader) {
+            return null;
+        }
+
+        $token = str_replace('Bearer ', '', $authHeader);
+        
+        try {
+            $key = getenv('JWT_SECRET') ?: 'your-secret-key-change-this-in-production';
+            $decoded = JWT::decode($token, new Key($key, 'HS256'));
+            
+            return [
+                'id' => $decoded->data->id,
+                'email' => $decoded->data->email,
+                'role' => $decoded->data->role,
+                'name' => 'Demo Admin',
+                'createdAt' => date('Y-m-d H:i:s'),
+                'lastLogin' => date('Y-m-d H:i:s'),
+            ];
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+}

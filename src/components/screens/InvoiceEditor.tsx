@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Invoice, InvoiceLine, ValidationError, InvoiceTemplate, CompanyProfile } from '../../types/invoice';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -57,41 +57,48 @@ interface InvoiceEditorProps {
 export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPreview, mode = 'invoice', templates = [], onLoadTemplate, profile }: InvoiceEditorProps) {
   const { t } = useLanguage();
   const [invoice, setInvoice] = useState<Invoice>(initialInvoice);
-  const [calculatedInvoice, setCalculatedInvoice] = useState<Invoice>(initialInvoice);
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Recalculate totals whenever invoice changes
-  useEffect(() => {
-    const recalculated = calculateInvoiceTotals(invoice);
-    setCalculatedInvoice(recalculated);
-    setHasUnsavedChanges(true);
+  // Memoize heavy calculations
+  const calculatedInvoice = useMemo(() => {
+    return calculateInvoiceTotals(invoice);
   }, [invoice]);
 
-  // Validate on changes
-  useEffect(() => {
-    const errors = validateInvoice(calculatedInvoice);
-    setValidationErrors(errors);
+  const validationErrors = useMemo(() => {
+    return validateInvoice(calculatedInvoice);
   }, [calculatedInvoice]);
 
-  const handleUpdateInvoice = (updates: Partial<Invoice>) => {
-    setInvoice({ ...invoice, ...updates });
-  };
+  // Track unsaved changes
+  useEffect(() => {
+    if (JSON.stringify(invoice) !== JSON.stringify(initialInvoice)) {
+      setHasUnsavedChanges(true);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+  }, [invoice, initialInvoice]);
 
-  const handleUpdateLine = (index: number, updatedLine: InvoiceLine) => {
-    const newLines = [...invoice.lines];
-    newLines[index] = updatedLine;
-    setInvoice({ ...invoice, lines: newLines });
-  };
+  const handleUpdateInvoice = useCallback((updates: Partial<Invoice>) => {
+    setInvoice(prev => ({ ...prev, ...updates }));
+  }, []);
 
-  const handleDeleteLine = (index: number) => {
-    const newLines = invoice.lines.filter((_, i) => i !== index);
-    setInvoice({ ...invoice, lines: newLines });
+  const handleUpdateLine = useCallback((index: number, updatedLine: InvoiceLine) => {
+    setInvoice(prev => {
+      const newLines = [...prev.lines];
+      newLines[index] = updatedLine;
+      return { ...prev, lines: newLines };
+    });
+  }, []);
+
+  const handleDeleteLine = useCallback((index: number) => {
+    setInvoice(prev => ({
+      ...prev,
+      lines: prev.lines.filter((_, i) => i !== index)
+    }));
     toast.success(t('editor.lineDeleted') || 'Line item deleted');
-  };
+  }, [t]);
 
-  const handleAddLine = () => {
+  const handleAddLine = useCallback(() => {
     const newLine: InvoiceLine = {
       id: String(Date.now()),
       description: '',
@@ -101,11 +108,14 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
       taxCategory: 'S',
       taxPercent: 19.0,
     };
-    setInvoice({ ...invoice, lines: [...invoice.lines, newLine] });
+    setInvoice(prev => ({
+      ...prev,
+      lines: [...prev.lines, newLine]
+    }));
     toast.success(t('editor.lineAdded') || 'Line item added');
-  };
+  }, [t]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     const toSave = {
       ...calculatedInvoice,
       updatedAt: new Date().toISOString(),
@@ -113,11 +123,10 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
     onSave(toSave);
     setHasUnsavedChanges(false);
     toast.success(t('editor.invoiceSaved'));
-  };
+  }, [calculatedInvoice, onSave, t]);
 
   const handleValidate = () => {
     const errors = validateInvoice(calculatedInvoice);
-    setValidationErrors(errors);
 
     if (errors.filter((e) => e.severity === 'error').length === 0) {
       toast.success(t('editor.validationSuccess') || 'Invoice is valid!', {
@@ -168,10 +177,9 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [invoice]);
+  }, [invoice, handleSave, handleAddLine, onPreview, calculatedInvoice]);
 
   const isValid = isInvoiceValid(calculatedInvoice);
-
   const isTemplateMode = mode === 'template';
 
   return (
@@ -337,7 +345,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                   id="invoiceNumber"
                   value={invoice.invoiceNumber}
                   onChange={(e) => handleUpdateInvoice({ invoiceNumber: e.target.value })}
-                  placeholder={isTemplateMode ? "My Template Name" : "INV-2025-00123"}
+                  placeholder={isTemplateMode ? t('templates.templateNamePlaceholder') || "My Template Name" : "INV-2025-00123"}
                   className="mt-1"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
