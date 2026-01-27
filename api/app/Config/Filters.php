@@ -11,7 +11,11 @@ use CodeIgniter\Filters\Honeypot;
 use CodeIgniter\Filters\InvalidChars;
 use CodeIgniter\Filters\PageCache;
 use CodeIgniter\Filters\PerformanceMetrics;
+// use CodeIgniter\Filters\PerformanceMetrics; // Removed duplicate import
 use CodeIgniter\Filters\SecureHeaders;
+
+// Logging to debug filters loading
+log_message('error', 'Filters.php Loaded');
 
 class Filters extends BaseFilters
 {
@@ -31,6 +35,7 @@ class Filters extends BaseFilters
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
         'cors'          => \App\Filters\CorsFilter::class,
+        'tenant'        => \App\Filters\TenantFilter::class, // Register Tenant Filter
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
@@ -74,11 +79,11 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'cors',  // CORS must run first for all routes
-            // All other filters applied per-route
+            'cors',
+            'tenant', // Identify tenant context globally
         ],
         'after' => [
-            'cors',  // Add CORS headers to all responses
+            'cors',
         ],
     ];
 

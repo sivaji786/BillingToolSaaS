@@ -16,7 +16,7 @@ class AddPerformanceIndexes extends Migration
             $this->db->query("ALTER TABLE `audit_logs` ADD INDEX `idx_audit_logs_timestamp` (`timestamp`)");
         }
         if (!in_array('idx_audit_logs_invoice', $indexNames)) {
-            $this->db->query("ALTER TABLE `audit_logs` ADD INDEX `idx_audit_logs_invoice` (`invoice_id`)");
+            $this->db->query("ALTER TABLE `audit_logs` ADD INDEX `idx_audit_logs_invoice` (`invoice_number`)");
         }
 
         // 2. Users Performance

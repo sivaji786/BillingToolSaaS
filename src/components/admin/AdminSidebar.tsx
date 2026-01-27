@@ -15,6 +15,7 @@ import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface AdminSidebarProps {
     currentScreen: string;
@@ -22,17 +23,18 @@ interface AdminSidebarProps {
     onLogout: () => void;
 }
 
-const menuItems = [
-    { id: 'SAdashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'SApackages', label: 'Packages', icon: Package },
-    { id: 'SAASusers', label: 'Users', icon: Users },
-    { id: 'SAbilling', label: 'Billing', icon: Receipt },
-    { id: 'SAusage', label: 'Analytics', icon: BarChart3 },
-    { id: 'SAsettings', label: 'Settings', icon: Settings },
-];
-
 export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSidebarProps) {
     const { sidebarCollapsed, toggleSidebar, adminUser } = useAdminStore();
+    const { t } = useLanguage();
+
+    const menuItems = [
+        { id: 'SAdashboard', label: t('navigation.dashboard'), icon: LayoutDashboard },
+        { id: 'SApackages', label: t('navigation.products'), icon: Package },
+        { id: 'SAASusers', label: t('navigation.clients'), icon: Users },
+        { id: 'SAbilling', label: t('billing.title'), icon: Receipt },
+        { id: 'SAusage', label: t('navigation.reports'), icon: BarChart3 },
+        { id: 'SAsettings', label: t('navigation.settings'), icon: Settings },
+    ];
 
     return (
         <>
@@ -58,9 +60,9 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                         {!sidebarCollapsed && (
                             <div className="flex items-center gap-2">
                                 <div className="h-8 w-8 rounded-lg bg-purple-600 flex items-center justify-center">
-                                    <span className="text-white font-bold text-sm">SA</span>
+                                    <span className="text-white font-bold text-sm">{t('admin.sa')}</span>
                                 </div>
-                                <span className="font-semibold text-lg">Admin Portal</span>
+                                <span className="font-semibold text-lg">{t('admin.adminPortal')}</span>
                             </div>
                         )}
                         <Button
@@ -129,7 +131,7 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                                     className="w-full justify-start"
                                 >
                                     <LogOut className="h-4 w-4 mr-2" />
-                                    Logout
+                                    {t('admin.logout')}
                                 </Button>
                             </div>
                         ) : (

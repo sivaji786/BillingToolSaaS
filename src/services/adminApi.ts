@@ -15,8 +15,10 @@ import {
     UsageFilters,
     PackageFormData,
     InvoiceFormData,
+    RevenueStats,
 } from '../types/admin';
 import { getApiBaseUrl } from '../utils/config';
+import { useAdminStore } from '../stores/adminStore';
 
 const API_URL = getApiBaseUrl();
 
@@ -28,9 +30,10 @@ const adminApi = axios.create({
     withCredentials: true,
 });
 
-// Request interceptor - use COMMON localStorage key 'token'
+// Request interceptor - use Admin Store token
 adminApi.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token'); // Common key for both admin and customer
+    // Get token from Zustand store instead of raw localStorage 'token' key
+    const token = useAdminStore.getState().token;
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
         config.headers['X-Authorization'] = `Bearer ${token}`;
@@ -43,9 +46,9 @@ adminApi.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Token expired or invalid - clear common storage
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            // Token expired or invalid - logout via store
+            // This handles clearing the specific admin storage keys
+            useAdminStore.getState().logout();
             window.location.hash = '#/SALogin';
         }
         return Promise.reject(error);
@@ -61,9 +64,9 @@ export const adminAuthService = {
         });
         const { user, token } = response.data.data;
 
-        // Store in COMMON localStorage (same keys as customer)
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
+        // Note: We don't manually set localStorage here anymore.
+        // The calling component (SALogin) calls setAuth() on the store,
+        // which handles persistence to 'admin-storage' key.
 
         return { user, token };
     },
@@ -74,9 +77,7 @@ export const adminAuthService = {
         } catch (error) {
             // Continue with logout even if API call fails
         }
-        // Clear COMMON localStorage
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        // Store logout is handled by the component or store action
     },
 
     me: async (): Promise<AdminUser> => {
@@ -181,8 +182,8 @@ export const adminBillingService = {
         return response.data;
     },
 
-    getRevenue: async (period: 'monthly' | 'yearly' = 'monthly'): Promise<any> => {
-        const response = await adminApi.get<any>('/revenue', {
+    getRevenue: async (period: 'monthly' | 'yearly' = 'monthly'): Promise<RevenueStats> => {
+        const response = await adminApi.get<RevenueStats>('/revenue', {
             params: { period },
         });
         return response.data; // Data is returned directly, not wrapped in data.data

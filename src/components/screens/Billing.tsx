@@ -5,9 +5,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
 import { Check, Download, Loader2, ShieldCheck } from 'lucide-react';
-import { formatCurrency } from '../../utils/invoice-calculations'; // Trying invoice-calculations or will inline
+import { formatCurrency } from '../../utils/invoice-calculations';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export const Billing = () => {
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<any>(null);
     const [history, setHistory] = useState<any[]>([]);
@@ -31,7 +33,7 @@ export const Billing = () => {
             setPlans(plansData);
         } catch (error) {
             console.error('Failed to load billing data', error);
-            toast.error('Failed to load billing details');
+            toast.error(t('billing.failedToLoad'));
         } finally {
             setLoading(false);
         }
@@ -40,11 +42,16 @@ export const Billing = () => {
     const handleUpgrade = async (planId: number) => {
         try {
             setUpgrading(planId);
-            await billingService.upgradePlan(planId);
-            toast.success('Plan upgraded successfully');
-            loadBillingData(); // Reload to show new plan
+            const response = await billingService.upgradePlan(planId);
+
+            if (response.checkoutUrl) {
+                window.location.href = response.checkoutUrl;
+            } else {
+                toast.success(t('billing.upgradeSuccess'));
+                loadBillingData(); // Reload to show new plan
+            }
         } catch (error) {
-            toast.error('Upgrade failed');
+            toast.error(t('billing.upgradeFailed'));
         } finally {
             setUpgrading(null);
         }
@@ -64,27 +71,29 @@ export const Billing = () => {
     return (
         <div className="space-y-8 max-w-6xl mx-auto p-6">
             <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">Billing & Subscription</h1>
-                <p className="text-muted-foreground">Manage your plan, limits, and billing history.</p>
+                <h1 className="text-3xl font-bold tracking-tight">{t('billing.title')}</h1>
+                <p className="text-muted-foreground">{t('billing.subtitle')}</p>
             </div>
 
             {/* Usage Section */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Current Usage</CardTitle>
-                    <CardDescription>Your usage for the current billing period.</CardDescription>
+                    <CardTitle>{t('billing.currentUsage')}</CardTitle>
+                    <CardDescription>{t('billing.usageDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                            <span className="font-medium">Invoices Generated</span>
+                            <span className="font-medium">{t('billing.invoicesGenerated')}</span>
                             <span className="text-muted-foreground">
-                                {usage.used} / {usage.limit === -1 ? 'Unlimited' : usage.limit}
+                                {usage.used} / {usage.limit === -1 ? t('billing.unlimited') : usage.limit}
                             </span>
                         </div>
                         <Progress value={usage.percentage} className="h-2" />
                         <p className="text-xs text-muted-foreground text-right">
-                            {usage.limit === -1 ? 'You have unlimited invoices!' : `${usage.limit - usage.used} invoices remaining`}
+                            {usage.limit === -1
+                                ? t('billing.unlimitedDesc')
+                                : t('billing.remainingInvoices', { count: usage.limit - usage.used })}
                         </p>
                     </div>
                 </CardContent>
@@ -98,10 +107,8 @@ export const Billing = () => {
                     try {
                         const parsed = JSON.parse(plan.features);
                         if (Array.isArray(parsed)) {
-                            // Features are stored as array of objects: [{name: "Storage", type: "storage", value: "5GB"}, ...]
-                            features = parsed.map(item => [item.name || 'Feature', item.value || 'Included']);
+                            features = parsed.map(item => [item.name || t('billing.feature'), item.value || t('billing.included')]);
                         } else if (typeof parsed === 'object' && parsed !== null) {
-                            // Fallback for simple key-value object format
                             features = Object.entries(parsed);
                         }
                     } catch (e) {
@@ -112,14 +119,14 @@ export const Billing = () => {
                         <Card key={plan.id} className={`flex flex-col relative ${isCurrent ? 'border-primary border-2 shadow-lg' : ''}`}>
                             {isCurrent && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                                    <ShieldCheck className="w-3 h-3" /> Current Plan
+                                    <ShieldCheck className="w-3 h-3" /> {t('billing.currentPlan')}
                                 </div>
                             )}
                             <CardHeader>
                                 <CardTitle>{plan.name}</CardTitle>
                                 <div className="flex items-baseline gap-1 mt-2">
                                     <span className="text-3xl font-bold">{formatCurrency(Number(plan.price), 'EUR')}</span>
-                                    <span className="text-muted-foreground text-sm">/month</span>
+                                    <span className="text-muted-foreground text-sm">{t('billing.perMonth')}</span>
                                 </div>
                             </CardHeader>
                             <CardContent className="flex-1 space-y-3 pt-0">
@@ -129,7 +136,7 @@ export const Billing = () => {
                                         <li key={`${key}-${index}`} className="flex items-center gap-2">
                                             <Check className="w-4 h-4 text-green-500 shrink-0" />
                                             <span className="text-muted-foreground">
-                                                {key}: <span className="text-foreground font-medium">{String(value === -1 || value === 'unlimited' ? 'Unlimited' : value)}</span>
+                                                {key}: <span className="text-foreground font-medium">{String(value === -1 || value === 'unlimited' ? t('billing.unlimited') : value)}</span>
                                             </span>
                                         </li>
                                     ))}
@@ -143,7 +150,7 @@ export const Billing = () => {
                                     onClick={() => handleUpgrade(plan.id)}
                                 >
                                     {upgrading === plan.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                    {isCurrent ? 'Current Plan' : 'Upgrade'}
+                                    {isCurrent ? t('billing.currentPlan') : t('billing.upgrade')}
                                 </Button>
                             </CardFooter>
                         </Card>
@@ -154,19 +161,19 @@ export const Billing = () => {
             {/* History Section */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Payment History</CardTitle>
-                    <CardDescription>View your recent payments and download invoices.</CardDescription>
+                    <CardTitle>{t('billing.paymentHistory')}</CardTitle>
+                    <CardDescription>{t('billing.historyDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="border rounded-lg overflow-hidden">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-muted text-muted-foreground">
                                 <tr>
-                                    <th className="px-4 py-3 font-medium">Invoice ID</th>
-                                    <th className="px-4 py-3 font-medium">Date</th>
-                                    <th className="px-4 py-3 font-medium">Amount</th>
-                                    <th className="px-4 py-3 font-medium">Status</th>
-                                    <th className="px-4 py-3 font-medium text-right">Action</th>
+                                    <th className="px-4 py-3 font-medium">{t('billing.invoiceId')}</th>
+                                    <th className="px-4 py-3 font-medium">{t('billing.date')}</th>
+                                    <th className="px-4 py-3 font-medium">{t('billing.amount')}</th>
+                                    <th className="px-4 py-3 font-medium">{t('billing.status')}</th>
+                                    <th className="px-4 py-3 font-medium text-right">{t('billing.action')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">

@@ -5,6 +5,9 @@ namespace App\Controllers;
 use App\Models\TenantModel;
 use App\Models\UserModel;
 use App\Models\SubscriptionModel;
+use App\Models\RoleModel;
+use App\Models\UserRoleModel;
+use App\Models\CompanyProfileModel;
 use CodeIgniter\API\ResponseTrait;
 use Exception;
 
@@ -16,13 +19,29 @@ class Onboarding extends BaseController
     {
         $rules = [
             'company_name' => 'required|min_length[3]|max_length[100]',
+            'website' => 'permit_empty|valid_url_strict',
             'subdomain' => 'required|min_length[3]|max_length[50]|alpha_dash|is_unique[tenants.subdomain]',
             'email' => 'required|valid_email|is_unique[users.email]', // user email might need to be unique globally? Yes usually.
             'password' => 'required|min_length[8]',
         ];
         
-        if (!$this->validate($rules)) {
-            return $this->fail($this->validator->getErrors());
+        // Get raw JSON input
+        $input = $this->request->getJSON(true);
+        
+        if (empty($input)) {
+             $this->response->setStatusCode(400);
+             return $this->respond(['message' => 'No data provided']);
+        }
+
+        // Log incoming data for debugging
+        log_message('error', 'Signup Payload: ' . json_encode($input));
+        
+        $validation = \Config\Services::validation();
+        $validation->setRules($rules);
+
+        if (!$validation->run($input)) {
+            log_message('error', 'Signup Validation Errors: ' . json_encode($validation->getErrors()));
+            return $this->fail($validation->getErrors());
         }
         
         $db = \Config\Database::connect();
@@ -31,42 +50,28 @@ class Onboarding extends BaseController
         try {
             // 1. Create tenant
             $tenantModel = new TenantModel();
-            $tenantId = $tenantModel->insert([
-                'company_name' => $this->request->getPost('company_name'),
-                'subdomain' => strtolower($this->request->getPost('subdomain')),
-                'plan_id' => 1, // Default to Starter plan ID 1
-                'status' => 'active',
+            $tenantData = [
+                'company_name' => $input['company_name'],
+                'website'      => $input['website'] ?? null,
+                'subdomain'    => strtolower($input['subdomain']),
+                'plan_id'      => $input['plan_id'] ?? 1, 
+                'status'       => 'active',
                 'trial_ends_at' => date('Y-m-d H:i:s', strtotime('+14 days'))
-            ]);
+            ];
+            
+            $tenantId = $tenantModel->insert($tenantData);
             
             if (!$tenantId) {
-                // Return model errors if insert failed
+                 log_message('error', 'Tenant Insert Failed: ' . json_encode($tenantModel->errors()));
                  return $this->fail($tenantModel->errors());
             }
 
-            // 2. Create owner user
-            // NOTE: UserModel uses TenantScope. We need to manually inject tenant_id if we are outside context?
-            // BUT TenantScope works on find, update... insert logic in TenantScope automatically adds tenant_id from config.
-            // Here, we don't have config set yet because it's signup.
-            // So we must manually set tenant_id in data.
-            // And ensure UserModel doesn't overwrite it with null if config is null.
-            
-            // Checking TenantScope trait: 
-            /*
-            if ($tenant) {
-               if (!isset($data['data']['tenant_id'])) {
-                   $data['data']['tenant_id'] = $tenant['id'];
-               }
-            }
-            */
-            // So if $tenant is null (which it is for signup), it won't touch it. Perfect.
-            
             $userModel = new UserModel();
             $userData = [
                 'tenant_id' => $tenantId,
-                'email' => $this->request->getPost('email'),
-                'password_hash' => password_hash($this->request->getPost('password'), PASSWORD_BCRYPT),
-                'name' => 'Admin', // Default name or ask in form?
+                'email' => $input['email'],
+                'password_hash' => password_hash($input['password'], PASSWORD_BCRYPT),
+                'name' => 'Admin', 
                 'role' => 'admin',
                 'created_at' => date('Y-m-d H:i:s')
             ];
@@ -74,16 +79,36 @@ class Onboarding extends BaseController
             $userId = $userModel->insert($userData);
             
             if (!$userId) {
-                 // Check if it failed due to unique email?
-                 // But rule checked it. 
+                 log_message('error', 'User Insert Failed: ' . json_encode($userModel->errors()));
                  throw new Exception(implode(', ', $userModel->errors()));
             }
             
+            // 2b. Assign Role ID 51 (User Request)
+            $userRoleModel = new UserRoleModel();
+            $userRoleModel->builder()->insert([
+                'user_id' => $userId, 
+                'role_id' => 51
+            ]);
+            
+            // 2c. Create Default Company Profile
+            $companyProfileModel = new CompanyProfileModel();
+            $profileData = [
+                'tenant_id' => $tenantId,
+                'company_type_id' => 1,
+                'name' => $input['company_name'],
+                'email' => $input['email'],
+                'country' => $input['country'] ?? 'India',
+                'city' => $input['city'] ?? 'Unknown',
+                'street' => $input['address'] ?? 'Unknown',
+                'postal_code' => $input['postal_code'] ?? '000000',
+            ];
+            $companyProfileModel->insert($profileData);
+
             // 3. Create trial subscription
             $subscriptionModel = new SubscriptionModel();
             $subData = [
                 'tenant_id' => $tenantId,
-                'plan_id' => 1,
+                'plan_id' => $tenantData['plan_id'],
                 'status' => 'trialing',
                 'current_period_start' => date('Y-m-d H:i:s'),
                 'current_period_end' => date('Y-m-d H:i:s', strtotime('+14 days')),
@@ -97,17 +122,23 @@ class Onboarding extends BaseController
                 throw new Exception('Database transaction failed');
             }
             
-            // In dev, usage of .localhost might be implied.
-            $subdomain = strtolower($this->request->getPost('subdomain'));
-            // Construct redirect URL based on env
-            // Simple logic: protocol + subdomain + base domain
-            // Here we just return subdomain.
+            // Re-fetch tenant to get the generated UUID
+            $createdTenant = $tenantModel->find($tenantId);
+            $tenantUuid = $createdTenant['uuid'];
+            $subdomain = strtolower($input['subdomain']);
             
+            // Dynamic Redirect URL - Single Domain Strategy
+            $host = $_SERVER['HTTP_HOST'];
+            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+            
+            // Use UUID for the Portal URL
+            $redirectUrl = "{$protocol}://{$host}/portal/{$tenantUuid}/login";
+
             return $this->respond([
                 'success' => true,
                 'message' => 'Account created successfully!',
                 'subdomain' => $subdomain,
-                'redirect_url' => "http://{$subdomain}.localhost:8080" // Construct appropriate URL
+                'redirect_url' => $redirectUrl
             ]);
             
         } catch (Exception $e) {

@@ -4,21 +4,49 @@ namespace App\Traits;
 
 trait TenantScope
 {
+    protected $ignoreTenant = false;
+
+    /**
+     * Disable tenant scoping for the next query
+     */
+    public function withoutTenant()
+    {
+        $this->ignoreTenant = true;
+        return $this;
+    }
+
     /**
      * Filter data by current tenant
      */
     protected function beforeFind(array $data)
     {
+        // Debug Logging
+        log_message('error', 'TenantScope::beforeFind Triggered on ' . $this->table);
+
+        if ($this->ignoreTenant) {
+            $this->ignoreTenant = false; // Reset for next query
+            return $data;
+        }
+
         $appConfig = config('App');
         $tenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
         
-        if ($tenant && !isset($data['data']['tenant_id'])) {
-            // Check if we are already filtering by tenant_id to avoid duplication/conflicts
-            // Access builder from model?
-            // In CI4 beforeFind, $data['method'] is 'find', 'findAll', etc.
-            // We need to modify the query builder instance ($this)
-            
-            $this->where($this->table . '.tenant_id', $tenant->id);
+        log_message('error', 'TenantScope: Tenant Context: ' . json_encode($tenant));
+        
+        // FAIL-CLOSED LOGIC:
+        // If there is NO tenant context, we MUST NOT show all data. 
+        // We force an impossible condition unless explicitly bypassed (e.g., for Super Admin, which would need a bypass flag).
+        // Since we don't have a robust Super Admin "Global Scope" bypass yet, we err on the side of security.
+        
+        if ($tenant && is_object($tenant) && isset($tenant->id)) {
+            if (!isset($data['data']['tenant_id'])) {
+                $this->where($this->table . '.tenant_id', $tenant->id);
+            }
+        } else {
+             // NO TENANT FOUND -> BLOCK EVERYTHING
+             // This corresponds to "accessing from api.billingtool.com" without X-Tenant-ID header.
+             // Better to return nothing than everything.
+             $this->where('1=0');
         }
         
         return $data;
@@ -32,14 +60,7 @@ trait TenantScope
         $appConfig = config('App');
         $tenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
         
-        // If data is batch, handle it loop? CI4 passes data row by row or batch?
-        // Data['data'] contains the row(s).
-        
-        if ($tenant) {
-            // Check if it's a single row insert or batch
-            // Typically $data['data'] is the array of key-values
-            
-            // Should verify if key 'tenant_id' is already set
+        if ($tenant && is_object($tenant) && isset($tenant->id)) {
             if (!isset($data['data']['tenant_id'])) {
                  $data['data']['tenant_id'] = $tenant->id;
             }
@@ -55,7 +76,7 @@ trait TenantScope
     {
          $appConfig = config('App');
          $tenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
-         if ($tenant) {
+         if ($tenant && is_object($tenant) && isset($tenant->id)) {
              $this->where($this->table . '.tenant_id', $tenant->id);
          }
          return $data;
@@ -65,7 +86,7 @@ trait TenantScope
     {
          $appConfig = config('App');
          $tenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
-         if ($tenant) {
+         if ($tenant && is_object($tenant) && isset($tenant->id)) {
              $this->where($this->table . '.tenant_id', $tenant->id);
          }
          return $data;

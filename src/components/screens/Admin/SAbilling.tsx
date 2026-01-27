@@ -130,8 +130,8 @@ export function SAbilling() {
 
                         <Select
                             value={filters.status || 'all'}
-                            onValueChange={(value) =>
-                                setFilters({ ...filters, status: value === 'all' ? undefined : value as any, page: 1 })
+                            onValueChange={(value: string) =>
+                                setFilters({ ...filters, status: value === 'all' ? undefined : value as InvoiceFilters['status'], page: 1 })
                             }
                         >
                             <SelectTrigger>
@@ -148,7 +148,7 @@ export function SAbilling() {
 
                         <Select
                             value={filters.sortBy || 'issueDate'}
-                            onValueChange={(value) => setFilters({ ...filters, sortBy: value as any })}
+                            onValueChange={(value: string) => setFilters({ ...filters, sortBy: value as InvoiceFilters['sortBy'] })}
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Sort by" />

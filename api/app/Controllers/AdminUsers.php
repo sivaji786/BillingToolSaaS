@@ -10,7 +10,7 @@ use App\Models\SubscriptionModel;
 
 class AdminUsers extends ResourceController
 {
-    use ResponseTrait;
+    use ResponseTrait, \App\Traits\AuditTrait;
 
     protected $format = 'json';
     protected $tenantModel;
@@ -149,6 +149,7 @@ class AdminUsers extends ResourceController
         }
 
         $this->tenantModel->update($id, ['status' => 'suspended']);
+        $this->logAction('updated', "USER-{$id}", "User suspended: {$tenant['company_name']}");
 
         return $this->respond([
             'success' => true,
@@ -169,6 +170,7 @@ class AdminUsers extends ResourceController
         }
 
         $this->tenantModel->update($id, ['status' => 'active']);
+        $this->logAction('updated', "USER-{$id}", "User activated: {$tenant['company_name']}");
 
         return $this->respond([
             'success' => true,
@@ -211,6 +213,7 @@ class AdminUsers extends ResourceController
             );
         }
 
+        $this->logAction('exported', "ADMIN-USERS", "Users list exported by admin");
         return $this->response
             ->setHeader('Content-Type', 'text/csv')
             ->setHeader('Content-Disposition', 'attachment; filename="users-export.csv"')

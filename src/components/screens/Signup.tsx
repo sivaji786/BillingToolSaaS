@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -7,25 +7,85 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { FileText, Mail, Lock, Building2, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSwitcher } from '../LanguageSwitcher';
-import { onboardingService } from '../../services/api';
+import { onboardingService, billingService } from '../../services/api';
 
 interface SignupProps {
     initialPlan?: string;
 }
 
 export function Signup({ initialPlan }: SignupProps) {
-    const { t } = useLanguage();
-    const [step, setStep] = useState(1);
+    const { t, language } = useLanguage();
     const [isLoading, setIsLoading] = useState(false);
+    const [plans, setPlans] = useState<any[]>([]);
+    const [countries, setCountries] = useState<any[]>([]);
     const [formData, setFormData] = useState({
         company_name: '',
+        website: '',
         subdomain: '',
         email: '',
         password: '',
         confirmPassword: '',
-        plan_id: initialPlan || 'free'
+        plan_id: initialPlan || '',
+        phone: '',
+        address: '',
+        city: '',
+        country: '',
+        postal_code: ''
     });
     const [subdomainStatus, setSubdomainStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+    const [isSubdomainManual, setIsSubdomainManual] = useState(false);
+
+    useEffect(() => {
+        loadData();
+    }, [language]);
+
+    const loadData = async () => {
+        try {
+            const [plansData, countriesData] = await Promise.all([
+                billingService.getPlans(),
+                onboardingService.getCountries(language)
+            ]);
+            setPlans(plansData);
+            setCountries(countriesData);
+
+            if (plansData.length > 0 && !formData.plan_id) {
+                setFormData(prev => ({ ...prev, plan_id: String(plansData[0].id) }));
+            }
+            if (countriesData.length > 0 && !formData.country) {
+                setFormData(prev => ({ ...prev, country: countriesData[0].code }));
+            }
+        } catch (error) {
+            console.error('Failed to load signup data', error);
+        }
+    };
+
+    const generateSubdomain = (name: string, website: string) => {
+        if (isSubdomainManual) return;
+
+        let base = name;
+        if (website) {
+            try {
+                const url = new URL(website.startsWith('http') ? website : `https://${website}`);
+                base = url.hostname.split('.')[0];
+            } catch (e) {
+                // Ignore invalid URL
+            }
+        }
+
+        const slug = base.toLowerCase()
+            .replace(/[^a-z0-9]/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+
+        if (slug.length >= 3) {
+            setFormData(prev => ({ ...prev, subdomain: slug }));
+            checkSubdomain(slug);
+        }
+    };
+
+    useEffect(() => {
+        generateSubdomain(formData.company_name, formData.website);
+    }, [formData.company_name, formData.website]);
 
     const checkSubdomain = async (sub: string) => {
         if (sub.length < 3) return;
@@ -39,11 +99,11 @@ export function Signup({ initialPlan }: SignupProps) {
     };
 
     const handleSubdomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // lowercase, alphanumeric and hyphen only
+        setIsSubdomainManual(true);
         const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
         setFormData({ ...formData, subdomain: val });
         if (val.length >= 3) {
-            setTimeout(() => checkSubdomain(val), 500); // Debounce
+            setTimeout(() => checkSubdomain(val), 500);
         } else {
             setSubdomainStatus('idle');
         }
@@ -52,11 +112,11 @@ export function Signup({ initialPlan }: SignupProps) {
     const handleSignup = async (e: FormEvent) => {
         e.preventDefault();
         if (formData.password !== formData.confirmPassword) {
-            toast.error('Passwords do not match');
+            toast.error(t('signup.passwordsMismatch'));
             return;
         }
         if (subdomainStatus === 'taken') {
-            toast.error('Subdomain is taken');
+            toast.error(t('signup.subdomainTaken'));
             return;
         }
 
@@ -65,25 +125,30 @@ export function Signup({ initialPlan }: SignupProps) {
         try {
             const response = await onboardingService.signup({
                 company_name: formData.company_name,
+                website: formData.website,
                 subdomain: formData.subdomain,
                 email: formData.email,
                 password: formData.password,
-                plan_id: formData.plan_id // Pass the selected plan
+                plan_id: formData.plan_id,
+                phone: formData.phone,
+                address: formData.address,
+                city: formData.city,
+                country: formData.country,
+                postal_code: formData.postal_code
             });
 
             if (response.success) {
-                toast.success('Account created!', {
-                    description: 'Redirecting you to your new account...'
+                toast.success(t('signup.accountCreated'), {
+                    description: t('signup.redirecting')
                 });
-                // Redirect to new subdomain URL
                 setTimeout(() => {
                     window.location.href = response.redirect_url;
                 }, 1500);
             }
         } catch (error: any) {
             console.error(error);
-            toast.error('Signup failed', {
-                description: error.response?.data?.messages?.error || 'Please try again'
+            toast.error(t('signup.signupFailed'), {
+                description: error.response?.data?.messages?.error || t('common.error')
             });
             setIsLoading(false);
         }
@@ -91,7 +156,6 @@ export function Signup({ initialPlan }: SignupProps) {
 
     return (
         <div className="min-h-screen relative overflow-hidden">
-            {/* Animated gradient background from Login.tsx */}
             <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.1),transparent_50%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(236,72,153,0.1),transparent_50%)]" />
@@ -110,43 +174,45 @@ export function Signup({ initialPlan }: SignupProps) {
                             <FileText className="h-10 w-10 text-white" />
                         </div>
                         <h1 className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent text-3xl font-bold">
-                            {formData.plan_id !== 'free' ? `Start ${formData.plan_id.charAt(0).toUpperCase() + formData.plan_id.slice(1)} Plan` : 'Start Free Trial'}
+                            {t('signup.getStarted')}
                         </h1>
                         <p className="mt-2 text-muted-foreground">
-                            Create your account in seconds. No card required.
+                            {t('signup.subtitle')}
                         </p>
                     </div>
 
                     <Card className="border-2 shadow-xl backdrop-blur-sm bg-white/80">
                         <CardHeader className="space-y-1">
-                            <CardTitle>Account Details</CardTitle>
+                            <CardTitle>{t('signup.accountDetails')}</CardTitle>
                             <CardDescription>
-                                Enter your company information
+                                {t('signup.companyInfo')}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSignup} className="space-y-4">
-                                {/* Plan Selection Display (Hidden input for logic, potential dropdown for user change) */}
                                 <div className="space-y-2">
-                                    <Label>Selected Plan</Label>
+                                    <Label>{t('signup.selectedPlan')}</Label>
                                     <select
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                         value={formData.plan_id}
                                         onChange={(e) => setFormData({ ...formData, plan_id: e.target.value })}
+                                        required
                                     >
-                                        <option value="free">Free (€0/mo)</option>
-                                        <option value="starter">Starter (€9/mo)</option>
-                                        <option value="pro">Pro (€29/mo)</option>
-                                        <option value="enterprise">Enterprise (Custom)</option>
+                                        <option value="" disabled>{t('signup.selectPlan')}</option>
+                                        {plans.map(plan => (
+                                            <option key={plan.id} value={plan.id}>
+                                                {plan.name} ({plan.currency === 'USD' ? '$' : '€'}{plan.price}{t('billing.perMonth')})
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Company Name</Label>
+                                    <Label>{t('signup.companyName')}</Label>
                                     <div className="relative">
                                         <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                         <Input
-                                            placeholder="Acme Corp"
+                                            placeholder={t('signup.companyPlaceholder')}
                                             className="pl-10"
                                             value={formData.company_name}
                                             onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
@@ -156,29 +222,101 @@ export function Signup({ initialPlan }: SignupProps) {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Workspace URL</Label>
+                                    <Label>{t('signup.website')}</Label>
+                                    <div className="relative">
+                                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder={t('signup.websitePlaceholder')}
+                                            className="pl-10"
+                                            value={formData.website}
+                                            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>{t('signup.workspaceUrl')}</Label>
                                     <div className="relative flex items-center">
                                         <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                                         <Input
-                                            placeholder="acme"
+                                            placeholder={t('signup.workspacePlaceholder')}
                                             className={`pl-10 pr-24 ${subdomainStatus === 'available' ? 'border-green-500 focus-visible:ring-green-500' : subdomainStatus === 'taken' ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                                             value={formData.subdomain}
                                             onChange={handleSubdomainChange}
                                             required
                                         />
-                                        <span className="absolute right-3 text-sm text-muted-foreground opacity-70">.billingtool.com</span>
+                                        <span className="absolute right-3 text-sm text-muted-foreground opacity-70">.{t('signup.workspaceDomain')}</span>
                                     </div>
-                                    {subdomainStatus === 'available' && <p className="text-xs text-green-600">✓ Available</p>}
-                                    {subdomainStatus === 'taken' && <p className="text-xs text-red-600">✗ Already taken</p>}
+                                    {subdomainStatus === 'available' && <p className="text-xs text-green-600">✓ {t('signup.available')}</p>}
+                                    {subdomainStatus === 'taken' && <p className="text-xs text-red-600">✗ {t('signup.taken')}</p>}
+                                    {!isSubdomainManual && formData.subdomain && (
+                                        <p className="text-xs text-muted-foreground italic">{t('signup.subdomainAutoGenerated')}</p>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>{t('signup.city')}</Label>
+                                        <Input
+                                            placeholder={t('signup.cityPlaceholder')}
+                                            value={formData.city}
+                                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>{t('signup.country')}</Label>
+                                        <select
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                            value={formData.country}
+                                            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                                            required
+                                        >
+                                            <option value="" disabled>{t('signup.selectCountry')}</option>
+                                            {countries.map(c => (
+                                                <option key={c.code} value={c.code}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Email</Label>
+                                    <Label>{t('signup.phone')}</Label>
+                                    <Input
+                                        type="tel"
+                                        placeholder={t('signup.phonePlaceholder')}
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>{t('signup.address')}</Label>
+                                        <Input
+                                            placeholder={t('signup.addressPlaceholder')}
+                                            value={formData.address}
+                                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>{t('signup.postalCode')}</Label>
+                                        <Input
+                                            placeholder={t('signup.postalPlaceholder')}
+                                            value={formData.postal_code}
+                                            onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>{t('signup.email')}</Label>
                                     <div className="relative">
                                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                         <Input
                                             type="email"
-                                            placeholder="you@company.com"
+                                            placeholder={t('signup.emailPlaceholder')}
                                             className="pl-10"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -189,7 +327,7 @@ export function Signup({ initialPlan }: SignupProps) {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label>Password</Label>
+                                        <Label>{t('signup.password')}</Label>
                                         <div className="relative">
                                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <Input
@@ -203,7 +341,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Confirm</Label>
+                                        <Label>{t('signup.confirmPassword')}</Label>
                                         <div className="relative">
                                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <Input
@@ -222,11 +360,11 @@ export function Signup({ initialPlan }: SignupProps) {
                                     className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white shadow-lg mt-4"
                                     disabled={isLoading}
                                 >
-                                    {isLoading ? 'Creating Account...' : 'Get Started'}
+                                    {isLoading ? t('signup.creatingAccount') : t('signup.getStarted')}
                                 </Button>
 
                                 <p className="text-center text-sm text-muted-foreground mt-4">
-                                    Already have an account? <a href="#" className="text-purple-600 hover:underline" onClick={(e) => { e.preventDefault(); window.location.hash = 'login'; window.location.reload(); }}>Log in</a>
+                                    {t('signup.alreadyHaveAccount')} <a href="#" className="text-purple-600 hover:underline" onClick={(e) => { e.preventDefault(); window.location.hash = 'login'; window.location.reload(); }}>{t('signup.login')}</a>
                                 </p>
 
                             </form>

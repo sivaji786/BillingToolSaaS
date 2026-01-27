@@ -14,6 +14,8 @@ $routes->get('debug/users', '\App\Controllers\Debug::users');
 $routes->get('debug/roles', '\App\Controllers\Debug::roles');
 $routes->get('debug/find-role', '\App\Controllers\Debug::findRole');
 $routes->get('debug/schema', '\App\Controllers\Debug::schema');
+$routes->get('database/migrate', '\App\Controllers\Database::migrate');
+$routes->get('database/seed', '\App\Controllers\Database::seed');
 
 
 
@@ -33,6 +35,7 @@ $routes->group('billing', ['filter' => 'hybridauth'], function($routes) {
 });
 
 // SaaS Onboarding
+$routes->get('api/countries', '\App\Controllers\CountryController::index');
 $routes->group('onboarding', function($routes) {
     $routes->get('check-subdomain', '\App\Controllers\Onboarding::checkSubdomain');
     $routes->post('signup', '\App\Controllers\Onboarding::signup');
@@ -69,8 +72,8 @@ $routes->group('invoice-templates', ['filter' => ['hybridauth', 'rbac:company_pr
 $routes->get('company-profiles', '\App\Controllers\CompanyProfileController::index', ['filter' => ['hybridauth', 'rbac:company_profiles.read']]);
 $routes->put('company-profiles/(:segment)', '\App\Controllers\CompanyProfileController::update/$1', ['filter' => ['hybridauth', 'rbac:company_profiles.update']]);
 
-$routes->group('company-types', ['filter' => 'rbac:roles.manage'], function($routes) {
-    $routes->get('', '\App\Controllers\CompanyTypeController::index'); // Anyone with roles.manage can view (or maybe general read?) - sticking to manage for now as per plan
+$routes->group('company-types', ['filter' => 'rbac:company_profiles.read'], function($routes) {
+    $routes->get('', '\App\Controllers\CompanyTypeController::index'); // Changed to company_profiles.read for wider access
     $routes->post('', '\App\Controllers\CompanyTypeController::create');
     $routes->put('(:segment)', '\App\Controllers\CompanyTypeController::update/$1');
     $routes->delete('(:segment)', '\App\Controllers\CompanyTypeController::delete/$1');
@@ -133,13 +136,15 @@ $routes->group('users', ['filter' => 'rbac:users.manage'], function($routes) {
 // CORS preflight - must be BEFORE other routes
 $routes->options('(:any)', 'Cors::options');
 
+$routes->post('webhooks/stripe', '\App\Controllers\Webhooks::stripe');
+
 // Admin Portal API Routes
 $routes->group('admin', function($routes) {
-    // Admin Authentication (no auth filter) - Uses AuthController for admin login
-    $routes->post('auth/login', '\App\Controllers\AuthController::login');
-    $routes->get('auth/me', '\App\Controllers\AuthController::me');
-    $routes->post('auth/logout', '\App\Controllers\AuthController::logout');
-    $routes->post('auth/refresh', '\App\Controllers\AuthController::refresh');
+    // Admin Authentication (no auth filter) - Uses AdminAuth for admin login (supports demo credentials)
+    $routes->post('auth/login', '\App\Controllers\AdminAuth::login');
+    $routes->get('auth/me', '\App\Controllers\AdminAuth::me');
+    $routes->post('auth/logout', '\App\Controllers\AdminAuth::logout');
+    $routes->post('auth/refresh', '\App\Controllers\AdminAuth::refresh');
     
     // Admin Packages
     $routes->get('packages', '\App\Controllers\AdminPackages::index');

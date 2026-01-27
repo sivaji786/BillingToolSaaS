@@ -43,8 +43,8 @@ class Auth extends ResourceController
             return $this->fail('Invalid email format');
         }
 
-        // Check if email already exists
-        $existingUser = $this->userModel->findByEmail($data['email']);
+        // Check if email already exists (Globally unique)
+        $existingUser = $this->userModel->withoutTenant()->findByEmail($data['email']);
         if ($existingUser) {
             return $this->fail('Email already registered');
         }
@@ -154,8 +154,8 @@ class Auth extends ResourceController
             return $this->fail('Email and password are required');
         }
 
-        // Authenticate user
-        $user = $this->userModel->authenticate($data['email'], $data['password']);
+        // Authenticate user (Ignore tenant scope as we don't know the tenant yet)
+        $user = $this->userModel->withoutTenant()->authenticate($data['email'], $data['password']);
 
         if (!$user) {
             return $this->failUnauthorized('Invalid email or password');

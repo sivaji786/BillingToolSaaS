@@ -159,7 +159,7 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
     // Generate ID if new template
     const templateToSave = {
       ...formData,
-      id: formData.id || String(Date.now()),
+      id: formData.id || `new_${Date.now()}`,
     };
 
     onSave(templateToSave);

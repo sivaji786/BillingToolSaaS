@@ -11,27 +11,59 @@ class TenantFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // Get the full host
-        // 1. Check for X-Tenant-ID Header (Preferred for API)
-        $tenantIdHeader = $request->getHeaderLine('X-Tenant-ID');
-        
-        if (!empty($tenantIdHeader)) {
-            // Using ID or Subdomain from header?
-            // Let's assume the header sends the SUBDOMAIN for consistency with current logic.
-            // Or it could send the ID. Let's support subdomain in header for now as it's easier for frontend to derive.
-            $subdomain = $tenantIdHeader;
-            
-            file_put_contents(WRITEPATH . 'logs/tenant_debug.log', date('Y-m-d H:i:s') . " Header X-Tenant-ID found: $subdomain\n", FILE_APPEND);
-        } else {
-            // 2. Fallback to Host parsing
-            // Get the full host from server variable for reliability
-            $host = $_SERVER['HTTP_HOST'] ?? $request->getUri()->getHost();
-            $subdomain = $this->extractSubdomain($host);
-             file_put_contents(WRITEPATH . 'logs/tenant_debug.log', date('Y-m-d H:i:s') . " Host: $host SERVER_HOST: " . ($_SERVER['HTTP_HOST'] ?? 'N/A') . " Subdomain: $subdomain URI: " . $request->getUri()->getPath() . "\n", FILE_APPEND);
+        // Allow OPTIONS requests to bypass tenant check (Safety fallback for CORS)
+        if (strtoupper($request->getMethod()) === 'OPTIONS') {
+            return;
         }
 
-        // Skip for main domain or if no subdomain found
-        if (empty($subdomain) || in_array($subdomain, ['www', 'billingtool', 'api'])) {
+        $db = \Config\Database::connect();
+        $subdomain = null;
+        $tenantId = null;
+
+        // 1. Check for X-Tenant-ID Header (Explicit Override)
+        $tenantIdHeader = $request->getHeaderLine('X-Tenant-ID');
+        if (!empty($tenantIdHeader)) {
+            $subdomain = $tenantIdHeader;
+        }
+
+        // 2. Check for JWT Token (Primary Method for Common Users)
+        if (empty($subdomain)) {
+            $authHeader = $request->getHeaderLine('Authorization');
+            // Check for alternate Authorization headers
+            if (!$authHeader) {
+                $authHeader = $request->getHeaderLine('X-Authorization') 
+                    ?? $_SERVER['HTTP_AUTHORIZATION'] 
+                    ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] 
+                    ?? null;
+            }
+
+            if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                $token = $matches[1];
+                $decoded = \App\Helpers\JWTHelper::validateToken($token);
+                
+                if ($decoded && !empty($decoded['tenant_id'])) {
+                    $tenantId = $decoded['tenant_id'];
+                }
+            }
+        }
+
+        // 3. Check for URL Segment (e.g. /portal/acme/...) - Fallback for Public Routes
+        if (empty($subdomain) && empty($tenantId)) {
+            $uri = $request->getUri()->getPath();
+            // Match /portal/{subdomain}/...
+            if (preg_match('#^/?portal/([^/]+)#', $uri, $matches)) {
+                $subdomain = $matches[1];
+            }
+        }
+
+        // 4. Fallback to Host parsing (Legacy/Subdomain support)
+        if (empty($subdomain) && empty($tenantId)) {
+            $host = $_SERVER['HTTP_HOST'] ?? $request->getUri()->getHost();
+            $subdomain = $this->extractSubdomain($host);
+        }
+
+        // Skip if no context found (likely global route or login)
+        if (empty($tenantId) && (empty($subdomain) || in_array($subdomain, ['www', 'billingtool', 'api', 'demo']))) {
             return; 
         }
 
@@ -41,37 +73,38 @@ class TenantFilter implements FilterInterface
             return;
         }
         
-        $db = \Config\Database::connect();
-        $tenant = $db->table('tenants')
-            ->where('subdomain', $subdomain)
-            ->where('status', 'active')
-            ->get()
-            ->getRow();
+        $tenant = null;
+
+        // Fetch by ID (from Token)
+        if ($tenantId) {
+            $tenant = $db->table('tenants')
+                ->where('id', $tenantId)
+                ->where('status', 'active')
+                ->get()
+                ->getRow();
+        } 
+        // Fetch by Identifier (UUID or Subdomain from Header/URL)
+        elseif ($subdomain) {
+            $builder = $db->table('tenants')->where('status', 'active');
+            
+            // Check if it's a UUID
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $subdomain)) {
+                $builder->where('uuid', $subdomain);
+            } else {
+                $builder->where('subdomain', $subdomain);
+            }
+            
+            $tenant = $builder->get()->getRow();
+        }
         
         if (!$tenant) {
             return Services::response()
                 ->setJSON([
                     'error' => 'Tenant not found',
-                    'subdomain' => $subdomain,
                     'message' => 'This account does not exist or has been suspended.'
                 ])
                 ->setStatusCode(404);
         }
-        
-        // Check if subscription is active (Optional for Phase 1, but good practice)
-        // Simple check: do we have a subscription? 
-        /*
-        $subscription = $db->table('subscriptions')
-            ->where('tenant_id', $tenant['id'])
-            ->whereIn('status', ['active', 'trialing'])
-            ->get()
-            ->getRowArray();
-
-        if (!$subscription) {
-             return Services::response()
-                ->setJSON(['error' => 'Subscription inactive'])->setStatusCode(402);
-        }
-        */
         
         // Store tenant in request & global config
         $request->tenant = $tenant;
@@ -83,33 +116,17 @@ class TenantFilter implements FilterInterface
         // Remove port if present
         $host = explode(':', $host)[0];
         
-        // If IP address, return 'demo' for dev ease, or empty?
+        // If IP address, return 'demo' for dev ease
         if (filter_var($host, FILTER_VALIDATE_IP)) {
-            return 'demo'; // Default for local development
+            return 'demo'; 
         }
         
-        // Split by dots
         $parts = explode('.', $host);
         
-        // localhost handling: sub.localhost -> parts = [sub, localhost]
-        // billingtool.local -> sub.billingtool.local -> parts = [sub, billingtool, local]
-        // billingtool.com -> sub.billingtool.com -> parts = [sub, billingtool, com]
-        
-        // General logic: if more than 2 parts (for .com) or more than 1 part (for localhost), take the first.
-        // But localhost itself has 1 part. 'localhost'.
-        
-        if ($host === 'localhost') {
-            return 'demo'; // Fallback
-        }
+        if ($host === 'localhost') return 'demo';
 
-        if (count($parts) > 2) {
-            return $parts[0];
-        }
-        
-        // sub.localhost
-        if (count($parts) === 2 && $parts[1] === 'localhost') {
-            return $parts[0];
-        }
+        if (count($parts) > 2) return $parts[0];
+        if (count($parts) === 2 && $parts[1] === 'localhost') return $parts[0];
 
         return '';
     }

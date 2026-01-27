@@ -32,8 +32,17 @@ class AddMoreIndexes extends Migration
 
     public function down()
     {
-        $this->db->query("ALTER TABLE `tenants` DROP INDEX `idx_tenants_slug` ");
-        $this->db->query("ALTER TABLE `subscriptions` DROP INDEX `idx_subscriptions_tenant` ");
-        $this->db->query("ALTER TABLE `invoices` DROP INDEX `idx_invoices_tenant` ");
+        $indexes = $this->db->getIndexData('tenants');
+        if (in_array('idx_tenants_subdomain', array_column($indexes, 'name'))) {
+            $this->db->query("ALTER TABLE `tenants` DROP INDEX `idx_tenants_subdomain` ");
+        }
+
+        // Skipping idx_subscriptions_tenant as it's typically tied to a Foreign Key
+        // and will be dropped when the table or FK is dropped.
+
+        $indexes = $this->db->getIndexData('invoices');
+        if (in_array('idx_invoices_tenant', array_column($indexes, 'name'))) {
+            $this->db->query("ALTER TABLE `invoices` DROP INDEX `idx_invoices_tenant` ");
+        }
     }
 }

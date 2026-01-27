@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface StatsCardProps {
     title: string;
@@ -18,6 +19,7 @@ interface StatsCardProps {
 }
 
 export function StatsCard({ title, value, icon: Icon, trend, loading, className, onClick }: StatsCardProps) {
+    const { t } = useLanguage();
     if (loading) {
         return (
             <Card className={className}>
@@ -59,7 +61,7 @@ export function StatsCard({ title, value, icon: Icon, trend, loading, className,
                         >
                             {Math.abs(trend.value)}%
                         </span>
-                        <span className="text-muted-foreground ml-1">from last month</span>
+                        <span className="text-muted-foreground ml-1">{t('stats.fromLastMonth')}</span>
                     </div>
                 )}
             </CardContent>

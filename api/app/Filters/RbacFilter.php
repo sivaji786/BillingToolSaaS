@@ -52,6 +52,26 @@ class RbacFilter implements FilterInterface
              return response()->setJSON(['error' => 'Authentication required'])->setStatusCode(401);
         }
         
+        // 1.5 CHECK TENANT SCOPE MATCH
+        // We must ensure the authenticated user actually belongs to the current tenant context.
+        // TenantFilter has already run and set config('App')->currentTenant
+        $appConfig = config('App');
+        $currentTenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
+        
+        if ($currentTenant) {
+             // We need to fetch the user to check their tenant_id
+             // Ideally this should be in the token, but let's fetch from DB to be sure/secure or parse from token if available.
+             // decode token again? We decoded above.
+             
+             // Let's use the DB user model to get the fresh user data especially tenant_id
+             $userModel = new UserModel();
+             $user = $userModel->withoutTenant()->find($userId); // Bypass scope to find user globally first
+             
+             if ($user && $user['tenant_id'] != $currentTenant->id) {
+                 return response()->setJSON(['error' => 'Tenant Mismatch: User does not belong to this workspace'])->setStatusCode(403);
+             }
+        }
+        
         // 2. Check Permissions if arguments provided
         if (empty($arguments)) {
             // No specific permission required, just authentication (which passed)

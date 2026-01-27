@@ -105,15 +105,22 @@ export interface ActivityItem {
 }
 
 export interface UsageMetrics {
+    storageUsed: number;
+    storageLimit: number;
+    apiCalls: number;
+    apiCallsLimit: number;
+    bandwidthUsed: number;
+    bandwidthLimit: number;
+    activeSessions: number;
+    activeSessionsLimit: number;
     period: 'daily' | 'weekly' | 'monthly' | 'yearly';
-    startDate: string;
-    endDate: string;
-    metrics: {
-        storage: MetricDataPoint[];
-        apiCalls: MetricDataPoint[];
-        bandwidth: MetricDataPoint[];
-        activeSessions: MetricDataPoint[];
-    };
+    historicalData: {
+        date: string;
+        storage: number;
+        apiCalls: number;
+        bandwidth: number;
+        sessions: number;
+    }[];
 }
 
 export interface MetricDataPoint {
@@ -208,6 +215,16 @@ export interface ChartDataset {
     backgroundColor?: string;
     borderColor?: string;
     fill?: boolean;
+}
+export interface RevenueStats {
+    totalRevenue: number;
+    paidInvoices: number;
+    pendingInvoices: number;
+    monthlyData: {
+        month: string;
+        revenue: number;
+    }[];
+    growth: string;
 }
 
 // Form Types

@@ -62,15 +62,33 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                 const transformedPlans = data.map((plan: any, index: number) => {
                     let parsedFeatures: string[] = [];
                     try {
-                        if (plan.features) {
-                            if (typeof plan.features === 'string' && plan.features.startsWith('[')) {
-                                const featuresArray = JSON.parse(plan.features);
-                                parsedFeatures = featuresArray.map((f: any) => f.value ? `${f.name}: ${f.value}` : f.name);
-                            } else if (typeof plan.features === 'string') {
-                                parsedFeatures = plan.features.split(',').map((f: string) => f.trim());
-                            } else if (Array.isArray(plan.features)) {
-                                parsedFeatures = plan.features.map((f: any) => typeof f === 'object' ? (f.value ? `${f.name}: ${f.value}` : f.name) : f);
+                        let featuresData = plan.features;
+
+                        // Try to parse if it's a JSON string
+                        if (typeof featuresData === 'string' && (featuresData.startsWith('[') || featuresData.startsWith('{'))) {
+                            try {
+                                featuresData = JSON.parse(featuresData);
+                            } catch (e) {
+                                // Fallback to raw string handling
                             }
+                        }
+
+                        if (Array.isArray(featuresData)) {
+                            parsedFeatures = featuresData.map((f: any) => {
+                                if (typeof f === 'object' && f !== null) {
+                                    return f.value ? `${f.name}: ${f.value}` : (f.name || JSON.stringify(f));
+                                }
+                                return String(f);
+                            });
+                        } else if (typeof featuresData === 'object' && featuresData !== null) {
+                            // Handle object format {"users": 1, "support": "email"}
+                            parsedFeatures = Object.entries(featuresData).map(([key, value]) => {
+                                const humanKey = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                                return `${humanKey}: ${value}`;
+                            });
+                        } else if (typeof plan.features === 'string' && plan.features) {
+                            // Handle comma-separated string
+                            parsedFeatures = plan.features.split(',').map((f: string) => f.trim());
                         }
                     } catch (e) {
                         console.error('Error parsing features:', e);
@@ -135,23 +153,23 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
     const features = [
         {
             icon: <FileText className="h-6 w-6 text-purple-600" />,
-            title: "Smart Invoicing",
-            description: "Create professional EN 16931 compliant invoices in seconds."
+            title: t('landing.features.smartInvoicing.title'),
+            description: t('landing.features.smartInvoicing.desc')
         },
         {
             icon: <LayoutTemplate className="h-6 w-6 text-pink-600" />,
-            title: "Custom Templates",
-            description: "Design beautiful invoice templates that match your brand identity."
+            title: t('landing.features.customTemplates.title'),
+            description: t('landing.features.customTemplates.desc')
         },
         {
             icon: <Globe className="h-6 w-6 text-blue-600" />,
-            title: "Multi-Language",
-            description: "Support for 6+ languages including RTL support for Arabic."
+            title: t('landing.features.multiLanguage.title'),
+            description: t('landing.features.multiLanguage.desc')
         },
         {
             icon: <Shield className="h-6 w-6 text-green-600" />,
-            title: "Secure & Compliant",
-            description: "Bank-grade security with full audit trails and role-based access."
+            title: t('landing.features.secureCompliant.title'),
+            description: t('landing.features.secureCompliant.desc')
         }
     ];
 
@@ -180,10 +198,10 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                         <LanguageSwitcher variant="login" />
                         <div className="hidden md:flex gap-4">
                             <Button variant="ghost" onClick={onLogin}>
-                                Log In
+                                {t('landing.login')}
                             </Button>
                             <Button onClick={() => onSignup()}>
-                                Sign Up
+                                {t('landing.signup')}
                             </Button>
                         </div>
                     </nav>
@@ -215,19 +233,18 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                         >
                             <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
                                 <Sparkles className="mr-1 h-3 w-3 text-purple-600" />
-                                New: AI-Powered Invoice Processing
+                                {t('landing.hero.badge')}
                             </motion.div>
                             <motion.h1 variants={itemVariants} className="text-4xl font-extrabold tracking-tight lg:text-5xl xl:text-6xl max-w-4xl bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-purple-800 to-gray-900 dark:from-white dark:via-purple-200 dark:to-white pb-2">
-                                Modern Invoicing for <br className="hidden sm:inline" />
-                                <span className="text-purple-600">Forward-Thinking</span> Businesses
+                                {t('landing.hero.title')} <br className="hidden sm:inline" />
+                                <span className="text-purple-600">{t('landing.hero.titleAccent')}</span> {t('landing.hero.titleSuffix')}
                             </motion.h1>
                             <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                                Streamline your billing with our compliant, multi-tenant SaaS platform.
-                                Create, manage, and track invoices with enterprise-grade security and design.
+                                {t('landing.hero.subtitle')}
                             </motion.p>
                             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 min-w-[300px] justify-center pt-4">
                                 <Button size="lg" className="bg-purple-600 hover:bg-purple-700 h-12 px-8 text-lg" onClick={() => onSignup()}>
-                                    Get Started
+                                    {t('landing.hero.getStarted')}
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </motion.div>
@@ -245,9 +262,9 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                             variants={containerVariants}
                             className="text-center mb-16"
                         >
-                            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Everything you need</motion.h2>
+                            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t('landing.features.tag')}</motion.h2>
                             <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400 mt-4">
-                                Powerful features to help you get paid faster and manage your finances better.
+                                {t('landing.features.subtitle')}
                             </motion.p>
                         </motion.div>
                         <motion.div
@@ -286,9 +303,9 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                             variants={containerVariants}
                             className="text-center mb-16"
                         >
-                            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Simple, Transparent Pricing</motion.h2>
+                            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t('landing.pricing.tag')}</motion.h2>
                             <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400 mt-4">
-                                Choose the plan that fits your business needs. No hidden fees.
+                                {t('landing.pricing.subtitle')}
                             </motion.p>
                         </motion.div>
                         <motion.div
@@ -304,7 +321,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                                         {plan.highlight && (
                                             <div className="absolute -top-4 left-0 right-0 flex justify-center">
                                                 <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide shadow-md">
-                                                    Most Popular
+                                                    {t('landing.pricing.popular')}
                                                 </span>
                                             </div>
                                         )}
@@ -315,7 +332,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                                         <CardContent className="flex-1">
                                             <div className="mb-6">
                                                 <span className="text-4xl font-bold">{plan.price}</span>
-                                                {plan.price !== 'Custom' && <span className="text-muted-foreground">/month</span>}
+                                                {plan.price !== 'Custom' && <span className="text-muted-foreground">{t('billing.perMonth')}</span>}
                                             </div>
                                             <ul className="space-y-3 text-sm">
                                                 {plan.features.map((feature: string, i: number) => (
@@ -332,7 +349,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                                                 variant={plan.highlight ? 'default' : 'outline'}
                                                 onClick={() => onSignup(plan.id)}
                                             >
-                                                {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
+                                                {plan.price === 'Custom' ? t('landing.pricing.contactSales') : t('landing.hero.getStarted')}
                                             </Button>
                                         </CardFooter>
                                     </Card>
@@ -351,12 +368,12 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                         <span className="text-lg font-bold text-foreground">BillingTool</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                        © 2026 BillingTool Inc. All rights reserved.
+                        © 2026 BillingTool Inc. {t('landing.footer.rights')}
                     </p>
                     <div className="flex gap-4">
-                        <a href="#" className="text-sm text-muted-foreground hover:text-primary">Terms</a>
-                        <a href="#" className="text-sm text-muted-foreground hover:text-primary">Privacy</a>
-                        <a href="#" className="text-sm text-muted-foreground hover:text-primary">Contact</a>
+                        <a href="#" className="text-sm text-muted-foreground hover:text-primary">{t('landing.footer.terms')}</a>
+                        <a href="#" className="text-sm text-muted-foreground hover:text-primary">{t('landing.footer.privacy')}</a>
+                        <a href="#" className="text-sm text-muted-foreground hover:text-primary">{t('landing.footer.contact')}</a>
                     </div>
                 </div>
             </footer>

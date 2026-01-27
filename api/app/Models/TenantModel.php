@@ -13,9 +13,30 @@ class TenantModel extends Model
     protected $useSoftDeletes   = false; // Maybe true later
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'company_name', 'subdomain', 'custom_domain', 
-        'plan_id', 'status', 'trial_ends_at'
+        'company_name', 'website', 'subdomain', 'custom_domain', 
+        'plan_id', 'status', 'trial_ends_at', 'uuid'
     ];
+    
+    protected $beforeInsert = ['generateUuid'];
+    
+    protected function generateUuid(array $data)
+    {
+        if (!isset($data['data']['uuid'])) {
+            $data['data']['uuid'] = $this->getUuid();
+        }
+        return $data;
+    }
+    
+    private function getUuid() {
+        return sprintf(
+            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        );
+    }
 
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';

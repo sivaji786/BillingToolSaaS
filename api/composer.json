@@ -15,6 +15,7 @@
         "firebase/php-jwt": "^7.0",
         "gemini-api-php/client": "^1.7",
         "nyholm/psr7": "^1.8",
+        "stripe/stripe-php": "^19.2",
         "symfony/http-client": "^7.4"
     },
     "require-dev": {

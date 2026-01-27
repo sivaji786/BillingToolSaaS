@@ -33,22 +33,22 @@ export function SAusage() {
     };
 
     // Extract chart data from API response
-    const storageData = data?.historicalData?.map((item: any) => ({
+    const storageData = data?.historicalData?.map((item) => ({
         date: item.date,
         value: item.storage
     })) || [];
 
-    const apiCallsData = data?.historicalData?.map((item: any) => ({
+    const apiCallsData = data?.historicalData?.map((item) => ({
         date: item.date,
         value: item.apiCalls
     })) || [];
 
-    const bandwidthData = data?.historicalData?.map((item: any) => ({
+    const bandwidthData = data?.historicalData?.map((item) => ({
         date: item.date,
         value: item.bandwidth
     })) || [];
 
-    const activeSessionsData = data?.historicalData?.map((item: any) => ({
+    const activeSessionsData = data?.historicalData?.map((item) => ({
         date: item.date,
         value: item.sessions
     })) || [];

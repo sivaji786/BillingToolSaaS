@@ -34,33 +34,37 @@ class AdminAuth extends ResourceController
             return $this->failValidationErrors($this->validator->getErrors());
         }
 
-        $email = $this->request->getVar('email');
-        $password = $this->request->getVar('password');
+        try {
+            $email = $this->request->getVar('email');
+            $password = $this->request->getVar('password');
 
-        // For demo purposes, accept demo credentials
-        if ($email === 'admin@demo.com' && $password === 'admin123') {
-            $user = [
-                'id' => '1',
-                'name' => 'Demo Admin',
-                'email' => 'admin@demo.com',
-                'role' => 'super_admin',
-                'createdAt' => date('Y-m-d H:i:s'),
-                'lastLogin' => date('Y-m-d H:i:s'),
-            ];
+            $model = new \App\Models\AdminUserModel();
+            $user = $model->where('email', $email)->first();
 
-            $token = $this->generateToken($user);
+            if ($user && password_verify($password, $user['password'])) {
+                // Update last login
+                $model->update($user['id'], ['last_login' => date('Y-m-d H:i:s')]);
 
-            return $this->respond([
-                'success' => true,
-                'data' => [
-                    'user' => $user,
-                    'token' => $token,
-                ],
-                'message' => 'Login successful',
-            ]);
+                // Prepare user data for token (exclude password)
+                unset($user['password']);
+
+                $token = $this->generateToken($user);
+
+                return $this->respond([
+                    'success' => true,
+                    'data' => [
+                        'user' => $user,
+                        'token' => $token,
+                    ],
+                    'message' => 'Login successful',
+                ]);
+            }
+
+            return $this->failUnauthorized('Invalid credentials');
+        } catch (\Throwable $e) {
+            // DEBUGGING: Return the actual error message
+            return $this->failServerError('LOGIN CRASH: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
         }
-
-        return $this->failUnauthorized('Invalid credentials');
     }
 
     /**
@@ -153,14 +157,17 @@ class AdminAuth extends ResourceController
             $key = getenv('JWT_SECRET') ?: 'your-secret-key-change-this-in-production';
             $decoded = JWT::decode($token, new Key($key, 'HS256'));
             
-            return [
-                'id' => $decoded->data->id,
-                'email' => $decoded->data->email,
-                'role' => $decoded->data->role,
-                'name' => 'Demo Admin',
-                'createdAt' => date('Y-m-d H:i:s'),
-                'lastLogin' => date('Y-m-d H:i:s'),
-            ];
+            // Verify user exists in DB
+            $model = new \App\Models\AdminUserModel();
+            $user = $model->find($decoded->data->id);
+
+            if (!$user) {
+                return null;
+            }
+
+            // Return user data (without password)
+            unset($user['password']);
+            return $user;
         } catch (\Exception $e) {
             return null;
         }

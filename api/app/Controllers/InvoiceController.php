@@ -7,87 +7,93 @@ use App\Models\InvoiceModel;
 use App\Models\InvoiceLineModel;
 use CodeIgniter\API\ResponseTrait;
 
+use App\Traits\AuditTrait;
+
 class InvoiceController extends BaseController
 {
-    use ResponseTrait;
+    use ResponseTrait, AuditTrait;
 
     public function index()
     {
-        $model = new InvoiceModel();
-        
-        // Filtering
-        $search = $this->request->getGet('search');
-        if ($search) {
-            $model->groupStart()
-                ->like('invoice_number', $search)
-                ->orLike('buyer_name', $search)
-                ->orLike('seller_name', $search)
-                ->groupEnd();
-        }
-
-        $status = $this->request->getGet('status');
-        if ($status && $status !== 'all') {
-            $model->where('status', $status);
-        }
-
-        $dateFilter = $this->request->getGet('dateFilter');
-        if ($dateFilter && $dateFilter !== 'anyDate') {
-            $now = date('Y-m-d');
-            switch ($dateFilter) {
-                case 'last7Days':
-                    $model->where('issue_date >=', date('Y-m-d', strtotime('-7 days')));
-                    break;
-                case 'last30Days':
-                    $model->where('issue_date >=', date('Y-m-d', strtotime('-30 days')));
-                    break;
-                case 'last90Days':
-                    $model->where('issue_date >=', date('Y-m-d', strtotime('-90 days')));
-                    break;
-                case 'thisMonth':
-                    $model->where('issue_date >=', date('Y-m-01'));
-                    $model->where('issue_date <=', date('Y-m-t'));
-                    break;
-                case 'lastMonth':
-                    $model->where('issue_date >=', date('Y-m-01', strtotime('first day of last month')));
-                    $model->where('issue_date <=', date('Y-m-t', strtotime('last day of last month')));
-                    break;
-                case 'thisYear':
-                    $model->where('issue_date >=', date('Y-01-01'));
-                    $model->where('issue_date <=', date('Y-12-31'));
-                    break;
+        try {
+            $model = new InvoiceModel();
+            
+            // Filtering
+            $search = $this->request->getGet('search');
+            if ($search) {
+                $model->groupStart()
+                    ->like('invoice_number', $search)
+                    ->orLike('buyer_name', $search)
+                    ->orLike('seller_name', $search)
+                    ->groupEnd();
             }
-        }
 
-        // Sorting
-        $sort = $this->request->getGet('sort') ?? 'dateDesc';
-        switch ($sort) {
-            case 'dateDesc':
-                $model->orderBy('issue_date', 'DESC');
-                break;
-            case 'dateAsc':
-                $model->orderBy('issue_date', 'ASC');
-                break;
-            case 'amountDesc':
-                $model->orderBy('payable_amount', 'DESC');
-                break;
-            case 'amountAsc':
-                $model->orderBy('payable_amount', 'ASC');
-                break;
-            case 'numberDesc':
-                $model->orderBy('invoice_number', 'DESC');
-                break;
-            case 'numberAsc':
-                $model->orderBy('invoice_number', 'ASC');
-                break;
-            default:
-                $model->orderBy('issue_date', 'DESC');
-        }
+            $status = $this->request->getGet('status');
+            if ($status && $status !== 'all') {
+                $model->where('status', $status);
+            }
 
-        $invoices = $model->findAll();
-        
-        $transformed = array_map([$this, 'transformInvoice'], $invoices);
-        
-        return $this->respond($transformed);
+            $dateFilter = $this->request->getGet('dateFilter');
+            if ($dateFilter && $dateFilter !== 'anyDate') {
+                $now = date('Y-m-d');
+                switch ($dateFilter) {
+                    case 'last7Days':
+                        $model->where('issue_date >=', date('Y-m-d', strtotime('-7 days')));
+                        break;
+                    case 'last30Days':
+                        $model->where('issue_date >=', date('Y-m-d', strtotime('-30 days')));
+                        break;
+                    case 'last90Days':
+                        $model->where('issue_date >=', date('Y-m-d', strtotime('-90 days')));
+                        break;
+                    case 'thisMonth':
+                        $model->where('issue_date >=', date('Y-m-01'));
+                        $model->where('issue_date <=', date('Y-m-t'));
+                        break;
+                    case 'lastMonth':
+                        $model->where('issue_date >=', date('Y-m-01', strtotime('first day of last month')));
+                        $model->where('issue_date <=', date('Y-m-t', strtotime('last day of last month')));
+                        break;
+                    case 'thisYear':
+                        $model->where('issue_date >=', date('Y-01-01'));
+                        $model->where('issue_date <=', date('Y-12-31'));
+                        break;
+                }
+            }
+
+            // Sorting
+            $sort = $this->request->getGet('sort') ?? 'dateDesc';
+            switch ($sort) {
+                case 'dateDesc':
+                    $model->orderBy('issue_date', 'DESC');
+                    break;
+                case 'dateAsc':
+                    $model->orderBy('issue_date', 'ASC');
+                    break;
+                case 'amountDesc':
+                    $model->orderBy('payable_amount', 'DESC');
+                    break;
+                case 'amountAsc':
+                    $model->orderBy('payable_amount', 'ASC');
+                    break;
+                case 'numberDesc':
+                    $model->orderBy('invoice_number', 'DESC');
+                    break;
+                case 'numberAsc':
+                    $model->orderBy('invoice_number', 'ASC');
+                    break;
+                default:
+                    $model->orderBy('issue_date', 'DESC');
+            }
+
+            $invoices = $model->findAll();
+            
+            $transformed = array_map([$this, 'transformInvoice'], $invoices);
+            
+            return $this->respond($transformed);
+        } catch (\Throwable $e) {
+            return $this->failServerError('INVOICE LIST ERROR: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+        }
     }
 
     public function show($id = null)
@@ -128,6 +134,10 @@ class InvoiceController extends BaseController
 
     private function transformInvoice($invoice)
     {
+        // Robust decoding: if decode returns null (invalid/empty), default to empty array
+        $sellerContact = json_decode($invoice['seller_contact_json'] ?? '{}', true) ?: [];
+        $buyerContact = json_decode($invoice['buyer_contact_json'] ?? '{}', true) ?: [];
+
         return [
             'id' => $invoice['id'],
             'invoiceNumber' => $invoice['invoice_number'],
@@ -140,15 +150,15 @@ class InvoiceController extends BaseController
                 'name' => $invoice['seller_name'],
                 'vatId' => $invoice['seller_vat_id'],
                 'address' => json_decode($invoice['seller_address_json'] ?? '{}', true),
-                'contactEmail' => $invoice['seller_email'] ?? null,
-                'contactPhone' => $invoice['seller_phone'] ?? null,
+                'contactEmail' => $sellerContact['email'] ?? null,
+                'contactPhone' => $sellerContact['phone'] ?? null,
             ],
             'buyer' => [
                 'name' => $invoice['buyer_name'],
                 'vatId' => $invoice['buyer_vat_id'],
                 'address' => json_decode($invoice['buyer_address_json'] ?? '{}', true),
-                'contactEmail' => $invoice['buyer_email'] ?? null,
-                'contactPhone' => $invoice['buyer_phone'] ?? null,
+                'contactEmail' => $buyerContact['email'] ?? null,
+                'contactPhone' => $buyerContact['phone'] ?? null,
             ],
             'lines' => [], // Default empty lines for list view
             'taxTotals' => [], // Placeholder
@@ -167,7 +177,22 @@ class InvoiceController extends BaseController
         
         // Map frontend data to database columns
         $dbData = $this->mapInvoiceData($data);
-        $dbData['created_by'] = 1; // TODO: Get from auth
+        
+        // Get Authenticated User ID (from Session or JWT)
+        $userId = session()->get('userId');
+        if (!$userId) {
+             // Try JWT if session empty
+             $authHeader = $this->request->getHeaderLine('Authorization');
+             if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+                 $key = getenv('JWT_SECRET') ?: 'billing_tool_secret_key';
+                 try {
+                     $decoded = \Firebase\JWT\JWT::decode($matches[1], new \Firebase\JWT\Key($key, 'HS256'));
+                     $userId = $decoded->uid ?? $decoded->user_id;
+                 } catch (\Exception $e) {}
+             }
+        }
+        
+        $dbData['created_by'] = $userId ?: 1; // Fallback to 1 if not found (should be caught by RBAC filter anyway)
         
         if ($model->insert($dbData)) {
             $invoiceId = $model->getInsertID();
@@ -180,6 +205,7 @@ class InvoiceController extends BaseController
                 }
             }
             
+            $this->logAction('created', $dbData['invoice_number'], "Invoice created for {$dbData['buyer_name']}");
             return $this->respondCreated(['id' => $invoiceId, 'message' => 'Invoice created']);
         }
         
@@ -213,6 +239,12 @@ class InvoiceController extends BaseController
                 }
             }
             
+            $action = 'updated';
+            if ($dbData['status'] === 'validated') $action = 'validated';
+            if ($dbData['status'] === 'sent') $action = 'sent';
+            if ($dbData['signed']) $action = 'signed';
+
+            $this->logAction($action, $dbData['invoice_number'], "Invoice {$action}. Status: {$dbData['status']}", (bool)($dbData['signed'] ?? false));
             return $this->respond(['id' => $id, 'message' => 'Invoice updated']);
         }
         
@@ -232,6 +264,7 @@ class InvoiceController extends BaseController
         $lineModel->where('invoice_id', $id)->delete();
         
         if ($model->delete($id)) {
+            $this->logAction('deleted', $invoice['invoice_number'] ?? 'Unknown', "Invoice deleted");
             return $this->respondDeleted(['id' => $id, 'message' => 'Invoice deleted']);
         }
         

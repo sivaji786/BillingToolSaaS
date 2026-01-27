@@ -12,12 +12,16 @@ class InvoiceTemplateController extends BaseController
 
     public function index()
     {
-        $model = new InvoiceTemplateModel();
-        $templates = $model->findAll();
-        
-        $transformed = array_map([$this, 'transformTemplate'], $templates);
-        
-        return $this->respond($transformed);
+        try {
+            $model = new InvoiceTemplateModel();
+            $templates = $model->findAll();
+            
+            $transformed = array_map([$this, 'transformTemplate'], $templates);
+            
+            return $this->respond($transformed);
+        } catch (\Throwable $e) {
+            return $this->failServerError('TEMPLATE LIST ERROR: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+        }
     }
 
     public function show($id = null)
@@ -102,15 +106,15 @@ class InvoiceTemplateController extends BaseController
             'id' => $template['id'],
             'name' => $template['name'],
             'description' => $template['description'],
-            'seller' => json_decode($template['seller_json'] ?? '{}', true),
+            'seller' => json_decode($template['seller_json'] ?? '{}', true) ?: [],
             'defaultCurrency' => $template['default_currency'],
             'defaultTaxCategory' => $template['default_tax_category'],
             'defaultTaxPercent' => (float)$template['default_tax_percent'],
-            'defaultPaymentTerms' => json_decode($template['default_payment_terms_json'] ?? '{}', true),
+            'defaultPaymentTerms' => json_decode($template['default_payment_terms_json'] ?? '{}', true) ?: [],
             'logoUrl' => $template['logo_url'],
             'headerText' => $template['header_text'],
             'footerText' => $template['footer_text'],
-            'layout' => isset($template['layout_json']) ? json_decode($template['layout_json'], true) : [],
+            'layout' => json_decode($template['layout_json'] ?? '{}', true) ?: [],
         ];
     }
 }

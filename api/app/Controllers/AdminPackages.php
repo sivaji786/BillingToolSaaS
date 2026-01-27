@@ -8,7 +8,7 @@ use App\Models\PlanModel;
 
 class AdminPackages extends ResourceController
 {
-    use ResponseTrait;
+    use ResponseTrait, \App\Traits\AuditTrait;
 
     protected $format = 'json';
     protected $planModel;
@@ -122,6 +122,8 @@ class AdminPackages extends ResourceController
             return $this->fail('Failed to create package');
         }
 
+        $this->logAction('created', "PACK-{$id}", "Package created: {$planData['name']}");
+
         return $this->respondCreated([
             'success' => true,
             'message' => 'Package created successfully',
@@ -173,6 +175,8 @@ class AdminPackages extends ResourceController
             return $this->fail('Failed to update package');
         }
 
+        $this->logAction('updated', "PACK-{$id}", "Package updated: " . ($updateData['name'] ?? $plan['name']));
+
         return $this->respond([
             'success' => true,
             'message' => 'Package updated successfully',
@@ -204,6 +208,8 @@ class AdminPackages extends ResourceController
         if (!$success) {
             return $this->fail('Failed to delete package');
         }
+
+        $this->logAction('deleted', "PACK-{$id}", "Package deleted: {$plan['name']}");
 
         return $this->respond([
             'success' => true,

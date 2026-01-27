@@ -10,7 +10,7 @@ use App\Models\SubscriptionModel;
 
 class AdminAnalytics extends ResourceController
 {
-    use ResponseTrait;
+    use ResponseTrait, \App\Traits\AuditTrait;
 
     protected $format = 'json';
     protected $tenantModel;
@@ -293,6 +293,7 @@ class AdminAnalytics extends ResourceController
         $csv .= "2024-05,72.1,215000,2380,578\n";
         $csv .= "2024-06,78.9,238000,2650,642\n";
 
+        $this->logAction('exported', 'ADMIN-USAGE', "Usage data exported by admin");
         return $this->response
             ->setHeader('Content-Type', 'text/csv')
             ->setHeader('Content-Disposition', 'attachment; filename="usage-export.csv"')

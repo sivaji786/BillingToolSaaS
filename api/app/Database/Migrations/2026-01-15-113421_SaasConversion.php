@@ -69,7 +69,9 @@ class SaasConversion extends Migration
             'projects', 
             'audit_logs', 
             'tickets',
-            'company_profiles'
+            'company_profiles',
+            'roles',
+            'rights'
         ];
 
         foreach ($tables as $table) {
@@ -85,15 +87,14 @@ class SaasConversion extends Migration
                 ];
                 $this->forge->addColumn($table, $fields);
                 
-                // Add index manually as addColumn doesn't support addKey directly easily in all drivers
-                $this->db->query("ALTER TABLE `$table` ADD INDEX `idx_{$table}_tenant` (`tenant_id`)");
+                // Add index manually
+                $this->db->query("ALTER TABLE `$table` ADD INDEX `idx_{$table}_tenant` (`tenant_id`) ");
             }
         }
     }
 
     public function down()
     {
-        // Drop foreign keys first if needed, or just tables with keys
         $this->forge->dropTable('subscriptions', true);
         $this->forge->dropTable('tenants', true);
         $this->forge->dropTable('plans', true);
@@ -105,12 +106,13 @@ class SaasConversion extends Migration
             'projects', 
             'audit_logs', 
             'tickets',
-            'company_profiles'
+            'company_profiles',
+            'roles',
+            'rights'
         ];
 
         foreach ($tables as $table) {
              if ($this->db->tableExists($table)) {
-                // Check if column exists before dropping to avoid errors
                 if ($this->db->fieldExists('tenant_id', $table)) {
                     $this->forge->dropColumn($table, 'tenant_id');
                 }

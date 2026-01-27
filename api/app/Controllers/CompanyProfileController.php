@@ -6,51 +6,70 @@ use App\Controllers\BaseController;
 use App\Models\CompanyProfileModel;
 use CodeIgniter\API\ResponseTrait;
 
+use App\Traits\AuditTrait;
+
 class CompanyProfileController extends BaseController
 {
-    use ResponseTrait;
+    use ResponseTrait, AuditTrait;
 
     public function index()
     {
-        $model = new CompanyProfileModel();
-        $profiles = $model->findAll();
-        
-        $transformed = array_map([$this, 'transformProfile'], $profiles);
-        
-        return $this->respond($transformed);
+        try {
+            $model = new CompanyProfileModel();
+            $profiles = $model->findAll();
+            
+            $transformed = array_map([$this, 'transformProfile'], $profiles);
+            
+            return $this->respond($transformed);
+        } catch (\Throwable $e) {
+             return $this->failServerError('PROFILE LIST ERROR: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+        }
     }
 
     public function update($id = null)
     {
-        $model = new CompanyProfileModel();
-        $data = $this->request->getJSON(true);
-        
-        // Map frontend data to database columns
-        $dbData = [
-            'name' => $data['name'],
-            'vat_id' => $data['vatId'],
-            'legal_organization_id' => $data['legalOrganizationId'] ?? null,
-            'street' => $data['address']['street'],
-            'city' => $data['address']['city'],
-            'postal_code' => $data['address']['postalCode'],
-            'country' => $data['address']['country'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'website' => $data['website'] ?? null,
-            'logo_url' => $data['logoUrl'] ?? null,
-            'bank_iban' => $data['bankAccount']['iban'] ?? null,
-            'bank_bic' => $data['bankAccount']['bic'] ?? null,
-            'bank_account_name' => $data['bankAccount']['accountName'] ?? null,
-            'header_text' => $data['headerText'] ?? null,
-            'footer_text' => $data['footerText'] ?? null,
-            'company_type_id' => $data['companyTypeId'] ?? null,
-        ];
+        try {
+            $model = new CompanyProfileModel();
+            $data = $this->request->getJSON(true);
+            
+            log_message('error', 'PROFILE UPDATE DATA: ' . json_encode($data));
+            
+            $address = $data['address'] ?? [];
+            $bankAccount = $data['bankAccount'] ?? [];
 
-        if ($model->update($id, $dbData)) {
-            return $this->respond(['id' => $id, 'message' => 'Profile updated']);
+            // Map frontend data to database columns
+            $dbData = [
+                'name' => $data['name'] ?? null,
+                'vat_id' => $data['vatId'] ?? null,
+                'legal_organization_id' => $data['legalOrganizationId'] ?? null,
+                'street' => $address['street'] ?? null,
+                'city' => $address['city'] ?? null,
+                'postal_code' => $address['postalCode'] ?? null,
+                'country' => $address['country'] ?? null,
+                'email' => $data['email'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'website' => $data['website'] ?? null,
+                'logo_url' => $data['logoUrl'] ?? null,
+                'bank_iban' => $bankAccount['iban'] ?? null,
+                'bank_bic' => $bankAccount['bic'] ?? null,
+                'bank_account_name' => $bankAccount['accountName'] ?? null,
+                'header_text' => $data['headerText'] ?? null,
+                'footer_text' => $data['footerText'] ?? null,
+                'company_type_id' => $data['companyTypeId'] ?? null,
+            ];
+
+            if ($model->update($id, $dbData)) {
+                $this->logAction('updated', 'PROFILE', "Company profile updated: " . ($dbData['name'] ?? 'Unknown'));
+                return $this->respond(['id' => $id, 'message' => 'Profile updated']);
+            }
+            
+            log_message('error', 'UPDATE FAILED. Model Errors: ' . json_encode($model->errors()));
+            log_message('error', 'Allowed Fields: ' . json_encode($model->allowedFields)); // Accessing protected property might fail if not getter
+            
+            return $this->fail($model->errors());
+        } catch (\Throwable $e) {
+            return $this->failServerError('PROFILE UPDATE ERROR: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
         }
-        
-        return $this->fail($model->errors());
     }
 
     private function transformProfile($profile)

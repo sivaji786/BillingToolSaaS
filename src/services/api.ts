@@ -14,63 +14,17 @@ const api = axios.create({
     withCredentials: true,
 });
 
-// Helper to extract subdomain
-const getSubdomain = () => {
-    if (typeof window === 'undefined') return 'demo';
-    const host = window.location.hostname;
-
-    // Handle localhost and IPs
-    if (host === 'localhost' || /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) {
-        return 'demo';
-    }
-
-    const parts = host.split('.');
-
-    // For humple.org, parts.length is 2. 
-    // If it's a subdomain like sub.humple.org, parts.length is 3.
-    if (parts.length > 2) {
-        // sub.humple.com -> sub
-        // sub.humple.org -> sub
-        return parts[0];
-    }
-
-    // For humple.org or humple.local where it's the root domain
-    if (parts.length === 2) {
-        // If it's sub.localhost, parts[1] is localhost
-        if (parts[1] === 'localhost') return parts[0];
-
-        // Otherwise, it might be the main domain. 
-        // Let's return the first part instead of 'demo' to be more flexible.
-        return parts[0];
-    }
-
-    return 'demo';
-};
-
-// Add auth token and tenant header - use COMMON localStorage
+// Add auth token - use COMMON localStorage
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token'); // Common key for both admin and customer
+    const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token} `;
-        // Standard shared hosting workaround for Apache header stripping
         config.headers['X-Authorization'] = `Bearer ${token} `;
     }
 
-    // Inject Tenant Header
-    let tenantId = getSubdomain();
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-        try {
-            const user = JSON.parse(userStr);
-            if (user.tenant_id) {
-                // Use tenant_id if available
-            }
-        } catch (e) { }
-    }
-
-    if (tenantId) {
-        config.headers['X-Tenant-ID'] = tenantId;
-    }
+    // Note: We no longer auto-inject X-Tenant-ID here.
+    // The Backend now extracts tenant_id directly from the JWT Token.
+    // For legacy or specific overrides, you can still manually pass X-Tenant-ID in the config object of a specific call.
 
     return config;
 });
@@ -132,10 +86,26 @@ export const billingService = {
 
 export const onboardingService = {
     checkSubdomain: async (subdomain: string) => {
-        const response = await api.get(`/ onboarding / check - subdomain ? subdomain = ${subdomain} `);
+        const response = await api.get(`/onboarding/check-subdomain?subdomain=${subdomain}`);
         return response.data;
     },
-    signup: async (data: any) => {
+    getCountries: async (lang: string = 'en') => {
+        const response = await api.get(`/api/countries?lang=${lang}`);
+        return response.data;
+    },
+    signup: async (data: {
+        company_name: string;
+        website?: string;
+        subdomain: string;
+        email: string;
+        password: string;
+        plan_id?: string;
+        phone: string;
+        address?: string;
+        city: string;
+        country: string;
+        postal_code?: string;
+    }) => {
         const response = await api.post('/onboarding/signup', data);
         return response.data;
     },
@@ -152,7 +122,7 @@ export const invoiceService = {
         return response.data;
     },
     getById: async (id: string) => {
-        const response = await api.get<Invoice>(`/ invoices / ${id} `);
+        const response = await api.get<Invoice>(`/invoices/${id}`);
         return response.data;
     },
     create: async (invoice: Invoice) => {
@@ -160,11 +130,11 @@ export const invoiceService = {
         return response.data;
     },
     update: async (id: string, invoice: Invoice) => {
-        const response = await api.put(`/ invoices / ${id} `, invoice);
+        const response = await api.put(`/invoices/${id}`, invoice);
         return response.data;
     },
     delete: async (id: string) => {
-        const response = await api.delete(`/ invoices / ${id} `);
+        const response = await api.delete(`/invoices/${id}`);
         return response.data;
     },
 };
@@ -182,7 +152,7 @@ export const companyProfileService = {
         return response.data;
     },
     update: async (id: string, profile: CompanyProfile) => {
-        const response = await api.put(`/ company - profiles / ${id} `, profile);
+        const response = await api.put(`/company-profiles/${id}`, profile);
         return response.data;
     },
 };
@@ -193,7 +163,7 @@ export const invoiceTemplateService = {
         return response.data;
     },
     getById: async (id: string) => {
-        const response = await api.get<InvoiceTemplate>(`/ invoice - templates / ${id} `);
+        const response = await api.get<InvoiceTemplate>(`/invoice-templates/${id}`);
         return response.data;
     },
     create: async (template: InvoiceTemplate) => {
@@ -201,11 +171,11 @@ export const invoiceTemplateService = {
         return response.data;
     },
     update: async (id: string, template: InvoiceTemplate) => {
-        const response = await api.put(`/ invoice - templates / ${id} `, template);
+        const response = await api.put(`/invoice-templates/${id}`, template);
         return response.data;
     },
     delete: async (id: string) => {
-        const response = await api.delete(`/ invoice - templates / ${id} `);
+        const response = await api.delete(`/invoice-templates/${id}`);
         return response.data;
     },
 };
@@ -227,11 +197,11 @@ export const companyTypeService = {
         return response.data;
     },
     update: async (id: string, data: any) => {
-        const response = await api.put(`/ company - types / ${id} `, data);
+        const response = await api.put(`/company-types/${id}`, data);
         return response.data;
     },
     delete: async (id: string) => {
-        const response = await api.delete(`/ company - types / ${id} `);
+        const response = await api.delete(`/company-types/${id}`);
         return response.data;
     },
 };
@@ -242,7 +212,7 @@ export const roleService = {
         return response.data;
     },
     getById: async (id: string) => {
-        const response = await api.get<any>(`/ roles / ${id} `);
+        const response = await api.get<any>(`/roles/${id}`);
         return response.data;
     },
     create: async (data: any) => {
@@ -250,11 +220,11 @@ export const roleService = {
         return response.data;
     },
     update: async (id: string, data: any) => {
-        const response = await api.put(`/ roles / ${id} `, data);
+        const response = await api.put(`/roles/${id}`, data);
         return response.data;
     },
     delete: async (id: string) => {
-        const response = await api.delete(`/ roles / ${id} `);
+        const response = await api.delete(`/roles/${id}`);
         return response.data;
     },
 };
@@ -276,7 +246,7 @@ export const userService = {
         return response.data;
     },
     update: async (id: string, data: any) => {
-        const response = await api.put(`/ users / ${id} `, data);
+        const response = await api.put(`/users/${id}`, data);
         return response.data;
     },
 };
