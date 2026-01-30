@@ -86,7 +86,7 @@ class AdminBilling extends ResourceController
             ];
         }, $subscriptions);
 
-        return $this->respond([
+        return $this->response->setJSON([
             'data' => $formattedInvoices,
             'pagination' => [
                 'currentPage' => (int)$page,
@@ -94,7 +94,7 @@ class AdminBilling extends ResourceController
                 'totalItems' => $totalItems,
                 'itemsPerPage' => (int)$limit,
             ],
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -117,10 +117,10 @@ class AdminBilling extends ResourceController
             'paidDate' => '2024-06-05T10:30:00Z',
         ];
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'data' => $invoice,
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -197,12 +197,12 @@ class AdminBilling extends ResourceController
             ? round((($currentMonthRevenue - $previousMonthRevenue) / $previousMonthRevenue) * 100, 1) 
             : 0;
 
-        return $this->respond([
+        return $this->response->setJSON([
             'totalRevenue' => (float)$totalRevenue,
             'paidInvoices' => $paidInvoices,
             'pendingInvoices' => $pendingInvoices,
             'monthlyData' => $monthlyData,
             'growth' => ($growth >= 0 ? '+' : '') . $growth . '%',
-        ]);
+        ])->setStatusCode(200);
     }
 }

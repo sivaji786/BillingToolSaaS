@@ -81,7 +81,7 @@ class AdminUsers extends ResourceController
             ];
         }, $tenants);
 
-        return $this->respond([
+        return $this->response->setJSON([
             'data' => $users,
             'pagination' => [
                 'currentPage' => (int)$page,
@@ -89,7 +89,7 @@ class AdminUsers extends ResourceController
                 'totalItems' => count($users),
                 'itemsPerPage' => (int)$limit,
             ],
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -130,10 +130,10 @@ class AdminUsers extends ResourceController
             ],
         ];
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'data' => $user,
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -151,10 +151,10 @@ class AdminUsers extends ResourceController
         $this->tenantModel->update($id, ['status' => 'suspended']);
         $this->logAction('updated', "USER-{$id}", "User suspended: {$tenant['company_name']}");
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'message' => 'User suspended successfully',
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -172,10 +172,10 @@ class AdminUsers extends ResourceController
         $this->tenantModel->update($id, ['status' => 'active']);
         $this->logAction('updated', "USER-{$id}", "User activated: {$tenant['company_name']}");
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'message' => 'User activated successfully',
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -184,10 +184,10 @@ class AdminUsers extends ResourceController
      */
     public function upgrade($id = null)
     {
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'message' => 'User package upgraded successfully',
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -226,16 +226,19 @@ class AdminUsers extends ResourceController
     private function getPlanLimits($planId)
     {
         $plan = $this->planModel->find($planId);
-        
+        $defaults = [
+            'storage_gb' => 10,
+            'users' => 5,
+            'bandwidth_gb' => 100,
+            'api_calls' => 50000,
+            'invoices' => 500
+        ];
+
         if (!$plan || !$plan['limits']) {
-            return [
-                'storage_gb' => 10,
-                'users' => 5,
-                'bandwidth_gb' => 100,
-                'api_calls' => 50000,
-            ];
+            return $defaults;
         }
 
-        return json_decode($plan['limits'], true);
+        $limits = json_decode($plan['limits'], true) ?: [];
+        return array_merge($defaults, $limits);
     }
 }

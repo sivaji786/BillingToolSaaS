@@ -28,12 +28,12 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
     const { t } = useLanguage();
 
     const menuItems = [
-        { id: 'SAdashboard', label: t('navigation.dashboard'), icon: LayoutDashboard },
-        { id: 'SApackages', label: t('navigation.products'), icon: Package },
-        { id: 'SAASusers', label: t('navigation.clients'), icon: Users },
+        { id: 'SAdashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+        { id: 'SApackages', label: t('nav.products'), icon: Package },
+        { id: 'SAASusers', label: t('nav.clients'), icon: Users },
         { id: 'SAbilling', label: t('billing.title'), icon: Receipt },
-        { id: 'SAusage', label: t('navigation.reports'), icon: BarChart3 },
-        { id: 'SAsettings', label: t('navigation.settings'), icon: Settings },
+        { id: 'SAusage', label: t('nav.reports'), icon: BarChart3 },
+        { id: 'SAsettings', label: t('nav.settings'), icon: Settings },
     ];
 
     return (

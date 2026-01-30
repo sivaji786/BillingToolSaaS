@@ -17,33 +17,33 @@ class HybridAuthFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // Allow OPTIONS requests to pass through (handled by CORS filter)
-        if (strtoupper($request->getMethod()) === 'OPTIONS') {
-            return $request;
-        }
+        try {
+            // Allow OPTIONS requests to pass through (handled by CORS filter)
+            if (strtoupper($request->getMethod()) === 'OPTIONS') {
+                return $request;
+            }
 
-        $session = session();
-        
-        // Check if already authenticated via session (old system)
-        if ($session->get('isLoggedIn')) {
-            return $request;
-        }
-        
-        // Check for JWT token (new SaaS system)
-        $authHeader = $request->getHeaderLine('Authorization');
-        
-        // Fallback for some Apache configurations where header is renamed or stripped
-        if (!$authHeader) {
-            $authHeader = $request->getHeaderLine('X-Authorization') 
-                ?? $_SERVER['HTTP_AUTHORIZATION'] 
-                ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] 
-                ?? null;
-        }
-        
-        if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-            $token = $matches[1];
+            $session = session();
             
-            try {
+            // Check if already authenticated via session (old system)
+            if ($session->get('isLoggedIn')) {
+                return $request;
+            }
+            
+            // Check for JWT token (new SaaS system)
+            $authHeader = $request->getHeaderLine('Authorization');
+            
+            // Fallback for some Apache configurations where header is renamed or stripped
+            if (!$authHeader) {
+                $authHeader = $request->getHeaderLine('X-Authorization') 
+                    ?? $_SERVER['HTTP_AUTHORIZATION'] 
+                    ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] 
+                    ?? null;
+            }
+            
+            if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                $token = $matches[1];
+                
                 $decoded = JWTHelper::validateToken($token);
                 
                 if ($decoded) {
@@ -58,15 +58,20 @@ class HybridAuthFilter implements FilterInterface
                         
                         if ($user) {
                             // Set up session for RBAC system
-                            $session->set([
-                                'isLoggedIn' => true,
-                                'userId' => $user['id'],
-                                'userEmail' => $user['email'],
-                                'userName' => $user['name'] ?? $user['email'],
-                                'tenantId' => $tenantId,
-                                'companyTypeId' => $user['company_type_id'] ?? 1,
-                                'authMethod' => 'jwt' // Track that this is JWT auth
-                            ]);
+                            // Only set if session is actually working
+                            try {
+                                $session->set([
+                                    'isLoggedIn' => true,
+                                    'userId' => $user['id'],
+                                    'userEmail' => $user['email'],
+                                    'userName' => $user['name'] ?? $user['email'],
+                                    'tenantId' => $tenantId,
+                                    'companyTypeId' => $user['company_type_id'] ?? 1,
+                                    'authMethod' => 'jwt' // Track that this is JWT auth
+                                ]);
+                            } catch (\Throwable $sessionError) {
+                                // Ignore session write errors for API if JWT is valid
+                            }
                             
                             // Add to request for controllers
                             $request->tenantId = $tenantId;
@@ -76,16 +81,25 @@ class HybridAuthFilter implements FilterInterface
                         }
                     }
                 }
-            } catch (\Exception $e) {
-                // JWT validation failed, continue to check other auth methods
-                log_message('error', 'JWT validation failed: ' . $e->getMessage());
             }
+            
+            // No valid authentication found
+            return service('response')
+                ->setJSON(['success' => false, 'message' => 'Authentication required'])
+                ->setStatusCode(401);
+                
+        } catch (\Throwable $e) {
+            // Log to temporary file for debug
+            file_put_contents('/tmp/billing_debug.log', "FILTER FATAL ERROR: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . "\n", FILE_APPEND);
+            
+            return service('response')
+                ->setJSON([
+                    'success' => false, 
+                    'message' => 'Internal Filter Error: ' . $e->getMessage(),
+                    'trace' => defined('ENVIRONMENT') && ENVIRONMENT === 'development' ? $e->getTraceAsString() : null
+                ])
+                ->setStatusCode(500);
         }
-        
-        // No valid authentication found
-        return service('response')
-            ->setJSON(['success' => false, 'message' => 'Authentication required'])
-            ->setStatusCode(401);
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)

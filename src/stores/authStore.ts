@@ -53,6 +53,8 @@ export const useAuthStore = create<AuthState>()(
                     user: null,
                     tenant: null,
                 });
+                // Explicitly clear localStorage
+                localStorage.removeItem('auth-storage');
             },
 
             updateUser: (user) => {

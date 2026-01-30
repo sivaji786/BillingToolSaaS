@@ -8,7 +8,7 @@ import { Label } from '../../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Switch } from '../../ui/switch';
 import { Separator } from '../../ui/separator';
-import { User, Lock, Key, Settings as SettingsIcon, Copy, Trash2 } from 'lucide-react';
+import { User, Lock, Key, Settings as SettingsIcon, Copy, Trash2, Database } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function SAsettings() {
@@ -307,6 +307,63 @@ export function SAsettings() {
                             >
                                 System
                             </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+            {/* Database Management */}
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <Database className="h-5 w-5" />
+                        <CardTitle>Database Management</CardTitle>
+                    </div>
+                    <CardDescription>Run database migrations and seeders</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="flex-1 space-y-2">
+                            <h4 className="text-sm font-medium">Migrations</h4>
+                            <p className="text-sm text-muted-foreground">
+                                Update the database schema to the latest version.
+                            </p>
+                            <Button
+                                variant="outline"
+                                onClick={async () => {
+                                    const promise = adminSettingsService.migrateDatabase();
+                                    toast.promise(promise, {
+                                        loading: 'Running migrations...',
+                                        success: (data) => data.message,
+                                        error: 'Migration failed'
+                                    });
+                                }}
+                            >
+                                Run Pending Migrations
+                            </Button>
+                        </div>
+                        <Separator orientation="vertical" className="hidden sm:block h-24" />
+                        <div className="flex-1 space-y-2">
+                            <h4 className="text-sm font-medium">Seeding</h4>
+                            <p className="text-sm text-muted-foreground">
+                                Reset or populate database with default data.
+                            </p>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={async () => {
+                                        if (confirm('Are you sure you want to run the default seeder? This may overwrite existing data.')) {
+                                            const promise = adminSettingsService.seedDatabase();
+                                            toast.promise(promise, {
+                                                loading: 'Running seeder...',
+                                                success: (data) => data.message,
+                                                error: 'Seeding failed'
+                                            });
+                                        }
+                                    }}
+                                >
+                                    Run Default Seeder
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </CardContent>

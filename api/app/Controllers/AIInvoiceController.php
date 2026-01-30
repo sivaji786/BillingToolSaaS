@@ -57,13 +57,13 @@ class AIInvoiceController extends BaseController
         // Basic validation of AI output
         $validation = $this->validateParsedInvoice($parsedData);
         
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'invoice' => $parsedData,
             'confidence' => 95, 
             'suggestions' => $validation['suggestions'],
             'errors' => $validation['errors']
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**

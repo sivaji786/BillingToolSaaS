@@ -22,7 +22,7 @@ class RoleController extends BaseController
             $roles = $model->findAll();
         }
         
-        return $this->respond($roles);
+        return $this->response->setJSON($roles)->setStatusCode(200);
     }
 
     public function show($id = null)
@@ -45,7 +45,7 @@ class RoleController extends BaseController
 
         $role['rights'] = $rights;
 
-        return $this->respond($role);
+        return $this->response->setJSON($role)->setStatusCode(200);
     }
 
     public function create()
@@ -103,7 +103,7 @@ class RoleController extends BaseController
             }
         }
 
-        return $this->respond(['id' => $id, 'message' => 'Role updated']);
+        return $this->response->setJSON(['id' => $id, 'message' => 'Role updated'])->setStatusCode(200);
     }
 
     public function delete($id = null)

@@ -18,7 +18,7 @@ class InvoiceTemplateController extends BaseController
             
             $transformed = array_map([$this, 'transformTemplate'], $templates);
             
-            return $this->respond($transformed);
+            return $this->response->setJSON($transformed)->setStatusCode(200);
         } catch (\Throwable $e) {
             return $this->failServerError('TEMPLATE LIST ERROR: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
         }
@@ -33,7 +33,7 @@ class InvoiceTemplateController extends BaseController
             return $this->failNotFound('Template not found');
         }
         
-        return $this->respond($this->transformTemplate($template));
+        return $this->response->setJSON($this->transformTemplate($template))->setStatusCode(200);
     }
 
     public function create()

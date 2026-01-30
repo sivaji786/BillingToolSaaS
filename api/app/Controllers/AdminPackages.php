@@ -46,7 +46,7 @@ class AdminPackages extends ResourceController
             ];
         }, $plans);
 
-        return $this->respond([
+        return $this->response->setJSON([
             'data' => $packages,
             'pagination' => [
                 'currentPage' => (int)$page,
@@ -54,7 +54,7 @@ class AdminPackages extends ResourceController
                 'totalItems' => count($packages),
                 'itemsPerPage' => (int)$limit,
             ],
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -83,10 +83,10 @@ class AdminPackages extends ResourceController
             'updatedAt' => $plan['updated_at'],
         ];
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'data' => $package,
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -177,10 +177,10 @@ class AdminPackages extends ResourceController
 
         $this->logAction('updated', "PACK-{$id}", "Package updated: " . ($updateData['name'] ?? $plan['name']));
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'message' => 'Package updated successfully',
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -211,9 +211,9 @@ class AdminPackages extends ResourceController
 
         $this->logAction('deleted', "PACK-{$id}", "Package deleted: {$plan['name']}");
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'message' => 'Package deleted successfully',
-        ]);
+        ])->setStatusCode(200);
     }
 }

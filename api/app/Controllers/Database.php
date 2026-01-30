@@ -65,13 +65,34 @@ class Database extends BaseController
     }
 
     /**
-     * Verify the migration token against environment variable
+     * Verify the migration token against environment variable or admin session
      */
     private function verifyToken(): bool
     {
+        // 1. Check for token in URL
         $token = $this->request->getGet('token');
-        $expectedToken = getenv('MIGRATION_TOKEN') ?: 'debug_token_123'; // Fallback for local dev
+        $expectedToken = getenv('MIGRATION_TOKEN') ?: 'debug_token_123';
         
-        return !empty($token) && $token === $expectedToken;
+        if (!empty($token) && $token === $expectedToken) {
+            return true;
+        }
+
+        // 2. Check for authenticated admin user
+        $authHeader = $this->request->getHeaderLine('Authorization');
+        if ($authHeader) {
+            $jwtoken = str_replace('Bearer ', '', $authHeader);
+            try {
+                $key = getenv('JWT_SECRET') ?: 'your-secret-key-change-this-in-production';
+                $decoded = \Firebase\JWT\JWT::decode($jwtoken, new \Firebase\JWT\Key($key, 'HS256'));
+                
+                if (isset($decoded->data->role) && $decoded->data->role === 'super_admin') {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                // Invalid token
+            }
+        }
+
+        return false;
     }
 }

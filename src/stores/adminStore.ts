@@ -39,6 +39,8 @@ export const useAdminStore = create<AdminState>()(
 
             logout: () => {
                 set({ isAuthenticated: false, adminUser: null, token: null });
+                // Explicitly clear localStorage
+                localStorage.removeItem('admin-storage');
             },
 
             setTheme: (theme) => {

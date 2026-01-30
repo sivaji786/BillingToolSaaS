@@ -15,7 +15,7 @@ class CompanyTypeController extends BaseController
         $model = new CompanyTypeModel();
         $types = $model->findAll();
         // Return as is (id, name)
-        return $this->respond($types);
+        return $this->response->setJSON($types)->setStatusCode(200);
     }
 
     public function create()
@@ -61,7 +61,7 @@ class CompanyTypeController extends BaseController
             return $this->failValidationError($model->errors());
         }
 
-        return $this->respond(['id' => $id, 'message' => 'Company type updated']);
+        return $this->response->setJSON(['id' => $id, 'message' => 'Company type updated'])->setStatusCode(200);
     }
 
     public function delete($id = null)

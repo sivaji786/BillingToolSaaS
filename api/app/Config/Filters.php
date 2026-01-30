@@ -14,8 +14,7 @@ use CodeIgniter\Filters\PerformanceMetrics;
 // use CodeIgniter\Filters\PerformanceMetrics; // Removed duplicate import
 use CodeIgniter\Filters\SecureHeaders;
 
-// Logging to debug filters loading
-log_message('error', 'Filters.php Loaded');
+// Filters.php Loaded
 
 class Filters extends BaseFilters
 {
@@ -62,9 +61,9 @@ class Filters extends BaseFilters
             'pagecache',  // Web Page Caching
         ],
         'after' => [
-            'pagecache',   // Web Page Caching
-            'performance', // Performance Metrics
-            'toolbar',     // Debug Toolbar
+            // 'pagecache',   // Web Page Caching
+            // 'performance', // Performance Metrics
+            // 'toolbar',     // Debug Toolbar
         ],
     ];
 

@@ -105,6 +105,6 @@ class TicketController extends ResourceController
     public function index() {
         // Optional: for verification later if needed
         $model = new TicketModel();
-        return $this->respond($model->findAll());
+        return $this->response->setJSON($model->findAll())->setStatusCode(200);
     }
 }

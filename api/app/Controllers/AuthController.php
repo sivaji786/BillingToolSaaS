@@ -43,7 +43,7 @@ class AuthController extends BaseController
 
         $rights = $userModel->getRights($user['id']);
 
-        return $this->respond([
+        return $this->response->setJSON([
             'token' => $token,
             'user' => [
                 'id' => $user['id'],
@@ -55,7 +55,7 @@ class AuthController extends BaseController
                 'type' => 'admin'  // Include type in response
             ],
             'tenant' => $tenant // Optional: return full tenant info
-        ]);
+        ])->setStatusCode(200);
     }
 
     public function me()
@@ -99,7 +99,7 @@ class AuthController extends BaseController
 
             unset($user['password_hash']);
             $user['rights'] = $userModel->getRights($user['id']);
-            return $this->respond($user);
+            return $this->response->setJSON($user)->setStatusCode(200);
 
         } catch (\Exception $e) {
             return $this->failUnauthorized('Invalid token');

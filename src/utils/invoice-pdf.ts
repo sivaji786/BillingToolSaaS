@@ -106,7 +106,7 @@ export async function generateInvoicePDF(
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...colors.text);
-    doc.text(invoice.invoiceNumber, titlePos.x, titlePos.y + 45);
+    doc.text(String(invoice.invoiceNumber || 'N/A'), titlePos.x, titlePos.y + 45);
   }
 
   // 3. Dates (Right Aligned)
@@ -152,7 +152,7 @@ export async function generateInvoicePDF(
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...colors.text);
-    doc.text(data.name, x, curY);
+    doc.text(String(data.name || ''), x, curY);
     curY += 12;
 
     doc.setFont('helvetica', 'normal');
@@ -161,16 +161,30 @@ export async function generateInvoicePDF(
 
     if (data.vatId) {
       doc.setTextColor(...colors.textMuted);
-      doc.text(`VAT: ${data.vatId}`, x, curY);
+      doc.text(`VAT: ${String(data.vatId)}`, x, curY);
       doc.setTextColor(...colors.text);
       curY += 12;
     }
 
-    doc.text(data.address.street, x, curY);
-    curY += 12;
-    doc.text(`${data.address.postalCode} ${data.address.city}`, x, curY);
-    curY += 12;
-    doc.text(data.address.country, x, curY);
+    // Safely handle address fields with null/undefined checks
+    if (data.address) {
+      if (data.address.street) {
+        doc.text(String(data.address.street), x, curY);
+        curY += 12;
+      }
+
+      const postalCity = [data.address.postalCode, data.address.city]
+        .filter(Boolean)
+        .join(' ');
+      if (postalCity) {
+        doc.text(postalCity, x, curY);
+        curY += 12;
+      }
+
+      if (data.address.country) {
+        doc.text(String(data.address.country), x, curY);
+      }
+    }
   };
 
   if (sellerPos.visible) renderAddress('From', invoice.seller, sellerPos.x, sellerPos.y);
@@ -319,14 +333,14 @@ export async function generateInvoicePDF(
     }
 
     if (effectivePaymentMeans?.iban) {
-      doc.text(`IBAN: ${effectivePaymentMeans.iban}`, margin, textY);
+      doc.text(`IBAN: ${String(effectivePaymentMeans.iban || '')}`, margin, textY);
       textY += 11;
       if (effectivePaymentMeans.bic) {
-        doc.text(`BIC: ${effectivePaymentMeans.bic}`, margin, textY);
+        doc.text(`BIC: ${String(effectivePaymentMeans.bic || '')}`, margin, textY);
         textY += 11;
       }
       if (effectivePaymentMeans.accountName) {
-        doc.text(`Account: ${effectivePaymentMeans.accountName}`, margin, textY);
+        doc.text(`Account: ${String(effectivePaymentMeans.accountName || '')}`, margin, textY);
       }
     }
   }

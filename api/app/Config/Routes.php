@@ -172,6 +172,10 @@ $routes->group('admin', function($routes) {
     $routes->get('analytics/dashboard', '\App\Controllers\AdminAnalytics::dashboard');
     $routes->get('usage', '\App\Controllers\AdminAnalytics::usage');
     $routes->get('usage/export', '\App\Controllers\AdminAnalytics::exportUsage');
+
+    // Database Management
+    $routes->get('database/migrate', '\App\Controllers\Database::migrate');
+    $routes->get('database/seed', '\App\Controllers\Database::seed');
 });
 
 $routes->get('debug/model-check', 'Debug::modelCheck');

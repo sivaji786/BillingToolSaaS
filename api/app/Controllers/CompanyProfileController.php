@@ -20,7 +20,7 @@ class CompanyProfileController extends BaseController
             
             $transformed = array_map([$this, 'transformProfile'], $profiles);
             
-            return $this->respond($transformed);
+            return $this->response->setJSON($transformed)->setStatusCode(200);
         } catch (\Throwable $e) {
              return $this->failServerError('PROFILE LIST ERROR: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
         }

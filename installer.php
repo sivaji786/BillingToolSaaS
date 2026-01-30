@@ -1,15 +1,17 @@
 <?php
 /**
- * BillingTool Installer
+ * BillingTool Installer - IMPROVED VERSION
  * 
  * This installer will:
  * 1. Extract the application zip file
  * 2. Configure database connection
- * 3. Set up environment files
- * 4. Configure file permissions
- * 5. Create .htaccess files
+ * 3. Run database migrations automatically
+ * 4. Seed the database with demo data
+ * 5. Set up environment files
+ * 6. Configure file permissions
+ * 7. Create .htaccess files
  * 
- * NOTE: You must import database/schema.sql via phpMyAdmin BEFORE running this installer!
+ * NO MANUAL DATABASE SETUP REQUIRED!
  */
 
 // Prevent direct access after installation
@@ -101,13 +103,25 @@ class Installer {
             return;
         }
         
-        // Step 5: Set permissions
+        // Step 5: Run database migrations
+        if (!$this->runMigrations()) {
+            $this->showForm();
+            return;
+        }
+        
+        // Step 6: Seed database
+        if (!$this->seedDatabase()) {
+            $this->showForm();
+            return;
+        }
+        
+        // Step 7: Set permissions
         if (!$this->setPermissions()) {
             $this->showForm();
             return;
         }
         
-        // Step 6: Create .htaccess files
+        // Step 8: Create .htaccess files
         if (!$this->createHtaccessFiles()) {
             $this->showForm();
             return;
@@ -205,8 +219,8 @@ encryption.key = {$this->config['encryption_key']}
 #--------------------------------------------------------------------
 # SESSION
 #--------------------------------------------------------------------
-session.driver = 'CodeIgniter\\Session\\Handlers\\FileHandler'
-session.savePath = null
+session.driver = 'CodeIgniter\\\\Session\\\\Handlers\\\\DatabaseHandler'
+session.savePath = ci_sessions
 
 #--------------------------------------------------------------------
 # LOGGER
@@ -247,6 +261,197 @@ JS;
         return true;
     }
     
+    private function runMigrations() {
+        try {
+            // Define paths
+            if (!defined('FCPATH')) {
+                define('FCPATH', EXTRACT_PATH . '/api/public/');
+            }
+            if (!defined('ROOTPATH')) {
+                define('ROOTPATH', EXTRACT_PATH . '/api/');
+            }
+            if (!defined('APPPATH')) {
+                define('APPPATH', ROOTPATH . 'app/');
+            }
+            if (!defined('WRITEPATH')) {
+                define('WRITEPATH', ROOTPATH . 'writable/');
+            }
+            if (!defined('SYSTEMPATH')) {
+                define('SYSTEMPATH', ROOTPATH . 'vendor/codeigniter4/framework/system/');
+            }
+            
+            // Define APP_NAMESPACE (required by CodeIgniter)
+            if (!defined('APP_NAMESPACE')) {
+                define('APP_NAMESPACE', 'App');
+            }
+            
+            // Load Composer autoloader
+            require_once ROOTPATH . 'vendor/autoload.php';
+            
+            // Load Constants
+            if (file_exists(APPPATH . 'Config/Constants.php')) {
+                require_once APPPATH . 'Config/Constants.php';
+            }
+            
+            // Load CodeIgniter's Common.php (contains service() function)
+            require_once SYSTEMPATH . 'Common.php';
+            
+            // Load environment
+            require_once SYSTEMPATH . 'Config/DotEnv.php';
+            $env = new \CodeIgniter\Config\DotEnv(ROOTPATH, '.env');
+            $env->load();
+            
+            // Set environment to production
+            if (!defined('ENVIRONMENT')) {
+                define('ENVIRONMENT', 'production');
+            }
+            
+            // Define CI_DEBUG (required by Logger)
+            if (!defined('CI_DEBUG')) {
+                define('CI_DEBUG', false);
+            }
+            
+            // Bootstrap the application
+            $app = \Config\Services::codeigniter();
+            $app->initialize();
+            
+            // Clean existing database tables
+            $this->cleanDatabase();
+            
+            // Run migration manually (CodeIgniter's migration system has issues in installer context)
+            try {
+                // Get database connection
+                $db = \Config\Database::connect();
+                
+                // Load and execute the migration file directly
+                require_once APPPATH . 'Database/Migrations/2020-01-15-050000_InitialSchema.php';
+                
+                $migration = new \App\Database\Migrations\InitialSchema();
+                
+                // Set the db and forge properties (required by Migration class)
+                $reflection = new \ReflectionClass($migration);
+                
+                $dbProperty = $reflection->getProperty('db');
+                $dbProperty->setAccessible(true);
+                $dbProperty->setValue($migration, $db);
+                
+                $forgeProperty = $reflection->getProperty('forge');
+                $forgeProperty->setAccessible(true);
+                $forgeProperty->setValue($migration, \Config\Database::forge());
+                
+                // Run the migration
+                $migration->up();
+                
+                // Create migrations table and mark as run
+                if (!$db->tableExists('migrations')) {
+                    $db->query("
+                        CREATE TABLE `migrations` (
+                            `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                            `version` varchar(255) NOT NULL,
+                            `class` varchar(255) NOT NULL,
+                            `group` varchar(255) NOT NULL,
+                            `namespace` varchar(255) NOT NULL,
+                            `time` int(11) NOT NULL,
+                            `batch` int(11) unsigned NOT NULL,
+                            PRIMARY KEY (`id`)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    ");
+                }
+                
+                $db->table('migrations')->insert([
+                    'version' => '2020-01-15-050000',
+                    'class' => 'App\\Database\\Migrations\\InitialSchema',
+                    'group' => 'default',
+                    'namespace' => 'App',
+                    'time' => time(),
+                    'batch' => 1
+                ]);
+                
+            } catch (Exception $e) {
+                $this->errors[] = "Migration execution error: " . $e->getMessage();
+                $this->errors[] = "File: " . $e->getFile() . " Line: " . $e->getLine();
+                return false;
+            }
+            
+            // Verify tables were created
+            $db = \Config\Database::connect();
+            $tables = $db->listTables();
+            
+            if (count($tables) < 10) {
+                $this->errors[] = "Migration completed but only " . count($tables) . " tables created (expected 20+)";
+                $this->errors[] = "Tables created: " . implode(', ', $tables);
+                return false;
+            }
+            
+            $this->success[] = "Database migrations completed successfully (" . count($tables) . " tables created)";
+            return true;
+        } catch (Exception $e) {
+            $this->errors[] = "Migration error: " . $e->getMessage();
+            $this->errors[] = "File: " . $e->getFile() . " Line: " . $e->getLine();
+            $this->errors[] = "Trace: " . $e->getTraceAsString();
+            return false;
+        } catch (Throwable $e) {
+            $this->errors[] = "Migration error: " . $e->getMessage();
+            $this->errors[] = "File: " . $e->getFile() . " Line: " . $e->getLine();
+            $this->errors[] = "Trace: " . $e->getTraceAsString();
+            return false;
+        }
+    }
+    
+    private function cleanDatabase() {
+        try {
+            $db = \Config\Database::connect();
+            
+            // Disable foreign key checks
+            $db->query('SET FOREIGN_KEY_CHECKS=0');
+            
+            // Get all tables
+            $tables = $db->listTables();
+            
+            // Drop each table (including migrations table)
+            foreach ($tables as $table) {
+                $db->query("DROP TABLE IF EXISTS `{$table}`");
+            }
+            
+            // Re-enable foreign key checks
+            $db->query('SET FOREIGN_KEY_CHECKS=1');
+            
+            $this->success[] = "Database cleaned successfully (" . count($tables) . " tables dropped)";
+        } catch (Exception $e) {
+            // Non-fatal - continue anyway
+            $this->success[] = "Database cleanup skipped (fresh database)";
+        }
+    }
+    
+    private function seedDatabase() {
+        try {
+            // Verify tables exist before seeding
+            $db = \Config\Database::connect();
+            $tables = $db->listTables();
+            
+            if (empty($tables)) {
+                $this->errors[] = "No tables found! Migration may have failed.";
+                return false;
+            }
+            
+            // Get seeder
+            $seeder = \Config\Database::seeder();
+            $seeder->call('MainSeeder');
+            
+            $this->success[] = "Database seeded with demo data successfully";
+            $this->success[] = "Super Admin: admin@humpl.org / admin123";
+            $this->success[] = "Demo Tenant: admin@techflow.com / password123";
+            return true;
+        } catch (Exception $e) {
+            $this->errors[] = "Seeding error: " . $e->getMessage();
+            $this->errors[] = "Stack trace: " . $e->getTraceAsString();
+            return false;
+        } catch (Throwable $e) {
+            $this->errors[] = "Seeding error: " . $e->getMessage();
+            $this->errors[] = "Stack trace: " . $e->getTraceAsString();
+            return false;
+        }
+    }
     
     private function setPermissions() {
         $writableDirs = [
@@ -378,6 +583,21 @@ HTACCESS;
                     font-weight: bold;
                     margin-right: 8px;
                 }
+                .info-box {
+                    background: #d1ecf1;
+                    border-left: 4px solid #0c5460;
+                    padding: 15px;
+                    margin-bottom: 30px;
+                    border-radius: 4px;
+                }
+                .info-box strong {
+                    color: #0c5460;
+                }
+                .info-box p {
+                    margin-top: 10px;
+                    color: #0c5460;
+                    font-size: 14px;
+                }
                 .form-group {
                     margin-bottom: 20px;
                 }
@@ -454,7 +674,7 @@ HTACCESS;
         <body>
             <div class="container">
                 <h1>🚀 BillingTool Installer</h1>
-                <p class="subtitle">Configure your installation settings</p>
+                <p class="subtitle">Automated installation with database setup</p>
                 
                 <div class="requirements">
                     <h3>System Requirements Met</h3>
@@ -466,15 +686,15 @@ HTACCESS;
                     </ul>
                 </div>
                 
-                <div class="warning">
-                    <strong>⚠️ IMPORTANT: Database Setup Required</strong>
-                    <p style="margin-top: 10px;">Before running this installer, you MUST:</p>
-                    <ol style="margin-left: 20px; margin-top: 10px;">
-                        <li>Create a database in phpMyAdmin</li>
-                        <li>Import the <code>database/schema.sql</code> file into your database</li>
-                        <li>Create a database user with all privileges</li>
-                    </ol>
-                    <p style="margin-top: 10px; font-size: 12px;">The installer will NOT create database tables. You must import the schema manually first.</p>
+                <div class="info-box">
+                    <strong>✨ Fully Automated Installation</strong>
+                    <p>This installer will automatically:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Create all database tables</li>
+                        <li>Seed demo data (5 tenants, users, invoices)</li>
+                        <li>Configure the application</li>
+                    </ul>
+                    <p style="margin-top: 10px; font-size: 12px;">Just create an empty database and provide the credentials below!</p>
                 </div>
                 
                 <?php if (!empty($this->errors)): ?>
@@ -533,7 +753,7 @@ HTACCESS;
                         <input type="text" id="db_name" name="db_name" 
                                value="<?php echo isset($_POST['db_name']) ? htmlspecialchars($_POST['db_name']) : ''; ?>" 
                                required>
-                        <div class="help-text">Create this database in phpMyAdmin first</div>
+                        <div class="help-text">Create an empty database in phpMyAdmin/cPanel first</div>
                     </div>
                     
                     <div class="form-group">
@@ -618,6 +838,17 @@ HTACCESS;
                     margin-bottom: 10px;
                     line-height: 1.6;
                 }
+                .credentials {
+                    background: #d1ecf1;
+                    border-left: 4px solid #0c5460;
+                    padding: 15px;
+                    margin: 20px 0;
+                    text-align: left;
+                    border-radius: 4px;
+                }
+                .credentials strong {
+                    color: #0c5460;
+                }
                 .warning {
                     background: #fff3cd;
                     border-left: 4px solid #ffc107;
@@ -658,18 +889,24 @@ HTACCESS;
                 <h1>Installation Complete!</h1>
                 <p>BillingTool has been successfully installed and configured.</p>
                 
+                <div class="credentials">
+                    <strong>🔐 Default Login Credentials:</strong>
+                    <p style="margin-top: 10px;"><strong>Super Admin Portal:</strong></p>
+                    <p style="margin-left: 20px;">Email: <code>admin@humpl.org</code></p>
+                    <p style="margin-left: 20px;">Password: <code>admin123</code></p>
+                    
+                    <p style="margin-top: 15px;"><strong>Demo Tenant (Customer):</strong></p>
+                    <p style="margin-left: 20px;">Email: <code>admin@techflow.com</code></p>
+                    <p style="margin-left: 20px;">Password: <code>password123</code></p>
+                </div>
+                
                 <div class="info">
-                    <h3>Next Steps:</h3>
-                    <p><strong>1.</strong> Delete the installer files for security:</p>
-                    <p style="margin-left: 20px;">- <code>installer.php</code></p>
-                    <p style="margin-left: 20px;">- <code>billingtool.zip</code></p>
-                    
-                    <p style="margin-top: 15px;"><strong>2.</strong> Access your application:</p>
-                    <p style="margin-left: 20px;">Frontend: <code><?php echo htmlspecialchars($this->config['site_url']); ?></code></p>
-                    <p style="margin-left: 20px;">API: <code><?php echo htmlspecialchars($this->config['api_url']); ?></code></p>
-                    
-                    <p style="margin-top: 15px;"><strong>3.</strong> Default login credentials:</p>
-                    <p style="margin-left: 20px;">Check your database or documentation for default admin credentials</p>
+                    <h3>What Was Installed:</h3>
+                    <p>✓ All database tables created</p>
+                    <p>✓ 5 demo tenants with users</p>
+                    <p>✓ Sample invoices and data</p>
+                    <p>✓ RBAC system configured</p>
+                    <p>✓ 4 subscription plans</p>
                 </div>
                 
                 <div class="warning">

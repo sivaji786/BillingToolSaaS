@@ -20,8 +20,6 @@ trait TenantScope
      */
     protected function beforeFind(array $data)
     {
-        // Debug Logging
-        log_message('error', 'TenantScope::beforeFind Triggered on ' . $this->table);
 
         if ($this->ignoreTenant) {
             $this->ignoreTenant = false; // Reset for next query
@@ -31,7 +29,6 @@ trait TenantScope
         $appConfig = config('App');
         $tenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
         
-        log_message('error', 'TenantScope: Tenant Context: ' . json_encode($tenant));
         
         // FAIL-CLOSED LOGIC:
         // If there is NO tenant context, we MUST NOT show all data. 

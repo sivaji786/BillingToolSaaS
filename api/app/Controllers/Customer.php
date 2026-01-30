@@ -197,7 +197,7 @@ class Customer extends BaseController
             return $this->response->setJSON([
                 'success' => true,
                 'data' => $invoice
-            ]);
+            ])->setStatusCode(200);
 
         } catch (\Exception $e) {
             return $this->response->setJSON([
@@ -294,7 +294,7 @@ class Customer extends BaseController
                 'success' => true,
                 'message' => 'Profile updated successfully',
                 'data' => $tenant
-            ]);
+            ])->setStatusCode(200);
 
         } catch (\Exception $e) {
             return $this->response->setJSON([
@@ -355,7 +355,7 @@ class Customer extends BaseController
             return $this->response->setJSON([
                 'success' => true,
                 'data' => $usage
-            ]);
+            ])->setStatusCode(200);
 
         } catch (\Exception $e) {
             return $this->response->setJSON([

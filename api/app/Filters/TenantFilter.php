@@ -63,13 +63,22 @@ class TenantFilter implements FilterInterface
         }
 
         // Skip if no context found (likely global route or login)
-        if (empty($tenantId) && (empty($subdomain) || in_array($subdomain, ['www', 'billingtool', 'api', 'demo']))) {
+        if (empty($tenantId) && (empty($subdomain) || in_array($subdomain, ['www', 'billingtool', 'api']))) {
             return; 
+        }
+
+        // SPECIAL LOCALHOST FALLBACK: Map 'demo' or empty to the first tenant if we're on localhost
+        if (($subdomain === 'demo' || empty($subdomain)) && ($_SERVER['HTTP_HOST'] === 'localhost:8080' || $_SERVER['HTTP_HOST'] === 'localhost')) {
+             $firstTenant = $db->table('tenants')->where('status', 'active')->limit(1)->get()->getRow();
+             if ($firstTenant) {
+                 $tenant = $firstTenant;
+                 $subdomain = $tenant->subdomain;
+             }
         }
 
         // Bypass check for auth routes if filter exception fails
         $uri = $request->getUri()->getPath();
-        if (strpos($uri, 'auth/') === 0 || strpos($uri, 'onboarding/') === 0) {
+        if (strpos($uri, 'auth/') === 0 || strpos($uri, 'onboarding/') === 0 || strpos($uri, 'admin/') === 0) {
             return;
         }
         

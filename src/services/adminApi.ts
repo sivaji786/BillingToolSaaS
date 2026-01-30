@@ -240,6 +240,16 @@ export const adminSettingsService = {
     updateSystemSettings: async (settings: any): Promise<void> => {
         await adminApi.put('/settings/system', settings);
     },
+    migrateDatabase: async (): Promise<{ status: string; message: string }> => {
+        const response = await adminApi.get<{ status: string; message: string }>('/database/migrate');
+        return response.data;
+    },
+    seedDatabase: async (className?: string): Promise<{ status: string; message: string }> => {
+        const response = await adminApi.get<{ status: string; message: string }>('/database/seed', {
+            params: { class: className }
+        });
+        return response.data;
+    },
 };
 
 export default adminApi;

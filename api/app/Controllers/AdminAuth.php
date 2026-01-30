@@ -50,14 +50,14 @@ class AdminAuth extends ResourceController
 
                 $token = $this->generateToken($user);
 
-                return $this->respond([
+                return $this->response->setJSON([
                     'success' => true,
                     'data' => [
                         'user' => $user,
                         'token' => $token,
                     ],
                     'message' => 'Login successful',
-                ]);
+                ])->setStatusCode(200);
             }
 
             return $this->failUnauthorized('Invalid credentials');
@@ -79,10 +79,10 @@ class AdminAuth extends ResourceController
             return $this->failUnauthorized('Unauthorized');
         }
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'data' => $user,
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -91,10 +91,10 @@ class AdminAuth extends ResourceController
      */
     public function logout()
     {
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'message' => 'Logged out successfully',
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -111,12 +111,12 @@ class AdminAuth extends ResourceController
 
         $token = $this->generateToken($user);
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'data' => [
                 'token' => $token,
             ],
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**

@@ -14,6 +14,6 @@ class AuditLogController extends BaseController
     {
         $model = new AuditLogModel();
         $logs = $model->orderBy('timestamp', 'DESC')->findAll();
-        return $this->respond($logs);
+        return $this->response->setJSON($logs)->setStatusCode(200);
     }
 }

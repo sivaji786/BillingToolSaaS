@@ -22,9 +22,9 @@ class RightController extends BaseController
             foreach ($rights as $right) {
                 $grouped[$right['module']][] = $right;
             }
-            return $this->respond($grouped);
+            return $this->response->setJSON($grouped)->setStatusCode(200);
         }
 
-        return $this->respond($rights);
+        return $this->response->setJSON($rights)->setStatusCode(200);
     }
 }

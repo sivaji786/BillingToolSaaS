@@ -29,7 +29,7 @@ class UserController extends BaseController
             $user['roles'] = $roles;
         }
 
-        return $this->respond($users);
+        return $this->response->setJSON($users)->setStatusCode(200);
     }
 
     public function create()
@@ -124,7 +124,7 @@ class UserController extends BaseController
                 }
             }
             
-            return $this->respond(['id' => $id, 'message' => 'User updated']);
+            return $this->response->setJSON(['id' => $id, 'message' => 'User updated'])->setStatusCode(200);
         } catch (\Exception $e) {
             return $this->failServerError('Failed to update user: ' . $e->getMessage());
         }

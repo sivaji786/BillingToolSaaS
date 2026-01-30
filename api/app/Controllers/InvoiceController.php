@@ -90,7 +90,7 @@ class InvoiceController extends BaseController
             
             $transformed = array_map([$this, 'transformInvoice'], $invoices);
             
-            return $this->respond($transformed);
+            return $this->response->setJSON($transformed)->setStatusCode(200);
         } catch (\Throwable $e) {
             return $this->failServerError('INVOICE LIST ERROR: ' . $e->getMessage() . ' File: ' . $e->getFile() . ' Line: ' . $e->getLine());
         }

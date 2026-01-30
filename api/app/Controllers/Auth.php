@@ -177,7 +177,7 @@ class Auth extends ResourceController
         // Generate CUSTOMER JWT token (type='customer')
         $token = JWTHelper::generateToken($user['id'], $user['tenant_id'], $user['email'], $user['name'], 'customer');
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'message' => 'Login successful',
             'data' => [
@@ -185,7 +185,7 @@ class Auth extends ResourceController
                 'user' => $user,
                 'tenant' => $tenant,
             ],
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -220,13 +220,13 @@ class Auth extends ResourceController
         // Get tenant
         $tenant = $this->tenantModel->find($user['tenant_id']);
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'data' => [
                 'user' => $user,
                 'tenant' => $tenant,
             ],
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -239,10 +239,10 @@ class Auth extends ResourceController
         // by removing the token. Server-side logout would require
         // a token blacklist, which we can implement later if needed.
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'message' => 'Logged out successfully',
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -263,12 +263,12 @@ class Auth extends ResourceController
             return $this->failUnauthorized('Invalid token');
         }
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'data' => [
                 'token' => $newToken,
             ],
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**

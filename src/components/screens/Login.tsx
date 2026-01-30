@@ -4,15 +4,17 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { FileText, Mail, Lock } from 'lucide-react';
+import { FileText, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 
 interface LoginProps {
   onLogin: (email: string, password: string) => void;
+  onSignup?: () => void;
+  onGoHome?: () => void;
 }
 
-export function Login({ onLogin }: LoginProps) {
+export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
   const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -51,7 +53,16 @@ export function Login({ onLogin }: LoginProps) {
         <div className="w-full max-w-md space-y-8">
           {/* Language Switcher */}
           {/* Language Switcher and Wiki Link */}
-          <div className="flex justify-end gap-2 items-center mb-6">
+          <div className="flex justify-between gap-2 items-center mb-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-violet-600 hover:text-violet-700 hover:bg-violet-50"
+              onClick={onGoHome}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('login.backToHome')}
+            </Button>
             <LanguageSwitcher variant="login" />
           </div>
 
@@ -126,9 +137,22 @@ export function Login({ onLogin }: LoginProps) {
             <p>
               {t('login.footer1')}
             </p>
-            <p className="mt-2">
+            <p>
               {t('login.footer2')}
             </p>
+            {onSignup && (
+              <div className="mt-6 pt-6 border-t border-violet-100">
+                <p className="text-muted-foreground">
+                  {t('login.noAccount')}{' '}
+                  <button
+                    onClick={onSignup}
+                    className="text-violet-600 font-semibold hover:text-violet-700 transition-colors"
+                  >
+                    {t('login.signup')}
+                  </button>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -134,12 +134,12 @@ class Onboarding extends BaseController
             // Use UUID for the Portal URL
             $redirectUrl = "{$protocol}://{$host}/portal/{$tenantUuid}/login";
 
-            return $this->respond([
+            return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Account created successfully!',
                 'subdomain' => $subdomain,
                 'redirect_url' => $redirectUrl
-            ]);
+            ])->setStatusCode(200);
             
         } catch (Exception $e) {
             $db->transRollback();
@@ -157,27 +157,27 @@ class Onboarding extends BaseController
         
         // Validate format
         if (!preg_match('/^[a-z0-9-]+$/', $subdomain)) {
-            return $this->respond([
+            return $this->response->setJSON([
                 'available' => false,
                 'message' => 'Invalid characters'
-            ]);
+            ])->setStatusCode(200);
         }
         
         // Reserved
         $reserved = ['www', 'api', 'admin', 'app', 'mail', 'demo', 'billingtool'];
         if (in_array($subdomain, $reserved)) {
-             return $this->respond([
+             return $this->response->setJSON([
                 'available' => false,
                 'message' => 'Reserved'
-            ]);
+            ])->setStatusCode(200);
         }
         
         $tenantModel = new TenantModel();
         $exists = $tenantModel->where('subdomain', $subdomain)->first();
         
-        return $this->respond([
+        return $this->response->setJSON([
             'available' => !$exists,
             'message' => $exists ? 'Taken' : 'Available'
-        ]);
+        ])->setStatusCode(200);
     }
 }

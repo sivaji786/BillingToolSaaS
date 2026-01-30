@@ -121,20 +121,7 @@ export function SALogin({ onLoginSuccess }: SALoginProps) {
                             </Button>
                         </form>
 
-                        {/* Demo Credentials */}
-                        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-                                Demo Credentials
-                            </p>
-                            <div className="space-y-1 text-xs text-blue-700 dark:text-blue-300">
-                                <p>
-                                    <span className="font-medium">Email:</span> admin@demo.com
-                                </p>
-                                <p>
-                                    <span className="font-medium">Password:</span> admin123
-                                </p>
-                            </div>
-                        </div>
+
                     </CardContent>
                 </Card>
 

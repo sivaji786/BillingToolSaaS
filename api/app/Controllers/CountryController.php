@@ -24,6 +24,6 @@ class CountryController extends BaseController
                            ->orderBy("name_{$lang}", 'ASC')
                            ->findAll();
 
-        return $this->respond($countries);
+        return $this->response->setJSON($countries)->setStatusCode(200);
     }
 }

@@ -192,10 +192,10 @@ class AdminAnalytics extends ResourceController
             'recentActivity' => $recentActivity
         ];
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'data' => $stats,
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**
@@ -272,10 +272,10 @@ class AdminAnalytics extends ResourceController
             'historicalData' => $historicalData,
         ];
 
-        return $this->respond([
+        return $this->response->setJSON([
             'success' => true,
             'data' => $metrics,
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**

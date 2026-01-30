@@ -73,11 +73,11 @@ class Billing extends BaseController
                 ]
             ];
 
-            return $this->respond([
+            return $this->response->setJSON([
                 'subscription' => $subscription,
                 'plan' => $plan,
                 'usage' => $usage
-            ]);
+            ])->setStatusCode(200);
         } catch (\Exception $e) {
             return $this->failServerError('Error fetching subscription: ' . $e->getMessage());
         }
@@ -127,7 +127,7 @@ class Billing extends BaseController
                 $origin . '/billing?canceled=true'
             );
 
-            return $this->respond(['checkoutUrl' => $checkoutUrl]);
+            return $this->response->setJSON(['checkoutUrl' => $checkoutUrl])->setStatusCode(200);
 
         } catch (\Exception $e) {
             return $this->failServerError('Stripe Error: ' . $e->getMessage());
@@ -138,13 +138,13 @@ class Billing extends BaseController
     {
         // TODO: Sync invoices from Stripe via Webhook to local DB
         // For now, return empty or mock
-        return $this->respond([]); 
+        return $this->response->setJSON([])->setStatusCode(200); 
     }
     
     public function plans()
     {
         $model = new PlanModel();
         $plans = $model->where('is_active', 1)->findAll();
-        return $this->respond($plans);
+        return $this->response->setJSON($plans)->setStatusCode(200);
     }
 }

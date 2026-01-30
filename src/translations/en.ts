@@ -25,6 +25,9 @@ export const en = {
         loginFailedDesc: 'Please enter your email and password.',
         loggedOut: 'Logged out successfully',
         loggedOutDesc: 'You have been logged out of your account.',
+        noAccount: "Don't have an account?",
+        signup: 'Sign up now',
+        backToHome: 'Back to home',
     },
 
     // Navigation
@@ -33,6 +36,9 @@ export const en = {
         templates: 'Templates',
         activity: 'Activity Log',
         settings: 'Settings',
+        products: 'Packages',
+        clients: 'Clients',
+        reports: 'Reports',
     },
 
     // Dashboard

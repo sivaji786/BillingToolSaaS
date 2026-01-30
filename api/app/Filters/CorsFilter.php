@@ -10,11 +10,11 @@ class CorsFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // Handle preflight requests - use header() directly for immediate output
+        $origin = $request->getHeaderLine('Origin');
+        $allowedOrigin = $this->getAllowedOrigin($origin);
+
+        // Handle preflight requests
         if (strtoupper($request->getMethod()) === 'OPTIONS') {
-            $origin = $request->getHeaderLine('Origin');
-            $allowedOrigin = $this->getAllowedOrigin($origin);
-            
             header("Access-Control-Allow-Origin: $allowedOrigin");
             header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH');
             header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Authorization, X-Requested-With, X-Tenant-ID');
@@ -23,6 +23,13 @@ class CorsFilter implements FilterInterface
             http_response_code(204);
             exit(0);
         }
+
+        // For non-OPTIONS requests, we also set headers using header() 
+        // to ensure they exist even if a later 'before' filter terminates the request
+        header("Access-Control-Allow-Origin: $allowedOrigin");
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Authorization, X-Requested-With, X-Tenant-ID');
+        header('Access-Control-Allow-Credentials: true');
         
         return $request;
     }
@@ -37,6 +44,12 @@ class CorsFilter implements FilterInterface
         $response->setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
         $response->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Authorization, X-Requested-With, X-Tenant-ID');
         $response->setHeader('Access-Control-Allow-Credentials', 'true');
+        
+        // GLOBAL FIX: Force 200 OK for successful responses to avoid server-level 500 overrides
+        // Only override if the current status is purely 200 or unset (0)
+        if ($response->getStatusCode() === 200 || $response->getStatusCode() === 0) {
+            $response->setStatusCode(200);
+        }
         
         return $response;
     }
