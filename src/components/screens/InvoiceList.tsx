@@ -4,19 +4,7 @@ import { Invoice } from '../../types/invoice';
 import { invoiceService } from '../../services/api';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-// import { hasPermissionSync } from '../../hooks/usePermission'; 
-
-const hasPermissionSync = (requiredRight: string): boolean => {
-  try {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return false;
-    const user = JSON.parse(userStr);
-    const rights = user.rights || [];
-    return rights.includes('*') || rights.includes(requiredRight);
-  } catch (e) {
-    return false;
-  }
-};
+import { hasPermissionSync } from '../../hooks/usePermission';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { memo } from 'react';

@@ -53,8 +53,8 @@ export const useAuthStore = create<AuthState>()(
                     user: null,
                     tenant: null,
                 });
-                // Clear all localStorage as per requirement
-                localStorage.clear();
+                // We don't call localStorage.clear() here to avoid logging out the admin portal
+                // auth-storage will be updated by persist middleware
             },
 
             updateUser: (user) => {

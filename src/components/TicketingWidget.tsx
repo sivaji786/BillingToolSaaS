@@ -9,9 +9,10 @@ import { createTicket } from '../services/ticketService';
 interface TicketingWidgetProps {
     apiKey: string;
     apiBaseUrl?: string;
+    userId?: string | null;
 }
 
-export function TicketingWidget({ apiKey, apiBaseUrl }: TicketingWidgetProps) {
+export function TicketingWidget({ apiKey, apiBaseUrl, userId: propUserId }: TicketingWidgetProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -265,24 +266,12 @@ export function TicketingWidget({ apiKey, apiBaseUrl }: TicketingWidgetProps) {
                 finalScreenshot = canvas.toDataURL('image/png');
             }
 
-            // Get user info if available
-            let userId = null;
-            try {
-                const userStr = localStorage.getItem('user');
-                if (userStr) {
-                    const user = JSON.parse(userStr);
-                    userId = user.id;
-                }
-            } catch (e) {
-                console.error('Failed to parse user from localStorage', e);
-            }
-
             const postData = {
                 ...formData,
                 screenshot: finalScreenshot,
                 domain: window.location.hostname,
                 page: window.location.pathname,
-                user_id: userId
+                user_id: propUserId
             };
 
             await createTicket(postData, {

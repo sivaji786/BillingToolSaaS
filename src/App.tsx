@@ -70,7 +70,7 @@ type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
   const { t } = useLanguage();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, user, login, logout } = useAuthStore();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
@@ -87,7 +87,6 @@ function AppContent() {
   });
   const [previousScreen, setPreviousScreen] = useState<Screen>('dashboard');
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
-  const [user, setUser] = useState<any>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('invoice');
   const [editingTemplate, setEditingTemplate] = useState<InvoiceTemplate | undefined>(undefined);
   const [selectedPlan, setSelectedPlan] = useState<string | undefined>(undefined);
@@ -105,21 +104,41 @@ function AppContent() {
     }
 
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
+      // 1. Get token from store
+      let token = useAuthStore.getState().token;
+
+      // 2. Migration: Check raw localStorage for legacy token
+      const legacyToken = localStorage.getItem('token');
+      if (!token && legacyToken) {
+        console.log('Migrating legacy token to authStore');
+        token = legacyToken;
+        // Temporarily set token so authService.me() can use it
+        useAuthStore.setState({ token: legacyToken });
+      }
+
+      // 3. Clean up legacy keys anyway
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      // 4. Handle token from URL (redirection)
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenFromUrl = urlParams.get('token');
+      if (tokenFromUrl) {
+        console.log('Token found in URL, updating store');
+        token = tokenFromUrl;
+        useAuthStore.setState({ token: tokenFromUrl });
+        // Clean up URL without page reload
+        const newUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, '', newUrl);
+      }
+
       if (token) {
         try {
           // Verify token and get fresh user data including rights
           const userData = await authService.me();
-          localStorage.setItem('user', JSON.stringify(userData));
-          setUser(userData);
-          setIsAuthenticated(true);
-          // Update useAuthStore for customer components
-          if (userData.tenant) {
-            useAuthStore.getState().login(token, userData, userData.tenant);
-          } else if (userData.tenant_id) {
-            // Fallback for when tenant object isn't fully nested
-            useAuthStore.getState().login(token, userData, userData.tenant || {} as any);
-          }
+
+          // Update store with full user/tenant data
+          login(token, userData, userData.tenant || {} as any);
 
           // If we were on landing or login, go to dashboard
           if (currentScreen === 'landing' || currentScreen === 'login') {
@@ -127,9 +146,7 @@ function AppContent() {
           }
         } catch (e) {
           console.error('Auth check failed:', e);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setIsAuthenticated(false);
+          logout();
         }
       }
       setIsCheckingAuth(false);
@@ -235,14 +252,7 @@ function AppContent() {
       }
 
       // If no redirect_url (already on correct subdomain), proceed normally
-      setIsAuthenticated(true);
-      setUser(data.user);
-
-      // Update useAuthStore for customer components
-      if (data.tenant) {
-        useAuthStore.getState().login(data.token, data.user, data.tenant);
-      }
-
+      login(data.token, data.user, data.tenant || {} as any);
       setCurrentScreen('dashboard');
     } catch (error) {
       console.error('Login error:', error);
@@ -253,7 +263,6 @@ function AppContent() {
   const handleLogout = () => {
     authService.logout();
     useAuthStore.getState().logout();
-    setIsAuthenticated(false);
     setCurrentScreen('dashboard');
     setCurrentInvoice(null);
     toast.success(t('login.loggedOut'), {
@@ -735,7 +744,11 @@ function AppContent() {
         <GlobalAIAssistant
           onGenerateInvoiceNumber={() => `INV-2025-${String(invoices.length + 1).padStart(5, '0')}`}
         />
-        <TicketingWidget apiKey="billtool_test_key" apiBaseUrl="http://localhost:8081" />
+        <TicketingWidget
+          apiKey="billtool_test_key"
+          apiBaseUrl="http://localhost:8080"
+          userId={user?.id}
+        />
         <Toaster />
       </SidebarInset>
     </SidebarProvider>

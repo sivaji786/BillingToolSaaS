@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuthStore } from '../stores/authStore';
 
 export const usePermission = (requiredRight: string) => {
     const [hasPermission, setHasPermission] = useState(false);
@@ -12,13 +13,12 @@ export const usePermission = (requiredRight: string) => {
 
     const checkPermission = () => {
         try {
-            const userStr = localStorage.getItem('user');
-            if (!userStr) {
+            const user = useAuthStore.getState().user;
+            if (!user) {
                 setHasPermission(false);
                 return;
             }
 
-            const user = JSON.parse(userStr);
             const rights = user.rights || [];
 
             if (rights.includes('*') || rights.includes(requiredRight)) {
@@ -37,10 +37,9 @@ export const usePermission = (requiredRight: string) => {
 // Also export a synchronous function for use in loops/rendering where hook rules might be annoying
 export const hasPermissionSync = (requiredRight: string): boolean => {
     try {
-        const userStr = localStorage.getItem('user');
-        if (!userStr) return false;
+        const user = useAuthStore.getState().user;
+        if (!user) return false;
 
-        const user = JSON.parse(userStr);
         const rights = user.rights || [];
 
         return user.role === 'admin' || rights.includes('*') || rights.includes(requiredRight);

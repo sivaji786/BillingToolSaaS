@@ -1,6 +1,8 @@
 import { ReactNode } from 'react';
 import { AdminSidebar } from './AdminSidebar';
 import { ThemeToggle } from './ThemeToggle';
+import { TicketingWidget } from '../TicketingWidget';
+import { useAdminStore } from '../../stores/adminStore';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -10,6 +12,7 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children, currentScreen, onNavigate, onLogout }: AdminLayoutProps) {
+    const { adminUser } = useAdminStore();
 
     return (
         <div className="flex min-h-screen bg-background">
@@ -51,6 +54,13 @@ export function AdminLayout({ children, currentScreen, onNavigate, onLogout }: A
                 {/* Page content */}
                 <main className="flex-1 p-6">{children}</main>
             </div>
+
+            {/* Bug reporting widget for SA portal */}
+            <TicketingWidget
+                apiKey="sa_portal_key_2026"
+                apiBaseUrl="http://localhost:8080"
+                userId={adminUser?.id?.toString()}
+            />
         </div>
     );
 }

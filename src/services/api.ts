@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry, AIPromptRequest, AIPromptResponse } from '../types/invoice';
 import { getApiBaseUrl } from '../utils/config';
+import { useAuthStore } from '../stores/authStore';
 
 // Use runtime configuration for API URL (can be changed after build by installer)
 const API_URL = getApiBaseUrl();
@@ -14,9 +15,9 @@ const api = axios.create({
     withCredentials: true,
 });
 
-// Add auth token - use COMMON localStorage
+// Add auth token - use Zustand store
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
+    const token = useAuthStore.getState().token;
     if (token) {
         config.headers.Authorization = `Bearer ${token} `;
         config.headers['X-Authorization'] = `Bearer ${token} `;
@@ -34,17 +35,14 @@ export const authService = {
         const response = await api.post('/auth/login', { email, password });
         const data = response.data.data || response.data;
 
-        // Store in COMMON localStorage (same keys as admin)
-        if (data.token) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-        }
+        // Note: We don't manually set raw localStorage here anymore.
+        // The calling component or store.login() handles persistence via Zustand.
 
         return data;
     },
     logout: () => {
-        // Clear all localStorage as per requirement
-        localStorage.clear();
+        // Broad clear is removed to avoid cross-portal logout. 
+        // Individual stores handle their own state.
     },
     me: async () => {
         const response = await api.get('/auth/me');
