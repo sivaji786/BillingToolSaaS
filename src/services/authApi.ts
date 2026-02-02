@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getApiBaseUrl } from '../utils/config';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = getApiBaseUrl();
 
 export interface SignupData {
     email: string;

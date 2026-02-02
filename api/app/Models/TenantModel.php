@@ -14,7 +14,8 @@ class TenantModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'company_name', 'website', 'subdomain', 'custom_domain', 
-        'plan_id', 'status', 'trial_ends_at', 'uuid'
+        'plan_id', 'status', 'trial_ends_at', 'uuid',
+        'ai_provider', 'gemini_api_key', 'openai_api_key'
     ];
     
     protected $beforeInsert = ['generateUuid'];

@@ -68,6 +68,7 @@ import {
   FileDown,
   X,
   Upload,
+  Plus,
   FileUp,
   CalendarIcon,
   RefreshCw,
@@ -79,12 +80,13 @@ import { Card } from '../ui/card';
 interface InvoiceListProps {
   onSelectInvoice?: (invoice: Invoice) => void;
   onEditInvoice?: (invoice: Invoice) => void;
+  onNewInvoice?: () => void;
 }
 
 type SortOption = 'dateDesc' | 'dateAsc' | 'amountDesc' | 'amountAsc' | 'numberDesc' | 'numberAsc';
 type DateFilter = 'anyDate' | 'last7Days' | 'last30Days' | 'last90Days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'customRange';
 
-export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps) {
+export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: InvoiceListProps) {
   const { t } = useLanguage();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -226,7 +228,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
   const handleDuplicate = (invoice: Invoice) => {
     const newInvoice: Invoice = {
       ...invoice,
-      id: Math.random().toString(36).substring(7),
+      id: `new_${Math.random().toString(36).substring(7)}`,
       invoiceNumber: `${invoice.invoiceNumber} -COPY`,
       status: 'draft',
       createdAt: new Date().toISOString(),
@@ -390,13 +392,22 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice }: InvoiceListProps
           <h1 className="text-purple-900 dark:text-purple-100 mb-1">{t('invoiceList.title')}</h1>
           <p className="text-gray-600 dark:text-gray-400">{t('invoiceList.subtitle')}</p>
         </div>
-        <Button
-          onClick={() => setShowImportDialog(true)}
-          className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white"
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          {t('invoiceList.importFile')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={onNewInvoice}
+            className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-md shadow-purple-500/20"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t('dashboard.newInvoice')}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowImportDialog(true)}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            {t('invoiceList.importFile')}
+          </Button>
+        </div>
       </div>
 
       {/* Filters and Search */}

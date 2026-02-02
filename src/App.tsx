@@ -60,6 +60,7 @@ import {
   companyProfileService,
   auditLogService,
 } from './services/api';
+import { getApiBaseUrl } from './utils/config';
 import { calculateInvoiceTotals } from './utils/invoice-calculations';
 import { toast } from 'sonner';
 import { authService, invoiceService } from './services/api';
@@ -324,7 +325,7 @@ function AppContent() {
   };
 
 
-  const handleSaveInvoice = (invoice: Invoice) => {
+  const handleSaveInvoice = async (invoice: Invoice) => {
     if (editorMode === 'template') {
       // Save as template
       const newTemplate: InvoiceTemplate = {
@@ -342,50 +343,45 @@ function AppContent() {
         defaultPaymentTerms: invoice.paymentTerms,
       };
 
-      const saveTemplate = async () => {
-        try {
-          await invoiceTemplateService.create(newTemplate);
-          refetchTemplates();
-          toast.success(t('templates.templateSaved') || 'Template saved', {
-            description: t('templates.templateSavedDesc') || 'Template has been saved to your library',
-          });
-          setCurrentScreen('templates');
-          setCurrentInvoice(null);
-        } catch (error) {
-          console.error('Failed to save template:', error);
-          toast.error(t('common.error') || 'Failed to save template');
-        }
-      };
-      saveTemplate();
+      try {
+        await invoiceTemplateService.create(newTemplate);
+        refetchTemplates();
+        toast.success(t('templates.templateSaved') || 'Template saved', {
+          description: t('templates.templateSavedDesc') || 'Template has been saved to your library',
+        });
+        setCurrentScreen('templates');
+        setCurrentInvoice(null);
+        return newTemplate;
+      } catch (error) {
+        console.error('Failed to save template:', error);
+        toast.error(t('common.error') || 'Failed to save template');
+        throw error;
+      }
     } else {
       // Save as invoice
       const calculated = calculateInvoiceTotals(invoice);
 
-      const savePromise = async () => {
-        try {
-          let savedInvoice: Invoice = calculated;
-          if (calculated.id && !calculated.id.startsWith('new_')) {
-            // Update existing
-            await invoiceService.update(calculated.id, calculated);
-          } else {
-            // Create new
-            // Remove temporary ID
-            const { id, ...invoiceData } = calculated;
-            const response = await invoiceService.create(invoiceData as Invoice);
-            savedInvoice = { ...calculated, id: response.id };
-          }
-
-          refetchInvoices();
-
-          setCurrentInvoice(savedInvoice);
-          toast.success(t('editor.invoiceSaved') || 'Invoice saved successfully');
-        } catch (error) {
-          console.error('Failed to save invoice:', error);
-          toast.error(t('common.error') || 'Failed to save invoice');
+      try {
+        let savedInvoice: Invoice = calculated;
+        if (calculated.id && !calculated.id.startsWith('new_')) {
+          // Update existing
+          await invoiceService.update(calculated.id, calculated);
+        } else {
+          // Create new
+          // Remove temporary ID
+          const { id, ...invoiceData } = calculated;
+          const response = await invoiceService.create(invoiceData as Invoice);
+          savedInvoice = { ...calculated, id: response.id };
         }
-      };
 
-      savePromise();
+        refetchInvoices();
+        setCurrentInvoice(savedInvoice);
+        return savedInvoice;
+      } catch (error) {
+        console.error('Failed to save invoice:', error);
+        toast.error(t('common.error') || 'Failed to save invoice');
+        throw error;
+      }
     }
   };
 
@@ -699,6 +695,7 @@ function AppContent() {
                   <InvoiceList
                     onSelectInvoice={handlePreviewInvoice}
                     onEditInvoice={handleOpenInvoice}
+                    onNewInvoice={handleNewInvoice}
                   />
                 )}
 
@@ -747,7 +744,7 @@ function AppContent() {
         />
         <TicketingWidget
           apiKey="billtool_test_key"
-          apiBaseUrl="http://localhost:8080"
+          apiBaseUrl={getApiBaseUrl()}
           userId={user?.id}
         />
         <Toaster />

@@ -1,19 +1,17 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-const ENV_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const ENV_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
-export const parseInvoiceWithGemini = async (prompt: string, context: 'create' | 'edit' = 'create', apiKey?: string) => {
+export const parseInvoiceWithOpenAI = async (prompt: string, context: 'create' | 'edit' = 'create', apiKey?: string) => {
     const activeKey = apiKey || ENV_API_KEY;
 
     if (!activeKey) {
-        throw new Error("Missing Gemini API Key. Please configure it in Settings.");
+        throw new Error("Missing OpenAI API Key. Please configure it in Settings.");
     }
 
-    const genAI = new GoogleGenerativeAI(activeKey);
-    // Using gemini-3.0-flash which is the latest and supports JSON mode
-    const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash-lite",
-        generationConfig: { responseMimeType: "application/json" }
+    const openai = new OpenAI({
+        apiKey: activeKey,
+        dangerouslyAllowBrowser: true
     });
 
     const currentDate = new Date().toISOString().split('T')[0];
@@ -61,10 +59,25 @@ export const parseInvoiceWithGemini = async (prompt: string, context: 'create' |
     `;
 
     try {
-        const result = await model.generateContent(systemPrompt + "\n\nUser Input: " + prompt);
-        return JSON.parse(result.response.text());
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: prompt }
+            ],
+            response_format: { type: "json_object" }
+        });
+
+        const content = response.choices[0].message.content;
+        if (!content) {
+            throw new Error("Empty response from OpenAI");
+        }
+
+        return JSON.parse(content);
     } catch (error: any) {
-        console.error("Gemini Error:", error);
+        if (error?.status === 429) {
+            throw new Error("OpenAI Rate Limit Exceeded: This usually means you need to add credits (separate from ChatGPT Plus) or wait a few minutes.");
+        }
         throw error;
     }
 };

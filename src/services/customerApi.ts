@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/customer';
+import { getApiBaseUrl } from '../utils/config';
+const API_URL = `${getApiBaseUrl()}/customer`;
 
 export interface DashboardData {
     tenant: any;
@@ -66,7 +67,14 @@ export const customerService = {
         return response.data.data;
     },
 
-    updateProfile: async (token: string, data: { company_name?: string; contact_email?: string; contact_phone?: string }) => {
+    updateProfile: async (token: string, data: {
+        company_name?: string;
+        contact_email?: string;
+        contact_phone?: string;
+        ai_provider?: 'gemini' | 'openai';
+        gemini_api_key?: string;
+        openai_api_key?: string;
+    }) => {
         const response = await axios.put(`${API_URL}/profile`, data, {
             headers: {
                 'Authorization': `Bearer ${token}`,

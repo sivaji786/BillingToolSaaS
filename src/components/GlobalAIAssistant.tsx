@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { parseInvoiceWithGemini } from '../services/gemini';
+import { parseInvoiceWithOpenAI } from '../services/openai';
+import { useAuthStore } from '../stores/authStore';
 import { ChatMessage, Invoice, AIPromptRequest } from '../types/invoice';
 import { Sparkles, X, Send, Loader2, MessageSquare, Mic, MicOff } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -135,6 +137,8 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber }: GlobalAIAssistant
         }
     }, [isOpen, t]);
 
+    const tenant = useAuthStore((state) => state.tenant);
+
     const processCommand = async (text: string) => {
         if (!text.trim() || isLoading) return;
 
@@ -150,8 +154,16 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber }: GlobalAIAssistant
         setIsLoading(true);
 
         try {
-            // Client-side Gemini Parsing
-            const parsedInvoice = await parseInvoiceWithGemini(userMessage.content, 'create');
+            // Determine which AI provider and key to use
+            const provider = tenant?.ai_provider || 'gemini';
+            const apiKey = provider === 'openai' ? tenant?.openai_api_key : tenant?.gemini_api_key;
+
+            let parsedInvoice;
+            if (provider === 'openai') {
+                parsedInvoice = await parseInvoiceWithOpenAI(userMessage.content, 'create', apiKey);
+            } else {
+                parsedInvoice = await parseInvoiceWithGemini(userMessage.content, 'create', apiKey);
+            }
 
             const request: AIPromptRequest = {
                 prompt: userMessage.content,

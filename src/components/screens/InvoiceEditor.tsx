@@ -30,6 +30,7 @@ import {
   AlertCircle,
   LayoutTemplate,
   FileText,
+  Loader2,
 } from 'lucide-react';
 import { LineItemRow } from '../invoice/LineItemRow';
 import { PartyCard } from '../invoice/PartyCard';
@@ -59,6 +60,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
   const [invoice, setInvoice] = useState<Invoice>(initialInvoice);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Memoize heavy calculations
   const calculatedInvoice = useMemo(() => {
@@ -115,14 +117,21 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
     toast.success(t('editor.lineAdded') || 'Line item added');
   }, [t]);
 
-  const handleSave = useCallback(() => {
-    const toSave = {
-      ...calculatedInvoice,
-      updatedAt: new Date().toISOString(),
-    };
-    onSave(toSave);
-    setHasUnsavedChanges(false);
-    toast.success(t('editor.invoiceSaved'));
+  const handleSave = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      const toSave = {
+        ...calculatedInvoice,
+        updatedAt: new Date().toISOString(),
+      };
+      await onSave(toSave);
+      setHasUnsavedChanges(false);
+      toast.success(t('editor.invoiceSaved') || 'Invoice saved successfully');
+    } catch (error) {
+      // Error handled by onSave toast
+    } finally {
+      setIsSaving(false);
+    }
   }, [calculatedInvoice, onSave, t]);
 
   const handleValidate = () => {
@@ -286,8 +295,12 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={!hasUnsavedChanges}>
-              <Save className="h-4 w-4 mr-2" />
+            <Button onClick={handleSave} disabled={!hasUnsavedChanges || isSaving}>
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
               {isTemplateMode
                 ? (t('templates.saveTemplate') || 'Save Template')
                 : (t('editor.saveDraft') || 'Save Draft')
@@ -519,8 +532,12 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
         <Button variant="outline" onClick={onBack}>
           {t('editor.back') || 'Back'}
         </Button>
-        <Button onClick={handleSave} disabled={!hasUnsavedChanges}>
-          <Save className="h-4 w-4 mr-2" />
+        <Button onClick={handleSave} disabled={!hasUnsavedChanges || isSaving}>
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
           {isTemplateMode
             ? (t('templates.saveTemplate') || 'Save Template')
             : (t('editor.saveDraft') || 'Save Draft')

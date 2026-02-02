@@ -278,6 +278,9 @@ class Customer extends BaseController
             if (isset($data['company_name'])) $updateData['company_name'] = $data['company_name'];
             if (isset($data['contact_email'])) $updateData['contact_email'] = $data['contact_email'];
             if (isset($data['contact_phone'])) $updateData['contact_phone'] = $data['contact_phone'];
+            if (isset($data['ai_provider'])) $updateData['ai_provider'] = $data['ai_provider'];
+            if (isset($data['gemini_api_key'])) $updateData['gemini_api_key'] = $data['gemini_api_key'];
+            if (isset($data['openai_api_key'])) $updateData['openai_api_key'] = $data['openai_api_key'];
 
             if (empty($updateData)) {
                 return $this->response->setJSON([

@@ -17,6 +17,9 @@ interface Tenant {
     plan_id: string;
     status: string;
     trial_ends_at: string;
+    ai_provider?: 'gemini' | 'openai';
+    gemini_api_key?: string;
+    openai_api_key?: string;
 }
 
 interface AuthState {

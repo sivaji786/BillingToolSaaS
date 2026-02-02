@@ -5,8 +5,6 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use CodeIgniter\API\ResponseTrait;
 use App\Models\CompanyProfileModel;
-use GeminiAPI\Client;
-use GeminiAPI\Resources\Parts\TextPart;
 
 class AIInvoiceController extends BaseController
 {
