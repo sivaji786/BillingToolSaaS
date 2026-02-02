@@ -8,6 +8,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use App\Models\UserModel;
+use App\Models\TenantModel;
 
 class RbacFilter implements FilterInterface
 {
@@ -60,18 +61,6 @@ class RbacFilter implements FilterInterface
                  return response()->setJSON(['error' => 'Authentication required'])->setStatusCode(401);
             }
             
-            // 1.5 CHECK TENANT SCOPE MATCH
-            $appConfig = config('App');
-            $currentTenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
-            
-            if ($currentTenant) {
-                 $userModel = new UserModel();
-                 $user = $userModel->withoutTenant()->find($userId); 
-                 
-                 if ($user && $user['tenant_id'] != $currentTenant->id) {
-                     return response()->setJSON(['error' => 'Tenant Mismatch: User does not belong to this workspace'])->setStatusCode(403);
-                 }
-            }
             
             // 2. Check Permissions if arguments provided
             if (empty($arguments)) {

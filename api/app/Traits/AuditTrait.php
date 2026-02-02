@@ -18,7 +18,7 @@ trait AuditTrait
         $tenantId = isset($appConfig->currentTenant) ? $appConfig->currentTenant->id : null;
         
         if (!$tenantId) {
-            $tenantId = $this->request->getHeaderLine('X-Tenant-ID') ?: (property_exists($this, 'tenantId') ? $this->tenantId : null);
+            $tenantId = property_exists($this, 'tenantId') ? $this->tenantId : null;
         }
         
         // Try to get user from session or auth

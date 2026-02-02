@@ -41,7 +41,7 @@ class UnifiedAuthFilter implements FilterInterface
 
         // 4. Tenancy Identification Logic
         $tenantId = $tokenData['tenant_id'] ?? $tokenData['tid'] ?? null;
-        $subdomain = $request->getHeaderLine('X-Tenant-ID') ?: null;
+        $subdomain = null;
 
         // Fallback for public routes or if tenant not in JWT
         if (empty($tenantId) && empty($subdomain)) {
@@ -69,6 +69,34 @@ class UnifiedAuthFilter implements FilterInterface
         // Special fallback for localhost dev
         if (!$tenant && ($_SERVER['HTTP_HOST'] === 'localhost:8080' || $_SERVER['HTTP_HOST'] === 'localhost')) {
             $tenant = $db->table('tenants')->where('status', 'active')->limit(1)->get()->getRow();
+        }
+
+        // 5. ENFORCE TENANT MATCH (Anti-Conflict Logic)
+        // If we have a token (authenticated) and we found a tenant, 
+        // ensure it matches the current subdomain context.
+        if ($tokenData && $tenant) {
+            $host = $_SERVER['HTTP_HOST'] ?? $request->getUri()->getHost();
+            $hostSubdomain = $this->extractSubdomain($host);
+            
+            // Only enforce for actual subdomains (skip www, api, etc. if they are not the tenant's)
+            if (!empty($hostSubdomain) && !in_array($hostSubdomain, ['www', 'api', 'demo', 'localhost'])) {
+                if ($tenant->subdomain !== $hostSubdomain) {
+                    // Mismatch! Construct redirect URL
+                    $frontendDomain = getenv('FRONTEND_DOMAIN') ?: ($_ENV['FRONTEND_DOMAIN'] ?? 'localhost');
+                    $frontendPort = getenv('FRONTEND_PORT') ?: ($_ENV['FRONTEND_PORT'] ?? '');
+                    $protocol = getenv('FRONTEND_PROTOCOL') ?: ($_ENV['FRONTEND_PROTOCOL'] ?? 'http');
+                    $portSuffix = $frontendPort ? ":{$frontendPort}" : '';
+                    
+                    $redirectUrl = "{$protocol}://{$tenant->subdomain}.{$frontendDomain}{$portSuffix}/#/dashboard";
+
+                    return Services::response()->setJSON([
+                        'error' => 'Workspace mismatch',
+                        'message' => "This account belongs to the '{$tenant->subdomain}' workspace.",
+                        'redirect_url' => $redirectUrl,
+                        'correct_workspace' => $tenant->subdomain
+                    ])->setStatusCode(403);
+                }
+            }
         }
 
         // 6. Enforce Authentication and Tenancy (Skip for login/signup/admin-auth)
@@ -136,7 +164,15 @@ class UnifiedAuthFilter implements FilterInterface
         if (filter_var($host, FILTER_VALIDATE_IP) || $host === 'localhost') {
             return 'demo'; 
         }
+        
         $parts = explode('.', $host);
+        
+        // Handle .localhost (e.g. highgoweb.localhost)
+        if (count($parts) === 2 && $parts[1] === 'localhost') {
+            return $parts[0];
+        }
+        
+        // Handle standard subdomains (e.g. highgoweb.billingtool.com)
         return (count($parts) > 2) ? $parts[0] : '';
     }
 

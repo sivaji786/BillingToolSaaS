@@ -14,7 +14,7 @@ class Cors extends Controller
         // Set CORS headers
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Tenant-ID');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
         header('Access-Control-Max-Age: 7200');
         header('Access-Control-Allow-Credentials: true');
         

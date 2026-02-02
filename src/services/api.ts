@@ -19,8 +19,8 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
     const token = useAuthStore.getState().token;
     if (token) {
-        config.headers.Authorization = `Bearer ${token} `;
-        config.headers['X-Authorization'] = `Bearer ${token} `;
+        config.headers.Authorization = `Bearer ${token}`;
+        config.headers['X-Authorization'] = `Bearer ${token}`;
     }
 
     // Note: We no longer auto-inject X-Tenant-ID here.
@@ -29,6 +29,18 @@ api.interceptors.request.use((config) => {
 
     return config;
 });
+
+// Handle auto-redirect for workspace mismatches
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 403 && error.response.data?.redirect_url) {
+            console.log('Tenant mismatch detected, redirecting to correct workspace:', error.response.data.redirect_url);
+            window.location.href = error.response.data.redirect_url;
+        }
+        return Promise.reject(error);
+    }
+);
 
 export const authService = {
     login: async (email: string, password: string) => {

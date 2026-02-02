@@ -92,17 +92,6 @@ function AppContent() {
   const [selectedPlan, setSelectedPlan] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    // Check for token in URL query params (from redirection)
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
-    if (tokenFromUrl) {
-      console.log('Token found in URL, saving to localStorage');
-      localStorage.setItem('token', tokenFromUrl);
-      // Clean up URL without page reload
-      const newUrl = window.location.pathname + window.location.hash;
-      window.history.replaceState({}, '', newUrl);
-    }
-
     const checkAuth = async () => {
       // 1. Get token from store
       let token = useAuthStore.getState().token;
@@ -240,19 +229,22 @@ function AppContent() {
     try {
       const data = await authService.login(email, password);
 
-      // Check if we need to redirect to tenant subdomain
-      if (data.redirect_url) {
+      const targetUrl = new URL(data.redirect_url);
+      const isSameHost = targetUrl.host === window.location.host;
+
+      // Always update state first
+      login(data.token, data.user, data.tenant || {} as any);
+
+      if (data.redirect_url && !isSameHost) {
         toast.success(t('login.success') || 'Login successful', {
           description: t('login.redirecting') || 'Redirecting to your workspace...'
         });
         setTimeout(() => {
           window.location.href = data.redirect_url;
-        }, 1000);
+        }, 800);
         return;
       }
 
-      // If no redirect_url (already on correct subdomain), proceed normally
-      login(data.token, data.user, data.tenant || {} as any);
       setCurrentScreen('dashboard');
     } catch (error) {
       console.error('Login error:', error);
@@ -330,6 +322,7 @@ function AppContent() {
       toast.error(t('common.error') || 'Failed to load invoice details');
     }
   };
+
 
   const handleSaveInvoice = (invoice: Invoice) => {
     if (editorMode === 'template') {
@@ -455,9 +448,17 @@ function AppContent() {
     setCurrentInvoice(null);
   };
 
-  const handlePreviewInvoice = (invoice: Invoice) => {
-    setCurrentInvoice(invoice);
-    setCurrentScreen('preview');
+  const handlePreviewInvoice = async (invoice: Invoice) => {
+    if (!invoice.id) return;
+    try {
+      const fullInvoice = await invoiceService.getById(invoice.id);
+      setCurrentInvoice(fullInvoice);
+      setPreviousScreen(currentScreen);
+      setCurrentScreen('preview');
+    } catch (error) {
+      console.error('Failed to load invoice for preview:', error);
+      toast.error(t('common.error') || 'Failed to load invoice details');
+    }
   };
 
   const handleBackToEditor = () => {
@@ -690,13 +691,13 @@ function AppContent() {
                   <Dashboard
                     invoices={invoices}
                     onNewInvoice={handleNewInvoice}
-                    onOpenInvoice={handleOpenInvoice}
+                    onOpenInvoice={handlePreviewInvoice}
                   />
                 )}
 
                 {currentScreen === 'invoices' && (
                   <InvoiceList
-                    onSelectInvoice={handleOpenInvoice}
+                    onSelectInvoice={handlePreviewInvoice}
                     onEditInvoice={handleOpenInvoice}
                   />
                 )}
