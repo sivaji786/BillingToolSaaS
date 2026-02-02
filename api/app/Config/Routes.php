@@ -6,29 +6,12 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-// Test routes
-$routes->get('test', '\App\Controllers\Test::index');
-$routes->get('test/verify', '\App\Controllers\Test::verify');
-$routes->get('test/database', '\App\Controllers\Test::database');
-$routes->get('debug/users', '\App\Controllers\Debug::users');
-$routes->get('debug/roles', '\App\Controllers\Debug::roles');
-$routes->get('debug/find-role', '\App\Controllers\Debug::findRole');
-$routes->get('debug/schema', '\App\Controllers\Debug::schema');
+// Database Management
 $routes->get('database/migrate', '\App\Controllers\Database::migrate');
 $routes->get('database/seed', '\App\Controllers\Database::seed');
 
-
-
-
-// Customer Authentication API
-$routes->post('api/auth/signup', '\App\Controllers\Auth::signup');
-$routes->post('api/auth/login', '\App\Controllers\Auth::login');
-$routes->post('api/auth/logout', '\App\Controllers\Auth::logout');
-$routes->post('api/auth/refresh', '\App\Controllers\Auth::refresh');
-$routes->get('api/auth/me', '\App\Controllers\Auth::me');
-
 $routes->get('billing/plans', '\App\Controllers\Billing::plans');
-$routes->group('billing', ['filter' => 'hybridauth'], function($routes) {
+$routes->group('billing', ['filter' => 'auth'], function($routes) {
     $routes->get('subscription', '\App\Controllers\Billing::subscription');
     $routes->post('upgrade', '\App\Controllers\Billing::upgrade');
     $routes->get('history', '\App\Controllers\Billing::history');
@@ -42,35 +25,35 @@ $routes->group('onboarding', function($routes) {
 });
 
 // Invoices Group (supports both JWT and session auth)
-$routes->group('invoices', ['filter' => ['hybridauth', 'rbac:invoices.read']], function($routes) {
+$routes->group('invoices', ['filter' => ['auth', 'rbac:invoices.read']], function($routes) {
     $routes->get('', '\App\Controllers\InvoiceController::index');
     $routes->get('(:segment)', '\App\Controllers\InvoiceController::show/$1');
 });
-$routes->group('invoices', ['filter' => ['hybridauth', 'rbac:invoices.create']], function($routes) {
+$routes->group('invoices', ['filter' => ['auth', 'rbac:invoices.create']], function($routes) {
     $routes->post('', '\App\Controllers\InvoiceController::create');
 });
-$routes->group('invoices', ['filter' => ['hybridauth', 'rbac:invoices.update']], function($routes) {
+$routes->group('invoices', ['filter' => ['auth', 'rbac:invoices.update']], function($routes) {
     $routes->put('(:segment)', '\App\Controllers\InvoiceController::update/$1');
 });
-$routes->group('invoices', ['filter' => ['hybridauth', 'rbac:invoices.delete']], function($routes) {
+$routes->group('invoices', ['filter' => ['auth', 'rbac:invoices.delete']], function($routes) {
     $routes->delete('(:segment)', '\App\Controllers\InvoiceController::delete/$1');
 });
 
 
 // Invoice Templates (supports both JWT and session auth)
-$routes->group('invoice-templates', ['filter' => ['hybridauth', 'rbac:company_profiles.read']], function($routes) {
+$routes->group('invoice-templates', ['filter' => ['auth', 'rbac:company_profiles.read']], function($routes) {
     $routes->get('', '\App\Controllers\InvoiceTemplateController::index');
     $routes->get('(:segment)', '\App\Controllers\InvoiceTemplateController::show/$1');
 });
-$routes->group('invoice-templates', ['filter' => ['hybridauth', 'rbac:company_profiles.update']], function($routes) {
+$routes->group('invoice-templates', ['filter' => ['auth', 'rbac:company_profiles.update']], function($routes) {
     $routes->post('', '\App\Controllers\InvoiceTemplateController::create');
     $routes->put('(:segment)', '\App\Controllers\InvoiceTemplateController::update/$1');
     $routes->delete('(:segment)', '\App\Controllers\InvoiceTemplateController::delete/$1');
 });
 
 // Company Profiles (supports both JWT and session auth)
-$routes->get('company-profiles', '\App\Controllers\CompanyProfileController::index', ['filter' => ['hybridauth', 'rbac:company_profiles.read']]);
-$routes->put('company-profiles/(:segment)', '\App\Controllers\CompanyProfileController::update/$1', ['filter' => ['hybridauth', 'rbac:company_profiles.update']]);
+$routes->get('company-profiles', '\App\Controllers\CompanyProfileController::index', ['filter' => ['auth', 'rbac:company_profiles.read']]);
+$routes->put('company-profiles/(:segment)', '\App\Controllers\CompanyProfileController::update/$1', ['filter' => ['auth', 'rbac:company_profiles.update']]);
 
 $routes->group('company-types', ['filter' => 'rbac:company_profiles.read'], function($routes) {
     $routes->get('', '\App\Controllers\CompanyTypeController::index'); // Changed to company_profiles.read for wider access
@@ -80,7 +63,7 @@ $routes->group('company-types', ['filter' => 'rbac:company_profiles.read'], func
 });
 
 // Audit Logs (supports both JWT and session auth)
-$routes->get('audit-logs', '\App\Controllers\AuditLogController::index', ['filter' => ['hybridauth', 'rbac:audit_logs.read']]);
+$routes->get('audit-logs', '\App\Controllers\AuditLogController::index', ['filter' => ['auth', 'rbac:audit_logs.read']]);
 
 // AI Invoice Assistant
 $routes->post('ai/parse-invoice', '\App\Controllers\AIInvoiceController::parseInvoice', ['filter' => 'rbac:invoices.create']);
@@ -105,7 +88,7 @@ $routes->group('auth', function($routes) {
 });
 
 // Customer Portal API Routes (requires authentication)
-$routes->group('customer', ['filter' => 'hybridauth'], function($routes) {
+$routes->group('customer', ['filter' => 'auth'], function($routes) {
     $routes->get('dashboard', '\App\Controllers\Customer::dashboard');
     $routes->get('invoices', '\App\Controllers\Customer::invoices');
     $routes->get('invoices/(:segment)', '\App\Controllers\Customer::invoice/$1');
@@ -139,7 +122,7 @@ $routes->options('(:any)', 'Cors::options');
 $routes->post('webhooks/stripe', '\App\Controllers\Webhooks::stripe');
 
 // Admin Portal API Routes
-$routes->group('admin', function($routes) {
+$routes->group('admin', ['filter' => 'auth'], function($routes) {
     // Admin Authentication (no auth filter) - Uses AdminAuth for admin login (supports demo credentials)
     $routes->post('auth/login', '\App\Controllers\AdminAuth::login');
     $routes->get('auth/me', '\App\Controllers\AdminAuth::me');
@@ -161,9 +144,11 @@ $routes->group('admin', function($routes) {
     $routes->post('users/(:segment)/suspend', '\App\Controllers\AdminUsers::suspend/$1');
     $routes->post('users/(:segment)/activate', '\App\Controllers\AdminUsers::activate/$1');
     $routes->post('users/(:segment)/upgrade', '\App\Controllers\AdminUsers::upgrade/$1');
+    $routes->post('users/(:segment)/reset-password', '\App\Controllers\AdminUsers::resetPassword/$1');
     
     // Admin Billing
     $routes->get('invoices', '\App\Controllers\AdminBilling::index');
+    $routes->post('invoices', '\App\Controllers\AdminBilling::create');
     $routes->get('invoices/(:segment)', '\App\Controllers\AdminBilling::show/$1');
     $routes->get('invoices/(:segment)/pdf', '\App\Controllers\AdminBilling::downloadPdf/$1');
     $routes->get('revenue', '\App\Controllers\AdminBilling::revenue');
@@ -176,8 +161,15 @@ $routes->group('admin', function($routes) {
     // Database Management
     $routes->get('database/migrate', '\App\Controllers\Database::migrate');
     $routes->get('database/seed', '\App\Controllers\Database::seed');
+
+    // Admin Settings
+    $routes->get('settings', '\App\Controllers\AdminSettings::index');
+    $routes->put('settings/profile', '\App\Controllers\AdminSettings::updateProfile');
+    $routes->post('settings/password', '\App\Controllers\AdminSettings::changePassword');
+    $routes->post('settings/api-keys', '\App\Controllers\AdminSettings::generateApiKey');
+    $routes->delete('settings/api-keys/(:segment)', '\App\Controllers\AdminSettings::revokeApiKey/$1');
+    $routes->put('settings/system', '\App\Controllers\AdminSettings::updateSystemSettings');
 });
 
-$routes->get('debug/model-check', 'Debug::modelCheck');
 
 

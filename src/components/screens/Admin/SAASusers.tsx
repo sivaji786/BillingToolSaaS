@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Badge } from '../../ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
-import { Search, Download, UserCheck, UserX, Eye } from 'lucide-react';
+import { Search, Download, UserCheck, UserX, Eye, Key } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '../../ui/skeleton';
 import { format } from 'date-fns';
@@ -40,6 +40,16 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
             queryClient.invalidateQueries({ queryKey: ['users'] });
             toast.success('User activated successfully');
         },
+    });
+
+    const resetPasswordMutation = useMutation({
+        mutationFn: (userId: string) => adminUserService.resetPassword(userId),
+        onSuccess: () => {
+            toast.success('Password reset to "password123" successfully');
+        },
+        onError: () => {
+            toast.error('Failed to reset password');
+        }
     });
 
     const handleExportCsv = async () => {
@@ -132,6 +142,7 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead className="w-[80px]">S.No</TableHead>
                                     <TableHead>User</TableHead>
                                     <TableHead>Package</TableHead>
                                     <TableHead>Status</TableHead>
@@ -141,8 +152,11 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {usersData?.data.map((user) => (
+                                {usersData?.data.map((user, index) => (
                                     <TableRow key={user.id}>
+                                        <TableCell className="font-medium">
+                                            {((filters.page || 1) - 1) * (filters.limit || 10) + index + 1}
+                                        </TableCell>
                                         <TableCell>
                                             <div>
                                                 <p className="font-medium">{user.name}</p>
@@ -165,6 +179,18 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                                     onClick={() => onNavigate('SAUserDetails', { userId: user.id })}
                                                 >
                                                     <Eye className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        if (window.confirm('Are you sure you want to reset the tenant admin password to "password123"?')) {
+                                                            resetPasswordMutation.mutate(user.id);
+                                                        }
+                                                    }}
+                                                    title="Reset Password to password123"
+                                                >
+                                                    <Key className="h-4 w-4" />
                                                 </Button>
                                                 {user.status === 'active' ? (
                                                     <Button

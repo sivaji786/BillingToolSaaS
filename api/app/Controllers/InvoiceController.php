@@ -184,7 +184,7 @@ class InvoiceController extends BaseController
              // Try JWT if session empty
              $authHeader = $this->request->getHeaderLine('Authorization');
              if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-                 $key = getenv('JWT_SECRET') ?: 'billing_tool_secret_key';
+                 $key = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?? 'e88f7de29c95b084f1eb22e69093c3dafaa85f84eca6bbe0c8a94b8f4590df3e';
                  try {
                      $decoded = \Firebase\JWT\JWT::decode($matches[1], new \Firebase\JWT\Key($key, 'HS256'));
                      $userId = $decoded->uid ?? $decoded->user_id;

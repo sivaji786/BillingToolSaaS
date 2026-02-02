@@ -41,7 +41,7 @@ class RbacFilter implements FilterInterface
             // 1. Check Authentication (should be handled by HybridAuthFilter, but double check)
             if (!$userId) {
                 // Fallback: Check for JWT in header (in case HybridAuthFilter didn't run or failed)
-                $key = getenv('JWT_SECRET') ?: 'billing_tool_secret_key';
+                $key = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?? 'e88f7de29c95b084f1eb22e69093c3dafaa85f84eca6bbe0c8a94b8f4590df3e';
                 $header = $request->getHeaderLine('Authorization');
                 if (!$header) $header = $request->getHeaderLine('X-Authorization');
                 

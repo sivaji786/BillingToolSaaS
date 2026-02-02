@@ -441,6 +441,7 @@ export const de = {
     landing: {
         login: 'Anmelden',
         signup: 'Registrieren',
+        aboutUs: 'Über uns',
         hero: {
             badge: 'Neu: KI-gestützte Rechnungserstellung',
             title: 'Moderne Rechnungsstellung für',

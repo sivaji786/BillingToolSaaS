@@ -20,9 +20,7 @@ trait TenantScope
      */
     protected function beforeFind(array $data)
     {
-
         if ($this->ignoreTenant) {
-            $this->ignoreTenant = false; // Reset for next query
             return $data;
         }
 
@@ -54,11 +52,15 @@ trait TenantScope
      */
     protected function beforeInsert(array $data)
     {
+        if ($this->ignoreTenant) {
+            return $data;
+        }
+
         $appConfig = config('App');
         $tenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
         
         if ($tenant && is_object($tenant) && isset($tenant->id)) {
-            if (!isset($data['data']['tenant_id'])) {
+            if (!array_key_exists('tenant_id', $data['data'])) {
                  $data['data']['tenant_id'] = $tenant->id;
             }
         }
@@ -71,6 +73,10 @@ trait TenantScope
      */
     protected function beforeUpdate(array $data)
     {
+         if ($this->ignoreTenant) {
+             return $data;
+         }
+
          $appConfig = config('App');
          $tenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
          if ($tenant && is_object($tenant) && isset($tenant->id)) {
@@ -81,11 +87,5 @@ trait TenantScope
 
     protected function beforeDelete(array $data)
     {
-         $appConfig = config('App');
-         $tenant = isset($appConfig->currentTenant) ? $appConfig->currentTenant : null;
-         if ($tenant && is_object($tenant) && isset($tenant->id)) {
-             $this->where($this->table . '.tenant_id', $tenant->id);
-         }
-         return $data;
     }
 }

@@ -81,6 +81,9 @@ export default defineConfig({
             if (id.includes('date-fns')) {
               return 'vendor-dates';
             }
+            if (id.includes('axios') || id.includes('zustand') || id.includes('@tanstack')) {
+              return 'vendor-utils';
+            }
             return 'vendor';
           }
           if (id.includes('src/components/ui')) {

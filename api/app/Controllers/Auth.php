@@ -177,6 +177,20 @@ class Auth extends ResourceController
         // Generate CUSTOMER JWT token (type='customer')
         $token = JWTHelper::generateToken($user['id'], $user['tenant_id'], $user['email'], $user['name'], 'customer');
 
+        // Build redirect URL using subdomain pattern
+        // Get configuration from environment variables
+        $frontendDomain = getenv('FRONTEND_DOMAIN') ?: ($_ENV['FRONTEND_DOMAIN'] ?? 'localhost');
+        $frontendPort = getenv('FRONTEND_PORT') ?: ($_ENV['FRONTEND_PORT'] ?? '');
+        $protocol = getenv('FRONTEND_PROTOCOL') ?: ($_ENV['FRONTEND_PROTOCOL'] ?? 'http');
+        
+        $subdomain = $tenant['subdomain'];
+        
+        // Build port suffix (only if port is specified)
+        $portSuffix = $frontendPort ? ":{$frontendPort}" : '';
+        
+        // Build redirect URL to tenant subdomain
+        $redirectUrl = "{$protocol}://{$subdomain}.{$frontendDomain}{$portSuffix}/?token={$token}#/dashboard";
+
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Login successful',
@@ -184,6 +198,7 @@ class Auth extends ResourceController
                 'token' => $token,
                 'user' => $user,
                 'tenant' => $tenant,
+                'redirect_url' => $redirectUrl,
             ],
         ])->setStatusCode(200);
     }

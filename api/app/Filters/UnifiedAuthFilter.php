@@ -1,0 +1,172 @@
+<?php
+
+namespace App\Filters;
+
+use CodeIgniter\Filters\FilterInterface;
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use Config\Services;
+use App\Helpers\JWTHelper;
+use App\Models\UserModel;
+use App\Models\TenantModel;
+
+/**
+ * Unified Auth Filter
+ * Consolidates Tenancy identification and Authentication (JWT/Session)
+ */
+class UnifiedAuthFilter implements FilterInterface
+{
+    public function before(RequestInterface $request, $arguments = null)
+    {
+        // 1. Skip for OPTIONS requests (already handled by CorsFilter)
+        if (strtoupper($request->getMethod()) === 'OPTIONS') {
+            return;
+        }
+
+        $db = \Config\Database::connect();
+        $session = session();
+        $tokenData = null;
+        $tenant = null;
+
+        // 2. Identify Public Routes EARLY to avoid unnecessary DB lookups
+        $uri = $request->getUri()->getPath();
+        $isPublicRoute = $this->isPublicRoute($uri);
+
+        // 3. Identify User / Token
+        $authHeader = $this->getAuthHeader($request);
+        if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            $token = $matches[1];
+            $tokenData = JWTHelper::validateToken($token);
+        }
+
+        // 4. Tenancy Identification Logic
+        $tenantId = $tokenData['tenant_id'] ?? $tokenData['tid'] ?? null;
+        $subdomain = $request->getHeaderLine('X-Tenant-ID') ?: null;
+
+        // Fallback for public routes or if tenant not in JWT
+        if (empty($tenantId) && empty($subdomain)) {
+            if (preg_match('#^/?portal/([^/]+)#', $uri, $matches)) {
+                $subdomain = $matches[1];
+            } else {
+                $host = $_SERVER['HTTP_HOST'] ?? $request->getUri()->getHost();
+                $subdomain = $this->extractSubdomain($host);
+            }
+        }
+
+        // 4. Resolve Tenant Object
+        if ($tenantId) {
+            $tenant = $db->table('tenants')->where('id', $tenantId)->where('status', 'active')->get()->getRow();
+        } elseif ($subdomain && !in_array($subdomain, ['www', 'billingtool', 'api', 'demo'])) {
+            $builder = $db->table('tenants')->where('status', 'active');
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $subdomain)) {
+                $builder->where('uuid', $subdomain);
+            } else {
+                $builder->where('subdomain', $subdomain);
+            }
+            $tenant = $builder->get()->getRow();
+        }
+
+        // Special fallback for localhost dev
+        if (!$tenant && ($_SERVER['HTTP_HOST'] === 'localhost:8080' || $_SERVER['HTTP_HOST'] === 'localhost')) {
+            $tenant = $db->table('tenants')->where('status', 'active')->limit(1)->get()->getRow();
+        }
+
+        // 6. Enforce Authentication and Tenancy (Skip for login/signup/admin-auth)
+
+        if (!$isPublicRoute) {
+            if (!$tokenData && !$session->get('isLoggedIn')) {
+                return $this->fail('Authentication required', 401);
+            }
+
+            // If we're in a tenant-specific context (all routes except /admin), require a tenant
+            if (strpos($uri, '/admin/') === false && !$tenant) {
+                return $this->fail('Tenant not found', 404);
+            }
+        }
+
+        // 6. Setup Request Context & Session Bridge for Legacy RBAC
+        if ($tenant) {
+            $request->tenant = $tenant;
+            $request->tenantId = $tenant->id;
+            config('App')->currentTenant = $tenant;
+        }
+
+        if ($tokenData) {
+            $tokenDataArr = (array) $tokenData;
+            $userId = $tokenDataArr['user_id'] ?? $tokenDataArr['uid'] ?? null;
+            
+            if (!$userId && isset($tokenDataArr['data'])) {
+                $data = (array) $tokenDataArr['data'];
+                $userId = $data['id'] ?? null;
+            }
+
+            if ($userId) {
+                $request->userId = $userId;
+                $request->userType = $tokenDataArr['type'] ?? (isset($tokenDataArr['data']) ? ((array)$tokenDataArr['data'])['role'] ?? 'customer' : 'customer');
+
+                // Bridge to session for legacy RBAC
+                if (!$session->get('isLoggedIn')) {
+                    try {
+                        $session->set([
+                            'isLoggedIn' => true,
+                            'userId' => $userId,
+                            'tenantId' => $tenant->id ?? null,
+                            'authMethod' => 'jwt'
+                        ]);
+                    } catch (\Throwable $e) {}
+                }
+            }
+        }
+
+        return $request;
+    }
+
+    private function getAuthHeader($request)
+    {
+        return $request->getHeaderLine('Authorization') 
+            ?? $request->getHeaderLine('X-Authorization') 
+            ?? $_SERVER['HTTP_AUTHORIZATION'] 
+            ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] 
+            ?? null;
+    }
+
+    private function extractSubdomain(string $host): string
+    {
+        $host = explode(':', $host)[0];
+        if (filter_var($host, FILTER_VALIDATE_IP) || $host === 'localhost') {
+            return 'demo'; 
+        }
+        $parts = explode('.', $host);
+        return (count($parts) > 2) ? $parts[0] : '';
+    }
+
+    private function isPublicRoute(string $uri): bool
+    {
+        $publicPatterns = [
+            '/auth/login',
+            '/auth/signup',
+            '/api/countries',
+            '/onboarding/',
+            '/admin/auth/login',
+            '/test/',
+            '/debug/',
+            '/billing/plans'
+        ];
+        foreach ($publicPatterns as $pattern) {
+            if (strpos($uri, $pattern) !== false) return true;
+        }
+        return false;
+    }
+
+    private function fail(string $message, int $code)
+    {
+        return Services::response()
+            ->setJSON(['success' => false, 'message' => $message])
+            ->setStatusCode($code);
+    }
+
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
+    {
+        return $response;
+    }
+}

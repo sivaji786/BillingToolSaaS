@@ -26,8 +26,21 @@ export function AdminLayout({ children, currentScreen, onNavigate, onLogout }: A
                 {/* Header */}
                 <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-6">
                     <div>
-                        <h1 className="text-2xl font-bold capitalize">
-                            {currentScreen.replace('SA', '').replace('SAAS', '')}
+                        <h1 className="text-2xl font-bold">
+                            {(() => {
+                                switch (currentScreen) {
+                                    case 'SAdashboard': return 'Dashboard';
+                                    case 'SApackages': return 'Subscription Packages';
+                                    case 'SAPackageForm': return 'Package Editor';
+                                    case 'SAASusers': return 'SaaS Users';
+                                    case 'SAUserDetails': return 'User Details';
+                                    case 'SAbilling': return 'Revenue Overview';
+                                    case 'SAInvoiceForm': return 'Generate Invoice';
+                                    case 'SAusage': return 'Platform Usage';
+                                    case 'SAsettings': return 'System Settings';
+                                    default: return currentScreen.replace(/^SA+/, '').replace(/([A-Z])/g, ' $1').trim();
+                                }
+                            })()}
                         </h1>
                     </div>
                     <div className="flex items-center gap-4">

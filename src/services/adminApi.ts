@@ -147,6 +147,10 @@ export const adminUserService = {
         await adminApi.post(`/users/${userId}/activate`);
     },
 
+    resetPassword: async (userId: string): Promise<void> => {
+        await adminApi.post(`/users/${userId}/reset-password`);
+    },
+
     exportCsv: async (filters: UserFilters = {}): Promise<Blob> => {
         const response = await adminApi.get('/users/export', {
             params: filters,

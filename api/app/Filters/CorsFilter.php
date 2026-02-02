@@ -62,8 +62,13 @@ class CorsFilter implements FilterInterface
             'https://localhost:3000',
         ];
         
-        // Check if origin matches *.humpl.org pattern
+        // Check if origin matches *.humpl.org pattern (production)
         if (preg_match('/^https?:\/\/([a-zA-Z0-9-]+\.)?humpl\.org$/', $origin)) {
+            return $origin;
+        }
+        
+        // Check if origin matches *.localhost:3000 pattern (local development)
+        if (preg_match('/^https?:\/\/([a-zA-Z0-9_-]+\.)?localhost:3000$/', $origin)) {
             return $origin;
         }
         

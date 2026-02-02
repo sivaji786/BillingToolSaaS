@@ -48,7 +48,7 @@ class AdminAuth extends ResourceController
                 // Prepare user data for token (exclude password)
                 unset($user['password']);
 
-                $token = $this->generateToken($user);
+                $token = self::generateToken($user);
 
                 return $this->response->setJSON([
                     'success' => true,
@@ -73,7 +73,7 @@ class AdminAuth extends ResourceController
      */
     public function me()
     {
-        $user = $this->getAuthenticatedUser();
+        $user = self::getAuthenticatedUser($this->request);
         
         if (!$user) {
             return $this->failUnauthorized('Unauthorized');
@@ -103,13 +103,13 @@ class AdminAuth extends ResourceController
      */
     public function refresh()
     {
-        $user = $this->getAuthenticatedUser();
+        $user = self::getAuthenticatedUser($this->request);
         
         if (!$user) {
             return $this->failUnauthorized('Unauthorized');
         }
 
-        $token = $this->generateToken($user);
+        $token = self::generateToken($user);
 
         return $this->response->setJSON([
             'success' => true,
@@ -120,11 +120,14 @@ class AdminAuth extends ResourceController
     }
 
     /**
-     * Generate JWT token
+     * Generate JWT token (PUBLIC STATIC - can be called from other controllers)
+     * 
+     * @param array $user User data
+     * @return string JWT token
      */
-    private function generateToken($user)
+    public static function generateToken($user)
     {
-        $key = getenv('JWT_SECRET') ?: 'your-secret-key-change-this-in-production';
+        $key = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?? 'e88f7de29c95b084f1eb22e69093c3dafaa85f84eca6bbe0c8a94b8f4590df3e';
         $payload = [
             'iss' => base_url(),
             'aud' => base_url(),
@@ -141,11 +144,14 @@ class AdminAuth extends ResourceController
     }
 
     /**
-     * Get authenticated user from token
+     * Get authenticated admin user from JWT token (PUBLIC STATIC - can be called from other controllers)
+     * 
+     * @param \CodeIgniter\HTTP\RequestInterface $request Request object
+     * @return array|null User data if authenticated, null otherwise
      */
-    private function getAuthenticatedUser()
+    public static function getAuthenticatedUser($request)
     {
-        $authHeader = $this->request->getHeaderLine('Authorization');
+        $authHeader = $request->getHeaderLine('Authorization');
         
         if (!$authHeader) {
             return null;
@@ -154,7 +160,7 @@ class AdminAuth extends ResourceController
         $token = str_replace('Bearer ', '', $authHeader);
         
         try {
-            $key = getenv('JWT_SECRET') ?: 'your-secret-key-change-this-in-production';
+            $key = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?? 'e88f7de29c95b084f1eb22e69093c3dafaa85f84eca6bbe0c8a94b8f4590df3e';
             $decoded = JWT::decode($token, new Key($key, 'HS256'));
             
             // Verify user exists in DB
@@ -169,6 +175,7 @@ class AdminAuth extends ResourceController
             unset($user['password']);
             return $user;
         } catch (\Exception $e) {
+            log_message('error', 'JWT Authentication failed: ' . $e->getMessage());
             return null;
         }
     }

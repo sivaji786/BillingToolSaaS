@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { adminBillingService } from '../../../services/adminApi';
+import { adminBillingService, adminSettingsService } from '../../../services/adminApi';
 import { InvoiceFilters } from '../../../types/admin';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
@@ -13,6 +13,8 @@ import { toast } from 'sonner';
 import { Skeleton } from '../../ui/skeleton';
 import { format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { generateInvoicePDF } from '../../../utils/invoice-pdf';
+import { Invoice as FullInvoice } from '../../../types/invoice';
 
 export function SAbilling() {
     const [filters, setFilters] = useState<InvoiceFilters>({ page: 1, limit: 10 });
@@ -27,17 +29,76 @@ export function SAbilling() {
         queryFn: () => adminBillingService.getRevenue('monthly'),
     });
 
+    const { data: settings } = useQuery({
+        queryKey: ['admin-settings'],
+        queryFn: () => adminSettingsService.getSettings(),
+    });
+
     const handleDownloadPdf = async (invoiceId: string) => {
+        const invoice = invoicesData?.data.find(inv => inv.id === invoiceId);
+        if (!invoice) return;
+
+        const cd = settings?.companyDetails;
+
         try {
-            const blob = await adminBillingService.downloadPdf(invoiceId);
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `invoice-${invoiceId}.pdf`;
-            a.click();
-            toast.success('Invoice downloaded successfully');
+            const toastId = toast.loading('Generating PDF...');
+
+            // Map simplified admin Invoice to the FullInvoice format required by the PDF generator
+            const fullInvoice: FullInvoice = {
+                id: String(invoice.id),
+                invoiceNumber: invoice.invoiceNumber,
+                issueDate: invoice.issueDate,
+                dueDate: invoice.dueDate,
+                currency: invoice.currency,
+                seller: {
+                    name: cd?.name || "BillingTool Platform",
+                    address: {
+                        street: cd?.address?.street || "123 Business Avenue",
+                        city: cd?.address?.city || "Antwerp",
+                        postalCode: cd?.address?.postalCode || "2000",
+                        country: cd?.address?.country || "BE"
+                    },
+                    contactEmail: cd?.email,
+                    contactPhone: cd?.phone,
+                    vatId: cd?.vatId
+                },
+                buyer: {
+                    name: invoice.userName,
+                    address: { street: "", city: "", postalCode: "", country: "" },
+                    contactEmail: invoice.userEmail
+                },
+                lines: [
+                    {
+                        id: '1',
+                        description: `Subscription - ${invoice.invoiceNumber}`,
+                        quantity: 1,
+                        unitCode: 'EA',
+                        unitPrice: invoice.amount,
+                        taxCategory: 'S',
+                        taxPercent: 0
+                    }
+                ],
+                taxTotals: [],
+                lineExtensionAmount: invoice.amount,
+                taxExclusiveAmount: invoice.amount,
+                taxInclusiveAmount: invoice.amount,
+                payableAmount: invoice.amount,
+                paymentMeans: cd?.bankDetails ? {
+                    type: 'BankTransfer',
+                    iban: cd.bankDetails.iban,
+                    bic: cd.bankDetails.bic,
+                    accountName: cd.bankDetails.accountName,
+                } : undefined,
+                status: invoice.status === 'paid' ? 'paid' : 'sent',
+                note: "Generated via Super Admin Portal"
+            };
+
+            await generateInvoicePDF(fullInvoice);
+            toast.dismiss(toastId);
+            toast.success('Invoice generated and downloaded');
         } catch (error) {
-            toast.error('Failed to download invoice');
+            console.error('PDF generation error:', error);
+            toast.error('Failed to generate PDF');
         }
     };
 

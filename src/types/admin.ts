@@ -134,6 +134,39 @@ export interface AdminSettings {
         name: string;
         email: string;
     };
+    companyDetails: {
+        name: string;
+        vatId: string;
+        address: {
+            street: string;
+            city: string;
+            postalCode: string;
+            country: string;
+        };
+        email: string;
+        phone: string;
+        bankDetails?: {
+            accountName: string;
+            iban: string;
+            bic: string;
+        };
+    };
+    companyProfile: {
+        id?: number;
+        name: string;
+        vat_id?: string;
+        street: string;
+        city: string;
+        postal_code: string;
+        country: string;
+        email: string;
+        phone?: string;
+        bank_account_name?: string;
+        bank_iban?: string;
+        bank_bic?: string;
+        created_at?: string;
+        updated_at?: string;
+    };
     apiKeys: ApiKey[];
     systemSettings: {
         maintenanceMode: boolean;

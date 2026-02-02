@@ -755,6 +755,7 @@ export const en = {
     landing: {
         login: 'Log In',
         signup: 'Sign Up',
+        aboutUs: 'About Us',
         hero: {
             badge: 'New: AI-Powered Invoice Processing',
             title: 'Modern Invoicing for',

@@ -13,6 +13,7 @@ interface AdminState {
 
     // UI State
     sidebarCollapsed: boolean;
+    _hasHydrated: boolean;
 
     // Actions
     setAuth: (user: AdminUser, token: string) => void;
@@ -20,6 +21,7 @@ interface AdminState {
     setTheme: (theme: 'light' | 'dark' | 'system') => void;
     toggleSidebar: () => void;
     setSidebarCollapsed: (collapsed: boolean) => void;
+    setHasHydrated: (state: boolean) => void;
 }
 
 export const useAdminStore = create<AdminState>()(
@@ -31,6 +33,7 @@ export const useAdminStore = create<AdminState>()(
             token: null,
             theme: 'light',
             sidebarCollapsed: false,
+            _hasHydrated: false,
 
             // Actions
             setAuth: (user, token) => {
@@ -39,8 +42,8 @@ export const useAdminStore = create<AdminState>()(
 
             logout: () => {
                 set({ isAuthenticated: false, adminUser: null, token: null });
-                // Explicitly clear localStorage
-                localStorage.removeItem('admin-storage');
+                // Clear all localStorage as per requirement
+                localStorage.clear();
             },
 
             setTheme: (theme) => {
@@ -65,6 +68,8 @@ export const useAdminStore = create<AdminState>()(
             toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
             setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+
+            setHasHydrated: (state) => set({ _hasHydrated: state }),
         }),
         {
             name: 'admin-storage',
@@ -76,6 +81,9 @@ export const useAdminStore = create<AdminState>()(
                 theme: state.theme,
                 sidebarCollapsed: state.sidebarCollapsed,
             }),
+            onRehydrateStorage: (state) => {
+                return () => state.setHasHydrated(true);
+            },
         }
     )
 );

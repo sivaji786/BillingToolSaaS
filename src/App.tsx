@@ -31,6 +31,7 @@ const SAUserDetails = lazy(() => import('./components/screens/Admin/SAUserDetail
 const SAbilling = lazy(() => import('./components/screens/Admin/SAbilling').then(module => ({ default: module.SAbilling })));
 const SAusage = lazy(() => import('./components/screens/Admin/SAusage').then(module => ({ default: module.SAusage })));
 const SAsettings = lazy(() => import('./components/screens/Admin/SAsettings').then(module => ({ default: module.SAsettings })));
+const SAInvoiceForm = lazy(() => import('./components/screens/Admin/SAInvoiceForm').then(module => ({ default: module.SAInvoiceForm })));
 
 
 import { TicketingWidget } from './components/TicketingWidget';
@@ -64,7 +65,7 @@ import { toast } from 'sonner';
 import { authService, invoiceService } from './services/api';
 // hasPermissionSync removed
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAInvoiceForm';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -92,6 +93,17 @@ function AppContent() {
   const [selectedPlan, setSelectedPlan] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    // Check for token in URL query params (from redirection)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl) {
+      console.log('Token found in URL, saving to localStorage');
+      localStorage.setItem('token', tokenFromUrl);
+      // Clean up URL without page reload
+      const newUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
+    }
+
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
       if (token) {
@@ -110,10 +122,14 @@ function AppContent() {
           }
 
           // If we were on landing or login, go to dashboard
-          setCurrentScreen('dashboard');
+          if (currentScreen === 'landing' || currentScreen === 'login') {
+            setCurrentScreen('dashboard');
+          }
         } catch (e) {
+          console.error('Auth check failed:', e);
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+          setIsAuthenticated(false);
         }
       }
       setIsCheckingAuth(false);
@@ -206,6 +222,19 @@ function AppContent() {
   const handleLogin = async (email: string, password: string) => {
     try {
       const data = await authService.login(email, password);
+
+      // Check if we need to redirect to tenant subdomain
+      if (data.redirect_url) {
+        toast.success(t('login.success') || 'Login successful', {
+          description: t('login.redirecting') || 'Redirecting to your workspace...'
+        });
+        setTimeout(() => {
+          window.location.href = data.redirect_url;
+        }, 1000);
+        return;
+      }
+
+      // If no redirect_url (already on correct subdomain), proceed normally
       setIsAuthenticated(true);
       setUser(data.user);
 
@@ -216,6 +245,7 @@ function AppContent() {
 
       setCurrentScreen('dashboard');
     } catch (error) {
+      console.error('Login error:', error);
       toast.error(t('login.failed') || 'Login failed');
     }
   };
@@ -728,7 +758,7 @@ function AdminPortalRouter() {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
       // Check if it's an admin route
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm'].includes(hash)) {
         return hash as Screen;
       }
     }
@@ -737,12 +767,14 @@ function AdminPortalRouter() {
 
   const [navigationParams, setNavigationParams] = useState<{ packageId?: string; userId?: string }>({});
 
-  const { isAuthenticated: isAdminAuth } = useAdminStore();
+  const { isAuthenticated: isAdminAuth, _hasHydrated } = useAdminStore();
 
   useEffect(() => {
+    // Only handle routes after hydration
+    if (!_hasHydrated) return;
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm'].includes(hash)) {
         setCurrentScreen(hash as Screen);
       }
     };
@@ -758,9 +790,14 @@ function AdminPortalRouter() {
   };
 
   // Admin Portal Routes
-  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings'].includes(currentScreen);
+  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm'].includes(currentScreen);
 
   if (isAdminRoute) {
+    // Wait for hydration before checking auth
+    if (!_hasHydrated) {
+      return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
+    }
+
     // Show admin login if not authenticated
     if (!isAdminAuth && currentScreen !== 'SALogin') {
       window.location.hash = '#/SALogin';
@@ -808,6 +845,7 @@ function AdminPortalRouter() {
           {currentScreen === 'SAASusers' && <SAASusers onNavigate={handleNavigate} />}
           {currentScreen === 'SAUserDetails' && <SAUserDetails userId={navigationParams.userId || ''} onNavigate={handleNavigate} />}
           {currentScreen === 'SAbilling' && <SAbilling />}
+          {currentScreen === 'SAInvoiceForm' && <SAInvoiceForm onNavigate={handleNavigate} />}
           {currentScreen === 'SAusage' && <SAusage />}
           {currentScreen === 'SAsettings' && <SAsettings />}
         </AdminLayoutWrapper>

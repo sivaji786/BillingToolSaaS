@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminSettingsService } from '../../../services/adminApi';
 import { useAdminStore } from '../../../stores/adminStore';
 import { Button } from '../../ui/button';
@@ -8,15 +8,30 @@ import { Label } from '../../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Switch } from '../../ui/switch';
 import { Separator } from '../../ui/separator';
-import { User, Lock, Key, Settings as SettingsIcon, Copy, Trash2, Database } from 'lucide-react';
+import { User, Lock, Key, Settings as SettingsIcon, Copy, Trash2, Database, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function SAsettings() {
+    const queryClient = useQueryClient();
     const { adminUser, theme, setTheme } = useAdminStore();
-    const [apiKeys, setApiKeys] = useState([
-        { id: '1', name: 'Production API', key: 'sk_live_xxxxxxxxxxxxxxxx', createdAt: '2024-01-15', status: 'active' },
-        { id: '2', name: 'Development API', key: 'sk_test_xxxxxxxxxxxxxxxx', createdAt: '2024-02-20', status: 'active' },
-    ]);
+    const { data: settings, isLoading } = useQuery({
+        queryKey: ['admin-settings'],
+        queryFn: () => adminSettingsService.getSettings(),
+    });
+
+    const [apiKeys, setApiKeys] = useState<any[]>([]);
+
+    // Sync apiKeys state when settings are loaded
+    useState(() => {
+        if (settings?.apiKeys) {
+            setApiKeys(settings.apiKeys);
+        }
+    });
+
+    // Effect-like behavior for setApiKeys when settings load
+    if (settings?.apiKeys && apiKeys.length === 0 && settings.apiKeys.length > 0) {
+        setApiKeys(settings.apiKeys);
+    }
 
     const updateProfileMutation = useMutation({
         mutationFn: (data: { name: string; email: string }) => adminSettingsService.updateProfile(data),
@@ -36,6 +51,17 @@ export function SAsettings() {
         },
         onError: () => {
             toast.error('Failed to change password');
+        },
+    });
+
+    const updateSystemSettingsMutation = useMutation({
+        mutationFn: (data: any) => adminSettingsService.updateSystemSettings(data),
+        onSuccess: () => {
+            toast.success('Settings updated successfully');
+            queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
+        },
+        onError: () => {
+            toast.error('Failed to update settings');
         },
     });
 
@@ -65,6 +91,31 @@ export function SAsettings() {
         });
     };
 
+    const handleSystemSettingsSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        updateSystemSettingsMutation.mutate({
+            companyDetails: {
+                name: formData.get('companyName'),
+                vatId: formData.get('vatId'),
+                address: {
+                    street: formData.get('street'),
+                    city: formData.get('city'),
+                    postalCode: formData.get('postalCode'),
+                    country: formData.get('country'),
+                },
+                email: formData.get('companyEmail'),
+                phone: formData.get('companyPhone'),
+                bankDetails: {
+                    accountName: formData.get('bankAccountName'),
+                    iban: formData.get('bankIban'),
+                    bic: formData.get('bankBic'),
+                }
+            }
+        });
+    };
+
+
     const handleGenerateApiKey = async () => {
         try {
             const newKey = await adminSettingsService.generateApiKey('New API Key');
@@ -90,8 +141,90 @@ export function SAsettings() {
         }
     };
 
+    if (isLoading) {
+        return <div className="p-8 text-center text-muted-foreground">Loading settings...</div>;
+    }
+
     return (
-        <div className="space-y-6 max-w-4xl">
+        <div className="space-y-6 max-w-4xl pb-12">
+            {/* Company Details */}
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <Building2 className="h-5 w-5" />
+                        <CardTitle>Platform Company Details</CardTitle>
+                    </div>
+                    <CardDescription>Configure your company information for invoice "From" section</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSystemSettingsSubmit} className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="grid gap-2">
+                                <Label htmlFor="companyName">Company Name</Label>
+                                <Input id="companyName" name="companyName" defaultValue={settings?.companyProfile?.name} required />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="vatId">VAT ID (Optional)</Label>
+                                <Input id="vatId" name="vatId" defaultValue={settings?.companyProfile?.vat_id} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="companyEmail">Contact Email</Label>
+                                <Input id="companyEmail" name="companyEmail" type="email" defaultValue={settings?.companyProfile?.email} required />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="companyPhone">Contact Phone</Label>
+                                <Input id="companyPhone" name="companyPhone" defaultValue={settings?.companyProfile?.phone} />
+                            </div>
+                        </div>
+
+                        <Separator />
+                        <h4 className="text-sm font-medium">Headquarters Address</h4>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="grid gap-2">
+                                <Label htmlFor="street">Street Address</Label>
+                                <Input id="street" name="street" defaultValue={settings?.companyProfile?.street} required />
+                            </div>
+                            <div className="grid gap-4 grid-cols-3">
+                                <div className="grid gap-2 col-span-1">
+                                    <Label htmlFor="postalCode">Postal Code</Label>
+                                    <Input id="postalCode" name="postalCode" defaultValue={settings?.companyProfile?.postal_code} required />
+                                </div>
+                                <div className="grid gap-2 col-span-2">
+                                    <Label htmlFor="city">City</Label>
+                                    <Input id="city" name="city" defaultValue={settings?.companyProfile?.city} required />
+                                </div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="country">Country</Label>
+                                <Input id="country" name="country" defaultValue={settings?.companyProfile?.country} required />
+                            </div>
+                        </div>
+
+                        <Separator />
+                        <h4 className="text-sm font-medium">Bank Account Information (Required for QR/Giro)</h4>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="grid gap-2 md:col-span-2">
+                                <Label htmlFor="bankAccountName">Account Holder Name</Label>
+                                <Input id="bankAccountName" name="bankAccountName" defaultValue={settings?.companyProfile?.bank_account_name} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="bankIban">IBAN</Label>
+                                <Input id="bankIban" name="bankIban" defaultValue={settings?.companyProfile?.bank_iban} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="bankBic">BIC / SWIFT</Label>
+                                <Input id="bankBic" name="bankBic" defaultValue={settings?.companyProfile?.bank_bic} />
+                            </div>
+                        </div>
+
+                        <Button type="submit" disabled={updateSystemSettingsMutation.isPending}>
+                            {updateSystemSettingsMutation.isPending ? 'Saving...' : 'Update Company Details'}
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
             {/* Profile Settings */}
             <Card>
                 <CardHeader>

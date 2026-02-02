@@ -205,4 +205,69 @@ class AdminBilling extends ResourceController
             'growth' => ($growth >= 0 ? '+' : '') . $growth . '%',
         ])->setStatusCode(200);
     }
+
+    /**
+     * Generate manual invoice (creates subscription record)
+     * POST /api/admin/invoices
+     */
+    public function create()
+    {
+        $rules = [
+            'userId' => 'required',
+            'dueDate' => 'required|valid_date',
+            'items' => 'required'
+        ];
+
+        if (!$this->validate($rules)) {
+            return $this->fail($this->validator->getErrors());
+        }
+
+        $data = $this->request->getJSON(true);
+        $db = \Config\Database::connect();
+
+        // Calculate total from items
+        $total = 0;
+        foreach ($data['items'] as $item) {
+            $total += ($item['quantity'] * $item['unitPrice']);
+        }
+
+        // For demo purposes, we'll create a subscription record that represents this "invoice"
+        // In a real app, you might have a dedicated billing_invoices table
+        $subData = [
+            'tenant_id' => $data['userId'],
+            'plan_id' => 1, // Default or derived from items
+            'status' => 'active',
+            'stripe_subscription_id' => 'MANUAL-' . uniqid(),
+            'current_period_start' => date('Y-m-d H:i:s'),
+            'current_period_end' => $data['dueDate'],
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+
+        $db->table('subscriptions')->insert($subData);
+        $insertId = $db->insertID();
+
+        // Log action
+        $this->logAction('created', "BILL-{$insertId}", "Manual invoice generated for tenant ID: {$data['userId']} (Total: €{$total})");
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Invoice generated successfully',
+            'data' => [
+                'id' => $insertId,
+                'total' => $total
+            ]
+        ])->setStatusCode(201);
+    }
+
+    private function logAction($action, $target, $details)
+    {
+        $db = \Config\Database::connect();
+        $db->table('audit_logs')->insert([
+            'action' => $action,
+            'user' => 'Super Admin',
+            'details' => $details,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'signed' => 0
+        ]);
+    }
 }

@@ -34,12 +34,11 @@ class Filters extends BaseFilters
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
         'cors'          => \App\Filters\CorsFilter::class,
-        'tenant'        => \App\Filters\TenantFilter::class, // Register Tenant Filter
+        'auth'          => \App\Filters\UnifiedAuthFilter::class,
+        'rbac'          => \App\Filters\RbacFilter::class,
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
-        'rbac'          => \App\Filters\RbacFilter::class,
-        'hybridauth'    => \App\Filters\HybridAuthFilter::class,  // Unified auth for all portals
     ];
 
     /**
@@ -61,8 +60,8 @@ class Filters extends BaseFilters
             'pagecache',  // Web Page Caching
         ],
         'after' => [
+            'performance', // Performance Metrics
             // 'pagecache',   // Web Page Caching
-            // 'performance', // Performance Metrics
             // 'toolbar',     // Debug Toolbar
         ],
     ];
@@ -79,7 +78,7 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             'cors',
-            'tenant', // Identify tenant context globally
+            'auth', // Unified Auth handles Tenancy context as well
         ],
         'after' => [
             'cors',

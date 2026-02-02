@@ -1,26 +1,75 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminUserService } from '../../../services/adminApi';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
-import { ArrowLeft, Mail, Calendar, CreditCard, Database, Zap, Activity, Ban, CheckCircle, Bell, FileText, DollarSign, Clock, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Mail, Calendar, Activity, Ban, CheckCircle, Bell, FileText, Download, Key } from 'lucide-react';
 import { Skeleton } from '../../ui/skeleton';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { adminBillingService, adminSettingsService } from '../../../services/adminApi';
+import { generateInvoicePDF } from '../../../utils/invoice-pdf';
+import { Invoice as FullInvoice } from '../../../types/invoice';
 
 interface SAUserDetailsProps {
     userId: string;
     onNavigate: (screen: string) => void;
 }
 
+
 export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
+    // All hooks must be called unconditionally at the top
     const { data: user, isLoading } = useQuery({
         queryKey: ['user', userId],
         queryFn: () => adminUserService.getById(userId),
     });
 
+    const { data: invoicesData } = useQuery({
+        queryKey: ['user-invoices', userId],
+        queryFn: async () => {
+            return adminBillingService.getInvoices({ userId, limit: 10 });
+        },
+        enabled: !!userId,
+    });
+
+    const { data: settings } = useQuery({
+        queryKey: ['admin-settings'],
+        queryFn: adminSettingsService.getSettings,
+    });
+
+    const queryClient = useQueryClient();
+
+    const suspendMutation = useMutation({
+        mutationFn: (userId: string) => adminUserService.suspend(userId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user', userId] });
+            toast.success('User suspended successfully');
+        },
+    });
+
+    const activateMutation = useMutation({
+        mutationFn: (userId: string) => adminUserService.activate(userId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user', userId] });
+            toast.success('User activated successfully');
+        },
+    });
+
+    const resetPasswordMutation = useMutation({
+        mutationFn: (userId: string) => adminUserService.resetPassword(userId),
+        onSuccess: () => {
+            toast.success('Password reset to "password123" successfully');
+        },
+        onError: () => {
+            toast.error('Failed to reset password');
+        }
+    });
+
+    const invoices = invoicesData?.data || [];
+
+    // Now conditional returns are safe
     if (isLoading) {
         return (
             <div className="space-y-6">
@@ -51,33 +100,79 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
         );
     }
 
-    // Mock data
-    const usageData = [
-        { date: '2024-01', storage: 2.1, apiCalls: 1200, bandwidth: 45 },
-        { date: '2024-02', storage: 2.8, apiCalls: 1500, bandwidth: 52 },
-        { date: '2024-03', storage: 3.2, apiCalls: 1800, bandwidth: 58 },
-        { date: '2024-04', storage: 3.5, apiCalls: 2100, bandwidth: 65 },
-        { date: '2024-05', storage: 4.2, apiCalls: 2400, bandwidth: 72 },
-        { date: '2024-06', storage: 4.8, apiCalls: 2800, bandwidth: 78 },
-    ];
-
-    const invoices = [
-        { id: 'INV-001', date: '2024-06-01', amount: 29.99, status: 'paid' },
-        { id: 'INV-002', date: '2024-05-01', amount: 29.99, status: 'paid' },
-        { id: 'INV-003', date: '2024-04-01', amount: 29.99, status: 'paid' },
-        { id: 'INV-004', date: '2024-03-01', amount: 29.99, status: 'overdue' },
-    ];
-
     const handleSendReminder = () => {
         toast.success('Payment reminder sent successfully');
     };
 
     const handleSuspend = () => {
-        toast.success('User suspended successfully');
+        suspendMutation.mutate(userId);
     };
 
     const handleActivate = () => {
-        toast.success('User activated successfully');
+        activateMutation.mutate(userId);
+    };
+
+    const handleDownloadPdf = async (invoice: any) => {
+        try {
+            const toastId = toast.loading('Generating PDF...');
+
+            const cd = settings?.companyDetails;
+
+            const fullInvoice: FullInvoice = {
+                id: String(invoice.id),
+                invoiceNumber: invoice.invoiceNumber || `INV-${invoice.id}`,
+                issueDate: invoice.issueDate || new Date().toISOString(),
+                dueDate: invoice.dueDate,
+                currency: invoice.currency || 'EUR',
+                seller: {
+                    name: cd?.name || "BillingTool Platform",
+                    address: {
+                        street: cd?.address?.street || "123 Business Avenue",
+                        city: cd?.address?.city || "Antwerp",
+                        postalCode: cd?.address?.postalCode || "2000",
+                        country: cd?.address?.country || "BE"
+                    },
+                    contactEmail: cd?.email,
+                    contactPhone: cd?.phone,
+                    vatId: cd?.vatId
+                },
+                buyer: {
+                    name: user.name,
+                    address: { street: "", city: "", postalCode: "", country: "" },
+                    contactEmail: user.email
+                },
+                lines: [
+                    {
+                        id: '1',
+                        description: `Subscription Fee - ${invoice.invoiceNumber || invoice.id}`,
+                        quantity: 1,
+                        unitCode: 'EA',
+                        unitPrice: invoice.amount,
+                        taxCategory: 'S',
+                        taxPercent: 0
+                    }
+                ],
+                taxTotals: [],
+                lineExtensionAmount: invoice.amount,
+                taxExclusiveAmount: invoice.amount,
+                taxInclusiveAmount: invoice.amount,
+                payableAmount: invoice.amount,
+                paymentMeans: cd?.bankDetails ? {
+                    type: 'BankTransfer',
+                    iban: cd.bankDetails.iban,
+                    bic: cd.bankDetails.bic,
+                    accountName: cd.bankDetails.accountName,
+                } : undefined,
+                status: invoice.status === 'paid' ? 'paid' : 'sent'
+            };
+
+            await generateInvoicePDF(fullInvoice);
+            toast.dismiss(toastId);
+            toast.success('Invoice downloaded successfully');
+        } catch (error) {
+            console.error('PDF generation error:', error);
+            toast.error('Failed to generate PDF');
+        }
     };
 
     return (
@@ -94,6 +189,18 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                     </div>
                 </div>
                 <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                            if (window.confirm('Are you sure you want to reset the tenant admin password to "password123"?')) {
+                                resetPasswordMutation.mutate(user.id);
+                            }
+                        }}
+                    >
+                        <Key className="h-4 w-4 mr-2" />
+                        Reset Password
+                    </Button>
                     <Button variant="outline" size="sm" onClick={handleSendReminder}>
                         <Bell className="h-4 w-4 mr-2" />
                         Send Reminder
@@ -132,7 +239,7 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                             <div>
                                 <p className="text-sm font-medium">Joined Date</p>
                                 <p className="text-sm text-muted-foreground">
-                                    {format(new Date(user.joinedDate), 'MMM dd, yyyy')}
+                                    {user.joinedDate ? format(new Date(user.joinedDate), 'MMM dd, yyyy') : 'N/A'}
                                 </p>
                             </div>
                         </div>
@@ -153,34 +260,10 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                         <CardTitle>Subscription Details</CardTitle>
                         <CardDescription>Current package and billing cycle</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <CreditCard className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                                <p className="text-sm font-medium">Current Package</p>
-                                <p className="text-sm text-muted-foreground">{user.packageId || 'Starter Plan'}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Calendar className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                                <p className="text-sm font-medium">Subscription Start</p>
-                                <p className="text-sm text-muted-foreground">Jan 15, 2024</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Clock className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                                <p className="text-sm font-medium">Next Billing Date</p>
-                                <p className="text-sm text-muted-foreground">Jul 15, 2024</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <DollarSign className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                                <p className="text-sm font-medium">Monthly Amount</p>
-                                <p className="text-sm font-bold">€29.99</p>
-                            </div>
+                    <CardContent className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                            <p className="text-lg font-semibold text-muted-foreground">Coming Soon</p>
+                            <p className="text-sm text-muted-foreground mt-1">Subscription details will be available soon</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -192,23 +275,10 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                     <CardTitle>Payment Information</CardTitle>
                     <CardDescription>Billing details and payment method</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <p className="text-sm font-medium mb-1">Payment Method</p>
-                            <div className="flex items-center gap-2">
-                                <CreditCard className="h-4 w-4 text-muted-foreground" />
-                                <p className="text-sm text-muted-foreground">Visa ending in 4242</p>
-                            </div>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium mb-1">Billing Email</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium mb-1">Auto-Renewal</p>
-                            <Badge variant="default">Enabled</Badge>
-                        </div>
+                <CardContent className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                        <p className="text-lg font-semibold text-muted-foreground">Coming Soon</p>
+                        <p className="text-sm text-muted-foreground mt-1">Payment information will be available soon</p>
                     </div>
                 </CardContent>
             </Card>
@@ -239,10 +309,14 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {invoices.map((invoice) => (
+                            {invoices.map((invoice: any) => (
                                 <TableRow key={invoice.id}>
-                                    <TableCell className="font-medium">{invoice.id}</TableCell>
-                                    <TableCell>{format(new Date(invoice.date), 'MMM dd, yyyy')}</TableCell>
+                                    <TableCell className="font-medium">{invoice.invoiceNumber || invoice.id}</TableCell>
+                                    <TableCell>
+                                        {(invoice.issueDate || invoice.date)
+                                            ? format(new Date(invoice.issueDate || invoice.date), 'MMM dd, yyyy')
+                                            : 'N/A'}
+                                    </TableCell>
                                     <TableCell>€{invoice.amount}</TableCell>
                                     <TableCell>
                                         <Badge variant={invoice.status === 'paid' ? 'default' : 'destructive'}>
@@ -250,8 +324,8 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="sm">
-                                            <FileText className="h-4 w-4" />
+                                        <Button variant="ghost" size="sm" onClick={() => handleDownloadPdf(invoice)}>
+                                            <Download className="h-4 w-4" />
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -262,80 +336,32 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
             </Card>
 
             {/* Usage Statistics */}
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Storage Used</CardTitle>
-                        <Database className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">4.8 GB</div>
-                        <p className="text-xs text-muted-foreground">of 10 GB limit</p>
-                        <div className="mt-2 h-2 bg-secondary rounded-full overflow-hidden">
-                            <div className="h-full bg-primary" style={{ width: '48%' }} />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">API Calls</CardTitle>
-                        <Zap className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">2,847</div>
-                        <p className="text-xs text-muted-foreground">this month</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Bandwidth</CardTitle>
-                        <Activity className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">78 GB</div>
-                        <p className="text-xs text-muted-foreground">this month</p>
-                    </CardContent>
-                </Card>
-            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Usage Statistics</CardTitle>
+                    <CardDescription>Storage, API calls, and bandwidth metrics</CardDescription>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                        <p className="text-lg font-semibold text-muted-foreground">Coming Soon</p>
+                        <p className="text-sm text-muted-foreground mt-1">Usage statistics will be available soon</p>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Usage Charts */}
-            <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Storage Usage Trend</CardTitle>
-                        <CardDescription>Storage consumption over time</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ResponsiveContainer width="100%" height={200}>
-                            <AreaChart data={usageData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" />
-                                <YAxis />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="storage" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>API Calls Trend</CardTitle>
-                        <CardDescription>API usage over time</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ResponsiveContainer width="100%" height={200}>
-                            <AreaChart data={usageData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" />
-                                <YAxis />
-                                <Tooltip />
-                                <Area type="monotone" dataKey="apiCalls" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Usage Trends</CardTitle>
+                    <CardDescription>Storage and API usage over time</CardDescription>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                        <p className="text-lg font-semibold text-muted-foreground">Coming Soon</p>
+                        <p className="text-sm text-muted-foreground mt-1">Usage trend charts will be available soon</p>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }

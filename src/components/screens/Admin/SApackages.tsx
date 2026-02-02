@@ -95,9 +95,17 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                                 <div className="space-y-2">
                                     <p className="text-sm font-medium">Features:</p>
                                     <ul className="space-y-1 text-sm text-muted-foreground">
-                                        {pkg.features.map((feature, idx) => (
-                                            <li key={idx}>• {feature.name}: {feature.value}</li>
-                                        ))}
+                                        {Array.isArray(pkg.features) ? (
+                                            pkg.features.map((feature, idx) => (
+                                                <li key={idx}>• {feature.name}: {feature.value}</li>
+                                            ))
+                                        ) : typeof pkg.features === 'object' && pkg.features !== null ? (
+                                            Object.entries(pkg.features).map(([key, value], idx) => (
+                                                <li key={idx}>• {key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}: {String(value)}</li>
+                                            ))
+                                        ) : (
+                                            <li>No features available</li>
+                                        )}
                                     </ul>
                                 </div>
 

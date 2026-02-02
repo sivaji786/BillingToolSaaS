@@ -18,7 +18,7 @@ class MainSeeder extends Seeder
             'plans', 'countries', 'rights', 'roles', 'role_rights', 'user_roles', 
             'admin_users', 'tenants', 'users', 'company_profiles', 'invoices', 
             'invoice_lines', 'invoice_templates', 'subscriptions', 'company_types',
-            'audit_logs', 'projects', 'tickets'
+            'audit_logs', 'projects', 'tickets', 'platform_company_details', 'api_keys'
         ];
         foreach ($tables as $table) {
             $db->table($table)->truncate();
@@ -28,7 +28,7 @@ class MainSeeder extends Seeder
         $this->seedPlans($db);
 
         // 2. Foundation: Countries
-        $this->seedCountries($db);
+        $this->call('CountrySeeder');
 
         // 3. Foundation: RBAC (Company Types, Roles, Rights)
         $this->seedRbac($db);
@@ -42,6 +42,7 @@ class MainSeeder extends Seeder
         // 6. Project specific: Projects & Tickets
         $this->seedProjects($db);
         $this->seedTickets($db);
+        $this->seedPlatformDetails($db);
 
         // 7. Legacy / Specific Test Cases
         $this->seedMainTestData($db);
@@ -59,25 +60,45 @@ class MainSeeder extends Seeder
         $data = [
             [
                 'name' => 'Starter', 'slug' => 'starter', 'price' => 19.00, 'billing_period' => 'monthly',
-                'features' => json_encode(['invoices_per_month' => 50, 'users' => 1, 'templates' => 3, 'support' => 'email']),
+                'features' => json_encode([
+                    ['name' => 'Invoices per Month', 'value' => '50', 'type' => 'feature'],
+                    ['name' => 'Users', 'value' => '1', 'type' => 'users'],
+                    ['name' => 'Templates', 'value' => '3', 'type' => 'feature'],
+                    ['name' => 'Support', 'value' => 'Email', 'type' => 'support']
+                ]),
                 'limits' => json_encode(['invoices' => 50, 'users' => 1, 'storage_gb' => 2, 'bandwidth_gb' => 10, 'api_calls' => 1000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
                 'name' => 'Professional', 'slug' => 'professional', 'price' => 49.00, 'billing_period' => 'monthly',
-                'features' => json_encode(['invoices_per_month' => 500, 'users' => 3, 'templates' => 'unlimited', 'support' => 'priority']),
+                'features' => json_encode([
+                    ['name' => 'Invoices per Month', 'value' => '500', 'type' => 'feature'],
+                    ['name' => 'Users', 'value' => '3', 'type' => 'users'],
+                    ['name' => 'Templates', 'value' => 'Unlimited', 'type' => 'feature'],
+                    ['name' => 'Support', 'value' => 'Priority', 'type' => 'support']
+                ]),
                 'limits' => json_encode(['invoices' => 500, 'users' => 3, 'storage_gb' => 10, 'bandwidth_gb' => 50, 'api_calls' => 10000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
                 'name' => 'Business', 'slug' => 'business', 'price' => 99.00, 'billing_period' => 'monthly',
-                'features' => json_encode(['invoices_per_month' => 2000, 'users' => 10, 'templates' => 'unlimited', 'support' => 'priority_phone']),
+                'features' => json_encode([
+                    ['name' => 'Invoices per Month', 'value' => '2000', 'type' => 'feature'],
+                    ['name' => 'Users', 'value' => '10', 'type' => 'users'],
+                    ['name' => 'Templates', 'value' => 'Unlimited', 'type' => 'feature'],
+                    ['name' => 'Support', 'value' => 'Priority Phone', 'type' => 'support']
+                ]),
                 'limits' => json_encode(['invoices' => 2000, 'users' => 10, 'storage_gb' => 50, 'bandwidth_gb' => 200, 'api_calls' => 100000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
                 'name' => 'Enterprise', 'slug' => 'enterprise', 'price' => 299.00, 'billing_period' => 'monthly',
-                'features' => json_encode(['invoices_per_month' => -1, 'users' => -1, 'templates' => 'unlimited', 'support' => 'dedicated']),
+                'features' => json_encode([
+                    ['name' => 'Invoices per Month', 'value' => 'Unlimited', 'type' => 'feature'],
+                    ['name' => 'Users', 'value' => 'Unlimited', 'type' => 'users'],
+                    ['name' => 'Templates', 'value' => 'Unlimited', 'type' => 'feature'],
+                    ['name' => 'Support', 'value' => 'Dedicated Manager', 'type' => 'support']
+                ]),
                 'limits' => json_encode(['invoices' => -1, 'users' => -1, 'storage_gb' => 1000, 'bandwidth_gb' => 10000, 'api_calls' => 1000000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ]
@@ -85,20 +106,7 @@ class MainSeeder extends Seeder
         $db->table('plans')->insertBatch($data);
     }
 
-    private function seedCountries($db)
-    {
-        echo "Seeding Countries...\n";
-        $data = [
-            ['code' => 'IN', 'name_en' => 'India', 'name_de' => 'Indien', 'name_ar' => 'الهند'],
-            ['code' => 'DE', 'name_en' => 'Germany', 'name_de' => 'Deutschland', 'name_ar' => 'ألمانيا'],
-            ['code' => 'US', 'name_en' => 'USA', 'name_de' => 'USA', 'name_ar' => 'الولايات المتحدة'],
-            ['code' => 'GB', 'name_en' => 'UK', 'name_de' => 'Großbritannien', 'name_ar' => 'المملكة المتحدة'],
-            ['code' => 'FR', 'name_en' => 'France', 'name_de' => 'Frankreich', 'name_ar' => 'فرنسا'],
-            ['code' => 'AE', 'name_en' => 'UAE', 'name_de' => 'VAE', 'name_ar' => 'الإمارات العربية المتحدة']
-        ];
-        foreach ($data as &$d) { $d['created_at'] = date('Y-m-d H:i:s'); $d['updated_at'] = date('Y-m-d H:i:s'); }
-        $db->table('countries')->insertBatch($data);
-    }
+    // Unified Country Seeding moved to CountrySeeder.php
 
     private function seedRbac($db)
     {
@@ -132,11 +140,16 @@ class MainSeeder extends Seeder
             $db->table('company_types')->insert(['name' => $typeName]);
             $typeId = $db->insertID();
 
+            // ALWAYS add a default "Admin" role for signup fallback
+            $this->insertRoleAndRights($db, $typeId, 'Admin', 'Management', $allRights);
+
             // Structure 1: Departments
             if (isset($comp['departments'])) {
                 foreach ($comp['departments'] as $dept) {
                     $deptName = $dept['name'] ?? '';
                     foreach ($dept['roles'] as $roleName) {
+                        // Skip if we just added it manually or if it's already "Admin"
+                        if ($roleName === 'Admin') continue;
                         $this->insertRoleAndRights($db, $typeId, $roleName, $deptName, $allRights);
                     }
                 }
@@ -145,6 +158,7 @@ class MainSeeder extends Seeder
             elseif (isset($comp['roles'])) {
                 foreach ($comp['roles'] as $roleItem) {
                     $roleName = is_array($roleItem) ? $roleItem['name'] : $roleItem;
+                    if ($roleName === 'Admin') continue;
                     $this->insertRoleAndRights($db, $typeId, $roleName, '', $allRights);
                 }
             }
@@ -193,26 +207,26 @@ class MainSeeder extends Seeder
 
     private function seedSaaSData($db)
     {
-        echo "Seeding SaaS Demo Ecosystem (5 Tenants, 3 Users each)...\n";
+        echo "Seeding SaaS Demo Ecosystem (12 Diverse Tenants)...\n";
         
-        // Primary Tenant
-        $this->createTenant($db, 'TechFlow Solutions', 'techflow', 'admin@techflow.com', 'Sarah Tech', 'active');
-
-        // Demo company names
         $companies = [
-            'Digital Innovations Inc',
-            'Global Solutions Ltd',
-            'Smart Systems Corp',
-            'Future Tech Partners'
+            ['name' => 'Nexus Quantum AI', 'sub' => 'nexus_ai', 'domain' => 'nexus.ai', 'admin' => 'Alex Rivera'],
+            ['name' => 'Blue Wave Logistics', 'sub' => 'bluewave', 'domain' => 'bluewave.logistics', 'admin' => 'Jordan Smith'],
+            ['name' => 'Terraform Real Estate', 'sub' => 'terraform', 'domain' => 'terraform.estate', 'admin' => 'Elena Rodriguez'],
+            ['name' => 'CloudScale Systems', 'sub' => 'cloudscale', 'domain' => 'cloudscale.io', 'admin' => 'Marcus Thorne'],
+            ['name' => 'Zenith Financial', 'sub' => 'zenith', 'domain' => 'zenith-fin.com', 'admin' => 'Sarah Jenkins'],
+            ['name' => 'Vanguard Cyber Security', 'sub' => 'vanguard', 'domain' => 'vanguard.security', 'admin' => 'Hiroshi Tanaka'],
+            ['name' => 'BioGenie Labs', 'sub' => 'biogenie', 'domain' => 'biogenie.bio', 'admin' => 'Dr. Aris Varma'],
+            ['name' => 'Stellar E-commerce', 'sub' => 'stellar', 'domain' => 'stellar-shop.net', 'admin' => 'Emily White'],
+            ['name' => 'Apex Marketing Group', 'sub' => 'apex', 'domain' => 'apexgroup.agency', 'admin' => 'Liam O\'Connor'],
+            ['name' => 'Infinity Software', 'sub' => 'infinity', 'domain' => 'infinity.dev', 'admin' => 'Sofia Rossi'],
+            ['name' => 'GreenLeaf Sustainable', 'sub' => 'greenleaf', 'domain' => 'greenleaf.earth', 'admin' => 'Oliver Green'],
+            ['name' => 'Titan Industrial', 'sub' => 'titan', 'domain' => 'titan-ind.com', 'admin' => 'Hans Schmidt']
         ];
-        
-        $names = ['John Smith', 'Maria Garcia', 'Ahmed Hassan', 'Lisa Chen'];
-        
-        // Random Tenants (4 more to total 5)
-        for ($i = 0; $i < 4; $i++) {
-            $name = $companies[$i];
-            $sub = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $name)) . rand(10,99);
-            $this->createTenant($db, $name, $sub, "admin@$sub.com", $names[$i], 'active');
+
+        foreach ($companies as $comp) {
+            $email = strtolower(str_replace(' ', '.', $comp['admin'])) . '@' . $comp['domain'];
+            $this->createTenant($db, $comp['name'], $comp['sub'], $email, $comp['admin'], 'active');
         }
     }
 
@@ -229,15 +243,22 @@ class MainSeeder extends Seeder
         $tid = $db->insertID();
 
         // Add 3 Users for each tenant
-        $userNames = ['Admin User', 'Manager User', 'Staff User'];
+        $commonFirst = ['James', 'David', 'Robert', 'Michael', 'William', 'Thomas', 'Daniel', 'Paul', 'Mark', 'George', 'Kevin', 'Steven'];
+        $commonLast = ['Johnson', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas', 'Jackson', 'White', 'Harris'];
+        
+        $domain = explode('@', $email)[1];
+
         for ($u = 0; $u < 3; $u++) {
             $isPrimary = ($u === 0);
+            $userNameToUse = $isPrimary ? $userName : $commonFirst[array_rand($commonFirst)] . ' ' . $commonLast[array_rand($commonLast)];
+            $userEmailToUse = $isPrimary ? $email : strtolower(str_replace(' ', '.', $userNameToUse)) . '@' . $domain;
+
             $db->table('users')->insert([
                 'tenant_id' => $tid,
-                'email' => $isPrimary ? $email : "user{$u}@{$sub}.com",
+                'email' => $userEmailToUse,
                 'password_hash' => password_hash('password123', PASSWORD_BCRYPT),
-                'name' => $isPrimary ? $userName : $userNames[$u],
-                'role' => $isPrimary ? 'admin' : 'user',
+                'name' => $userNameToUse,
+                'role' => $isPrimary ? 'admin' : ($u === 1 ? 'manager' : 'user'),
                 'created_at' => date('Y-m-d H:i:s')
             ]);
         }
@@ -370,6 +391,25 @@ class MainSeeder extends Seeder
                 'created_at' => date('Y-m-d H:i:s')
             ]);
         }
+    }
+
+    private function seedPlatformDetails($db)
+    {
+        echo "Seeding Platform Company Details...\n";
+        $db->table('platform_company_details')->insert([
+            'name' => 'BillingTool Platform',
+            'vat_id' => 'BE0123456789',
+            'street' => '123 Business Avenue',
+            'city' => 'Antwerp',
+            'postal_code' => '2000',
+            'country' => 'BE',
+            'email' => 'admin@billingtool.com',
+            'phone' => '+32 3 123 45 67',
+            'bank_iban' => 'BE12 3456 7890 1234',
+            'bank_bic' => 'BBRUBEBB',
+            'bank_account_name' => 'BillingTool Admin',
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
     }
 
     private function runIntegritySweep($db)

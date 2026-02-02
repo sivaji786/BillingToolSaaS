@@ -43,12 +43,11 @@ export const authService = {
         return data;
     },
     logout: () => {
-        // Clear COMMON localStorage
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        // Clear all localStorage as per requirement
+        localStorage.clear();
     },
     me: async () => {
-        const response = await api.get('/api/auth/me');
+        const response = await api.get('/auth/me');
         // API returns { success: true, data: { user: ..., tenant: ... } }
         const responseData = response.data;
 

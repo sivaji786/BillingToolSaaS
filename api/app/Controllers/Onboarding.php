@@ -7,6 +7,7 @@ use App\Models\UserModel;
 use App\Models\SubscriptionModel;
 use App\Models\RoleModel;
 use App\Models\UserRoleModel;
+use App\Models\CompanyTypeModel;
 use App\Models\CompanyProfileModel;
 use CodeIgniter\API\ResponseTrait;
 use Exception;
@@ -49,6 +50,7 @@ class Onboarding extends BaseController
         
         try {
             // 1. Create tenant
+            log_message('info', 'Step 1: Creating tenant');
             $tenantModel = new TenantModel();
             $tenantData = [
                 'company_name' => $input['company_name'],
@@ -62,10 +64,12 @@ class Onboarding extends BaseController
             $tenantId = $tenantModel->insert($tenantData);
             
             if (!$tenantId) {
-                 log_message('error', 'Tenant Insert Failed: ' . json_encode($tenantModel->errors()));
-                 return $this->fail($tenantModel->errors());
+                 $errors = json_encode($tenantModel->errors());
+                 log_message('error', 'Tenant Insert Failed: ' . $errors);
+                 throw new Exception('Tenant creation failed: ' . $errors);
             }
 
+            log_message('info', 'Step 2: Creating user');
             $userModel = new UserModel();
             $userData = [
                 'tenant_id' => $tenantId,
@@ -79,22 +83,61 @@ class Onboarding extends BaseController
             $userId = $userModel->insert($userData);
             
             if (!$userId) {
-                 log_message('error', 'User Insert Failed: ' . json_encode($userModel->errors()));
-                 throw new Exception(implode(', ', $userModel->errors()));
+                 $errors = json_encode($userModel->errors());
+                 log_message('error', 'User Insert Failed: ' . $errors);
+                 throw new Exception('User creation failed: ' . $errors);
             }
             
-            // 2b. Assign Role ID 51 (User Request)
+            // 2b. Determine Company Type and Assign Role
+            log_message('info', 'Step 3: Determining Company Type and Role');
+            
+            // Look up "Technology / Automation" as default company type if not specified
+            $companyTypeModel = new CompanyTypeModel();
+            $companyType = $companyTypeModel->where('name', 'Technology / Automation')->first();
+            if (!$companyType) {
+                $companyType = $companyTypeModel->first();
+            }
+            $companyTypeId = $companyType ? $companyType['id'] : 1;
+
+            // Look up "Admin" role for this company type
+            $roleModel = new RoleModel();
+            $role = $roleModel->where([
+                'company_type_id' => $companyTypeId,
+                'name' => 'Admin'
+            ])->first();
+            
+            // Fallback: search for any Admin role if specific one not found
+            if (!$role) {
+                $role = $roleModel->where('name', 'Admin')->first();
+            }
+            
+            // Fallback 2: search for any role at all if no Admin found
+            if (!$role) {
+                $role = $roleModel->first();
+            }
+            
+            if (!$role) {
+                throw new Exception('No available roles found in system');
+            }
+            
             $userRoleModel = new UserRoleModel();
-            $userRoleModel->builder()->insert([
-                'user_id' => $userId, 
-                'role_id' => 51
-            ]);
+            try {
+                $userRoleModel->builder()->insert([
+                    'user_id' => $userId, 
+                    'role_id' => $role['id']
+                ]);
+                log_message('info', "Assigned role ID {$role['id']} ({$role['name']}) to user ID {$userId}");
+            } catch (Exception $e) {
+                log_message('error', 'UserRole Insert Failed: ' . $e->getMessage());
+                throw new Exception('Role assignment failed: ' . $e->getMessage());
+            }
             
             // 2c. Create Default Company Profile
+            log_message('info', 'Step 4: Creating company profile');
             $companyProfileModel = new CompanyProfileModel();
             $profileData = [
                 'tenant_id' => $tenantId,
-                'company_type_id' => 1,
+                'company_type_id' => $companyTypeId,
                 'name' => $input['company_name'],
                 'email' => $input['email'],
                 'country' => $input['country'] ?? 'India',
@@ -102,9 +145,15 @@ class Onboarding extends BaseController
                 'street' => $input['address'] ?? 'Unknown',
                 'postal_code' => $input['postal_code'] ?? '000000',
             ];
-            $companyProfileModel->insert($profileData);
+            
+            if (!$companyProfileModel->insert($profileData)) {
+                $errors = json_encode($companyProfileModel->errors());
+                log_message('error', 'Company Profile Insert Failed: ' . $errors);
+                throw new Exception('Company profile creation failed: ' . $errors);
+            }
 
             // 3. Create trial subscription
+            log_message('info', 'Step 5: Creating subscription');
             $subscriptionModel = new SubscriptionModel();
             $subData = [
                 'tenant_id' => $tenantId,
@@ -114,12 +163,16 @@ class Onboarding extends BaseController
                 'current_period_end' => date('Y-m-d H:i:s', strtotime('+14 days')),
                 'created_at' => date('Y-m-d H:i:s')
             ];
-            $subscriptionModel->insert($subData);
+            if (!$subscriptionModel->insert($subData)) {
+                $errors = json_encode($subscriptionModel->errors());
+                log_message('error', 'Subscription Insert Failed: ' . $errors);
+                throw new Exception('Subscription creation failed: ' . $errors);
+            }
             
             $db->transComplete();
             
             if ($db->transStatus() === false) {
-                throw new Exception('Database transaction failed');
+                throw new Exception('Database transaction failed at commit');
             }
             
             // Re-fetch tenant to get the generated UUID
@@ -143,6 +196,7 @@ class Onboarding extends BaseController
             
         } catch (Exception $e) {
             $db->transRollback();
+            log_message('error', 'Signup Exception: ' . $e->getMessage());
             return $this->fail('Failed to create account: ' . $e->getMessage());
         }
     }

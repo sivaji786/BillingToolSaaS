@@ -441,6 +441,7 @@ export const ar = {
     landing: {
         login: 'تسجيل الدخول',
         signup: 'إنشاء حساب',
+        aboutUs: 'من نحن',
         hero: {
             badge: 'جديد: معالجة الفواتير بالذكاء الاصطناعي',
             title: 'فوترة حديثة لـ',

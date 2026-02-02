@@ -19,7 +19,7 @@ class JWTHelper
             ?? $_ENV['JWT_SECRET'] 
             ?? $_SERVER['JWT_SECRET'] 
             ?? getenv('JWT_SECRET') 
-            ?? 'billing_tool_secret_key';
+            ?? 'e88f7de29c95b084f1eb22e69093c3dafaa85f84eca6bbe0c8a94b8f4590df3e';
     }
 
     public static function getSecretKey()

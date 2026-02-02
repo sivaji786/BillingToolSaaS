@@ -197,6 +197,12 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                     <nav className="flex items-center gap-4">
                         <LanguageSwitcher variant="login" />
                         <div className="hidden md:flex gap-4">
+                            <Button variant="ghost" onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}>
+                                {t('landing.aboutUs')}
+                            </Button>
+                            <Button variant="ghost" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
+                                {t('nav.products')}
+                            </Button>
                             <Button variant="ghost" onClick={onLogin}>
                                 {t('landing.login')}
                             </Button>
@@ -293,6 +299,58 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                     </div>
                 </section>
 
+                {/* About Us Section */}
+                <section id="about" className="py-12 md:py-24 lg:py-32">
+                    <div className="container px-4 md:px-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                            <motion.div
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={{ once: true }}
+                                variants={containerVariants}
+                            >
+                                <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-6">
+                                    {t('landing.aboutUs')}
+                                </motion.h2>
+                                <motion.div variants={itemVariants} className="space-y-4 text-gray-500 md:text-lg dark:text-gray-400">
+                                    <p>
+                                        BillingTool is a modern invoicing platform designed to simplify the billing process for businesses of all sizes.
+                                        We believe that professional invoicing should be accessible, secure, and compliant with the latest standards.
+                                    </p>
+                                    <p>
+                                        Our platform is built with a focus on user experience and regulatory compliance, ensuring that your invoices
+                                        not only look great but also meet all legal requirements like EN 16931 and UBL 2.1.
+                                    </p>
+                                    <div className="flex gap-4 pt-4">
+                                        <div className="flex flex-col">
+                                            <span className="text-2xl font-bold text-purple-600">10k+</span>
+                                            <span className="text-sm">Active Users</span>
+                                        </div>
+                                        <div className="border-l pl-4 flex flex-col">
+                                            <span className="text-2xl font-bold text-purple-600">500k+</span>
+                                            <span className="text-sm">Invoices Sent</span>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8 }}
+                                className="relative rounded-2xl overflow-hidden shadow-2xl"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-fuchsia-600/20 z-10" />
+                                <img
+                                    src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800"
+                                    alt="About Our Team"
+                                    className="w-full h-auto object-cover"
+                                />
+                            </motion.div>
+                        </div>
+                    </div>
+                </section>
+
                 {/* Pricing Section */}
                 <section id="pricing" className="py-12 md:py-24 lg:py-32">
                     <div className="container px-4 md:px-6">
@@ -377,6 +435,6 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                     </div>
                 </div>
             </footer>
-        </div>
+        </div >
     );
 }
