@@ -340,7 +340,7 @@ export async function generateInvoicePDF(
         textY += 11;
       }
       if (effectivePaymentMeans.accountName) {
-        doc.text(`Account: ${String(effectivePaymentMeans.accountName || '')}`, margin, textY);
+        doc.text(`Account owner: ${String(effectivePaymentMeans.accountName || '')}`, margin, textY);
       }
     }
   }

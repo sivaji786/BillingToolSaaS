@@ -741,6 +741,16 @@ function AppContent() {
 
         <GlobalAIAssistant
           onGenerateInvoiceNumber={() => `INV-2025-${String(invoices.length + 1).padStart(5, '0')}`}
+          currentInvoice={currentInvoice}
+          currentScreen={currentScreen}
+          onUpdateInvoice={(updatedInvoice) => {
+            setCurrentInvoice(updatedInvoice);
+            // If in preview mode, ensure we update the hash data to reflect changes
+            if (currentScreen === 'preview') {
+              const invoiceDataStr = encodeURIComponent(JSON.stringify(updatedInvoice));
+              window.location.hash = `#preview?data=${invoiceDataStr}`;
+            }
+          }}
         />
         <TicketingWidget
           apiKey="billtool_test_key"

@@ -813,7 +813,7 @@ export function InvoicePreview({ invoice, onBack, onSave, template, profile }: I
                                 <p className="text-sm">BIC: {effectiveInvoice.paymentMeans.bic}</p>
                               )}
                               {effectiveInvoice.paymentMeans.accountName && (
-                                <p className="text-sm">Account: {effectiveInvoice.paymentMeans.accountName}</p>
+                                <p className="text-sm">Account owner: {effectiveInvoice.paymentMeans.accountName}</p>
                               )}
                             </div>
                           )}

@@ -5,16 +5,19 @@ import { useAuthStore } from '../stores/authStore';
 import { ChatMessage, Invoice, AIPromptRequest } from '../types/invoice';
 import { Sparkles, X, Send, Loader2, MessageSquare, Mic, MicOff } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { aiInvoiceService } from '../services/api';
+import { aiInvoiceService, invoiceService } from '../services/api';
 import { ChatMessageComponent } from './invoice/ChatMessage';
 import { toast } from 'sonner';
 
 interface GlobalAIAssistantProps {
     onGenerateInvoiceNumber?: () => string;
+    currentInvoice?: Invoice | null;
+    currentScreen?: string;
+    onUpdateInvoice?: (invoice: Invoice) => void;
 }
 
-export function GlobalAIAssistant({ onGenerateInvoiceNumber }: GlobalAIAssistantProps) {
-    const { t } = useLanguage();
+export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, currentScreen, onUpdateInvoice }: GlobalAIAssistantProps) {
+    const { t, language } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
@@ -154,20 +157,48 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber }: GlobalAIAssistant
         setIsLoading(true);
 
         try {
+            // Determine context and existing invoice
+            let context: 'create' | 'edit' = 'create';
+            let targetInvoice = currentInvoice;
+
+            // Simple keyword detection for "update" or "change"
+            const updateMatch = text.match(/(?:update|change|modify|edit)\s+(?:invoice\s+)?(INV-[\w-]+)/i);
+            const genericUpdate = /\b(update|change|modify|edit)\b/i.test(text);
+
+            if (updateMatch) {
+                const invoiceNumber = updateMatch[1];
+                setIsLoading(true);
+                try {
+                    const invoices = await invoiceService.getAll({ search: invoiceNumber });
+                    const found = invoices.find(inv => inv.invoiceNumber === invoiceNumber);
+                    if (found) {
+                        targetInvoice = await invoiceService.getById(found.id!);
+                        context = 'edit';
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch invoice for update:', e);
+                }
+            } else if (genericUpdate || currentScreen === 'editor' || currentScreen === 'preview') {
+                if (currentInvoice) {
+                    context = 'edit';
+                    targetInvoice = currentInvoice;
+                }
+            }
+
             // Determine which AI provider and key to use
             const provider = tenant?.ai_provider || 'gemini';
             const apiKey = provider === 'openai' ? tenant?.openai_api_key : tenant?.gemini_api_key;
 
             let parsedInvoice;
             if (provider === 'openai') {
-                parsedInvoice = await parseInvoiceWithOpenAI(userMessage.content, 'create', apiKey);
+                parsedInvoice = await parseInvoiceWithOpenAI(userMessage.content, context, apiKey, targetInvoice, language);
             } else {
-                parsedInvoice = await parseInvoiceWithGemini(userMessage.content, 'create', apiKey);
+                parsedInvoice = await parseInvoiceWithGemini(userMessage.content, context, apiKey, targetInvoice, language);
             }
 
             const request: AIPromptRequest = {
                 prompt: userMessage.content,
-                context: 'create',
+                context: context,
                 parsedInvoice: parsedInvoice
             };
 
@@ -233,17 +264,28 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber }: GlobalAIAssistant
     };
 
     const handleUseInvoice = (invoiceData: Invoice) => {
-        // Prepare new invoice with clean ID and number
+        // If we are in edit mode or have an update function, use it
+        if (onUpdateInvoice && (currentScreen === 'editor' || currentScreen === 'preview')) {
+            onUpdateInvoice(invoiceData);
+            setIsOpen(false);
+            setIsDictating(false);
+            toast.success(t('ai.invoiceUpdated') || 'Invoice updated!');
+            return;
+        }
+
+        // Otherwise, prepare new invoice with clean ID and number (CREATE mode)
         const newInvoice = { ...invoiceData };
 
-        // Reset ID and set as draft
-        newInvoice.id = `new_${Date.now()}`;
-        newInvoice.status = 'draft';
-        newInvoice.issueDate = new Date().toISOString().split('T')[0];
+        // If it's a completely new one, reset ID
+        if (!newInvoice.id || newInvoice.id.startsWith('new_')) {
+            newInvoice.id = `new_${Date.now()}`;
+            newInvoice.status = 'draft';
+            newInvoice.issueDate = new Date().toISOString().split('T')[0];
 
-        // Generate new invoice number if function provided
-        if (onGenerateInvoiceNumber) {
-            newInvoice.invoiceNumber = onGenerateInvoiceNumber();
+            // Generate new invoice number if function provided
+            if (onGenerateInvoiceNumber) {
+                newInvoice.invoiceNumber = onGenerateInvoiceNumber();
+            }
         }
 
         // Navigate to invoice preview with the generated invoice
