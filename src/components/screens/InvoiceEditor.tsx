@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Invoice, InvoiceLine, ValidationError, InvoiceTemplate, CompanyProfile } from '../../types/invoice';
+import { Invoice, InvoiceLine, InvoiceTemplate, CompanyProfile } from '../../types/invoice';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -71,17 +71,35 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
     return validateInvoice(calculatedInvoice);
   }, [calculatedInvoice]);
 
-  // Track unsaved changes
+  // Track unsaved changes logic moved to individual handlers and sync effect
+
+  // Sync prop updates (e.g. from AI) to local state
   useEffect(() => {
-    if (JSON.stringify(invoice) !== JSON.stringify(initialInvoice)) {
-      setHasUnsavedChanges(true);
+    if (!initialInvoice) return;
+
+    // Check if this is a different invoice (e.g. navigation)
+    const isDifferentInvoice = !invoice.id || initialInvoice.id !== invoice.id;
+
+    if (isDifferentInvoice) {
+      setInvoice(initialInvoice);
+      // New invoices should be considered to have changes
+      setHasUnsavedChanges(initialInvoice.id?.startsWith('new_') || false);
     } else {
-      setHasUnsavedChanges(false);
+      // Same invoice ID - check if the incoming prop is different from our local state
+      // (This happens when the AI assistant updates the invoice)
+      const currentData = JSON.stringify(invoice);
+      const incomingData = JSON.stringify(initialInvoice);
+
+      if (incomingData !== currentData) {
+        setInvoice(initialInvoice);
+        setHasUnsavedChanges(true); // Mark as changed because of external (AI) update
+      }
     }
-  }, [invoice, initialInvoice]);
+  }, [initialInvoice]);
 
   const handleUpdateInvoice = useCallback((updates: Partial<Invoice>) => {
     setInvoice(prev => ({ ...prev, ...updates }));
+    setHasUnsavedChanges(true);
   }, []);
 
   const handleUpdateLine = useCallback((index: number, updatedLine: InvoiceLine) => {
@@ -90,6 +108,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
       newLines[index] = updatedLine;
       return { ...prev, lines: newLines };
     });
+    setHasUnsavedChanges(true);
   }, []);
 
   const handleDeleteLine = useCallback((index: number) => {
@@ -97,6 +116,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
       ...prev,
       lines: prev.lines.filter((_, i) => i !== index)
     }));
+    setHasUnsavedChanges(true);
     toast.success(t('editor.lineDeleted') || 'Line item deleted');
   }, [t]);
 
@@ -114,6 +134,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
       ...prev,
       lines: [...prev.lines, newLine]
     }));
+    setHasUnsavedChanges(true);
     toast.success(t('editor.lineAdded') || 'Line item added');
   }, [t]);
 
@@ -295,17 +316,24 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={!hasUnsavedChanges || isSaving}>
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
+            <div className="flex items-center gap-2">
+              <Button onClick={handleSave} disabled={!hasUnsavedChanges || isSaving}>
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                {isTemplateMode
+                  ? (t('templates.saveTemplate') || 'Save Template')
+                  : (t('editor.saveDraft') || 'Save Draft')
+                }
+              </Button>
+              {!hasUnsavedChanges && !invoice.id?.includes('_') && (
+                <span className="text-xs text-muted-foreground italic px-2 bg-gray-50 dark:bg-gray-900 py-1 rounded border">
+                  {t('editor.allChangesSaved') || 'All changes saved'}
+                </span>
               )}
-              {isTemplateMode
-                ? (t('templates.saveTemplate') || 'Save Template')
-                : (t('editor.saveDraft') || 'Save Draft')
-              }
-            </Button>
+            </div>
             {!isTemplateMode && (
               <>
                 <Button variant="outline" onClick={handleValidate}>
@@ -528,11 +556,20 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
       </div>
 
       {/* Bottom Actions */}
-      <div className="flex justify-end gap-4">
+      <div className="flex justify-end items-center gap-4">
+        {!hasUnsavedChanges && !invoice.id?.includes('_') && (
+          <span className="text-sm text-muted-foreground italic mr-2">
+            {t('editor.allChangesSaved') || 'All changes saved'}
+          </span>
+        )}
         <Button variant="outline" onClick={onBack}>
           {t('editor.back') || 'Back'}
         </Button>
-        <Button onClick={handleSave} disabled={!hasUnsavedChanges || isSaving}>
+        <Button
+          onClick={handleSave}
+          disabled={!hasUnsavedChanges || isSaving}
+          className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white min-w-[150px]"
+        >
           {isSaving ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (

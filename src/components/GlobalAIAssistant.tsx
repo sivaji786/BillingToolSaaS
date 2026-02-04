@@ -1,7 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { parseInvoiceWithGemini } from '../services/gemini';
-import { parseInvoiceWithOpenAI } from '../services/openai';
-import { useAuthStore } from '../stores/authStore';
 import { ChatMessage, Invoice, AIPromptRequest } from '../types/invoice';
 import { Sparkles, X, Send, Loader2, MessageSquare, Mic, MicOff } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -18,6 +15,7 @@ interface GlobalAIAssistantProps {
 
 export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, currentScreen, onUpdateInvoice }: GlobalAIAssistantProps) {
     const { t, language } = useLanguage();
+    // ... existing state and voice logic ...
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
@@ -140,7 +138,6 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
         }
     }, [isOpen, t]);
 
-    const tenant = useAuthStore((state) => state.tenant);
 
     const processCommand = async (text: string) => {
         if (!text.trim() || isLoading) return;
@@ -185,21 +182,12 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
                 }
             }
 
-            // Determine which AI provider and key to use
-            const provider = tenant?.ai_provider || 'gemini';
-            const apiKey = provider === 'openai' ? tenant?.openai_api_key : tenant?.gemini_api_key;
-
-            let parsedInvoice;
-            if (provider === 'openai') {
-                parsedInvoice = await parseInvoiceWithOpenAI(userMessage.content, context, apiKey, targetInvoice, language);
-            } else {
-                parsedInvoice = await parseInvoiceWithGemini(userMessage.content, context, apiKey, targetInvoice, language);
-            }
-
+            // Call backend directly with raw prompt and context
             const request: AIPromptRequest = {
                 prompt: userMessage.content,
                 context: context,
-                parsedInvoice: parsedInvoice
+                existingInvoice: targetInvoice || undefined,
+                language: language
             };
 
             const response = await aiInvoiceService.parseInvoicePrompt(request);
@@ -266,7 +254,12 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
     const handleUseInvoice = (invoiceData: Invoice) => {
         // If we are in edit mode or have an update function, use it
         if (onUpdateInvoice && (currentScreen === 'editor' || currentScreen === 'preview')) {
-            onUpdateInvoice(invoiceData);
+            const updatedData = { ...invoiceData };
+            // Preserve ID if it exists in currentInvoice but is missing in the AI response
+            if (!updatedData.id && currentInvoice?.id) {
+                updatedData.id = currentInvoice.id;
+            }
+            onUpdateInvoice(updatedData);
             setIsOpen(false);
             setIsDictating(false);
             toast.success(t('ai.invoiceUpdated') || 'Invoice updated!');
@@ -276,8 +269,8 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
         // Otherwise, prepare new invoice with clean ID and number (CREATE mode)
         const newInvoice = { ...invoiceData };
 
-        // If it's a completely new one, reset ID
-        if (!newInvoice.id || newInvoice.id.startsWith('new_')) {
+        // If it's a completely new one, ensure it has a proper temporary ID
+        if (!newInvoice.id || !newInvoice.id.includes('_')) {
             newInvoice.id = `new_${Date.now()}`;
             newInvoice.status = 'draft';
             newInvoice.issueDate = new Date().toISOString().split('T')[0];

@@ -34,14 +34,37 @@ interface InvoicePreviewProps {
 export function InvoicePreview({ invoice, onBack, onSave, template, profile }: InvoicePreviewProps) {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'pdf' | 'ubl'>('pdf');
-  const [editedInvoice, setEditedInvoice] = useState<Invoice>(invoice);
+  const [editedInvoice, setEditedInvoice] = useState<Invoice>(() => {
+    const inv = { ...invoice };
+    if (!inv.lines) inv.lines = [];
+    return inv;
+  });
   const [editingField, setEditingField] = useState<string | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
+  const [hasChanges, setHasChanges] = useState(() => (invoice.id?.startsWith('new_') || false));
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    setEditedInvoice(invoice);
-    setHasChanges(false);
+    const inv = { ...invoice };
+    if (!inv.lines) inv.lines = [];
+
+    // Check if this is a different invoice (e.g. navigation)
+    const isDifferentInvoice = !editedInvoice.id || inv.id !== editedInvoice.id;
+
+    if (isDifferentInvoice) {
+      setEditedInvoice(inv);
+      // New invoices should be considered to have changes so they can be saved
+      setHasChanges(inv.id?.startsWith('new_') || false);
+    } else {
+      // Same invoice ID - check if the incoming prop is different from our local state
+      // (This happens when the AI assistant updates the invoice)
+      const currentData = JSON.stringify(editedInvoice);
+      const incomingData = JSON.stringify(inv);
+
+      if (incomingData !== currentData) {
+        setEditedInvoice(inv);
+        setHasChanges(true); // Mark as changed because of external (AI) update
+      }
+    }
   }, [invoice]);
 
   const handleFieldChange = (path: string, value: any) => {
@@ -104,11 +127,13 @@ export function InvoicePreview({ invoice, onBack, onSave, template, profile }: I
       // Determine if this is a new invoice or existing one
       const isNewInvoice = !editedInvoice.id || editedInvoice.id.startsWith('new_');
 
+      let savedResult = calculated;
       if (isNewInvoice) {
         // Create new invoice in database
         const createdInvoice = await invoiceService.create(calculated);
         // Update local state with the new ID from server
         setEditedInvoice(createdInvoice);
+        savedResult = createdInvoice;
         toast.success(t('common.saved'), {
           description: t('previewModal.invoiceCreated') || 'Invoice created successfully',
         });
@@ -121,8 +146,8 @@ export function InvoicePreview({ invoice, onBack, onSave, template, profile }: I
       }
 
       setHasChanges(false);
-      // Still call the optional callback for parent component state updates
-      onSave?.(calculated);
+      // Pass the actual saved result (with server-generated ID if new) to parent
+      onSave?.(savedResult);
     } catch (error) {
       console.error('Failed to save invoice:', error);
       toast.error(t('common.error'), {
@@ -382,16 +407,21 @@ export function InvoicePreview({ invoice, onBack, onSave, template, profile }: I
           {t('common.back')}
         </Button>
 
-        {hasChanges && (
+        <div className="flex gap-2">
           <Button
             onClick={handleSave}
-            disabled={isSaving}
-            className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white"
+            disabled={isSaving || (!hasChanges && !editedInvoice.id?.includes('_'))}
+            className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-md"
           >
             <Save className="h-4 w-4 mr-2" />
             {isSaving ? t('common.saving') || 'Saving...' : t('common.save')}
           </Button>
-        )}
+          {!hasChanges && !editedInvoice.id?.includes('_') && (
+            <span className="text-xs text-muted-foreground self-center italic px-2">
+              {t('previewModal.allChangesSaved') || 'All changes saved'}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Preview Content */}
@@ -840,6 +870,25 @@ export function InvoicePreview({ invoice, onBack, onSave, template, profile }: I
                       dangerouslySetInnerHTML={{ __html: footerText }}
                     />
                   )}
+
+                  {/* BOTTOM ACTION BUTTON */}
+                  <div className="flex flex-col items-center gap-4 pt-12 border-t mt-12">
+                    <Button
+                      size="lg"
+                      variant="default"
+                      onClick={handleSave}
+                      disabled={isSaving || (!hasChanges && !editedInvoice.id?.includes('_'))}
+                      className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white min-w-[200px] shadow-xl hover:scale-105 transition-transform"
+                    >
+                      <Save className="h-5 w-5 mr-3" />
+                      {isSaving ? t('common.saving') || 'Saving...' : t('common.save') || 'Save Changes'}
+                    </Button>
+                    {!hasChanges && !editedInvoice.id?.includes('_') && (
+                      <p className="text-sm text-muted-foreground italic">
+                        {t('previewModal.noChangesToSave') || 'No new changes to save'}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

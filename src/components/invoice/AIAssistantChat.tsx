@@ -90,6 +90,7 @@ export function AIAssistantChat({
                 prompt: inputValue,
                 context,
                 existingInvoice: context === 'edit' ? existingInvoice : undefined,
+                language: (t as any).language || 'en' // Get language from context if available, fallback to 'en'
             };
 
             const response = await aiInvoiceService.parseInvoicePrompt(request);

@@ -14,15 +14,30 @@ class AIInvoiceController extends BaseController
      * Parse natural language prompt and generate invoice data
      * POST /api/ai/parse-invoice
      */
+    /**
+     * Parse natural language prompt and generate invoice data
+     * POST /api/ai/parse-invoice
+     */
     public function parseInvoice()
     {
         $data = $this->request->getJSON(true);
+        $prompt = $data['prompt'] ?? null;
+        $context = $data['context'] ?? 'create';
+        $language = $data['language'] ?? 'en';
+        $existingInvoice = $data['existingInvoice'] ?? null;
         
-        // Accept pre-parsed invoice data from client
+        // If pre-parsed data is provided (legacy support), use it. 
+        // Otherwise, call Gemini API from backend.
         if (isset($data['parsedInvoice']) && is_array($data['parsedInvoice'])) {
              $parsedData = $data['parsedInvoice'];
+        } elseif ($prompt) {
+             try {
+                 $parsedData = $this->callGeminiAPI($prompt, $context, $existingInvoice, $language);
+             } catch (\Exception $e) {
+                 return $this->fail('AI Processing Error: ' . $e->getMessage(), 500);
+             }
         } else {
-             return $this->fail('Backend AI processing is disabled. Please provide parsedInvoice data from client.', 400);
+             return $this->fail('Please provide either a "prompt" or "parsedInvoice" data.', 400);
         }
 
         // Fetch Default Seller from Company Profile
@@ -44,7 +59,7 @@ class AIInvoiceController extends BaseController
             ];
         }
 
-        // Apply default seller if missing (works for both AI and regex results)
+        // Apply default seller if missing
         if ((empty($parsedData['seller']['name']) || $parsedData['seller']['name'] === 'string') && $defaultSeller) {
              $parsedData['seller'] = $defaultSeller;
         }
@@ -62,6 +77,133 @@ class AIInvoiceController extends BaseController
             'suggestions' => $validation['suggestions'],
             'errors' => $validation['errors']
         ])->setStatusCode(200);
+    }
+
+    /**
+     * Call Gemini API to parse natural language prompt
+     */
+    private function callGeminiAPI($prompt, $context, $existingInvoice, $language)
+    {
+        // USER REQUESTED: Maintain key in api/.env file
+        $apiKey = env('GEMINI_API_KEY'); 
+        
+        if (empty($apiKey) || $apiKey === 'YOUR_GEMINI_API_KEY') {
+            throw new \Exception("Backend Gemini API Key not configured in .env file.");
+        }
+
+        $currentDate = date('Y-m-d');
+        $contextPrompt = "";
+        
+        if ($context === 'edit' && $existingInvoice) {
+            $contextPrompt = "
+            You are in EDIT mode for an existing invoice. 
+            Existing Invoice Data: " . json_encode($existingInvoice) . "
+            
+            Your task is to update the fields in this JSON based on the user's instructions. 
+            - If the user specifies changes to buyer, seller, or dates, update those fields.
+            - If the user specifies adding, removing, or changing line items, update the 'lines' array.
+            - Preserve all fields that are not explicitly mentioned for change.
+            - Ensure totals are NOT required in your output as they are calculated by the backend.
+            ";
+        } else {
+            $contextPrompt = "
+            You are in CREATE mode for a new invoice.
+            Extract invoice data from the user natural language prompt.
+            ";
+        }
+
+        $systemPrompt = "
+            You are an AI invoice assistant involved in a Billing Application. Your task is to extract or update invoice data into a structured JSON format.
+            
+            Current Date: $currentDate
+            Context: $context
+            LANGUAGE: $language
+            $contextPrompt
+            
+            Output MUST be a valid JSON object matching this structure:
+            {
+                \"invoiceNumber\": \"string\",
+                \"issueDate\": \"YYYY-MM-DD\",
+                \"dueDate\": \"YYYY-MM-DD or null\",
+                \"currency\": \"EUR\",
+                \"status\": \"draft\",
+                \"seller\": {
+                    \"name\": \"string\",
+                    \"address\": { \"street\": \"string\", \"city\": \"string\", \"postalCode\": \"string\", \"country\": \"ISO-2 codes like DE, AR, IN\" },
+                    \"contactEmail\": \"string\", \"contactPhone\": \"string\"
+                },
+                \"buyer\": {
+                    \"name\": \"string\",
+                    \"address\": { \"street\": \"string\", \"city\": \"string\", \"postalCode\": \"string\", \"country\": \"ISO-2 codes like DE, AR, IN\" },
+                    \"contactEmail\": \"string\", \"contactPhone\": \"string\"
+                },
+                \"lines\": [
+                    {
+                        \"id\": \"string (generate unique)\",
+                        \"description\": \"string (Extract in user language: $language)\",
+                        \"quantity\": number,
+                        \"unitCode\": \"string (Use UN/ECE codes: 'XPK' for bags, 'EA' for items, 'KGM' for kg, 'LTR' for liters, 'MTR' for meters)\",
+                        \"unitPrice\": number,
+                        \"taxPercent\": number,
+                        \"taxCategory\": \"S\"
+                    }
+                ],
+                \"note\": \"string (Extract in user language: $language)\"
+            }
+            
+            IMPORTANT RULES:
+            1. Always return VALID JSON.
+            2. Extracted money values should be numbers.
+            3. Tax Category 'S' stands for Standard rate.
+            4. If in EDIT mode, merge the changes into the provided JSON structure.
+            5. Use user's language ($language) for descriptions and notes, but JSON keys remain in English.
+        ";
+
+        $client = \Config\Services::curlrequest();
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $apiKey;
+
+        try {
+            $response = $client->post($url, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $systemPrompt . "\n\nUser Input: " . $prompt]
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'response_mime_type' => 'application/json',
+                    ]
+                ],
+                'http_errors' => false // Prevent auto-throwing so we can check status
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            
+            if ($statusCode === 429) {
+                throw new \Exception("Rate limit exceeded (429). If you are using a free tier Gemini key, please wait a minute before trying again.");
+            }
+            
+            if ($statusCode !== 200) {
+                $errorBody = json_decode($response->getBody(), true);
+                $errorMessage = $errorBody['error']['message'] ?? 'Unknown API error';
+                throw new \Exception("Gemini API Error ($statusCode): " . $errorMessage);
+            }
+
+            $body = json_decode($response->getBody(), true);
+            
+            if (isset($body['candidates'][0]['content']['parts'][0]['text'])) {
+                return json_decode($body['candidates'][0]['content']['parts'][0]['text'], true);
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
+
+        throw new \Exception("Failed to get valid response from Gemini API.");
     }
 
     /**

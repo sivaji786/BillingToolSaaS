@@ -192,6 +192,7 @@ export interface AIPromptRequest {
   prompt: string;
   context?: 'create' | 'edit';
   existingInvoice?: Partial<Invoice>;
+  language?: string;
   parsedInvoice?: any;
 }
 

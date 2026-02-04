@@ -28,6 +28,12 @@ export function calculateLineAmounts(line: InvoiceLine): InvoiceLine {
  * - PayableAmount: Invoice/LegalMonetaryTotal/PayableAmount
  */
 export function calculateInvoiceTotals(invoice: Invoice): Invoice {
+  // Defensive check for invoice and lines
+  if (!invoice || !invoice.lines) {
+    console.error('calculateInvoiceTotals: Invoice or lines is undefined', invoice);
+    return invoice || {} as Invoice;
+  }
+
   // Recalculate all line amounts
   const calculatedLines = invoice.lines.map(calculateLineAmounts);
 

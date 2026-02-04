@@ -159,6 +159,9 @@ function AppContent() {
         try {
           const dataStr = hash.split('data=')[1];
           const invoiceData = JSON.parse(decodeURIComponent(dataStr));
+          // Ensure lines property exists
+          if (!invoiceData.lines) invoiceData.lines = [];
+
           setCurrentInvoice(invoiceData);
           setEditorMode('invoice');
           setCurrentScreen('editor');
@@ -171,6 +174,9 @@ function AppContent() {
         try {
           const dataStr = hash.split('data=')[1];
           const invoiceData = JSON.parse(decodeURIComponent(dataStr));
+          // Ensure lines property exists
+          if (!invoiceData.lines) invoiceData.lines = [];
+
           setCurrentInvoice(invoiceData);
           setCurrentScreen('preview');
         } catch (e) {
@@ -462,21 +468,10 @@ function AppContent() {
   };
 
   const handleSaveFromPreview = async (invoice: Invoice) => {
-    const calculated = calculateInvoiceTotals(invoice);
-
-    try {
-      if (calculated.id && !calculated.id.startsWith('new_')) {
-        await invoiceService.update(calculated.id, calculated);
-        refetchInvoices();
-        setCurrentInvoice(calculated);
-        toast.success(t('common.saved'), {
-          description: t('invoiceList.invoiceUpdated') || 'Invoice updated successfully',
-        });
-      }
-    } catch (error) {
-      console.error('Failed to update invoice:', error);
-      toast.error(t('common.error') || 'Failed to update invoice');
-    }
+    // The InvoicePreview component handles its own database save logic
+    // We just need to update the app-level state and refresh the invoice list
+    setCurrentInvoice(invoice);
+    refetchInvoices();
   };
 
   const handleNewTemplate = () => {
