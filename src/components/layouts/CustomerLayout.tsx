@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { Button } from '../ui/button';
-import { LayoutDashboard, FileText, Settings, CreditCard, LogOut, Menu, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, CreditCard, LogOut, Menu, PlusCircle, Users } from 'lucide-react';
 import { useState } from 'react';
 
 interface CustomerLayoutProps {
@@ -18,6 +18,7 @@ export function CustomerLayout({ children, currentScreen, onNavigate }: Customer
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'create-invoice', label: 'Create Invoice', icon: PlusCircle },
         { id: 'invoices', label: 'My Invoices', icon: FileText },
+        { id: 'buyers', label: 'Clients', icon: Users },
         { id: 'subscription', label: 'Subscription', icon: CreditCard },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];

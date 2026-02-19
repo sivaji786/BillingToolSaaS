@@ -17,6 +17,12 @@ export interface Party {
   contactPhone?: string;
 }
 
+export interface Buyer extends Party {
+  id: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface InvoiceLine {
   id: string;
   description: string;

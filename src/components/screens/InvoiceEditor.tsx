@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Invoice, InvoiceLine, InvoiceTemplate, CompanyProfile } from '../../types/invoice';
+import { Invoice, InvoiceLine, InvoiceTemplate, CompanyProfile, Buyer } from '../../types/invoice';
+import { buyerService } from '../../services/api';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -61,6 +62,19 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
+
+  useEffect(() => {
+    const fetchBuyers = async () => {
+      try {
+        const data = await buyerService.getAll();
+        setBuyers(data);
+      } catch (error) {
+        console.error('Failed to fetch buyers', error);
+      }
+    };
+    fetchBuyers();
+  }, []);
 
   // Memoize heavy calculations
   const calculatedInvoice = useMemo(() => {
@@ -141,6 +155,33 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
+      // Check if buyer exists in directory, if not create it
+      if (invoice.buyer.name && invoice.buyer.name.trim().length >= 3) {
+        const buyerExists = buyers.find(b =>
+          b.name.toLowerCase() === invoice.buyer.name.toLowerCase()
+        );
+
+        if (!buyerExists) {
+          try {
+            await buyerService.create({
+              name: invoice.buyer.name,
+              vatId: invoice.buyer.vatId,
+              legalOrganizationId: invoice.buyer.legalOrganizationId,
+              address: invoice.buyer.address,
+              contact: {
+                email: invoice.buyer.contactEmail,
+                phone: invoice.buyer.contactPhone
+              }
+            });
+            // Update local buyers list
+            const updatedBuyers = await buyerService.getAll();
+            setBuyers(updatedBuyers);
+          } catch (e) {
+            console.error('Failed to auto-save new buyer:', e);
+          }
+        }
+      }
+
       const toSave = {
         ...calculatedInvoice,
         updatedAt: new Date().toISOString(),
@@ -153,7 +194,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
     } finally {
       setIsSaving(false);
     }
-  }, [calculatedInvoice, onSave, t]);
+  }, [calculatedInvoice, onSave, t, buyers, invoice.buyer]);
 
   const handleValidate = () => {
     const errors = validateInvoice(calculatedInvoice);
@@ -474,6 +515,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                 title={`${t('editor.buyer')} (Customer)`}
                 onUpdate={(party) => handleUpdateInvoice({ buyer: party })}
                 ublPath="Invoice/AccountingCustomerParty"
+                suggestions={buyers}
               />
             )}
             {isTemplateMode && (

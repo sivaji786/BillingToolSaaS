@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Invoice, InvoiceTemplate, InvoiceLine, CompanyProfile } from '../../types/invoice';
+import { Invoice, InvoiceTemplate, InvoiceLine, CompanyProfile, Buyer } from '../../types/invoice';
+import { buyerService } from '../../services/api';
+import { BuyerAutocomplete } from '../invoice/BuyerAutocomplete';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -42,6 +44,19 @@ export function InvoicePreview({ invoice, onBack, onSave, template, profile }: I
   const [editingField, setEditingField] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(() => (invoice.id?.startsWith('new_') || false));
   const [isSaving, setIsSaving] = useState(false);
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
+
+  useEffect(() => {
+    const fetchBuyers = async () => {
+      try {
+        const data = await buyerService.getAll();
+        setBuyers(data);
+      } catch (error) {
+        console.error('Failed to fetch buyers', error);
+      }
+    };
+    fetchBuyers();
+  }, []);
 
   useEffect(() => {
     const inv = { ...invoice };
@@ -126,6 +141,33 @@ export function InvoicePreview({ invoice, onBack, onSave, template, profile }: I
 
       // Determine if this is a new invoice or existing one
       const isNewInvoice = !editedInvoice.id || editedInvoice.id.startsWith('new_');
+
+      // Check if buyer exists in directory, if not create it
+      if (editedInvoice.buyer.name && editedInvoice.buyer.name.trim().length >= 3) {
+        const buyerExists = buyers.find(b =>
+          b.name.toLowerCase() === editedInvoice.buyer.name.toLowerCase()
+        );
+
+        if (!buyerExists) {
+          try {
+            await buyerService.create({
+              name: editedInvoice.buyer.name,
+              vatId: editedInvoice.buyer.vatId,
+              legalOrganizationId: editedInvoice.buyer.legalOrganizationId,
+              address: editedInvoice.buyer.address,
+              contact: {
+                email: editedInvoice.buyer.contactEmail,
+                phone: editedInvoice.buyer.contactPhone
+              }
+            });
+            // Update local buyers list
+            const updatedBuyers = await buyerService.getAll();
+            setBuyers(updatedBuyers);
+          } catch (e) {
+            console.error('Failed to auto-save new buyer during preview save:', e);
+          }
+        }
+      }
 
       let savedResult = calculated;
       if (isNewInvoice) {
@@ -587,10 +629,38 @@ export function InvoicePreview({ invoice, onBack, onSave, template, profile }: I
                       <p className="text-sm text-muted-foreground mb-3">{t('previewModal.billTo')}</p>
                       <div className="space-y-1">
                         <div className="text-lg">
-                          {renderEditableField(
-                            'buyer.name',
-                            editedInvoice.buyer.name,
-                            (value: string) => handleFieldChange('buyer.name', value)
+                          {editingField === 'buyer.name' ? (
+                            <BuyerAutocomplete
+                              value={editedInvoice.buyer.name}
+                              suggestions={buyers}
+                              onChange={(val) => handleFieldChange('buyer.name', val)}
+                              onSelect={(selectedBuyer) => {
+                                setEditedInvoice(prev => ({
+                                  ...prev,
+                                  buyer: {
+                                    ...prev.buyer,
+                                    name: selectedBuyer.name,
+                                    vatId: selectedBuyer.vatId || '',
+                                    legalOrganizationId: selectedBuyer.legalOrganizationId || '',
+                                    address: selectedBuyer.address,
+                                    contactEmail: selectedBuyer.contactEmail || '',
+                                    contactPhone: selectedBuyer.contactPhone || '',
+                                  }
+                                }));
+                                setHasChanges(true);
+                                setEditingField(null);
+                              }}
+                              placeholder="Company name"
+                            />
+                          ) : (
+                            <div
+                              onDoubleClick={() => setEditingField('buyer.name')}
+                              className="cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950 rounded px-1 transition-colors group relative"
+                              title="Double-click to edit"
+                            >
+                              {editedInvoice.buyer.name || <span className="text-gray-400 italic">Double-click to add</span>}
+                              <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-50 text-purple-600" />
+                            </div>
                           )}
                         </div>
                         {editedInvoice.buyer.vatId && (

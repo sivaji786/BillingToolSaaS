@@ -9,7 +9,8 @@ import {
     LogOut,
     CreditCard,
     ChevronsUpDown,
-    GalleryVerticalEnd
+    GalleryVerticalEnd,
+    Users
 } from "lucide-react"
 
 import {
@@ -58,6 +59,13 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
             url: "dashboard",
             icon: LayoutDashboard,
             isActive: currentScreen === "dashboard",
+        },
+        {
+            title: t('buyers.title') || "Buyers",
+            url: "buyers",
+            icon: Users,
+            isActive: currentScreen === "buyers",
+            permission: 'buyers.read'
         },
         {
             title: "Billing",

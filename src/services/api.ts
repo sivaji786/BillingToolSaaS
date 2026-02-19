@@ -30,10 +30,19 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Handle auto-redirect for workspace mismatches
+// Handle auto-redirect for workspace mismatches and token expiration
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        if (error.response?.status === 401) {
+            console.warn('Unauthorized or token expired, logging out...');
+            useAuthStore.getState().logout();
+            // Optional: for fully certain redirect if store update doesn't trigger parent re-render
+            if (!window.location.hash.includes('login') && !window.location.hash.includes('landing')) {
+                window.location.hash = '#login';
+            }
+        }
+
         if (error.response?.status === 403 && error.response.data?.redirect_url) {
             console.log('Tenant mismatch detected, redirecting to correct workspace:', error.response.data.redirect_url);
             window.location.href = error.response.data.redirect_url;
@@ -151,6 +160,29 @@ export const invoiceService = {
 export const auditLogService = {
     getAll: async () => {
         const response = await api.get<AuditLogEntry[]>('/audit-logs');
+        return response.data;
+    },
+};
+
+export const buyerService = {
+    getAll: async () => {
+        const response = await api.get<import('../types/invoice').Buyer[]>('/buyers');
+        return response.data;
+    },
+    getById: async (id: string) => {
+        const response = await api.get<import('../types/invoice').Buyer>(`/buyers/${id}`);
+        return response.data;
+    },
+    create: async (buyer: any) => {
+        const response = await api.post('/buyers', buyer);
+        return response.data;
+    },
+    update: async (id: string, buyer: any) => {
+        const response = await api.put(`/buyers/${id}`, buyer);
+        return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/buyers/${id}`);
         return response.data;
     },
 };

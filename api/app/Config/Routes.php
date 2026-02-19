@@ -68,6 +68,21 @@ $routes->get('audit-logs', '\App\Controllers\AuditLogController::index', ['filte
 // AI Invoice Assistant
 $routes->post('ai/parse-invoice', '\App\Controllers\AIInvoiceController::parseInvoice', ['filter' => 'rbac:invoices.create']);
 
+// Buyers Directory
+$routes->group('buyers', ['filter' => ['auth', 'rbac:buyers.read']], function($routes) {
+    $routes->get('', '\App\Controllers\BuyerController::index');
+    $routes->get('(:segment)', '\App\Controllers\BuyerController::show/$1');
+});
+$routes->group('buyers', ['filter' => ['auth', 'rbac:buyers.create']], function($routes) {
+    $routes->post('', '\App\Controllers\BuyerController::create');
+});
+$routes->group('buyers', ['filter' => ['auth', 'rbac:buyers.update']], function($routes) {
+    $routes->put('(:segment)', '\App\Controllers\BuyerController::update/$1');
+});
+$routes->group('buyers', ['filter' => ['auth', 'rbac:buyers.delete']], function($routes) {
+    $routes->delete('(:segment)', '\App\Controllers\BuyerController::delete/$1');
+});
+
 // Tickets
 $routes->get('tickets', '\App\Controllers\TicketController::index', ['filter' => 'rbac:tickets.read']);
 $routes->post('tickets', '\App\Controllers\TicketController::create', ['filter' => 'rbac:tickets.create']);

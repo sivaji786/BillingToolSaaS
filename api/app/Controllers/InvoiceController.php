@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\InvoiceModel;
 use App\Models\InvoiceLineModel;
+use App\Models\BuyerModel;
 use CodeIgniter\API\ResponseTrait;
 
 use App\Traits\AuditTrait;
@@ -205,6 +206,9 @@ class InvoiceController extends BaseController
                 }
             }
             
+            // Sync buyer to directory
+            $this->syncBuyer($data['buyer'] ?? []);
+            
             $this->logAction('created', $dbData['invoice_number'], "Invoice created for {$dbData['buyer_name']}");
             return $this->respondCreated(['id' => $invoiceId, 'message' => 'Invoice created']);
         }
@@ -242,7 +246,9 @@ class InvoiceController extends BaseController
             $action = 'updated';
             if ($dbData['status'] === 'validated') $action = 'validated';
             if ($dbData['status'] === 'sent') $action = 'sent';
-            if ($dbData['signed']) $action = 'signed';
+            
+            // Sync buyer to directory
+            $this->syncBuyer($data['buyer'] ?? []);
 
             $this->logAction($action, $dbData['invoice_number'], "Invoice {$action}. Status: {$dbData['status']}", (bool)($dbData['signed'] ?? false));
             return $this->respond(['id' => $id, 'message' => 'Invoice updated']);
@@ -317,5 +323,30 @@ class InvoiceController extends BaseController
             'tax_percent' => $line['taxPercent'],
             'line_extension_amount' => $line['quantity'] * $line['unitPrice'],
         ];
+    }
+
+    private function syncBuyer($buyerData)
+    {
+        if (empty($buyerData['name']) || strlen($buyerData['name']) < 3) {
+            return;
+        }
+
+        $buyerModel = new BuyerModel();
+        
+        // Check if buyer already exists for this tenant
+        $existing = $buyerModel->where('name', $buyerData['name'])->first();
+
+        if (!$existing) {
+            $buyerModel->insert([
+                'name' => $buyerData['name'],
+                'vat_id' => $buyerData['vatId'] ?? null,
+                'legal_organization_id' => $buyerData['legalOrganizationId'] ?? null,
+                'address_json' => json_encode($buyerData['address'] ?? []),
+                'contact_json' => json_encode([
+                    'email' => $buyerData['contactEmail'] ?? null,
+                    'phone' => $buyerData['contactPhone'] ?? null,
+                ]),
+            ]);
+        }
     }
 }

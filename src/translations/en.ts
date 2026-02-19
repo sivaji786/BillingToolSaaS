@@ -514,6 +514,33 @@ export const en = {
         statusChangeNote: 'This will update the status of all selected invoices. This action can be reverted by changing the status again.',
     },
 
+    // Buyers Directory
+    buyers: {
+        title: 'Buyers Directory',
+        subtitle: 'Manage your clients and their billing information',
+        searchPlaceholder: 'Search by name, VAT ID, email...',
+        addBuyer: 'Add Buyer',
+        editBuyer: 'Edit Buyer',
+        newBuyer: 'New Buyer',
+        buyerDetails: 'Buyer Details',
+        noBuyers: 'No buyers found',
+        noBuyersDesc: 'Add your first buyer to get started',
+        name: 'Full Name / Company Name',
+        vatId: 'VAT ID',
+        legalOrgId: 'Legal Organization ID',
+        email: 'Contact Email',
+        phone: 'Contact Phone',
+        address: 'Billing Address',
+        street: 'Street',
+        city: 'City',
+        postalCode: 'Postal Code',
+        country: 'Country',
+        buyerCreated: 'Buyer created successfully',
+        buyerUpdated: 'Buyer updated successfully',
+        buyerDeleted: 'Buyer deleted successfully',
+        deleteConfirm: 'Are you sure you want to delete this buyer?',
+    },
+
     // Design Layout
     designLayout: {
         elementLibrary: 'Element Library',

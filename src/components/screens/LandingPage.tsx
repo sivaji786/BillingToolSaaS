@@ -216,18 +216,21 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
 
             <main className="flex-1">
                 {/* Hero Section */}
-                <section className="relative overflow-hidden py-20 md:py-32 lg:py-40 bg-gradient-to-b from-purple-50 via-white to-white dark:from-purple-950/20 dark:via-background dark:to-background">
-                    <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        variants={fadeInVariants}
-                        className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.1),transparent_50%)]"
+                <section className="relative overflow-hidden py-20 md:py-32 lg:py-40">
+                    <div
+                        className="absolute inset-0 z-0"
+                        style={{
+                            backgroundImage: 'url(/images/landing_bg.png)',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            opacity: 0.45
+                        }}
                     />
                     <motion.div
                         initial="hidden"
                         animate="visible"
                         variants={fadeInVariants}
-                        className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(236,72,153,0.1),transparent_50%)]"
+                        className="absolute inset-0 bg-gradient-to-b from-purple-50/50 via-white/80 to-white dark:from-purple-950/20 dark:via-background/80 dark:to-background"
                     />
 
                     <div className="container px-4 md:px-6 relative z-10">
@@ -237,19 +240,19 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                             variants={containerVariants}
                             className="flex flex-col items-center space-y-6 text-center"
                         >
-                            <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                                <Sparkles className="mr-1 h-3 w-3 text-purple-600" />
+                            <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-4 py-1.5 text-xs font-semibold border-purple-100 bg-purple-50/50 text-purple-700 backdrop-blur-sm shadow-sm transition-all hover:bg-purple-100/50">
+                                <Sparkles className="mr-2 h-3.5 w-3.5 text-purple-600" />
                                 {t('landing.hero.badge')}
                             </motion.div>
-                            <motion.h1 variants={itemVariants} className="text-4xl font-extrabold tracking-tight lg:text-5xl xl:text-6xl max-w-4xl bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-purple-800 to-gray-900 dark:from-white dark:via-purple-200 dark:to-white pb-2">
+                            <motion.h1 variants={itemVariants} className="text-5xl font-extrabold tracking-tight lg:text-6xl xl:text-7xl max-w-4xl text-slate-900 dark:text-white pb-2 leading-[1.1]">
                                 {t('landing.hero.title')} <br className="hidden sm:inline" />
-                                <span className="text-purple-600">{t('landing.hero.titleAccent')}</span> {t('landing.hero.titleSuffix')}
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-fuchsia-600">{t('landing.hero.titleAccent')}</span> {t('landing.hero.titleSuffix')}
                             </motion.h1>
                             <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
                                 {t('landing.hero.subtitle')}
                             </motion.p>
                             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 min-w-[300px] justify-center pt-4">
-                                <Button size="lg" className="bg-purple-600 hover:bg-purple-700 h-12 px-8 text-lg" onClick={() => onSignup()}>
+                                <Button size="lg" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 h-12 px-8 text-lg shadow-xl shadow-purple-200 dark:shadow-none" onClick={() => onSignup()}>
                                     {t('landing.hero.getStarted')}
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>

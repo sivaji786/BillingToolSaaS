@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Party } from '../../types/invoice';
+import { Party, Buyer } from '../../types/invoice';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Pencil, Check, X } from 'lucide-react';
+import { BuyerAutocomplete } from './BuyerAutocomplete';
 
 interface PartyCardProps {
   party: Party;
@@ -12,9 +13,10 @@ interface PartyCardProps {
   onUpdate: (party: Party) => void;
   ublPath: string;
   defaultParty?: Partial<Party>;
+  suggestions?: Buyer[];
 }
 
-export function PartyCard({ party, title, onUpdate, ublPath, defaultParty }: PartyCardProps) {
+export function PartyCard({ party, title, onUpdate, ublPath, defaultParty, suggestions }: PartyCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedParty, setEditedParty] = useState<Party>(party);
 
@@ -75,13 +77,33 @@ export function PartyCard({ party, title, onUpdate, ublPath, defaultParty }: Par
         <div className="space-y-4">
           <div>
             <Label htmlFor={`${title}-name`}>Name *</Label>
-            <Input
-              id={`${title}-name`}
-              value={editedParty.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="Company name"
-              className="mt-1"
-            />
+            {suggestions ? (
+              <BuyerAutocomplete
+                value={editedParty.name}
+                suggestions={suggestions}
+                onChange={(val) => handleChange('name', val)}
+                onSelect={(selectedBuyer) => {
+                  setEditedParty({
+                    ...editedParty,
+                    name: selectedBuyer.name,
+                    vatId: selectedBuyer.vatId || '',
+                    legalOrganizationId: selectedBuyer.legalOrganizationId || '',
+                    address: selectedBuyer.address,
+                    contactEmail: selectedBuyer.contactEmail || '',
+                    contactPhone: selectedBuyer.contactPhone || '',
+                  });
+                }}
+                placeholder="Company name"
+              />
+            ) : (
+              <Input
+                id={`${title}-name`}
+                value={editedParty.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="Company name"
+                className="mt-1"
+              />
+            )}
           </div>
 
           {defaultParty && (

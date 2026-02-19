@@ -20,6 +20,7 @@ const AdminLayout = lazy(() => import('./components/screens/Admin/AdminLayout').
 const Signup = lazy(() => import('./components/screens/Signup').then(module => ({ default: module.Signup })));
 const Billing = lazy(() => import('./components/screens/Billing').then(module => ({ default: module.Billing })));
 const LandingPage = lazy(() => import('./components/screens/LandingPage').then(module => ({ default: module.LandingPage })));
+const Buyers = lazy(() => import('./components/screens/Buyers').then(module => ({ default: module.Buyers })));
 
 // Admin Portal Components
 const SALogin = lazy(() => import('./components/screens/Admin/SALogin').then(module => ({ default: module.SALogin })));
@@ -66,7 +67,7 @@ import { toast } from 'sonner';
 import { authService, invoiceService } from './services/api';
 // hasPermissionSync removed
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAInvoiceForm';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAInvoiceForm';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -76,7 +77,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
-      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki', 'signup'].includes(hash)) {
+      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki', 'signup', 'buyers'].includes(hash)) {
         return hash as Screen;
       }
       // Handle parameterized routes like designLayout/123
@@ -147,7 +148,7 @@ function AppContent() {
       const hash = window.location.hash.replace('#', '');
       console.log('Hash changed:', hash);
       if (hash && [
-        'landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki', 'signup'
+        'landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki', 'signup', 'buyers'
       ].includes(hash)) {
         console.log('Setting screen from hash change:', hash);
         setCurrentScreen(hash as Screen);
@@ -728,6 +729,8 @@ function AppContent() {
                 )}
 
                 {currentScreen === 'billing' && <Billing />}
+
+                {currentScreen === 'buyers' && <Buyers />}
 
               </div>
             )}

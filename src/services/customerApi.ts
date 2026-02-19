@@ -3,6 +3,26 @@ import axios from 'axios';
 import { getApiBaseUrl } from '../utils/config';
 const API_URL = `${getApiBaseUrl()}/customer`;
 
+// Add 401 interceptor to global axios or create local instance? 
+// Better use a local instance to avoid side effects on other services.
+const customerApi = axios.create({
+    baseURL: API_URL
+});
+
+customerApi.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.warn('Customer session expired, redirecting to login');
+            // Assuming useAuthStore exists and is imported
+            // Need to import it
+            window.location.hash = '#login';
+            window.location.reload(); // Force full reload to clear state
+        }
+        return Promise.reject(error);
+    }
+);
+
 export interface DashboardData {
     tenant: any;
     subscription: any;
@@ -24,8 +44,8 @@ export interface DashboardData {
 
 export const customerService = {
     getDashboard: async (token: string) => {
-        const response = await axios.get<{ success: boolean; data: DashboardData }>(
-            `${API_URL}/dashboard`,
+        const response = await customerApi.get<{ success: boolean; data: DashboardData }>(
+            `/dashboard`,
             {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -37,7 +57,7 @@ export const customerService = {
     },
 
     getInvoices: async (token: string, params?: { page?: number; limit?: number; status?: string }) => {
-        const response = await axios.get(`${API_URL}/invoices`, {
+        const response = await customerApi.get(`/invoices`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'X-Authorization': `Bearer ${token}`
@@ -48,7 +68,7 @@ export const customerService = {
     },
 
     getInvoice: async (token: string, id: string) => {
-        const response = await axios.get(`${API_URL}/invoices/${id}`, {
+        const response = await customerApi.get(`/invoices/${id}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'X-Authorization': `Bearer ${token}`
@@ -58,7 +78,7 @@ export const customerService = {
     },
 
     getSubscription: async (token: string) => {
-        const response = await axios.get(`${API_URL}/subscription`, {
+        const response = await customerApi.get(`/subscription`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'X-Authorization': `Bearer ${token}`
@@ -75,7 +95,7 @@ export const customerService = {
         gemini_api_key?: string;
         openai_api_key?: string;
     }) => {
-        const response = await axios.put(`${API_URL}/profile`, data, {
+        const response = await customerApi.put(`/profile`, data, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'X-Authorization': `Bearer ${token}`
@@ -85,7 +105,7 @@ export const customerService = {
     },
 
     getUsage: async (token: string) => {
-        const response = await axios.get(`${API_URL}/usage`, {
+        const response = await customerApi.get(`/usage`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'X-Authorization': `Bearer ${token}`
