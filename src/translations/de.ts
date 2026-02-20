@@ -50,6 +50,7 @@ export const de = {
         products: 'Pakete',
         clients: 'Kunden',
         reports: 'Berichte',
+        workspace: 'Mein Workspace',
     },
     invoice: {
         new: 'Neue Rechnung',

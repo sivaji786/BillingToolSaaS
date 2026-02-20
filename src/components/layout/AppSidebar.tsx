@@ -10,7 +10,8 @@ import {
     CreditCard,
     ChevronsUpDown,
     GalleryVerticalEnd,
-    Users
+    Users,
+    Folder
 } from "lucide-react"
 
 import {
@@ -59,6 +60,12 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
             url: "dashboard",
             icon: LayoutDashboard,
             isActive: currentScreen === "dashboard",
+        },
+        {
+            title: t('nav.workspace') || "My Workspace",
+            url: "workspace",
+            icon: Folder,
+            isActive: currentScreen === "workspace",
         },
         {
             title: t('buyers.title') || "Buyers",

@@ -131,6 +131,22 @@ $routes->group('users', ['filter' => 'rbac:users.manage'], function($routes) {
     $routes->put('(:segment)', '\App\Controllers\UserController::update/$1');
 });
 
+// Workspace Filesystem
+$routes->group('workspace', ['filter' => 'auth'], function($routes) {
+    $routes->get('list', '\App\Controllers\WorkspaceController::list');
+    $routes->post('upload', '\App\Controllers\WorkspaceController::upload');
+    $routes->post('mkdir', '\App\Controllers\WorkspaceController::mkdir');
+    $routes->post('delete', '\App\Controllers\WorkspaceController::delete');
+    $routes->get('download', '\App\Controllers\WorkspaceController::download');
+    $routes->get('search', '\App\Controllers\WorkspaceController::search');
+    $routes->get('ping', function() { return 'pong'; });
+    $routes->post('extract-zip', '\App\Controllers\WorkspaceController::extractZip');
+    $routes->post('rename', '\App\Controllers\WorkspaceController::rename');
+    $routes->post('open', '\App\Controllers\WorkspaceController::open');
+    $routes->post('download-zip', '\App\Controllers\WorkspaceController::downloadZip');
+    $routes->post('ai-search', '\App\Controllers\WorkspaceController::aiSearch');
+});
+
 // CORS preflight - must be BEFORE other routes
 $routes->options('(:any)', 'Cors::options');
 

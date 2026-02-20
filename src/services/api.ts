@@ -9,9 +9,6 @@ console.log('API_URL Final:', API_URL);
 
 const api = axios.create({
     baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
     withCredentials: true,
 });
 
@@ -34,6 +31,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        if (error.response) {
+            console.error('API Error Response:', error.response.status, error.response.data);
+        } else {
+            console.error('API Error Message:', error.message);
+        }
+
         if (error.response?.status === 401) {
             console.warn('Unauthorized or token expired, logging out...');
             useAuthStore.getState().logout();
@@ -290,5 +293,87 @@ export const userService = {
         const response = await api.put(`/users/${id}`, data);
         return response.data;
     },
+};
+
+export const workspaceService = {
+    list: async (path: string = '') => {
+        const response = await api.get('/workspace/list', { params: { path } });
+        return response.data;
+    },
+    upload: async (path: string, files: FileList | File[]) => {
+        const formData = new FormData();
+        formData.append('path', path);
+        Array.from(files).forEach(file => {
+            formData.append('files[]', file);
+        });
+        const response = await api.post('/workspace/upload', formData);
+        return response.data;
+    },
+    mkdir: async (path: string, name: string) => {
+        const response = await api.post('/workspace/mkdir', { path, name });
+        return response.data;
+    },
+    delete: async (path: string, items: string[]) => {
+        const response = await api.post('/workspace/delete', { path, items });
+        return response.data;
+    },
+    download: async (path: string, name: string) => {
+        const response = await api.get('/workspace/download', {
+            params: { path, name },
+            responseType: 'blob'
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', name);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    },
+    search: async (query: string) => {
+        const response = await api.get('/workspace/search', { params: { q: query } });
+        return response.data;
+    },
+    extractZip: async (path: string, name: string, toFolder: boolean, deleteSource: boolean) => {
+        const response = await api.post('/workspace/extract-zip', { path, name, toFolder, deleteSource });
+        return response.data;
+    },
+    rename: async (path: string, oldName: string, newName: string) => {
+        const response = await api.post('/workspace/rename', { path, oldName, newName });
+        return response.data;
+    },
+    open: async (path: string, name: string) => {
+        const response = await api.post('/workspace/open', { path, name });
+        return response.data;
+    },
+    downloadZip: async (path: string, items: string[]) => {
+        const response = await api.post('/workspace/download-zip', { path, items }, {
+            responseType: 'blob'
+        });
+
+        // Extract filename from Content-Disposition header if present
+        let filename = 'workspace_export.zip';
+        const disposition = response.headers['content-disposition'];
+        if (disposition && disposition.indexOf('attachment') !== -1) {
+            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            const matches = filenameRegex.exec(disposition);
+            if (matches != null && matches[1]) {
+                filename = matches[1].replace(/['"]/g, '');
+            }
+        }
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    },
+    aiSearch: async (prompt: string) => {
+        const response = await api.post('/workspace/ai-search', { prompt });
+        return response.data;
+    }
 };
 

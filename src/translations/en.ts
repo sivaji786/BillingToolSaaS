@@ -39,6 +39,7 @@ export const en = {
         products: 'Packages',
         clients: 'Clients',
         reports: 'Reports',
+        workspace: 'My Workspace',
     },
 
     // Dashboard
@@ -514,9 +515,9 @@ export const en = {
         statusChangeNote: 'This will update the status of all selected invoices. This action can be reverted by changing the status again.',
     },
 
-    // Buyers Directory
+    // Address book
     buyers: {
-        title: 'Buyers Directory',
+        title: 'Address book',
         subtitle: 'Manage your clients and their billing information',
         searchPlaceholder: 'Search by name, VAT ID, email...',
         addBuyer: 'Add Buyer',

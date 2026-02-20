@@ -219,7 +219,10 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="p-6 border-2 bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200 shadow-md">
+        <Card
+          className="p-6 border-2 bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200 shadow-md cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+          onClick={() => window.location.hash = 'invoices'}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-violet-700">{t('dashboard.totalInvoices')}</p>

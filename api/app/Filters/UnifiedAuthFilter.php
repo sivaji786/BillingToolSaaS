@@ -18,6 +18,8 @@ class UnifiedAuthFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
+        log_message('debug', 'AuthFilter: URI: ' . $request->getUri()->getPath() . ' Method: ' . $request->getMethod());
+        
         // 1. Skip for OPTIONS requests (already handled by CorsFilter)
         if (strtoupper($request->getMethod()) === 'OPTIONS') {
             return;
@@ -197,6 +199,7 @@ class UnifiedAuthFilter implements FilterInterface
 
     private function fail(string $message, int $code)
     {
+        log_message('error', "UnifiedAuthFilter Failure [$code]: $message. URI: " . $_SERVER['REQUEST_URI']);
         return Services::response()
             ->setJSON(['success' => false, 'message' => $message])
             ->setStatusCode($code);

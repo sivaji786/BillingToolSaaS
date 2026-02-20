@@ -50,6 +50,7 @@ export const ar = {
         products: 'الباقات',
         clients: 'العملاء',
         reports: 'التقارير',
+        workspace: 'مساحة عملي',
     },
     invoice: {
         new: 'فاتورة جديدة',

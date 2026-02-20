@@ -27,8 +27,8 @@ class App extends BaseConfig
             $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http');
             $dynamicBaseURL = $protocol . '://' . $_SERVER['HTTP_HOST'] . '/';
             
-            // Validate the dynamic URL to prevent ConfigException for invalid hostnames (like those with underscores)
-            if (filter_var($dynamicBaseURL, FILTER_VALIDATE_URL)) {
+            // Validate the dynamic URL but be lenient for local dev underscores
+            if (filter_var($dynamicBaseURL, FILTER_VALIDATE_URL) || strpos($_SERVER['HTTP_HOST'], '.localhost') !== false) {
                 $this->baseURL = $dynamicBaseURL;
             }
         }
