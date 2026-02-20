@@ -186,7 +186,8 @@ class UnifiedAuthFilter implements FilterInterface
             '/admin/auth/login',
             '/test/',
             '/debug/',
-            '/billing/plans'
+            '/billing/plans',
+            '/tickets'
         ];
         foreach ($publicPatterns as $pattern) {
             if (strpos($uri, $pattern) !== false) return true;

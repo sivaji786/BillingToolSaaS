@@ -195,7 +195,6 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                         </span>
                     </div>
                     <nav className="flex items-center gap-4">
-                        <LanguageSwitcher variant="login" />
                         <div className="hidden md:flex gap-4">
                             <Button variant="ghost" onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}>
                                 {t('landing.aboutUs')}
@@ -210,6 +209,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                                 {t('landing.signup')}
                             </Button>
                         </div>
+                        <LanguageSwitcher variant="login" />
                     </nav>
                 </div>
             </header>

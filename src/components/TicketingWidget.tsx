@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { MessageSquarePlus, X, Loader2, Pencil, Eraser, Trash2, Hand, Square, Circle, ArrowUpRight, Undo2, Redo2 } from 'lucide-react';

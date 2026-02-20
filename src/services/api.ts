@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry, AIPromptRequest, AIPromptResponse } from '../types/invoice';
+import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry, AIPromptRequest, AIPromptResponse, Buyer } from '../types/invoice';
 import { getApiBaseUrl } from '../utils/config';
 import { useAuthStore } from '../stores/authStore';
 
@@ -166,7 +166,7 @@ export const auditLogService = {
 
 export const buyerService = {
     getAll: async () => {
-        const response = await api.get<import('../types/invoice').Buyer[]>('/buyers');
+        const response = await api.get<Buyer[]>('/buyers');
         return response.data;
     },
     getById: async (id: string) => {

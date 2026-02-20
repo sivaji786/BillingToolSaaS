@@ -32,3 +32,4 @@ api/writable/session/*
 api/writable/debugbar/*
 api/writable/uploads/*
 !api/writable/**/index.html
+api/public/uploads/tickets/*

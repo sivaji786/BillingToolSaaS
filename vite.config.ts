@@ -60,9 +60,6 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('@radix-ui')) {
-              return 'vendor-ui';
-            }
             if (id.includes('lucide-react')) {
               return 'vendor-icons';
             }
@@ -80,9 +77,6 @@ export default defineConfig({
             }
             if (id.includes('date-fns')) {
               return 'vendor-dates';
-            }
-            if (id.includes('axios') || id.includes('zustand') || id.includes('@tanstack')) {
-              return 'vendor-utils';
             }
             return 'vendor';
           }

@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -49,7 +50,7 @@ export function Buyers() {
     const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isDelDialogOpen, setIsDelDialogOpen] = useState(false);
     const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
     const [formData, setFormData] = useState<Partial<Buyer>>({
         name: '',
@@ -95,7 +96,7 @@ export function Buyers() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['buyers'] });
             toast.success(t('buyers.buyerDeleted'));
-            setIsDeleteDialogOpen(false);
+            setIsDelDialogOpen(false);
         },
         onError: () => toast.error(t('common.error')),
     });
@@ -138,7 +139,7 @@ export function Buyers() {
 
     const handleOpenDelete = (buyer: Buyer) => {
         setSelectedBuyer(buyer);
-        setIsDeleteDialogOpen(true);
+        setIsDelDialogOpen(true);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -378,7 +379,7 @@ export function Buyers() {
             </Dialog>
 
             {/* Delete Confirmation */}
-            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialog open={isDelDialogOpen} onOpenChange={setIsDelDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>{t('buyers.deleteConfirm')}</AlertDialogTitle>

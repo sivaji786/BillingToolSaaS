@@ -17,7 +17,7 @@ class CorsFilter implements FilterInterface
         if (strtoupper($request->getMethod()) === 'OPTIONS') {
             header("Access-Control-Allow-Origin: $allowedOrigin");
             header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH');
-            header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Authorization, X-Requested-With');
+            header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Authorization, X-Requested-With, X-API-Key');
             header('Access-Control-Max-Age: 7200');
             header('Access-Control-Allow-Credentials: true');
             http_response_code(204);
@@ -28,7 +28,7 @@ class CorsFilter implements FilterInterface
         // to ensure they exist even if a later 'before' filter terminates the request
         header("Access-Control-Allow-Origin: $allowedOrigin");
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Authorization, X-Requested-With');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Authorization, X-Requested-With, X-API-Key');
         header('Access-Control-Allow-Credentials: true');
         
         return $request;
@@ -42,7 +42,7 @@ class CorsFilter implements FilterInterface
         // Add CORS headers to all responses
         $response->setHeader('Access-Control-Allow-Origin', $allowedOrigin);
         $response->setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-        $response->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Authorization, X-Requested-With');
+        $response->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Authorization, X-Requested-With, X-API-Key');
         $response->setHeader('Access-Control-Allow-Credentials', 'true');
         
         // GLOBAL FIX: Force 200 OK for successful responses to avoid server-level 500 overrides

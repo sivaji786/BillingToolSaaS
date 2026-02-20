@@ -24,8 +24,13 @@ class App extends BaseConfig
 
         // Allow dynamic base URL for multi-tenancy
         if (isset($_SERVER['HTTP_HOST'])) {
-            $this->baseURL = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') 
-                . '://' . $_SERVER['HTTP_HOST'] . '/';
+            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http');
+            $dynamicBaseURL = $protocol . '://' . $_SERVER['HTTP_HOST'] . '/';
+            
+            // Validate the dynamic URL to prevent ConfigException for invalid hostnames (like those with underscores)
+            if (filter_var($dynamicBaseURL, FILTER_VALIDATE_URL)) {
+                $this->baseURL = $dynamicBaseURL;
+            }
         }
     }
 

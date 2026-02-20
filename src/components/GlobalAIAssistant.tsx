@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { ChatMessage, Invoice, AIPromptRequest } from '../types/invoice';
 import { Sparkles, X, Send, Loader2, MessageSquare, Mic, MicOff } from 'lucide-react';

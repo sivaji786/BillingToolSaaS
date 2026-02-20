@@ -368,11 +368,11 @@ class MainSeeder extends Seeder
     {
         echo "Seeding Projects...\n";
         $tenants = $db->table('tenants')->limit(10)->get()->getResult();
-        foreach ($tenants as $t) {
+        foreach ($tenants as $index => $t) {
             $db->table('projects')->insert([
                 'tenant_id' => $t->id,
                 'name' => 'Main Website API',
-                'api_key' => bin2hex(random_bytes(16)),
+                'api_key' => ($index === 0) ? 'billtool_test_key' : bin2hex(random_bytes(16)),
                 'created_at' => date('Y-m-d H:i:s')
             ]);
         }
