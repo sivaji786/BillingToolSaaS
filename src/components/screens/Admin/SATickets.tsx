@@ -171,8 +171,8 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={ticket.priority === 'high' ? 'destructive' : ticket.priority === 'low' ? 'outline' : 'secondary'} className="capitalize">
-                                                    {ticket.priority || 'Normal'}
+                                                <Badge variant={ticket.priority === 'critical' || ticket.priority === 'high' ? 'destructive' : ticket.priority === 'low' ? 'outline' : 'secondary'} className="capitalize">
+                                                    {ticket.priority || 'Medium'}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="max-w-[200px]" title={ticket.description}>

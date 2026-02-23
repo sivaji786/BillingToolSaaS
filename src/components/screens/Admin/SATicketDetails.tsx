@@ -28,11 +28,10 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
 
     const ticket = tickets.find((t) => t.id === ticketId);
 
-    // Initialize state when ticket loads
     useEffect(() => {
         if (ticket) {
             setStatus(ticket.status || 'open');
-            setPriority(ticket.priority || 'normal');
+            setPriority(ticket.priority || 'medium');
         }
     }, [ticket]);
 
@@ -61,7 +60,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
         }
     };
 
-    const hasChanges = ticket && (status !== (ticket.status || 'open') || priority !== (ticket.priority || 'normal'));
+    const hasChanges = ticket && (status !== (ticket.status || 'open') || priority !== (ticket.priority || 'medium'));
 
     if (isLoading) {
         return (
@@ -125,9 +124,9 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="low">Low</SelectItem>
-                                    <SelectItem value="normal">Normal</SelectItem>
+                                    <SelectItem value="medium">Medium</SelectItem>
                                     <SelectItem value="high">High</SelectItem>
-                                    <SelectItem value="urgent">Urgent</SelectItem>
+                                    <SelectItem value="critical">Critical</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
