@@ -260,11 +260,11 @@ export const adminSettingsService = {
 // Ticket Services
 export const adminTicketService = {
     getTickets: async (): Promise<Ticket[]> => {
-        const response = await axios.get<Ticket[]>(`${API_URL}/tickets`);
+        const response = await adminApi.get<Ticket[]>('/tickets');
         return response.data;
     },
     updateTicket: async (id: string, data: Partial<Ticket>): Promise<{ status: string, message: string }> => {
-        const response = await axios.put<{ status: string, message: string }>(`${API_URL}/tickets/${id}`, data);
+        const response = await adminApi.put<{ status: string, message: string }>(`/tickets/${id}`, data);
         return response.data;
     }
 };
