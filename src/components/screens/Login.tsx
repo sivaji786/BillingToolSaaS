@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { FileText, Mail, Lock, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSwitcher } from '../LanguageSwitcher';
+import { TicketingWidget } from '../TicketingWidget';
 
 interface LoginProps {
   onLogin: (email: string, password: string) => void;
@@ -179,6 +180,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
           animation-delay: 4s;
         }
       `}</style>
+      <TicketingWidget apiKey="public" />
     </div >
   );
 }

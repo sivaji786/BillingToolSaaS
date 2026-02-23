@@ -8,6 +8,7 @@ import { FileText, Mail, Lock, Building2, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { onboardingService, billingService } from '../../services/api';
+import { TicketingWidget } from '../TicketingWidget';
 
 interface SignupProps {
     initialPlan?: string;
@@ -381,6 +382,7 @@ export function Signup({ initialPlan }: SignupProps) {
         .animate-blob { animation: blob 7s infinite; }
         .animation-delay-2000 { animation-delay: 2s; }
       `}</style>
+            <TicketingWidget apiKey="public" />
         </div>
     );
 }

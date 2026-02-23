@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Check, FileText, Globe, Shield, LayoutTemplate, Sparkles, ArrowRight } from 'lucide-react';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { billingService } from '../../services/api';
+import { TicketingWidget } from '../TicketingWidget';
 
 interface LandingPageProps {
     onLogin: () => void;
@@ -438,6 +439,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                     </div>
                 </div>
             </footer>
+            <TicketingWidget apiKey="public" />
         </div >
     );
 }

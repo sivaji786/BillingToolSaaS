@@ -8,6 +8,7 @@ import {
     LogOut,
     Menu,
     X,
+    Ticket,
 } from 'lucide-react';
 import { useAdminStore } from '../../stores/adminStore';
 import { cn } from '../../lib/utils';
@@ -33,6 +34,7 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
         { id: 'SAASusers', label: t('nav.clients'), icon: Users },
         { id: 'SAbilling', label: t('billing.title'), icon: Receipt },
         { id: 'SAusage', label: t('nav.reports'), icon: BarChart3 },
+        { id: 'SATickets', label: 'Tickets', icon: Ticket },
         { id: 'SAsettings', label: t('nav.settings'), icon: Settings },
     ];
 

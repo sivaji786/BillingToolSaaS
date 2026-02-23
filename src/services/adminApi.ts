@@ -16,6 +16,7 @@ import {
     PackageFormData,
     InvoiceFormData,
     RevenueStats,
+    Ticket,
 } from '../types/admin';
 import { getApiBaseUrl } from '../utils/config';
 import { useAdminStore } from '../stores/adminStore';
@@ -254,6 +255,18 @@ export const adminSettingsService = {
         });
         return response.data;
     },
+};
+
+// Ticket Services
+export const adminTicketService = {
+    getTickets: async (): Promise<Ticket[]> => {
+        const response = await axios.get<Ticket[]>(`${API_URL}/tickets`);
+        return response.data;
+    },
+    updateTicket: async (id: string, data: Partial<Ticket>): Promise<{ status: string, message: string }> => {
+        const response = await axios.put<{ status: string, message: string }>(`${API_URL}/tickets/${id}`, data);
+        return response.data;
+    }
 };
 
 export default adminApi;

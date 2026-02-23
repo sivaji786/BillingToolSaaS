@@ -34,6 +34,8 @@ const SAbilling = lazy(() => import('./components/screens/Admin/SAbilling').then
 const SAusage = lazy(() => import('./components/screens/Admin/SAusage').then(module => ({ default: module.SAusage })));
 const SAsettings = lazy(() => import('./components/screens/Admin/SAsettings').then(module => ({ default: module.SAsettings })));
 const SAInvoiceForm = lazy(() => import('./components/screens/Admin/SAInvoiceForm').then(module => ({ default: module.SAInvoiceForm })));
+const SATickets = lazy(() => import('./components/screens/Admin/SATickets').then(module => ({ default: module.SATickets })));
+const SATicketDetails = lazy(() => import('./components/screens/Admin/SATicketDetails').then(module => ({ default: module.SATicketDetails })));
 
 
 import { TicketingWidget } from './components/TicketingWidget';
@@ -68,7 +70,7 @@ import { toast } from 'sonner';
 import { authService, invoiceService } from './services/api';
 // hasPermissionSync removed
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAInvoiceForm';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -779,14 +781,14 @@ function AdminPortalRouter() {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
       // Check if it's an admin route
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails'].includes(hash)) {
         return hash as Screen;
       }
     }
     return 'landing';
   });
 
-  const [navigationParams, setNavigationParams] = useState<{ packageId?: string; userId?: string }>({});
+  const [navigationParams, setNavigationParams] = useState<{ packageId?: string; userId?: string; ticketId?: string }>({});
 
   const { isAuthenticated: isAdminAuth, _hasHydrated } = useAdminStore();
 
@@ -795,7 +797,7 @@ function AdminPortalRouter() {
     if (!_hasHydrated) return;
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails'].includes(hash)) {
         setCurrentScreen(hash as Screen);
       }
     };
@@ -804,14 +806,14 @@ function AdminPortalRouter() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const handleNavigate = (screen: string, params?: { packageId?: string; userId?: string }) => {
+  const handleNavigate = (screen: string, params?: { packageId?: string; userId?: string; ticketId?: string }) => {
     setCurrentScreen(screen as Screen);
     setNavigationParams(params || {});
     window.location.hash = `#/${screen}`;
   };
 
   // Admin Portal Routes
-  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm'].includes(currentScreen);
+  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails'].includes(currentScreen);
 
   if (isAdminRoute) {
     // Wait for hydration before checking auth
@@ -867,6 +869,8 @@ function AdminPortalRouter() {
           {currentScreen === 'SAUserDetails' && <SAUserDetails userId={navigationParams.userId || ''} onNavigate={handleNavigate} />}
           {currentScreen === 'SAbilling' && <SAbilling />}
           {currentScreen === 'SAInvoiceForm' && <SAInvoiceForm onNavigate={handleNavigate} />}
+          {currentScreen === 'SATickets' && <SATickets onNavigate={handleNavigate} />}
+          {currentScreen === 'SATicketDetails' && <SATicketDetails ticketId={navigationParams.ticketId || ''} onNavigate={handleNavigate} />}
           {currentScreen === 'SAusage' && <SAusage />}
           {currentScreen === 'SAsettings' && <SAsettings />}
         </AdminLayoutWrapper>

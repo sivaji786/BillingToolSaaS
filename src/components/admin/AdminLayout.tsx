@@ -41,6 +41,7 @@ export function AdminLayout({ children, currentScreen, onNavigate, onLogout }: A
                                     case 'SAbilling': return 'Revenue Overview';
                                     case 'SAInvoiceForm': return 'Generate Invoice';
                                     case 'SAusage': return 'Platform Usage';
+                                    case 'SATickets': return 'Support Tickets';
                                     case 'SAsettings': return 'System Settings';
                                     default: return currentScreen.replace(/^SA+/, '').replace(/([A-Z])/g, ' $1').trim();
                                 }

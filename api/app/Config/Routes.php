@@ -86,6 +86,7 @@ $routes->group('buyers', ['filter' => ['auth', 'rbac:buyers.delete']], function(
 // Tickets
 $routes->get('tickets', '\App\Controllers\TicketController::index');
 $routes->post('tickets', '\App\Controllers\TicketController::create');
+$routes->put('tickets/(:segment)', '\App\Controllers\TicketController::update/$1');
 
 // Audit Logs
 $routes->group('audit-logs', ['filter' => 'rbac:audit_logs.read'], function($routes) {

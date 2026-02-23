@@ -9,6 +9,19 @@ export interface AdminUser {
     lastLogin?: string;
 }
 
+export interface Ticket {
+    id: string;
+    subject: string;
+    description: string;
+    project_id?: string;
+    client_ip?: string;
+    screenshot_path?: string;
+    status?: string;
+    priority?: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface Package {
     id: string;
     name: string;

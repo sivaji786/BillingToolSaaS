@@ -107,4 +107,49 @@ class TicketController extends ResourceController
         $model = new TicketModel();
         return $this->response->setJSON($model->findAll())->setStatusCode(200);
     }
+
+    public function update($id = null)
+    {
+        if (!$id) {
+            return $this->fail('Ticket ID is required', 400);
+        }
+
+        $model = new TicketModel();
+        $ticket = $model->find($id);
+
+        if (!$ticket) {
+            return $this->failNotFound('Ticket not found');
+        }
+
+        $data = $this->request->getJSON(true);
+        if (!$data) {
+            $data = $this->request->getRawInput();
+        }
+
+        $updateData = [];
+        if (isset($data['status'])) {
+            $updateData['status'] = $data['status'];
+        }
+        if (isset($data['priority'])) {
+            $updateData['priority'] = $data['priority'];
+        }
+
+        if (empty($updateData)) {
+             return $this->fail('No valid fields to update', 400);
+        }
+
+        try {
+            if ($model->update($id, $updateData)) {
+                return $this->respond([
+                    'status' => 'success',
+                    'message' => 'Ticket updated successfully',
+                ]);
+            } else {
+                return $this->fail($model->errors());
+            }
+        } catch (\Throwable $e) {
+            log_message('error', '[TicketUpdate] ' . $e->getMessage());
+            return $this->failServerError('Server Error: ' . $e->getMessage());
+        }
+    }
 }
