@@ -84,9 +84,7 @@ $routes->group('buyers', ['filter' => ['auth', 'rbac:buyers.delete']], function(
 });
 
 // Tickets
-$routes->get('tickets', '\App\Controllers\TicketController::index');
 $routes->post('tickets', '\App\Controllers\TicketController::create');
-$routes->put('tickets/(:segment)', '\App\Controllers\TicketController::update/$1');
 
 // Audit Logs
 $routes->group('audit-logs', ['filter' => 'rbac:audit_logs.read'], function($routes) {
@@ -201,6 +199,10 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     $routes->post('settings/api-keys', '\App\Controllers\AdminSettings::generateApiKey');
     $routes->delete('settings/api-keys/(:segment)', '\App\Controllers\AdminSettings::revokeApiKey/$1');
     $routes->put('settings/system', '\App\Controllers\AdminSettings::updateSystemSettings');
+
+    // Admin Tickets
+    $routes->get('tickets', '\App\Controllers\TicketController::index');
+    $routes->put('tickets/(:segment)', '\App\Controllers\TicketController::update/$1');
 });
 
 
