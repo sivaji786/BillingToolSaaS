@@ -13,10 +13,12 @@ import {
     TableHeader,
     TableRow,
 } from '../../ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { format } from 'date-fns';
 import { Loader2, Search, ExternalLink, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getApiBaseUrl } from '../../../utils/config';
 import { Ticket } from '../../../types/admin';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 type SortColumn = 'created_at' | 'subject' | 'description' | 'client_ip' | 'status' | 'priority';
 type SortDirection = 'asc' | 'desc';
@@ -30,7 +32,8 @@ export function SATickets({ onNavigate }: SATicketsProps) {
     const [sortColumn, setSortColumn] = useState<SortColumn>('created_at');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const { t } = useLanguage();
 
     const { data: tickets = [], isLoading } = useQuery({
         queryKey: ['admin-tickets'],
@@ -80,7 +83,8 @@ export function SATickets({ onNavigate }: SATicketsProps) {
     const getImageUrl = (path: string) => {
         if (!path) return '';
         if (path.startsWith('http')) return path;
-        return `${getApiBaseUrl()}/${path.replace(/^\//, '')}`;
+        const baseUrl = getApiBaseUrl().replace(/\/index\.php\/?$/, '');
+        return `${baseUrl}/${path.replace(/^\//, '')}`;
     };
 
     const handleRowClick = (ticket: Ticket) => {
@@ -91,14 +95,14 @@ export function SATickets({ onNavigate }: SATicketsProps) {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Support Tickets</h2>
-                    <p className="text-muted-foreground">Manage and view user support and bug tickets.</p>
+                    <h2 className="text-2xl font-bold tracking-tight">{t('tickets.title')}</h2>
+                    <p className="text-muted-foreground">{t('tickets.subtitle')}</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="relative w-64">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search tickets..."
+                            placeholder={t('tickets.searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => {
                                 setSearchQuery(e.target.value);
@@ -116,27 +120,27 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[80px]">S.No</TableHead>
+                                    <TableHead className="w-[80px]">{t('tickets.columns.sno')}</TableHead>
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('subject')}>
-                                        Subject <SortIcon column="subject" />
+                                        {t('tickets.columns.subject')} <SortIcon column="subject" />
                                     </TableHead>
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('status')}>
-                                        Status <SortIcon column="status" />
+                                        {t('tickets.columns.status')} <SortIcon column="status" />
                                     </TableHead>
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('priority')}>
-                                        Priority <SortIcon column="priority" />
+                                        {t('tickets.columns.priority')} <SortIcon column="priority" />
                                     </TableHead>
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('description')}>
-                                        Description <SortIcon column="description" />
+                                        {t('tickets.columns.description')} <SortIcon column="description" />
                                     </TableHead>
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('client_ip')}>
-                                        IP Address <SortIcon column="client_ip" />
+                                        {t('tickets.columns.ip')} <SortIcon column="client_ip" />
                                     </TableHead>
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('created_at')}>
-                                        Date <SortIcon column="created_at" />
+                                        {t('tickets.columns.date')} <SortIcon column="created_at" />
                                     </TableHead>
-                                    <TableHead>Screenshot</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                                    <TableHead>{t('tickets.columns.screenshot')}</TableHead>
+                                    <TableHead className="text-right">{t('tickets.columns.actions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -149,7 +153,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                 ) : paginatedTickets.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={9} className="h-24 text-center">
-                                            No tickets found.
+                                            {t('tickets.ticketNotFound')}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -167,12 +171,12 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant={ticket.status === 'open' ? 'default' : ticket.status === 'in_progress' ? 'secondary' : 'outline'} className="capitalize">
-                                                    {ticket.status || 'Open'}
+                                                    {ticket.status ? t(`tickets.status.${ticket.status}`) : t('tickets.status.open')}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant={ticket.priority === 'critical' || ticket.priority === 'high' ? 'destructive' : ticket.priority === 'low' ? 'outline' : 'secondary'} className="capitalize">
-                                                    {ticket.priority || 'Medium'}
+                                                    {ticket.priority ? t(`tickets.priority.${ticket.priority}`) : t('tickets.priority.medium')}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="max-w-[200px]" title={ticket.description}>
@@ -222,7 +226,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                                         handleRowClick(ticket);
                                                     }}
                                                 >
-                                                    View Details
+                                                    {t('tickets.viewDetails')}
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
@@ -234,8 +238,30 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                     {/* Pagination Controls */}
                     {!isLoading && sortedTickets.length > 0 && (
                         <div className="flex items-center justify-between px-4 py-4 border-t">
-                            <div className="text-sm text-muted-foreground">
-                                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, sortedTickets.length)} of {sortedTickets.length} entries
+                            <div className="flex items-center space-x-4">
+                                <div className="text-sm text-muted-foreground">
+                                    {t('tickets.pagination.showing')} {((currentPage - 1) * itemsPerPage) + 1} {t('tickets.pagination.to')} {Math.min(currentPage * itemsPerPage, sortedTickets.length)} {t('tickets.pagination.of')} {sortedTickets.length} {t('tickets.pagination.entries')}
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-sm text-muted-foreground whitespace-nowrap">{t('tickets.pagination.rowsPerPage')}</span>
+                                    <Select
+                                        value={itemsPerPage.toString()}
+                                        onValueChange={(val) => {
+                                            setItemsPerPage(Number(val));
+                                            setCurrentPage(1);
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 w-[70px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="10">10</SelectItem>
+                                            <SelectItem value="25">25</SelectItem>
+                                            <SelectItem value="50">50</SelectItem>
+                                            <SelectItem value="100">100</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Button
@@ -245,10 +271,10 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                     disabled={currentPage === 1}
                                 >
                                     <ChevronLeft className="h-4 w-4 mr-1" />
-                                    Previous
+                                    {t('tickets.pagination.previous')}
                                 </Button>
                                 <div className="text-sm font-medium">
-                                    Page {currentPage} of {totalPages}
+                                    {t('tickets.pagination.page')} {currentPage} {t('tickets.pagination.of')} {totalPages}
                                 </div>
                                 <Button
                                     variant="outline"
@@ -256,7 +282,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                     disabled={currentPage === totalPages}
                                 >
-                                    Next
+                                    {t('tickets.pagination.next')}
                                     <ChevronRight className="h-4 w-4 ml-1" />
                                 </Button>
                             </div>

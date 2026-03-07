@@ -300,13 +300,15 @@ export const workspaceService = {
         const response = await api.get('/workspace/list', { params: { path } });
         return response.data;
     },
-    upload: async (path: string, files: FileList | File[]) => {
+    upload: async (path: string, files: FileList | File[], onUploadProgress?: (progressEvent: any) => void) => {
         const formData = new FormData();
         formData.append('path', path);
         Array.from(files).forEach(file => {
             formData.append('files[]', file);
         });
-        const response = await api.post('/workspace/upload', formData);
+        const response = await api.post('/workspace/upload', formData, {
+            onUploadProgress
+        });
         return response.data;
     },
     mkdir: async (path: string, name: string) => {
@@ -330,8 +332,8 @@ export const workspaceService = {
         link.click();
         link.remove();
     },
-    search: async (query: string) => {
-        const response = await api.get('/workspace/search', { params: { q: query } });
+    search: async (query: string, path: string = '') => {
+        const response = await api.get('/workspace/search', { params: { q: query, path } });
         return response.data;
     },
     extractZip: async (path: string, name: string, toFolder: boolean, deleteSource: boolean) => {
@@ -371,8 +373,12 @@ export const workspaceService = {
         link.remove();
         window.URL.revokeObjectURL(url);
     },
-    aiSearch: async (prompt: string) => {
-        const response = await api.post('/workspace/ai-search', { prompt });
+    aiSearch: async (prompt: string, path: string) => {
+        const response = await api.post('/workspace/ai-search', { prompt, path });
+        return response.data;
+    },
+    getAiHistory: async () => {
+        const response = await api.get('/workspace/ai-history');
         return response.data;
     }
 };

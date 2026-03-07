@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '../../ui/alert';
 import { Loader2, Lock, Mail, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { TicketingWidget } from '../../TicketingWidget';
+import { getTicketingApiKey } from '../../../utils/config';
 
 interface SALoginProps {
     onLoginSuccess: () => void;
@@ -131,7 +132,7 @@ export function SALogin({ onLoginSuccess }: SALoginProps) {
                     © 2026 SaaS Admin Portal. All rights reserved.
                 </p>
             </div>
-            <TicketingWidget apiKey="public" />
+            <TicketingWidget apiKey={getTicketingApiKey()} />
         </div>
     );
 }

@@ -307,27 +307,65 @@ class WorkspaceController extends BaseController
         $toFolder = $this->request->getVar('toFolder') ?? false;
         $deleteSource = $this->request->getVar('deleteSource') ?? false;
 
-        if (!$name) return $this->fail('Zip name required');
+        if (!$name) {
+            return $this->respond(['success' => false, 'message' => 'Zip name required'], 400);
+        }
 
         $zipPath = $this->getSafePath($relPath) . DIRECTORY_SEPARATOR . $name;
-        if (!file_exists($zipPath)) return $this->failNotFound('Zip not found');
+        if (!file_exists($zipPath)) {
+            return $this->respond(['success' => false, 'message' => 'Zip not found at path: ' . $zipPath], 404);
+        }
 
         $extractTo = $this->getSafePath($relPath);
         if ($toFolder) {
             $folderName = pathinfo($name, PATHINFO_FILENAME);
             $extractTo .= DIRECTORY_SEPARATOR . $folderName;
-            if (!is_dir($extractTo)) mkdir($extractTo, 0777, true);
+            if (!is_dir($extractTo)) {
+                if (!mkdir($extractTo, 0777, true)) {
+                    $error = error_get_last();
+                    return $this->respond(['success' => false, 'message' => 'Failed to create target directory: ' . $extractTo, 'details' => $error], 500);
+                }
+            }
         }
 
         $zip = new \ZipArchive();
-        if ($zip->open($zipPath) === true) {
-            $zip->extractTo($extractTo);
-            $this->indexExtractedFiles($extractTo);
-            $zip->close();
-            if ($deleteSource) unlink($zipPath);
-            return $this->respond(['message' => 'Success']);
+        $openResult = $zip->open($zipPath);
+        if ($openResult === true) {
+            try {
+                if (!$zip->extractTo($extractTo)) {
+                    $error = error_get_last();
+                    return $this->respond(['success' => false, 'message' => 'ZipArchive::extractTo failed.', 'details' => $error], 500);
+                }
+                
+                $this->indexExtractedFiles($extractTo);
+                
+                $zip->close();
+                if ($deleteSource) {
+                    unlink($zipPath);
+                }
+                return $this->respond(['message' => 'Success']);
+            } catch (\Exception $e) {
+                return $this->respond([
+                    'success' => false, 
+                    'message' => 'Exception occurred during extraction or indexing', 
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ], 500);
+            } catch (\Throwable $e) {
+                return $this->respond([
+                    'success' => false, 
+                    'message' => 'Fatal error occurred during extraction or indexing', 
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ], 500);
+            }
         }
-        return $this->fail('Zip open fail');
+        
+        return $this->respond(['success' => false, 'message' => 'Zip open fail', 'code' => $openResult], 500);
     }
 
     private function indexExtractedFiles($dir)
@@ -335,34 +373,54 @@ class WorkspaceController extends BaseController
         $model = new WorkspaceFileModel();
         $userId = $this->getUserId();
         
-        $files = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::SELF_FIRST
-        );
+        try {
+            $files = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
 
-        foreach ($files as $file) {
-            $filePath = $file->getRealPath();
-            $relFile = ltrim(str_replace($this->workspaceRoot, '', $filePath), DIRECTORY_SEPARATOR);
-            $model->where('path', $relFile)->delete();
+            foreach ($files as $file) {
+                $filePath = $file->getRealPath();
+                $relFile = ltrim(str_replace($this->workspaceRoot, '', $filePath), DIRECTORY_SEPARATOR);
+                
+                $model->where('path', $relFile)->delete();
 
-            $isDir = $file->isDir();
-            $data = [
-                'tenant_id' => $this->tenantId,
-                'user_id' => $userId,
-                'name' => $file->getFilename(),
-                'original_name' => $file->getFilename(),
-                'path' => $relFile,
-                'is_dir' => $isDir,
-                'size' => $isDir ? 0 : $file->getSize(),
-            ];
+                $isDir = $file->isDir();
+                $data = [
+                    'tenant_id' => $this->tenantId,
+                    'user_id' => $userId,
+                    'name' => $file->getFilename(),
+                    'original_name' => $file->getFilename(),
+                    'path' => $relFile,
+                    'is_dir' => $isDir,
+                    'size' => $isDir ? 0 : $file->getSize(),
+                ];
 
-            if (!$isDir) {
-                $data['extension'] = strtolower($file->getExtension());
-                $data['mime_type'] = mime_content_type($filePath);
-                $data['content'] = ContentExtractor::extract($filePath, $data['mime_type']);
+                if (!$isDir) {
+                    $data['extension'] = strtolower($file->getExtension());
+                    
+                    // Capture potential errors in mime_content_type
+                    try {
+                        $data['mime_type'] = mime_content_type($filePath);
+                    } catch (\Exception $e) {
+                        $data['mime_type'] = 'application/octet-stream';
+                    } catch (\Error $e) {
+                        $data['mime_type'] = 'application/octet-stream';
+                    }
+
+                    try {
+                        $data['content'] = ContentExtractor::extract($filePath, $data['mime_type']);
+                    } catch (\Exception $e) {
+                         $data['content'] = ''; // proceed even if extraction fails
+                    }
+                }
+
+                if (!$model->insert($data)) {
+                    throw new \Exception("DB Insert Failed for $filePath: " . json_encode($model->errors()));
+                }
             }
-
-            $model->insert($data);
+        } catch (\Exception $e) {
+             throw $e; // Re-throw to be caught by the calling extractZip function
         }
     }
 
@@ -371,17 +429,46 @@ class WorkspaceController extends BaseController
         if (!$this->ensureContext()) return $this->failUnauthorized();
 
         $query = $this->request->getGet('q');
+        $path = $this->request->getGet('path') ?? '';
         if (!$query) return $this->respond([]);
 
         $model = new WorkspaceFileModel();
-        $results = $model->groupStart()
+        
+        $builder = $model->groupStart()
             ->like('name', $query)
             ->orLike('content', $query)
             ->groupEnd()
-            ->where('is_dir', false)
-            ->findAll();
+            ->where('is_dir', false);
+            
+        if ($path) {
+            // Include files where path is exactly this path, or starts with this path/
+            $builder->groupStart()
+                ->where('path', $path) // files directly in this directory
+                ->orLike('path', $path . '/%', 'after') // files in subdirectories
+                ->groupEnd();
+        } else {
+             // If no path is specified, it means root, so we search everything but we could restrict explicitly
+        }
 
-        return $this->respond($results);
+        $results = $builder->findAll();
+
+        $formattedResults = array_map(function($row) use ($path) {
+            $row['isDir'] = (bool)$row['is_dir'];
+            $row['size'] = (int)$row['size'];
+            $row['lastModified'] = $row['updated_at'] ?? $row['created_at'];
+            
+            $relPath = $row['path'];
+            if ($path && $path !== '/' && strpos($relPath, $path . '/') === 0) {
+                 $row['name'] = substr($relPath, strlen($path) + 1);
+            } else {
+                 $row['name'] = $relPath;
+            }
+            
+            unset($row['is_dir']);
+            return $row;
+        }, $results);
+
+        return $this->respond($formattedResults);
     }
     public function rename()
     {
@@ -498,19 +585,28 @@ class WorkspaceController extends BaseController
 
         $zip = new \ZipArchive();
         if ($zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
+            $filesAdded = 0;
             foreach ($items as $item) {
-                // Ensure no dir traversal or malicious paths
-                if (strpos($item, '..') !== false || strpos($item, '/') !== false || strpos($item, '\\') !== false) {
+                // Ensure no dir traversal
+                if (strpos($item, '..') !== false) {
                     continue;
                 }
                 
-                $fullPath = $basePath . DIRECTORY_SEPARATOR . $item;
+                $fullPath = rtrim($basePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . ltrim($item, DIRECTORY_SEPARATOR);
+                log_message('debug', 'Zip item full path: ' . $fullPath);
                 
                 if (is_dir($fullPath)) {
                     $this->addDirToZip($fullPath, $zip, $item);
+                    $filesAdded++;
                 } elseif (file_exists($fullPath)) {
                     $zip->addFile($fullPath, $item);
+                    $filesAdded++;
+                } else {
+                    log_message('debug', 'Zip item not found: ' . $fullPath);
                 }
+            }
+            if ($filesAdded === 0) {
+                $zip->addFromString('empty.txt', 'No valid files were found to add to this archive.');
             }
             $zip->close();
         } else {
@@ -545,12 +641,18 @@ class WorkspaceController extends BaseController
             return $this->fail('Prompt is required');
         }
 
+        $folderPath = $this->request->getVar('path');
+        if ($folderPath === null) {
+            $folderPath = '/';
+        }
+
         $db = \Config\Database::connect();
         
         // 1. Check History Cache
         $history = $db->table('aiquery_history')
             ->where('tenant_id', $this->tenantId)
             ->where('prompt', $prompt)
+            ->orderBy('created_at', 'DESC')
             ->get()->getRowArray();
 
         $whereClause = null;
@@ -588,15 +690,6 @@ class WorkspaceController extends BaseController
                         $generatedWhere = preg_replace('/```sql\s*(.*?)\s*```/is', '$1', $generatedWhere);
                         $generatedWhere = preg_replace('/```\s*(.*?)\s*```/is', '$1', $generatedWhere);
                         $whereClause = trim($generatedWhere);
-
-                        // Save to history
-                        $db->table('aiquery_history')->insert([
-                            'tenant_id' => $this->tenantId,
-                            'user_id' => $this->getUserId(),
-                            'prompt' => $prompt,
-                            'sql_query' => $whereClause,
-                            'created_at' => date('Y-m-d H:i:s')
-                        ]);
                     }
                 }
             } catch (\Exception $e) {
@@ -609,11 +702,37 @@ class WorkspaceController extends BaseController
             return $this->fail('Could not generate a valid query from the prompt.');
         }
 
+        // Save to history if this exact combo doesn't exist
+        $exactMatch = $db->table('aiquery_history')
+            ->where('tenant_id', $this->tenantId)
+            ->where('prompt', $prompt)
+            ->where('folder_path', $folderPath)
+            ->get()->getRowArray();
+
+        if (!$exactMatch) {
+            $db->table('aiquery_history')->insert([
+                'tenant_id' => $this->tenantId,
+                'user_id' => $this->getUserId(),
+                'prompt' => $prompt,
+                'sql_query' => $whereClause,
+                'folder_path' => $folderPath,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+
         // 3. Execute Query safely with Tenant restriction
         try {
             $builder = $db->table('workspace_files')
                           ->where('tenant_id', $this->tenantId);
-            
+
+            // Add path restriction for AI search
+            if ($folderPath && $folderPath !== '/') {
+                 $builder->groupStart()
+                    ->where('path', $folderPath)
+                    ->orLike('path', $folderPath . '/%', 'after')
+                    ->groupEnd();
+            }
+
             // Add the AI generated where clause safely. 
             // In a production system, a proper SQL parser/sanitizer should be used.
             $builder->where("($whereClause)", null, false);
@@ -621,11 +740,19 @@ class WorkspaceController extends BaseController
             $results = $builder->get()->getResultArray();
 
             // Format results matching expected frontend structure
-            $formattedResults = array_map(function($row) {
+            $formattedResults = array_map(function($row) use ($folderPath) {
                 // Ensure proper booleans and ints
                 $row['isDir'] = (bool)$row['is_dir'];
                 $row['size'] = (int)$row['size'];
                 $row['lastModified'] = $row['updated_at'] ?? $row['created_at'];
+                
+                $relPath = $row['path'];
+                if ($folderPath && $folderPath !== '/' && strpos($relPath, $folderPath . '/') === 0) {
+                     $row['name'] = substr($relPath, strlen($folderPath) + 1);
+                } else {
+                     $row['name'] = $relPath;
+                }
+                
                 unset($row['is_dir']);
                 return $row;
             }, $results);
@@ -639,5 +766,23 @@ class WorkspaceController extends BaseController
             log_message('error', 'AI SQL Execution Error: ' . $e->getMessage() . ' Query: ' . $whereClause);
             return $this->fail('Generated search query resulted in an error.');
         }
+    }
+
+    public function getAiHistory()
+    {
+        if (!$this->ensureContext()) return $this->failUnauthorized();
+
+        $db = \Config\Database::connect();
+        
+        $history = $db->table('aiquery_history')
+            ->select('id, prompt, sql_query, folder_path, created_at')
+            ->where('tenant_id', $this->tenantId)
+            ->orderBy('created_at', 'DESC')
+            ->get()->getResultArray();
+
+        return $this->respond([
+            'success' => true,
+            'data' => $history
+        ]);
     }
 }

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { onboardingService, billingService } from '../../services/api';
 import { TicketingWidget } from '../TicketingWidget';
+import { getTicketingApiKey } from '../../utils/config';
 
 interface SignupProps {
     initialPlan?: string;
@@ -382,7 +383,7 @@ export function Signup({ initialPlan }: SignupProps) {
         .animate-blob { animation: blob 7s infinite; }
         .animation-delay-2000 { animation-delay: 2s; }
       `}</style>
-            <TicketingWidget apiKey="public" />
+            <TicketingWidget apiKey={getTicketingApiKey()} />
         </div>
     );
 }

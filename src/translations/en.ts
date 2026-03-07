@@ -28,6 +28,8 @@ export const en = {
         noAccount: "Don't have an account?",
         signup: 'Sign up now',
         backToHome: 'Back to home',
+        pendingActionBanner: 'Account found! Log in below to continue with your invoice.',
+        resumingAction: 'Resuming your invoice action…',
     },
 
     // Navigation
@@ -791,6 +793,7 @@ export const en = {
             titleSuffix: 'Businesses',
             subtitle: 'Streamline your billing with our compliant, multi-tenant SaaS platform. Create, manage, and track invoices with enterprise-grade security and design.',
             getStarted: 'Get Started',
+            tryNow: 'Create Invoice – No Sign Up',
         },
         features: {
             tag: 'Everything you need',
@@ -823,7 +826,385 @@ export const en = {
             rights: 'All rights reserved.',
             terms: 'Terms',
             privacy: 'Privacy',
-            contact: 'Contact'
+            contact: 'Contact',
+            impressum: 'Legal Notice',
+        },
+        about: {
+            desc1: 'BillingTool is a modern invoicing platform designed to simplify the billing process for businesses of all sizes. We believe that professional invoicing should be accessible, secure, and compliant with the latest standards.',
+            desc2: 'Our platform is built with a focus on user experience and regulatory compliance, ensuring that your invoices not only look great but also meet all legal requirements like EN 16931 and UBL 2.1.',
+            activeUsers: 'Active Users',
+            invoicesSent: 'Invoices Sent',
         }
-    }
+    },
+
+    // Tickets
+    tickets: {
+        title: 'Support Tickets',
+        subtitle: 'Manage and respond to user support requests.',
+        searchPlaceholder: 'Search tickets...',
+        columns: {
+            sno: 'S.No',
+            subject: 'Subject',
+            status: 'Status',
+            priority: 'Priority',
+            description: 'Description',
+            ip: 'IP Address',
+            date: 'Date',
+            screenshot: 'Screenshot',
+            actions: 'Actions',
+        },
+        viewDetails: 'View Details',
+        more: '...more',
+        none: 'None',
+        notAvailable: 'N/A',
+        view: 'View',
+        backToTickets: 'Back to Tickets',
+        ticketNotFound: 'Ticket not found.',
+        ticketId: 'Ticket #{id}',
+        createdOn: 'Created on {date}',
+        reporterInfo: 'Reporter Information',
+        projectId: 'Project ID',
+        attachedScreenshot: 'Attached Screenshot',
+        viewFullSize: 'View Full Size',
+        status: {
+            label: 'Status',
+            open: 'Open',
+            in_progress: 'In Progress',
+            resolved: 'Resolved',
+            closed: 'Closed',
+        },
+        priority: {
+            label: 'Priority',
+            low: 'Low',
+            medium: 'Medium',
+            high: 'High',
+            critical: 'Critical',
+        },
+        saveChanges: 'Save Changes',
+        updateSuccess: 'Ticket updated successfully',
+        updateError: 'Failed to update ticket',
+        pagination: {
+            showing: 'Showing',
+            to: 'to',
+            of: 'of',
+            entries: 'entries',
+            rowsPerPage: 'Rows per page:',
+            page: 'Page',
+            previous: 'Previous',
+            next: 'Next',
+        }
+    },
+
+    // Quick Access
+    quickAccess: {
+        title: 'Quick Access',
+        autoSavedLocally: 'Your draft is auto-saved locally',
+        guide: 'Guide',
+        newInvoice: 'New Invoice',
+        editInvoiceNoAccount: 'Edit your invoice below — no account needed to start',
+        pdf: 'PDF',
+        eInvoice: 'E-Invoice',
+        send: 'Send',
+        giroTitle: 'Giro / QR Code',
+        giroNote: 'After creating an account you will get a real Giro code with your bank details.',
+        validation: {
+            sellerNameRequired: 'Seller (your) name is required',
+            buyerNameRequired: 'Buyer (client) name is required',
+            atLeastOneItem: 'Add at least one line item',
+            itemDescriptionRequired: 'Each item must have a description',
+            itemPriceRequired: 'Each item must have a price greater than 0',
+            fixErrors: 'Please fix the highlighted fields before continuing',
+        },
+        saveDraft: 'Save Draft',
+        yourCompanyName: 'Your Company Name',
+        invoiceNumber: 'Invoice Number',
+        issueDate: 'Issue Date',
+        from: 'From',
+        billTo: 'Bill To',
+        vatId: 'VAT ID',
+        streetAddress: 'Street block text...',
+        restoring: 'Restoring your invoice…',
+        invoiceRestored: 'Invoice restored',
+        invoiceRestoredDesc: 'Your draft has been loaded — continue where you left off.',
+        restoreFailed: 'Could not restore draft from link. Your local copy is still here.',
+        invoiceSaved: 'Invoice saved!',
+        invoiceSavedDesc: 'Welcome — your invoice is ready.',
+        savingInvoice: 'Saving your invoice…',
+        invoiceSaveWarning: 'Account created, but invoice save failed. Your draft is still stored locally.',
+        actionResumed: 'Resuming your invoice action…',
+        zip: 'ZIP',
+        city: 'City',
+        country: 'Country',
+        clientCompanyName: 'Client Company Name',
+        clientVatId: 'Client VAT ID',
+        items: 'Items',
+        description: 'Description',
+        qty: 'Qty',
+        unitPrice: 'Unit Price',
+        tax: 'Tax',
+        amount: 'Amount',
+        addLineItem: 'Add Line Item',
+        subtotal: 'Subtotal',
+        vat: 'VAT',
+        total: 'Total',
+        saving: 'Saving…',
+        saveInvoice: 'Save Invoice',
+        freeNote: 'Free to use · No credit card required',
+        bottomNote: 'Everything you enter stays in your browser until you save. Once you verify your email, your account is created and this invoice is automatically stored in your workspace.',
+        guidePanel: {
+            title: 'Invoice Guide',
+            seller: { title: 'Seller (Your Company)', desc: 'Fill in your business name, VAT ID, and address. This appears at the top-left of the invoice.' },
+            buyer: { title: 'Buyer (Client)', desc: "Enter your client's company name and address. This is who you are invoicing." },
+            lines: { title: 'Line Items', desc: 'List each product or service with quantity, unit price and tax rate. Subtotals are calculated automatically.' },
+            totals: { title: 'Totals & Tax', desc: 'Subtotal, VAT and total are auto-calculated from your line items. No manual entry needed.' },
+            giro: { title: 'GiroCode / QR Payment', desc: 'After saving your account, add your IBAN to generate a scannable payment QR code compliant with EPC/GiroCode standard.' },
+            tipLabel: 'Tip:',
+            tipText: "Click any text field to edit it. Your draft auto-saves locally so you won't lose your work.",
+            ctaTitle: 'Ready to save?',
+            ctaDesc: 'Create a free account to download PDF, generate e-invoices and access your dashboard.',
+            ctaButton: 'Save & Create Account',
+        },
+    },
+
+    // Inline Quick Access
+    inlineQuickAccess: {
+        title: 'Quick Access',
+        reasons: {
+            save: 'save and access your invoice later',
+            download: 'download your invoice as PDF',
+            send: 'send this invoice to your customer',
+            export: 'export this invoice',
+        },
+        emailPrompt: 'To {reason}, enter your email and confirm in one click.',
+        companyDetailsNote: 'Your company details are taken directly from the {sellerName} section above.',
+        emailPlaceholder: 'your@email.com',
+        continue: 'Continue →',
+        noPasswordNote: 'We\'ll send a one-time code. No password needed.',
+        alreadyHaveAccount: 'Already have an account?',
+        otpPrompt: 'We sent a 6-digit code to {email}. Enter it below to verify and create your account.',
+        verify: 'Verify →',
+        changeEmail: '← Change email',
+        accountCreated: 'Account created!',
+        savingRedirecting: 'Saving your invoice and redirecting…',
+        passwordSetupPrompt: 'Set a password for quick login next time. You can always skip and use email + OTP instead.',
+        passwordPlaceholder: 'New password (min. 8 chars)',
+        passwordConfirmPlaceholder: 'Confirm password',
+        setPassword: 'Set Password',
+        skipForNow: 'Skip for now',
+        toast: {
+            invalidEmail: 'Please enter a valid email address',
+            checkEmail: 'Check your email',
+            codeSent: 'We sent a 6-digit code to {email}',
+            demoMode: 'Demo mode – use code 123456',
+            demoNoEmail: '(No real email sent – backend endpoint not yet live)',
+            enterFullCode: 'Please enter the full verification code',
+            invalidCode: 'Invalid verification code. Please try again.',
+            passwordTooShort: 'Password must be at least 8 characters',
+            passwordMismatch: 'Passwords do not match',
+            passwordSet: 'Password set successfully!',
+            passwordSetFailed: 'Could not set password — you can set it later in your profile.',
+            existingAccount: 'Account found! Redirecting you to login to continue…',
+        }
+    },
+
+    // Quick Access Tour
+    quickAccessTour: {
+        sellerTitle: 'Welcome to Quick Access!',
+        sellerDesc: 'Double-click any field to start editing. Try it here to set your company name.',
+        invoiceNumTitle: 'Invoice Details',
+        invoiceNumDesc: 'Update the invoice number or issue date. We auto-generate a starting point for you.',
+        buyerTitle: 'Client Information',
+        buyerDesc: 'Double-click to enter who this invoice is for.',
+        lineItemsTitle: 'Line Items',
+        lineItemsDesc: 'Add your services or products here. You can click to edit inline.',
+        downloadTitle: 'Download PDF',
+        downloadDesc: 'Instantly download a professional PDF of your invoice.',
+        sendTitle: 'Send Invoice',
+        sendDesc: 'Email the invoice directly to your client securely.',
+        saveTitle: 'Save Draft',
+        saveDesc: 'Save your work to your account so you can access it later.',
+        giroTitle: 'Giro / QR Code',
+        giroDesc: 'This is a preview of your Giro payment code. It\'s blurred and locked now because you haven\'t created an account yet. Once you save your invoice and create a free account, you\'ll receive a real Giro QR code linked to your bank details — making it easy for clients to pay you instantly.',
+        finish: 'Finish',
+        next: 'Next'
+    },
+
+    // Impressum / Legal Notice
+    impressum: {
+        title: 'Legal Notice',
+        subtitle: 'Legal information according to § 5 TMG',
+        back: 'Back',
+        phone: 'Phone',
+        fax: 'Fax',
+        sourceNote: 'Source: Impressum Generator by e-recht24.de',
+        sections: {
+            legalNotice: {
+                title: 'Legal Notice according to § 5 TMG',
+                content: '',
+            },
+            vat: {
+                title: 'Value Added Tax',
+                content: 'VAT identification number pursuant to § 27a of the German Value Added Tax Act:\nDE 362.250.524',
+            },
+            dispute: {
+                title: 'Dispute Resolution',
+                content: 'The European Commission provides a platform for online dispute resolution (ODR): https://ec.europa.eu/consumers/odr.\nYou can find our email address in the legal notice above.\n\nWe are not willing or obliged to participate in dispute resolution proceedings before a consumer arbitration board.',
+            },
+            liability: {
+                title: 'Liability for Content',
+                content: 'As a service provider, we are responsible for our own content on these pages in accordance with general law pursuant to § 7 para. 1 TMG. According to §§ 8 to 10 TMG, however, we are not obligated to monitor transmitted or stored third-party information or to investigate circumstances that indicate illegal activity.\n\nObligations to remove or block the use of information under general law remain unaffected. However, liability in this regard is only possible from the point in time at which a concrete legal infringement becomes known. Upon becoming aware of corresponding legal infringements, we will remove such content immediately.',
+            },
+            links: {
+                title: 'Liability for Links',
+                content: 'Our website contains links to external third-party websites, the content of which we have no influence over. Therefore, we cannot accept any liability for this external content. The respective provider or operator of the pages is always responsible for the content of the linked pages. The linked pages were checked for possible legal violations at the time of linking. No illegal content was apparent at the time of linking.\n\nHowever, permanent monitoring of the content of the linked pages is not reasonable without concrete evidence of a legal violation. If we become aware of legal violations, we will remove such links immediately.',
+            },
+            copyright: {
+                title: 'Copyright',
+                content: 'The content and works created by the site operators on these pages are subject to German copyright law. Duplication, processing, distribution and any form of commercialisation of such material beyond the scope of the copyright law shall require the prior written consent of its respective author or creator. Downloads and copies of this site are only permitted for private, non-commercial use.\n\nInsofar as the content on this site was not created by the operator, the copyrights of third parties are respected. In particular, third-party content is identified as such. Should you nevertheless become aware of a copyright infringement, please inform us accordingly. If we become aware of any legal violations, we will remove such content immediately.',
+            },
+        },
+    },
+
+    // Shared legal strings
+    legal: {
+        back: 'Back',
+        footer: {
+            impressum: 'Legal Notice',
+            privacy: 'Privacy Policy',
+            terms: 'Terms & Conditions',
+            cookies: 'Cookie Settings',
+        },
+    },
+
+    // Privacy Policy
+    privacyPolicy: {
+        title: 'Privacy Policy',
+        subtitle: 'Information pursuant to Art. 13 GDPR — last updated March 2026',
+        sections: {
+            controller: {
+                title: 'Controller Responsible for Data Processing',
+                content: '[mn]medianet, Bernhard Hnida\nAm Taubhaus 29, 63303 Dreieich, Germany\nPhone: +49 (0) 6103 / 69 77 84\nE-Mail: info@medianet-home.de',
+            },
+            general: {
+                title: 'General Information on Data Processing',
+                content: 'We process personal data only to the extent necessary to provide a functional website and our services. Data is collected and used only in accordance with applicable data protection law, in particular the GDPR and the German Federal Data Protection Act (BDSG).',
+            },
+            legalBasis: {
+                title: 'Legal Basis of Processing under GDPR',
+                content: 'We process personal data on the following legal bases:\n\n• Art. 6(1)(a) GDPR — your consent\n• Art. 6(1)(b) GDPR — performance of a contract or pre-contractual measures\n• Art. 6(1)(c) GDPR — compliance with a legal obligation\n• Art. 6(1)(f) GDPR — protection of legitimate interests',
+            },
+            hosting: {
+                title: 'Hosting and Server Log Files',
+                content: 'Our website is hosted on servers located within the European Union. When you visit our website, servers automatically record certain data (server log files), including your IP address, browser type, operating system, referring URL, and the time and date of your request. This data is stored for up to 7 days for security and troubleshooting purposes and is then deleted. It is not combined with other personal data.',
+            },
+            registration: {
+                title: 'User Registration and Accounts',
+                content: 'When you create an account, we collect your e-mail address and, optionally, profile details you provide. This data is used to create and manage your account and to provide you with access to the service. The legal basis is Art. 6(1)(b) GDPR (contract performance). You may delete your account at any time; personal data will be erased within 30 days.',
+            },
+            invoiceData: {
+                title: 'Processing of Invoice and Customer Data',
+                content: 'To provide the invoicing service, we process business data you enter, including company names, addresses, VAT identification numbers, bank details, and invoice amounts. This data is processed solely on your behalf and is necessary for the performance of the service contract (Art. 6(1)(b) GDPR). We do not sell or share this data with third parties for any purpose other than providing the service.',
+            },
+            cookies: {
+                title: 'Cookies and Tracking Technologies',
+                content: 'We use only technically necessary cookies to ensure the correct functioning of the website. These include session cookies for authentication and CSRF protection, and a cookie to remember your language preference. No analytics, advertising, or third-party tracking cookies are used. For more details, see our Cookie Policy.',
+            },
+            retention: {
+                title: 'Data Retention and Deletion',
+                content: 'Personal data is retained only for as long as necessary for the purpose it was collected, or as required by statutory retention periods (e.g. tax and commercial law require retention of invoicing records for up to 10 years). Account data is deleted within 30 days of account closure. Server log files are deleted after 7 days.',
+            },
+            rights: {
+                title: 'Rights of Data Subjects',
+                content: 'Under the GDPR you have the following rights:\n\n• Right of access (Art. 15 GDPR)\n• Right to rectification (Art. 16 GDPR)\n• Right to erasure (Art. 17 GDPR)\n• Right to restriction of processing (Art. 18 GDPR)\n• Right to data portability (Art. 20 GDPR)\n• Right to object to processing (Art. 21 GDPR)\n\nTo exercise your rights, contact us at info@medianet-home.de. You also have the right to lodge a complaint with the supervisory authority: Hessian Commissioner for Data Protection and Freedom of Information (HBDI), Wiesbaden.',
+            },
+            contact: {
+                title: 'Data Protection Contact',
+                content: 'For any questions regarding data protection or to exercise your rights, please contact:\n\ninfo@medianet-home.de\n+49 (0) 6103 / 69 77 84\n\n[mn]medianet, Bernhard Hnida, Am Taubhaus 29, 63303 Dreieich',
+            },
+        },
+    },
+
+    // Terms & Conditions
+    termsAndConditions: {
+        title: 'Terms and Conditions',
+        subtitle: 'General Terms and Conditions of Business — [mn]medianet / BillingTool',
+        sections: {
+            scope: {
+                title: 'Scope of Application',
+                content: 'These General Terms and Conditions (GTC) apply to all contracts concluded between [mn]medianet, Bernhard Hnida, Am Taubhaus 29, 63303 Dreieich, Germany (hereinafter "Provider") and users of the BillingTool platform (hereinafter "User"). Deviating terms and conditions of the User are not accepted unless the Provider expressly agrees to them in writing.',
+            },
+            subject: {
+                title: 'Subject Matter of the Contract (SaaS Service)',
+                content: 'BillingTool is a Software-as-a-Service (SaaS) platform for the creation, management, and distribution of invoices. Access to the software is provided via the internet. The Provider grants the User a non-exclusive, non-transferable right to use the platform within the scope of the selected subscription plan during the contract term.',
+            },
+            registration: {
+                title: 'Registration and User Account',
+                content: 'Use of the platform requires registration with a valid e-mail address. The User is responsible for maintaining the confidentiality of their credentials and for all activities that occur under their account. The User must notify the Provider immediately of any unauthorised use of their account. The Provider reserves the right to refuse registration without giving reasons.',
+            },
+            service: {
+                title: 'Description of the Software Service',
+                content: 'BillingTool provides features including: invoice creation and management, PDF export, e-invoice generation (compliant with EN 16931 / ZUGFeRD / XRechnung), customer management, and a personal dashboard. The scope of features available depends on the selected subscription plan. The Provider is entitled to extend, modify, or restrict features with reasonable notice.',
+            },
+            pricing: {
+                title: 'Pricing and Payment Terms',
+                content: 'The service is offered on a subscription basis. Current prices are displayed on the website and are subject to change with 30 days\' notice. The free tier is available with limited features. Paid subscriptions are billed in advance for the agreed period. All prices are net prices and are subject to applicable statutory VAT. Payment is processed via the payment providers listed on the website.',
+            },
+            duration: {
+                title: 'Contract Duration and Termination',
+                content: 'Subscriptions are concluded for the agreed contract period (monthly or annual). They are automatically renewed unless terminated with at least 30 days\' notice before the end of the current period. Free accounts may be deleted at any time. The right to terminate for good cause remains unaffected. Upon termination, the User\'s data will be deleted within 30 days unless statutory retention periods apply.',
+            },
+            obligations: {
+                title: 'User Obligations',
+                content: 'The User agrees to:\n\n• Use the platform only in accordance with applicable law and these GTC\n• Not misuse, reverse-engineer, or attempt to disrupt the service\n• Ensure the accuracy of data entered for invoicing purposes\n• Keep login credentials confidential and not share access with unauthorised third parties\n• Not use the platform to create fraudulent or legally non-compliant invoices',
+            },
+            availability: {
+                title: 'Platform Availability',
+                content: 'The Provider aims for a monthly availability of 99% of the service, calculated on a 24/7 basis, excluding planned maintenance windows. Planned maintenance will be announced in advance where possible. The Provider does not guarantee completely uninterrupted service and accepts no liability for temporary unavailability due to technical issues beyond its reasonable control.',
+            },
+            liability: {
+                title: 'Limitation of Liability',
+                content: 'The Provider is liable without limitation for damages resulting from intentional misconduct or gross negligence, as well as for damages arising from injury to life, body, or health. For slight negligence, liability is limited to foreseeable, typically occurring damages and only in the event of a breach of a material contractual obligation. The Provider\'s aggregate liability for damages per calendar year shall not exceed the total fees paid by the User in the 12 months preceding the event giving rise to the claim.',
+            },
+            dataProtection: {
+                title: 'Data Protection and Data Processing',
+                content: 'The processing of personal data is governed by the Provider\'s Privacy Policy, which forms an integral part of these GTC. Where the User processes personal data of third parties (e.g. customer data) via the platform, the User is responsible for ensuring a valid legal basis for such processing. A data processing agreement (DPA) pursuant to Art. 28 GDPR is available upon request.',
+            },
+            changes: {
+                title: 'Changes to the Service and GTC',
+                content: 'The Provider reserves the right to amend these GTC and the features of the service. Users will be notified of material changes via e-mail at least 30 days before the changes take effect. Continued use of the service after the effective date of the changes constitutes acceptance. If a User does not agree to the changes, they may terminate their account before the effective date.',
+            },
+            governing: {
+                title: 'Final Provisions and Jurisdiction',
+                content: 'These GTC are governed by the laws of the Federal Republic of Germany, excluding the UN Convention on Contracts for the International Sale of Goods (CISG). The exclusive place of jurisdiction for all disputes arising from or in connection with these GTC, where the User is a merchant, legal entity under public law, or a special fund under public law, is Darmstadt, Germany. Should any provision of these GTC be or become invalid, the remaining provisions shall remain in full force.',
+            },
+        },
+    },
+
+    // Cookie Policy
+    cookiePolicy: {
+        title: 'Cookie Information',
+        subtitle: 'How BillingTool uses cookies on this website',
+        sections: {
+            whatAre: {
+                title: 'What Are Cookies?',
+                content: 'Cookies are small text files that are stored on your device (computer, tablet, or smartphone) by your web browser when you visit a website. They are widely used to make websites work efficiently, improve user experience, and provide information to the website operators. Cookies can be "session cookies" (deleted when you close your browser) or "persistent cookies" (remain on your device for a set period).',
+            },
+            necessary: {
+                title: 'Technically Necessary Cookies',
+                content: 'BillingTool uses only technically necessary cookies, which are essential for the operation of the website and cannot be disabled without impacting its functionality. These include:\n\n• Session cookie — keeps you logged in during your visit\n• CSRF protection cookie — protects against cross-site request forgery attacks\n• Language preference cookie — remembers your chosen display language\n\nNo personally identifying information is stored in these cookies beyond what is required for session management. These cookies are set based on our legitimate interest (Art. 6(1)(f) GDPR) in providing a functional and secure service.',
+            },
+            analytics: {
+                title: 'Analytics or Tracking Cookies',
+                content: 'We do not currently use any analytics, advertising, or third-party tracking cookies. If we introduce such technologies in the future, this Cookie Policy will be updated accordingly and we will obtain your explicit consent before setting any non-essential cookies, in accordance with the GDPR and the German Telecommunications-Telemedia Data Protection Act (TTDSG).',
+            },
+            settings: {
+                title: 'Changing Cookie Settings',
+                content: 'You can control and manage cookies in your browser settings. Please note that disabling technically necessary cookies will affect the functionality of BillingTool and may prevent you from logging in or using key features.\n\nMost browsers offer options to:\n• View cookies stored on your device\n• Block cookies from specific websites\n• Delete all cookies when you close the browser\n\nFor browser-specific guidance, refer to the help pages of your browser (Chrome, Firefox, Safari, Edge, etc.).',
+            },
+            retention: {
+                title: 'Cookie Retention Duration',
+                content: 'Session cookies are deleted automatically when you close your browser. Persistent cookies used for preferences (such as language settings) are retained for a maximum of 12 months and are renewed each time you use the service. You can delete cookies at any time through your browser settings.',
+            },
+        },
+    },
 };

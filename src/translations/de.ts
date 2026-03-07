@@ -450,6 +450,7 @@ export const de = {
             titleSuffix: 'Unternehmen',
             subtitle: 'Optimieren Sie Ihre Abrechnung mit unserer konformen, mandantenfähigen SaaS-Plattform. Erstellen, verwalten und verfolgen Sie Rechnungen mit Sicherheit und Design auf Enterprise-Niveau.',
             getStarted: 'Loslegen',
+            tryNow: 'Rechnung erstellen – Ohne Anmeldung',
         },
         features: {
             tag: 'Alles was Sie brauchen',
@@ -482,7 +483,381 @@ export const de = {
             rights: 'Alle Rechte vorbehalten.',
             terms: 'Bedingungen',
             privacy: 'Datenschutz',
-            contact: 'Kontakt'
+            contact: 'Kontakt',
+            impressum: 'Impressum',
+        },
+        about: {
+            desc1: 'BillingTool ist eine moderne Rechnungsstellungsplattform, die entwickelt wurde, um den Abrechnungsprozess für Unternehmen jeder Größe zu vereinfachen. Wir glauben, dass professionelle Rechnungsstellung zugänglich, sicher und mit den neuesten Standards konform sein sollte.',
+            desc2: 'Unsere Plattform wurde mit Fokus auf Benutzerfreundlichkeit und Einhaltung gesetzlicher Vorschriften entwickelt. So wird sichergestellt, dass Ihre Rechnungen nicht nur gut aussehen, sondern auch alle gesetzlichen Anforderungen wie EN 16931 und UBL 2.1 erfüllen.',
+            activeUsers: 'Aktive Nutzer',
+            invoicesSent: 'Gesendete Rechnungen',
         }
-    }
+    },
+
+    // Tickets
+    tickets: {
+        title: 'Support-Tickets',
+        subtitle: 'Verwalten und beantworten Sie Support-Anfragen von Benutzern.',
+        searchPlaceholder: 'Tickets durchsuchen...',
+        columns: {
+            sno: 'Nr.',
+            subject: 'Betreff',
+            status: 'Status',
+            priority: 'Priorität',
+            description: 'Beschreibung',
+            ip: 'IP-Adresse',
+            date: 'Datum',
+            screenshot: 'Screenshot',
+            actions: 'Aktionen',
+        },
+        viewDetails: 'Details anzeigen',
+        more: '...mehr',
+        none: 'Keiner',
+        notAvailable: 'N/A',
+        view: 'Ansehen',
+        backToTickets: 'Zurück zu Tickets',
+        ticketNotFound: 'Ticket nicht gefunden.',
+        ticketId: 'Ticket #{id}',
+        createdOn: 'Erstellt am {date}',
+        reporterInfo: 'Informationen zum Reporter',
+        projectId: 'Projekt-ID',
+        attachedScreenshot: 'Angehängter Screenshot',
+        viewFullSize: 'In voller Größe ansehen',
+        status: {
+            label: 'Status',
+            open: 'Offen',
+            in_progress: 'In Bearbeitung',
+            resolved: 'Gelöst',
+            closed: 'Geschlossen',
+        },
+        priority: {
+            label: 'Priorität',
+            low: 'Niedrig',
+            medium: 'Mittel',
+            high: 'Hoch',
+            critical: 'Kritisch',
+        },
+        saveChanges: 'Änderungen speichern',
+        updateSuccess: 'Ticket erfolgreich aktualisiert',
+        updateError: 'Ticket konnte nicht aktualisiert werden',
+        pagination: {
+            showing: 'Zeige',
+            to: 'bis',
+            of: 'von',
+            entries: 'Einträgen',
+            rowsPerPage: 'Zeilen pro Seite:',
+            page: 'Seite',
+            previous: 'Zurück',
+            next: 'Weiter',
+        }
+    },
+
+    // Quick Access
+    quickAccess: {
+        title: 'Schnellzugriff',
+        autoSavedLocally: 'Ihr Entwurf wird automatisch lokal gespeichert',
+        guide: 'Leitfaden',
+        newInvoice: 'Neue Rechnung',
+        editInvoiceNoAccount: 'Bearbeiten Sie Ihre Rechnung unten — kein Konto erforderlich, um zu beginnen',
+        pdf: 'PDF',
+        eInvoice: 'E-Rechnung',
+        send: 'Senden',
+        giroTitle: 'Giro / QR-Code',
+        giroNote: 'Nach der Erstellung eines Kontos erhalten Sie einen echten Giro-Code mit Ihren Bankdaten.',
+        validation: {
+            sellerNameRequired: 'Name des Verkäufers (Ihr Name) ist erforderlich',
+            buyerNameRequired: 'Name des Käufers (Klient) ist erforderlich',
+            atLeastOneItem: 'Fügen Sie mindestens eine Position hinzu',
+            itemDescriptionRequired: 'Jede Position muss eine Beschreibung haben',
+            itemPriceRequired: 'Jede Position muss einen Preis größer als 0 haben',
+            fixErrors: 'Bitte korrigieren Sie die markierten Felder, bevor Sie fortfahren',
+        },
+        saveDraft: 'Entwurf speichern',
+        yourCompanyName: 'Ihr Firmenname',
+        invoiceNumber: 'Rechnungsnummer',
+        issueDate: 'Ausstellungsdatum',
+        from: 'Von',
+        billTo: 'Rechnungsempfänger',
+        vatId: 'USt-IdNr.',
+        streetAddress: 'Straßenadresse',
+        restoring: 'Ihre Rechnung wird wiederhergestellt…',
+        invoiceRestored: 'Rechnung wiederhergestellt',
+        invoiceRestoredDesc: 'Ihr Entwurf wurde geladen — fahren Sie dort fort, wo Sie aufgehört haben.',
+        restoreFailed: 'Entwurf konnte nicht aus dem Link wiederhergestellt werden. Ihre lokale Kopie ist noch vorhanden.',
+        invoiceSaved: 'Rechnung gespeichert!',
+        invoiceSavedDesc: 'Willkommen — Ihre Rechnung ist fertig.',
+        zip: 'PLZ',
+        city: 'Stadt',
+        country: 'Land',
+        clientCompanyName: 'Kunden Firmenname',
+        clientVatId: 'Kunden USt-IdNr.',
+        items: 'Positionen',
+        description: 'Beschreibung',
+        qty: 'Menge',
+        unitPrice: 'Einzelpreis',
+        tax: 'Steuer',
+        amount: 'Betrag',
+        addLineItem: 'Position hinzufügen',
+        subtotal: 'Zwischensumme',
+        vat: 'MwSt.',
+        total: 'Gesamt',
+        saving: 'Wird gespeichert…',
+        saveInvoice: 'Rechnung speichern',
+        freeNote: 'Kostenlos nutzen · Keine Kreditkarte erforderlich',
+        bottomNote: 'Alles, was Sie eingeben, bleibt in Ihrem Browser, bis Sie speichern. Sobald Sie Ihre E-Mail verifizieren, wird Ihr Konto erstellt und diese Rechnung automatisch in Ihrem Arbeitsbereich gespeichert.',
+        guidePanel: {
+            title: 'Rechnungsführer',
+            seller: { title: 'Verkäufer (Ihr Unternehmen)', desc: 'Geben Sie Ihren Firmennamen, die USt-ID und die Adresse ein. Dies erscheint oben links auf der Rechnung.' },
+            buyer: { title: 'Käufer (Kunde)', desc: 'Geben Sie den Firmennamen und die Adresse Ihres Kunden ein. Dies ist die Person, die Sie in Rechnung stellen.' },
+            lines: { title: 'Positionen', desc: 'Listen Sie jedes Produkt oder jede Dienstleistung mit Menge, Stückpreis und Steuersatz auf. Zwischensummen werden automatisch berechnet.' },
+            totals: { title: 'Summen & Steuer', desc: 'Zwischensumme, MwSt. und Gesamtbetrag werden automatisch aus Ihren Positionen berechnet.' },
+            giro: { title: 'GiroCode / QR-Zahlung', desc: 'Fügen Sie nach dem Speichern Ihre IBAN hinzu, um einen EPC/GiroCode-kompatiblen QR-Code zu generieren.' },
+            tipLabel: 'Tipp:',
+            tipText: 'Klicken Sie auf ein Textfeld, um es zu bearbeiten. Ihr Entwurf wird lokal automatisch gespeichert.',
+            ctaTitle: 'Bereit zum Speichern?',
+            ctaDesc: 'Erstellen Sie ein kostenloses Konto, um PDFs herunterzuladen, E-Rechnungen zu erstellen und auf Ihr Dashboard zuzugreifen.',
+            ctaButton: 'Speichern & Konto erstellen',
+        },
+    },
+
+    // Inline Quick Access
+    inlineQuickAccess: {
+        title: 'Schnellzugriff',
+        reasons: {
+            save: 'speichern und später auf Ihre Rechnung zugreifen',
+            download: 'Ihre Rechnung als PDF herunterladen',
+            send: 'diese Rechnung an Ihren Kunden senden',
+            export: 'diese Rechnung exportieren',
+        },
+        emailPrompt: 'Um {reason}, geben Sie Ihre E-Mail-Adresse ein und bestätigen Sie mit einem Klick.',
+        companyDetailsNote: 'Ihre Firmendaten werden direkt aus dem obigen Abschnitt {sellerName} übernommen.',
+        emailPlaceholder: 'ihre@email.de',
+        continue: 'Weiter →',
+        noPasswordNote: 'Wir senden Ihnen einen einmaligen Code. Kein Passwort erforderlich.',
+        alreadyHaveAccount: 'Haben Sie bereits ein Konto?',
+        otpPrompt: 'Wir haben einen 6-stelligen Code an {email} gesendet. Geben Sie ihn unten ein, um Ihr Konto zu verifizieren und zu erstellen.',
+        verify: 'Verifizieren →',
+        changeEmail: '← E-Mail ändern',
+        accountCreated: 'Konto erstellt!',
+        savingRedirecting: 'Ihre Rechnung wird gespeichert und weitergeleitet…',
+        passwordSetupPrompt: 'Legen Sie ein Passwort für eine schnelle Anmeldung fest. Sie können es auch überspringen und E-Mail + OTP verwenden.',
+        passwordPlaceholder: 'Neues Passwort (mind. 8 Zeichen)',
+        passwordConfirmPlaceholder: 'Passwort bestätigen',
+        setPassword: 'Passwort festlegen',
+        skipForNow: 'Jetzt überspringen',
+        toast: {
+            invalidEmail: 'Bitte geben Sie eine gültige E-Mail-Adresse ein',
+            checkEmail: 'Überprüfen Sie Ihre E-Mails',
+            codeSent: 'Wir haben einen 6-stelligen Code an {email} gesendet',
+            demoMode: 'Demo-Modus – verwenden Sie den Code 123456',
+            demoNoEmail: '(Keine echte E-Mail gesendet – Backend-Endpunkt ist noch nicht live)',
+            enterFullCode: 'Bitte geben Sie den vollständigen Bestätigungscode ein',
+            invalidCode: 'Ungültiger Bestätigungscode. Bitte versuchen Sie es erneut.',
+            passwordTooShort: 'Das Passwort muss mindestens 8 Zeichen lang sein',
+            passwordMismatch: 'Die Passwörter stimmen nicht überein',
+            passwordSet: 'Passwort erfolgreich festgelegt!',
+            passwordSetFailed: 'Passwort konnte nicht festgelegt werden — Sie können es später in Ihrem Profil einrichten.',
+        }
+    },
+
+    // Quick Access Tour
+    quickAccessTour: {
+        sellerTitle: 'Willkommen bei Quick Access!',
+        sellerDesc: 'Doppelklicken Sie auf ein beliebiges Feld, um mit der Bearbeitung zu beginnen. Versuchen Sie es hier, um Ihren Firmennamen festzulegen.',
+        invoiceNumTitle: 'Rechnungsdetails',
+        invoiceNumDesc: 'Aktualisieren Sie die Rechnungsnummer oder das Ausstellungsdatum. Wir generieren automatisch einen Startpunkt für Sie.',
+        buyerTitle: 'Kundeninformationen',
+        buyerDesc: 'Doppelklicken Sie, um einzugeben, für wen diese Rechnung bestimmt ist.',
+        lineItemsTitle: 'Positionen',
+        lineItemsDesc: 'Fügen Sie hier Ihre Dienstleistungen oder Produkte hinzu. Sie können klicken, um sie direkt zu bearbeiten.',
+        downloadTitle: 'PDF herunterladen',
+        downloadDesc: 'Laden Sie sofort ein professionelles PDF Ihrer Rechnung herunter.',
+        sendTitle: 'Rechnung senden',
+        sendDesc: 'Senden Sie die Rechnung sicher per E-Mail direkt an Ihren Kunden.',
+        saveTitle: 'Entwurf speichern',
+        saveDesc: 'Speichern Sie Ihre Arbeit in Ihrem Konto, damit Sie später darauf zugreifen können.',
+        giroTitle: 'Giro / QR-Code',
+        giroDesc: 'Dies ist eine Vorschau Ihres Giro-Zahlungscodes. Er ist jetzt unscharf und gesperrt, weil Sie noch kein Konto erstellt haben. Sobald Sie Ihre Rechnung speichern und ein kostenloses Konto erstellen, erhalten Sie einen echten Giro-QR-Code, der mit Ihren Bankdaten verknüpft ist — so können Kunden Sie sofort bezahlen.',
+        finish: 'Fertig',
+        next: 'Weiter'
+    },
+
+    // Impressum
+    impressum: {
+        title: 'Impressum',
+        subtitle: 'Angaben gemäß § 5 TMG',
+        back: 'Zurück',
+        phone: 'Telefon',
+        fax: 'Telefax',
+        sourceNote: 'Quelle: Impressum-Generator von e-recht24.de',
+        sections: {
+            legalNotice: {
+                title: 'Angaben gemäß § 5 TMG',
+                content: '',
+            },
+            vat: {
+                title: 'Umsatzsteuer',
+                content: 'Umsatzsteuer-Identifikationsnummer gemäß §27 a Umsatzsteuergesetz:\nDE 362.250.524',
+            },
+            dispute: {
+                title: 'Streitschlichtung',
+                content: 'Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: https://ec.europa.eu/consumers/odr.\nUnsere E-Mail-Adresse finden Sie oben im Impressum.\n\nWir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.',
+            },
+            liability: {
+                title: 'Haftung für Inhalte',
+                content: 'Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.\n\nVerpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.',
+            },
+            links: {
+                title: 'Haftung für Links',
+                content: 'Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar.\n\nEine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.',
+            },
+            copyright: {
+                title: 'Urheberrecht',
+                content: 'Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und Kopien dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet.\n\nSoweit die Inhalte auf dieser Seite nicht vom Betreiber erstellt wurden, werden die Urheberrechte Dritter beachtet. Insbesondere werden Inhalte Dritter als solche gekennzeichnet. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitten wir um einen entsprechenden Hinweis. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Inhalte umgehend entfernen.',
+            },
+        },
+    },
+
+    // Gemeinsame rechtliche Begriffe
+    legal: {
+        back: 'Zurück',
+        footer: {
+            impressum: 'Impressum',
+            privacy: 'Datenschutz',
+            terms: 'AGB',
+            cookies: 'Cookie-Einstellungen',
+        },
+    },
+
+    // Datenschutzerklärung
+    privacyPolicy: {
+        title: 'Datenschutzerklärung',
+        subtitle: 'Informationen gemäß Art. 13 DSGVO – zuletzt aktualisiert März 2026',
+        sections: {
+            controller: {
+                title: 'Verantwortlicher für die Datenverarbeitung',
+                content: '[mn]medianet, Bernhard Hnida\nAm Taubhaus 29, 63303 Dreieich\nTelefon: +49 (0) 6103 / 69 77 84\nE-Mail: info@medianet-home.de',
+            },
+            general: {
+                title: 'Allgemeine Hinweise zur Datenverarbeitung',
+                content: 'Wir verarbeiten personenbezogene Daten nur, soweit dies zur Bereitstellung einer funktionsfähigen Website sowie unserer Inhalte und Leistungen erforderlich ist. Die Erhebung und Verwendung personenbezogener Daten erfolgt regelmäßig nur nach Einwilligung der betroffenen Person und im Einklang mit der DSGVO sowie dem BDSG.',
+            },
+            legalBasis: {
+                title: 'Rechtsgrundlagen der Verarbeitung gemäß DSGVO',
+                content: 'Wir verarbeiten personenbezogene Daten auf Grundlage folgender Rechtsgrundlagen:\n\n• Art. 6 Abs. 1 lit. a DSGVO – Einwilligung\n• Art. 6 Abs. 1 lit. b DSGVO – Vertragserfüllung oder vorvertragliche Maßnahmen\n• Art. 6 Abs. 1 lit. c DSGVO – Erfüllung rechtlicher Verpflichtungen\n• Art. 6 Abs. 1 lit. f DSGVO – Wahrung berechtigter Interessen',
+            },
+            hosting: {
+                title: 'Hosting und Server-Logfiles',
+                content: 'Unsere Website wird auf Servern innerhalb der Europäischen Union gehostet. Beim Aufruf unserer Website werden durch den Webserver automatisch Server-Logfiles gespeichert, darunter IP-Adresse, Browsertyp, Betriebssystem, Referrer-URL sowie Datum und Uhrzeit des Zugriffs. Diese Daten werden aus Sicherheitsgründen bis zu 7 Tage gespeichert und anschließend gelöscht. Eine Zusammenführung mit anderen Daten findet nicht statt.',
+            },
+            registration: {
+                title: 'Nutzerregistrierung und Konten',
+                content: 'Bei der Registrierung erheben wir Ihre E-Mail-Adresse sowie freiwillig angegebene Profildaten. Diese Daten werden zur Einrichtung und Verwaltung Ihres Kontos verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung). Sie können Ihr Konto jederzeit löschen; personenbezogene Daten werden innerhalb von 30 Tagen gelöscht.',
+            },
+            invoiceData: {
+                title: 'Verarbeitung von Rechnungs- und Kundendaten',
+                content: 'Zur Erbringung des Rechnungsstellungsdienstes verarbeiten wir von Ihnen eingegebene Unternehmensdaten, wie Firmennamen, Adressen, Umsatzsteuer-Identifikationsnummern, Bankdaten und Rechnungsbeträge. Die Verarbeitung erfolgt ausschließlich in Ihrem Auftrag und ist für die Vertragserfüllung erforderlich (Art. 6 Abs. 1 lit. b DSGVO). Eine Weitergabe an Dritte zu anderen als den vertraglich vereinbarten Zwecken findet nicht statt.',
+            },
+            cookies: {
+                title: 'Cookies und Tracking-Technologien',
+                content: 'Wir verwenden ausschließlich technisch notwendige Cookies, die für den ordnungsgemäßen Betrieb der Website erforderlich sind. Dazu gehören Session-Cookies zur Authentifizierung, CSRF-Schutz-Cookies sowie ein Cookie zur Speicherung Ihrer Spracheinstellung. Analyse-, Werbe- oder Drittanbieter-Tracking-Cookies werden nicht eingesetzt. Weitere Informationen entnehmen Sie bitte unserer Cookie-Information.',
+            },
+            retention: {
+                title: 'Datenspeicherung und Löschung',
+                content: 'Personenbezogene Daten werden nur so lange gespeichert, wie dies für den jeweiligen Verarbeitungszweck erforderlich ist oder gesetzliche Aufbewahrungsfristen bestehen (z. B. steuer- und handelsrechtliche Aufbewahrungsfristen für Rechnungsunterlagen von bis zu 10 Jahren). Kontodaten werden innerhalb von 30 Tagen nach Kontolöschung gelöscht. Server-Logfiles werden nach 7 Tagen gelöscht.',
+            },
+            rights: {
+                title: 'Rechte der betroffenen Personen',
+                content: 'Gemäß DSGVO haben Sie folgende Rechte:\n\n• Auskunftsrecht (Art. 15 DSGVO)\n• Recht auf Berichtigung (Art. 16 DSGVO)\n• Recht auf Löschung (Art. 17 DSGVO)\n• Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)\n• Recht auf Datenübertragbarkeit (Art. 20 DSGVO)\n• Widerspruchsrecht (Art. 21 DSGVO)\n\nZur Ausübung Ihrer Rechte wenden Sie sich an info@medianet-home.de. Sie haben zudem das Recht, sich bei der zuständigen Aufsichtsbehörde zu beschweren: Der Hessische Beauftragte für Datenschutz und Informationsfreiheit (HBDI), Wiesbaden.',
+            },
+            contact: {
+                title: 'Datenschutzkontakt',
+                content: 'Bei Fragen zum Datenschutz oder zur Ausübung Ihrer Rechte wenden Sie sich bitte an:\n\ninfo@medianet-home.de\n+49 (0) 6103 / 69 77 84\n\n[mn]medianet, Bernhard Hnida, Am Taubhaus 29, 63303 Dreieich',
+            },
+        },
+    },
+
+    // Allgemeine Geschäftsbedingungen
+    termsAndConditions: {
+        title: 'Allgemeine Geschäftsbedingungen',
+        subtitle: 'AGB – [mn]medianet / BillingTool',
+        sections: {
+            scope: {
+                title: 'Geltungsbereich',
+                content: 'Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Verträge zwischen [mn]medianet, Bernhard Hnida, Am Taubhaus 29, 63303 Dreieich (nachfolgend „Anbieter") und den Nutzern der BillingTool-Plattform (nachfolgend „Nutzer"). Abweichende Bedingungen des Nutzers werden nicht anerkannt, sofern der Anbieter ihrer Geltung nicht ausdrücklich schriftlich zugestimmt hat.',
+            },
+            subject: {
+                title: 'Vertragsgegenstand (SaaS-Dienst)',
+                content: 'BillingTool ist eine Software-as-a-Service (SaaS)-Plattform zur Erstellung, Verwaltung und Versendung von Rechnungen. Der Zugang zur Software erfolgt über das Internet. Der Anbieter räumt dem Nutzer ein nicht ausschließliches, nicht übertragbares Nutzungsrecht an der Plattform im Umfang des gewählten Abonnementplans für die Vertragslaufzeit ein.',
+            },
+            registration: {
+                title: 'Registrierung und Nutzerkonto',
+                content: 'Die Nutzung der Plattform setzt eine Registrierung mit einer gültigen E-Mail-Adresse voraus. Der Nutzer ist für die Vertraulichkeit seiner Zugangsdaten und alle unter seinem Konto vorgenommenen Aktivitäten verantwortlich. Unbefugte Nutzung ist dem Anbieter unverzüglich zu melden. Der Anbieter behält sich das Recht vor, Registrierungen ohne Angabe von Gründen abzulehnen.',
+            },
+            service: {
+                title: 'Beschreibung des Software-Dienstes',
+                content: 'BillingTool umfasst die Funktionen: Rechnungserstellung und -verwaltung, PDF-Export, E-Rechnungserstellung (konform mit EN 16931 / ZUGFeRD / XRechnung), Kundenverwaltung und persönliches Dashboard. Der verfügbare Funktionsumfang richtet sich nach dem gewählten Abonnementplan. Der Anbieter ist berechtigt, Funktionen mit angemessener Vorankündigung zu erweitern, zu ändern oder einzuschränken.',
+            },
+            pricing: {
+                title: 'Preise und Zahlungsbedingungen',
+                content: 'Der Dienst wird auf Abonnementbasis angeboten. Aktuelle Preise sind auf der Website einsehbar und können mit 30-tägiger Frist geändert werden. Ein kostenloser Tarif mit eingeschränktem Funktionsumfang ist verfügbar. Bezahlte Abonnements werden im Voraus für den vereinbarten Zeitraum abgerechnet. Alle Preise sind Nettopreise zuzüglich der gesetzlichen Umsatzsteuer. Die Zahlung erfolgt über die auf der Website genannten Zahlungsanbieter.',
+            },
+            duration: {
+                title: 'Vertragslaufzeit und Kündigung',
+                content: 'Abonnements werden für die vereinbarte Vertragslaufzeit (monatlich oder jährlich) abgeschlossen. Sie verlängern sich automatisch, sofern sie nicht mit einer Frist von mindestens 30 Tagen vor Ablauf des aktuellen Zeitraums gekündigt werden. Kostenlose Konten können jederzeit gelöscht werden. Das Recht zur außerordentlichen Kündigung bleibt unberührt. Nach Kündigung werden Nutzerdaten innerhalb von 30 Tagen gelöscht, sofern keine gesetzlichen Aufbewahrungsfristen entgegenstehen.',
+            },
+            obligations: {
+                title: 'Nutzerpflichten',
+                content: 'Der Nutzer verpflichtet sich:\n\n• Die Plattform nur in Übereinstimmung mit geltendem Recht und diesen AGB zu verwenden\n• Den Dienst nicht zu missbrauchen, zu dekompilieren oder zu stören\n• Die Richtigkeit der für Rechnungszwecke eingegebenen Daten sicherzustellen\n• Zugangsdaten vertraulich zu behandeln und nicht an Dritte weiterzugeben\n• Die Plattform nicht zur Erstellung betrügerischer oder rechtswidriger Rechnungen zu nutzen',
+            },
+            availability: {
+                title: 'Verfügbarkeit der Plattform',
+                content: 'Der Anbieter strebt eine monatliche Verfügbarkeit von 99 % des Dienstes an (24/7, ohne geplante Wartungsfenster). Geplante Wartungsarbeiten werden nach Möglichkeit im Voraus angekündigt. Der Anbieter übernimmt keine Garantie für einen vollständig unterbrechungsfreien Betrieb und haftet nicht für vorübergehende Nichtverfügbarkeit aufgrund technischer Ursachen, die außerhalb seines Einflussbereichs liegen.',
+            },
+            liability: {
+                title: 'Haftungsbeschränkung',
+                content: 'Der Anbieter haftet unbeschränkt für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit sowie für Schäden, die auf Vorsatz oder grober Fahrlässigkeit beruhen. Bei einfacher Fahrlässigkeit haftet der Anbieter nur bei Verletzung wesentlicher Vertragspflichten auf den vorhersehbaren, vertragstypischen Schaden. Die Gesamthaftung des Anbieters ist auf die vom Nutzer im Zeitraum von 12 Monaten vor dem schadensbegründenden Ereignis gezahlten Entgelte begrenzt.',
+            },
+            dataProtection: {
+                title: 'Datenschutz und Datenverarbeitung',
+                content: 'Die Verarbeitung personenbezogener Daten richtet sich nach der Datenschutzerklärung des Anbieters, die Bestandteil dieser AGB ist. Soweit der Nutzer über die Plattform personenbezogene Daten Dritter verarbeitet (z. B. Kundendaten), ist er für die Sicherstellung einer rechtlichen Grundlage verantwortlich. Ein Auftragsverarbeitungsvertrag (AVV) gemäß Art. 28 DSGVO wird auf Anfrage bereitgestellt.',
+            },
+            changes: {
+                title: 'Änderungen des Dienstes und der AGB',
+                content: 'Der Anbieter behält sich vor, diese AGB und den Leistungsumfang zu ändern. Wesentliche Änderungen werden dem Nutzer mindestens 30 Tage vor Inkrafttreten per E-Mail mitgeteilt. Die weitere Nutzung des Dienstes nach Inkrafttreten der Änderungen gilt als Zustimmung. Lehnt der Nutzer die Änderungen ab, kann er sein Konto vor Inkrafttreten kündigen.',
+            },
+            governing: {
+                title: 'Schlussbestimmungen und Gerichtsstand',
+                content: 'Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts (CISG). Ausschließlicher Gerichtsstand für alle Streitigkeiten aus oder im Zusammenhang mit diesen AGB ist Darmstadt, sofern der Nutzer Kaufmann, juristische Person des öffentlichen Rechts oder öffentlich-rechtliches Sondervermögen ist. Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.',
+            },
+        },
+    },
+
+    // Cookie-Information
+    cookiePolicy: {
+        title: 'Cookie-Information',
+        subtitle: 'Wie BillingTool Cookies auf dieser Website einsetzt',
+        sections: {
+            whatAre: {
+                title: 'Was sind Cookies?',
+                content: 'Cookies sind kleine Textdateien, die beim Besuch einer Website von Ihrem Browser auf Ihrem Gerät (Computer, Tablet oder Smartphone) gespeichert werden. Sie dienen dazu, die Website funktionsfähig zu halten, die Nutzererfahrung zu verbessern und dem Websitebetreiber Informationen bereitzustellen. Es gibt „Session-Cookies" (die beim Schließen des Browsers gelöscht werden) und „persistente Cookies" (die für einen bestimmten Zeitraum auf Ihrem Gerät verbleiben).',
+            },
+            necessary: {
+                title: 'Technisch notwendige Cookies',
+                content: 'BillingTool verwendet ausschließlich technisch notwendige Cookies, die für den Betrieb der Website unerlässlich sind und ohne deren Deaktivierung die Funktionsfähigkeit beeinträchtigt wird. Dazu gehören:\n\n• Session-Cookie – hält Sie während Ihres Besuchs eingeloggt\n• CSRF-Schutz-Cookie – schützt vor Cross-Site-Request-Forgery-Angriffen\n• Sprachpräferenz-Cookie – speichert Ihre gewählte Anzeigesprache\n\nDiese Cookies werden auf Grundlage unseres berechtigten Interesses (Art. 6 Abs. 1 lit. f DSGVO) an einem funktionsfähigen und sicheren Dienst gesetzt.',
+            },
+            analytics: {
+                title: 'Analyse- oder Tracking-Cookies',
+                content: 'Wir setzen derzeit keine Analyse-, Werbe- oder Drittanbieter-Tracking-Cookies ein. Sollten wir solche Technologien in Zukunft einsetzen, wird diese Cookie-Information entsprechend aktualisiert und wir werden Ihre ausdrückliche Einwilligung einholen, bevor nicht notwendige Cookies gesetzt werden – in Übereinstimmung mit der DSGVO und dem TTDSG.',
+            },
+            settings: {
+                title: 'Cookie-Einstellungen ändern',
+                content: 'Sie können Cookies in den Einstellungen Ihres Browsers verwalten. Bitte beachten Sie, dass die Deaktivierung technisch notwendiger Cookies die Funktionsfähigkeit von BillingTool beeinträchtigt und Sie möglicherweise nicht einloggen können.\n\nDie meisten Browser bieten folgende Möglichkeiten:\n• Gespeicherte Cookies anzeigen\n• Cookies von bestimmten Websites blockieren\n• Alle Cookies beim Schließen des Browsers löschen\n\nHinweise zu Ihrem Browser finden Sie in der jeweiligen Hilfedokumentation (Chrome, Firefox, Safari, Edge usw.).',
+            },
+            retention: {
+                title: 'Speicherdauer der Cookies',
+                content: 'Session-Cookies werden beim Schließen des Browsers automatisch gelöscht. Persistente Cookies für Einstellungen (z. B. Sprachpräferenz) werden für maximal 12 Monate gespeichert und bei jeder Nutzung des Dienstes erneuert. Sie können Cookies jederzeit über die Einstellungen Ihres Browsers löschen.',
+            },
+        },
+    },
 };

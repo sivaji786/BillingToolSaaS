@@ -21,7 +21,8 @@ import {
     ArrowUp,
     ArrowDown,
     Edit2,
-    Sparkles
+    Sparkles,
+    History
 } from 'lucide-react';
 import { workspaceService } from '../../services/api';
 import { Button } from '../ui/button';
@@ -75,6 +76,7 @@ export function Workspace() {
     const [renameTarget, setRenameTarget] = useState('');
     const [newNameItem, setNewNameItem] = useState('');
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
+    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
     // AI Search state
     const [searchMode, setSearchMode] = useState<'standard' | 'ai'>('standard');
@@ -95,7 +97,37 @@ export function Workspace() {
     };
 
     useEffect(() => {
-        loadItems(currentPath);
+        const checkPendingSearch = async () => {
+            const pending = sessionStorage.getItem('pendingAiSearch');
+            if (pending) {
+                sessionStorage.removeItem('pendingAiSearch');
+                try {
+                    const data = JSON.parse(pending);
+                    setSearchMode('ai');
+                    setSearchQuery(data.prompt);
+                    setCurrentPath(data.path);
+
+                    setIsAiLoading(true);
+                    setIsLoading(true);
+                    try {
+                        const searchData = await workspaceService.aiSearch(data.prompt, data.path);
+                        setItems(searchData.items);
+                    } catch (error: any) {
+                        const message = error.response?.data?.message || 'AI search failed';
+                        toast.error(message);
+                    } finally {
+                        setIsAiLoading(false);
+                        setIsLoading(false);
+                    }
+                } catch (e) {
+                    loadItems(currentPath);
+                }
+            } else {
+                loadItems(currentPath);
+            }
+        };
+
+        checkPendingSearch();
     }, []);
 
     const handleFolderClick = (folderName: string) => {
@@ -125,14 +157,25 @@ export function Workspace() {
         const largeFiles = files.filter(file => file.size > MAX_FILE_SIZE);
         if (largeFiles.length > 0) {
             toast.error(`Some files are too large. Max size is 100MB. (${largeFiles.map(f => f.name).join(', ')})`);
+            if (e.target) e.target.value = '';
             return;
         }
 
         try {
-            await workspaceService.upload(currentPath, e.target.files);
+            setUploadProgress(0);
+            await workspaceService.upload(currentPath, e.target.files, (progressEvent) => {
+                if (progressEvent.total) {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setUploadProgress(percentCompleted);
+                }
+            });
+            setUploadProgress(null);
             toast.success('Files uploaded successfully');
             loadItems(currentPath);
+            if (e.target) e.target.value = '';
         } catch (error: any) {
+            setUploadProgress(null);
+            if (e.target) e.target.value = '';
             const message = error.response?.data?.message || 'Failed to upload files';
             toast.error(message);
         }
@@ -320,11 +363,11 @@ export function Workspace() {
         setIsAiLoading(true);
         setIsLoading(true); // show loader in table
         try {
-            const data = await workspaceService.aiSearch(searchQuery);
+            const data = await workspaceService.aiSearch(searchQuery, currentPath);
             // AI search returns flattened search results, so we'll just set them into the item list
             // For simplicity, we can just replace the current table contents with the search results.
             setItems(data.items);
-            setCurrentPath(''); // Clear path since these are global results within the workspace
+            // We intentionally don't clear path here as the user might want to stay in context
         } catch (error: any) {
             const message = error.response?.data?.message || 'AI search failed';
             toast.error(message);
@@ -352,6 +395,7 @@ export function Workspace() {
                         <Plus className="h-4 w-4 mr-2" />
                         New Folder
                     </Button>
+
                     <div className="relative">
                         <Input
                             type="file"
@@ -359,16 +403,44 @@ export function Workspace() {
                             className="hidden"
                             id="file-upload"
                             onChange={handleUpload}
+                            disabled={uploadProgress !== null}
                         />
-                        <Button asChild className="bg-purple-600 hover:bg-purple-700">
-                            <label htmlFor="file-upload" className="cursor-pointer">
-                                <Upload className="h-4 w-4 mr-2" />
-                                Upload Files
+                        <Button asChild className={`bg-purple-600 hover:bg-purple-700 ${uploadProgress !== null ? 'opacity-70 pointer-events-none' : ''}`}>
+                            <label htmlFor="file-upload" className="cursor-pointer flex items-center">
+                                {uploadProgress !== null ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Uploading {uploadProgress}%
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        Upload Files
+                                    </>
+                                )}
                             </label>
                         </Button>
                     </div>
+                    <Button variant="outline" onClick={() => window.location.hash = 'aiHistory'}>
+                        <History className="h-4 w-4 mr-2" />
+                        AI history
+                    </Button>
                 </div>
             </div>
+
+            {uploadProgress !== null && (
+                <Card className="p-4 border-purple-200 bg-purple-50/50">
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-sm font-medium text-purple-800">
+                            <span>Uploading files to {currentPath || 'workspace root'}...</span>
+                            <span>{uploadProgress}%</span>
+                        </div>
+                        <div className="w-full bg-purple-200 rounded-full h-2 overflow-hidden">
+                            <div className="bg-purple-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                        </div>
+                    </div>
+                </Card>
+            )}
 
             <Card className="p-4">
                 <div className="flex flex-col gap-4">
@@ -437,15 +509,19 @@ export function Workspace() {
                             <div className="relative flex-1">
                                 <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${searchMode === 'ai' ? 'text-purple-400' : 'text-gray-400'}`} />
                                 <Input
-                                    placeholder={searchMode === 'ai' ? 'e.g., "Show me all PDF invoices created last week"' : 'Search files and folders...'}
-                                    className={`pl-10 ${searchMode === 'ai' ? 'border-purple-200 focus-visible:ring-purple-500 bg-purple-50/30' : ''}`}
+                                    placeholder={searchMode === 'ai' ? "Ask AI to find files... (e.g. 'show me invoices from 2024')" : "Search files..."}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && searchMode === 'ai') {
-                                            handleAiSearch();
+                                        if (e.key === 'Enter') {
+                                            if (searchMode === 'ai') {
+                                                handleAiSearch();
+                                            } else {
+                                                workspaceService.search(searchQuery, currentPath).then(data => setItems(data));
+                                            }
                                         }
                                     }}
+                                    className={`pl-10 ${searchMode === 'ai' ? 'border-purple-300 focus:border-purple-500 focus:ring-purple-500 bg-purple-50 dark:bg-purple-900/10' : ''}`}
                                 />
                             </div>
                             {searchMode === 'ai' && (

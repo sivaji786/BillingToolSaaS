@@ -20,8 +20,14 @@ const AdminLayout = lazy(() => import('./components/screens/Admin/AdminLayout').
 const Signup = lazy(() => import('./components/screens/Signup').then(module => ({ default: module.Signup })));
 const Billing = lazy(() => import('./components/screens/Billing').then(module => ({ default: module.Billing })));
 const LandingPage = lazy(() => import('./components/screens/LandingPage').then(module => ({ default: module.LandingPage })));
+const QuickAccessInvoice = lazy(() => import('./components/screens/QuickAccessInvoice').then(module => ({ default: module.QuickAccessInvoice })));
+const Impressum = lazy(() => import('./components/screens/Impressum').then(module => ({ default: module.Impressum })));
+const PrivacyPolicy = lazy(() => import('./components/screens/PrivacyPolicy').then(module => ({ default: module.PrivacyPolicy })));
+const TermsAndConditions = lazy(() => import('./components/screens/TermsAndConditions').then(module => ({ default: module.TermsAndConditions })));
+const CookiePolicy = lazy(() => import('./components/screens/CookiePolicy').then(module => ({ default: module.CookiePolicy })));
 const Buyers = lazy(() => import('./components/screens/Buyers').then(module => ({ default: module.Buyers })));
 const Workspace = lazy(() => import('./components/screens/Workspace').then(module => ({ default: module.Workspace })));
+const AIHistory = lazy(() => import('./components/screens/AIHistory').then(module => ({ default: module.AIHistory })));
 
 // Admin Portal Components
 const SALogin = lazy(() => import('./components/screens/Admin/SALogin').then(module => ({ default: module.SALogin })));
@@ -64,13 +70,13 @@ import {
   companyProfileService,
   auditLogService,
 } from './services/api';
-import { getApiBaseUrl } from './utils/config';
+import { getApiBaseUrl, getTicketingApiKey } from './utils/config';
 import { calculateInvoiceTotals } from './utils/invoice-calculations';
 import { toast } from 'sonner';
 import { authService, invoiceService } from './services/api';
 // hasPermissionSync removed
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -80,7 +86,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
-      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki', 'signup', 'buyers', 'workspace'].includes(hash)) {
+      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum'].includes(hash)) {
         return hash as Screen;
       }
       // Handle parameterized routes like designLayout/123
@@ -151,7 +157,7 @@ function AppContent() {
       const hash = window.location.hash.replace('#', '');
       console.log('Hash changed:', hash);
       if (hash && [
-        'landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki', 'signup', 'buyers', 'workspace'
+        'landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'wiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy'
       ].includes(hash)) {
         console.log('Setting screen from hash change:', hash);
         setCurrentScreen(hash as Screen);
@@ -201,7 +207,7 @@ function AppContent() {
   // Update hash when screen changes
   useEffect(() => {
     if ([
-      'dashboard', 'invoices', 'templates', 'activity', 'settings', 'admin', 'workspace'
+      'dashboard', 'invoices', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory'
     ].includes(currentScreen)) {
       if (window.location.hash.replace('#', '') !== currentScreen) {
         window.location.hash = currentScreen;
@@ -253,6 +259,17 @@ function AppContent() {
         setTimeout(() => {
           window.location.href = data.redirect_url;
         }, 800);
+        return;
+      }
+
+      // Check if the user was redirected here from Quick Access with a pending action
+      const pendingAction = localStorage.getItem('qa_pending_action');
+      if (pendingAction) {
+        // Send them back to quickAccess which will auto-execute the pending action
+        toast.success(t('login.success') || 'Login successful!', {
+          description: t('login.resumingAction') || 'Resuming your invoice action…',
+        });
+        setCurrentScreen('quickAccess');
         return;
       }
 
@@ -544,9 +561,53 @@ function AppContent() {
     );
   }
 
-  // Show login screen if not authenticated
+  // Public legal pages — no auth required
+  const navigate = (screen: string) => setCurrentScreen(screen as Screen);
+
+  if (currentScreen === 'impressum') {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <Impressum onBack={() => setCurrentScreen('landing')} onNavigate={navigate} />
+      </Suspense>
+    );
+  }
+  if (currentScreen === 'privacyPolicy') {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <PrivacyPolicy onBack={() => setCurrentScreen('landing')} onNavigate={navigate} />
+      </Suspense>
+    );
+  }
+  if (currentScreen === 'termsAndConditions') {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <TermsAndConditions onBack={() => setCurrentScreen('landing')} onNavigate={navigate} />
+      </Suspense>
+    );
+  }
+  if (currentScreen === 'cookiePolicy') {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <CookiePolicy onBack={() => setCurrentScreen('landing')} onNavigate={navigate} />
+      </Suspense>
+    );
+  }
+
   // Show login/signup/landing if not authenticated
   if (!isAuthenticated) {
+    if (currentScreen === 'quickAccess') {
+      return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+          <QuickAccessInvoice
+            onLogin={() => setCurrentScreen('login')}
+            onComplete={() => setCurrentScreen('dashboard')}
+            onNavigate={(screen) => setCurrentScreen(screen as Parameters<typeof setCurrentScreen>[0])}
+          />
+          <Toaster />
+        </Suspense>
+      );
+    }
+
     if (currentScreen === 'signup') {
       return (
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
@@ -577,6 +638,8 @@ function AppContent() {
             setSelectedPlan(planId);
             setCurrentScreen('signup');
           }}
+          onTryNow={() => setCurrentScreen('quickAccess')}
+          onNavigate={navigate}
         />
         <Toaster />
       </Suspense>
@@ -735,6 +798,7 @@ function AppContent() {
 
                 {currentScreen === 'buyers' && <Buyers />}
                 {currentScreen === 'workspace' && <Workspace />}
+                {currentScreen === 'aiHistory' && <AIHistory />}
 
               </div>
             )}
@@ -755,7 +819,7 @@ function AppContent() {
           }}
         />
         <TicketingWidget
-          apiKey="billtool_test_key"
+          apiKey={getTicketingApiKey()}
           apiBaseUrl={getApiBaseUrl()}
           userId={user?.id}
         />

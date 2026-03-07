@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Under Maintenance — BillingTool</title>
+    <meta name="description" content="BillingTool is currently under maintenance. We'll be back shortly." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --purple-500: #8b5cf6;
+            --purple-600: #7c3aed;
+            --purple-700: #6d28d9;
+            --purple-100: #ede9fe;
+            --purple-50: #f5f3ff;
+            --gray-900: #111827;
+            --gray-700: #374151;
+            --gray-500: #6b7280;
+            --gray-200: #e5e7eb;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #fafafa;
+            color: var(--gray-900);
+        }
+
+        /* ── Animated gradient background ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139, 92, 246, .18), transparent),
+                radial-gradient(ellipse 60% 50% at 80% 80%, rgba(124, 58, 237, .10), transparent),
+                radial-gradient(ellipse 50% 40% at 10% 60%, rgba(167, 139, 250, .12), transparent);
+            z-index: 0;
+            animation: bgShift 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgShift {
+            from {
+                opacity: .7;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ── Grid dots ── */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(139, 92, 246, .12) 1px, transparent 1px);
+            background-size: 32px 32px;
+            z-index: 0;
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        /* ── Logo badge ── */
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 999px;
+            padding: .45rem 1.1rem;
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--purple-500), var(--purple-700));
+        }
+
+        /* ── Gear icon ring ── */
+        .icon-ring {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--purple-50), var(--purple-100));
+            border: 2px solid var(--purple-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            box-shadow: 0 0 0 12px rgba(139, 92, 246, .06), 0 0 0 24px rgba(139, 92, 246, .03);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 12px rgba(139, 92, 246, .06), 0 0 0 24px rgba(139, 92, 246, .03);
+            }
+
+            50% {
+                box-shadow: 0 0 0 16px rgba(139, 92, 246, .10), 0 0 0 32px rgba(139, 92, 246, .05);
+            }
+        }
+
+        .icon-ring svg {
+            animation: spin 6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Heading ── */
+        h1 {
+            font-size: clamp(1.75rem, 5vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: -.02em;
+            background: linear-gradient(135deg, var(--gray-900) 40%, var(--purple-600));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: .75rem;
+        }
+
+        p.sub {
+            font-size: 1.05rem;
+            color: var(--gray-500);
+            max-width: 440px;
+            line-height: 1.65;
+            margin: 0 auto 2.5rem;
+        }
+
+        /* ── Progress bar ── */
+        .progress-wrap {
+            width: 100%;
+            max-width: 380px;
+            background: var(--purple-50);
+            border-radius: 999px;
+            height: 6px;
+            overflow: hidden;
+            margin: 0 auto 2.5rem;
+            border: 1px solid var(--purple-100);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--purple-500), var(--purple-700));
+            border-radius: 999px;
+            animation: progress 3s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0% {
+                width: 15%;
+                margin-left: 0;
+            }
+
+            50% {
+                width: 55%;
+                margin-left: 20%;
+            }
+
+            100% {
+                width: 15%;
+                margin-left: 80%;
+            }
+        }
+
+        /* ── Status chips ── */
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .78rem;
+            font-weight: 500;
+            padding: .3rem .85rem;
+            border-radius: 999px;
+            background: white;
+            border: 1px solid var(--gray-200);
+            color: var(--gray-700);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
+        }
+
+        .chip .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .chip.done .dot {
+            background: #10b981;
+        }
+
+        .chip.active .dot {
+            background: var(--purple-500);
+            animation: blink 1.2s ease infinite;
+        }
+
+        .chip.wait .dot {
+            background: var(--gray-300, #d1d5db);
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .3;
+            }
+        }
+
+        /* ── Footer ── */
+        footer {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: .78rem;
+            color: var(--gray-500);
+        }
+
+        footer a {
+            color: var(--purple-600);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .chips {
+                gap: .4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+
+        <div class="logo">
+            <span class="logo-dot"></span>
+            BillingTool
+        </div>
+
+        <div class="icon-ring">
+            <!-- Gear SVG -->
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.7"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+        </div>
+
+        <h1>We'll Be Right Back</h1>
+        <p class="sub">
+            BillingTool is currently undergoing scheduled maintenance to bring you
+            improvements and new features. This should only take a few minutes.
+        </p>
+
+        <div class="progress-wrap">
+            <div class="progress-bar"></div>
+        </div>
+
+        <div class="chips">
+            <span class="chip done"> <span class="dot"></span> Database backup</span>
+            <span class="chip done"><span class="dot"></span> Deploying updates</span>
+            <span class="chip active"> <span class="dot"></span> Verification</span>
+            <span class="chip wait"> <span class="dot"></span> Back online</span>
+        </div>
+
+    </div>
+
+    <footer>
+        Questions? Contact us at <a href="mailto:support@billingtool.com">support@billingtool.com</a>
+    </footer>
+</body>
+
+</html>

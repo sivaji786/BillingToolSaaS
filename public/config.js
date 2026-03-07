@@ -5,16 +5,14 @@
     const protocol = window.location.protocol;
 
     // For localhost (development), use port 8080
-    // For production domains, use /api/public path
+    // For production domains, use the current hostname with /api/public path
     let apiBaseUrl;
     if (hostname.includes('localhost')) {
         apiBaseUrl = protocol + '//' + hostname + ':8080';
     } else {
-        // Production: use the base domain with /api/public
-        // Extract base domain (e.g., humpl.org from nexus-ai.humpl.org)
-        const parts = hostname.split('.');
-        const baseDomain = parts.length > 2 ? parts.slice(-2).join('.') : hostname;
-        apiBaseUrl = protocol + '//' + baseDomain + '/api/public';
+        // Production: use the exact hostname to avoid Cross-Origin (CORS) issues
+        // e.g., nexus-ai.humpl.org/api/public
+        apiBaseUrl = protocol + '//' + hostname + '/api/public';
     }
 
     window.APP_CONFIG = {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Invoice } from '../../types/invoice';
 import {
   Dialog,
@@ -17,10 +17,20 @@ interface PreviewModalProps {
   invoice: Invoice;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultTab?: 'pdf' | 'ubl';
+  hideTabs?: boolean;
+  onCopyUBL?: (xml: string) => void;
+  onDownloadUBL?: (xml: string) => void;
 }
 
-export function PreviewModal({ invoice, open, onOpenChange }: PreviewModalProps) {
-  const [activeTab, setActiveTab] = useState<'pdf' | 'ubl'>('pdf');
+export function PreviewModal({ invoice, open, onOpenChange, defaultTab = 'pdf', hideTabs = false, onCopyUBL, onDownloadUBL }: PreviewModalProps) {
+  const [activeTab, setActiveTab] = useState<'pdf' | 'ubl'>(defaultTab);
+
+  useEffect(() => {
+    if (open) {
+      setActiveTab(defaultTab);
+    }
+  }, [open, defaultTab]);
 
   // Generate UBL XML preview
   const generateUBL = () => {
@@ -161,23 +171,25 @@ ${invoice.lines
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Invoice Preview - {invoice.invoiceNumber}</DialogTitle>
+          <DialogTitle>{hideTabs ? 'E-Invoice (UBL XML) Preview' : `Invoice Preview - ${invoice.invoiceNumber}`}</DialogTitle>
           <DialogDescription>
-            Preview your invoice in PDF format or as UBL XML
+            {hideTabs ? 'UBL XML' : 'Preview your invoice in PDF format or as UBL XML'}
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as 'pdf' | 'ubl')}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="pdf">
-              <FileText className="h-4 w-4 mr-2" />
-              PDF Preview
-            </TabsTrigger>
-            <TabsTrigger value="ubl">
-              <Code className="h-4 w-4 mr-2" />
-              UBL XML
-            </TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as 'pdf' | 'ubl')} className="w-full min-w-0">
+          {!hideTabs && (
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="pdf">
+                <FileText className="h-4 w-4 mr-2" />
+                PDF Preview
+              </TabsTrigger>
+              <TabsTrigger value="ubl">
+                <Code className="h-4 w-4 mr-2" />
+                UBL XML
+              </TabsTrigger>
+            </TabsList>
+          )}
 
           <TabsContent value="pdf" className="mt-4">
             <ScrollArea className="h-[600px] border rounded-lg bg-white p-8">
@@ -304,34 +316,47 @@ ${invoice.lines
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="ubl" className="mt-4">
-            <div className="h-[600px] border rounded-lg bg-slate-950 overflow-hidden">
-              <ScrollArea className="h-full">
-                <div className="p-4">
-                  <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap break-words overflow-wrap-anywhere">
+          <TabsContent value="ubl" className={hideTabs ? "mt-0 min-w-0" : "mt-4 min-w-0"}>
+            <div className="h-[600px] w-full border border-slate-800 rounded-lg bg-slate-900 overflow-hidden shadow-inner flex flex-col">
+              <ScrollArea className="flex-1 w-full">
+                <div className="p-6 min-w-0">
+                  <pre className="text-sm text-emerald-300 font-mono whitespace-pre-wrap break-words overflow-wrap-anywhere leading-relaxed">
                     <code>{generateUBL()}</code>
                   </pre>
                 </div>
               </ScrollArea>
             </div>
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-2 mt-4 justify-end">
               <Button
                 variant="outline"
+                className="gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700"
                 onClick={() => {
-                  navigator.clipboard.writeText(generateUBL());
+                  const xml = generateUBL();
+                  if (onCopyUBL) {
+                    onCopyUBL(xml);
+                  } else {
+                    navigator.clipboard.writeText(xml);
+                  }
                 }}
               >
+                <FileText className="h-4 w-4" />
                 Copy XML
               </Button>
               <Button
-                variant="outline"
+                variant="default"
+                className="gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 shadow-sm border-0"
                 onClick={() => {
-                  const blob = new Blob([generateUBL()], { type: 'application/xml' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `${invoice.invoiceNumber}.xml`;
-                  a.click();
+                  const xml = generateUBL();
+                  if (onDownloadUBL) {
+                    onDownloadUBL(xml);
+                  } else {
+                    const blob = new Blob([xml], { type: 'application/xml' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${invoice.invoiceNumber}.xml`;
+                    a.click();
+                  }
                 }}
               >
                 <Download className="h-4 w-4 mr-2" />

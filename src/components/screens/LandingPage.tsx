@@ -7,10 +7,13 @@ import { Check, FileText, Globe, Shield, LayoutTemplate, Sparkles, ArrowRight } 
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { billingService } from '../../services/api';
 import { TicketingWidget } from '../TicketingWidget';
+import { getTicketingApiKey } from '../../utils/config';
 
 interface LandingPageProps {
     onLogin: () => void;
     onSignup: (planId?: string) => void;
+    onTryNow: () => void;
+    onNavigate: (screen: string) => void;
 }
 
 interface Plan {
@@ -50,7 +53,7 @@ const fadeInVariants: Variants = {
     }
 };
 
-export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
+export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: LandingPageProps) {
     const { t } = useLanguage();
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
@@ -203,6 +206,9 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                             <Button variant="ghost" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
                                 {t('nav.products')}
                             </Button>
+                            {/* <Button variant="ghost" onClick={() => onNavigate('impressum')} className="text-muted-foreground">
+                                {t('legal.footer.impressum')}
+                            </Button> */}
                             <Button variant="ghost" onClick={onLogin}>
                                 {t('landing.login')}
                             </Button>
@@ -224,15 +230,9 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                             backgroundImage: 'url(/images/landing_bg.png)',
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
-                            opacity: 0.45
                         }}
                     />
-                    <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        variants={fadeInVariants}
-                        className="absolute inset-0 bg-gradient-to-b from-purple-50/50 via-white/80 to-white dark:from-purple-950/20 dark:via-background/80 dark:to-background"
-                    />
+                    {/* Overlay removed — landing_bg shows at full opacity */}
 
                     <div className="container px-4 md:px-6 relative z-10">
                         <motion.div
@@ -257,6 +257,18 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                                     {t('landing.hero.getStarted')}
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
+                                {onTryNow && (
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        className="h-12 px-8 text-lg border-2 border-purple-300 hover:border-purple-500 hover:bg-purple-50 text-purple-700 font-semibold gap-2 shadow-md"
+                                        onClick={onTryNow}
+                                        id="hero-try-now"
+                                    >
+                                        <FileText className="h-5 w-5" />
+                                        {t('landing.hero.tryNow')}
+                                    </Button>
+                                )}
                             </motion.div>
                         </motion.div>
                     </div>
@@ -318,21 +330,19 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                                 </motion.h2>
                                 <motion.div variants={itemVariants} className="space-y-4 text-gray-500 md:text-lg dark:text-gray-400">
                                     <p>
-                                        BillingTool is a modern invoicing platform designed to simplify the billing process for businesses of all sizes.
-                                        We believe that professional invoicing should be accessible, secure, and compliant with the latest standards.
+                                        {t('landing.about.desc1')}
                                     </p>
                                     <p>
-                                        Our platform is built with a focus on user experience and regulatory compliance, ensuring that your invoices
-                                        not only look great but also meet all legal requirements like EN 16931 and UBL 2.1.
+                                        {t('landing.about.desc2')}
                                     </p>
                                     <div className="flex gap-4 pt-4">
                                         <div className="flex flex-col">
                                             <span className="text-2xl font-bold text-purple-600">10k+</span>
-                                            <span className="text-sm">Active Users</span>
+                                            <span className="text-sm">{t('landing.about.activeUsers')}</span>
                                         </div>
                                         <div className="border-l pl-4 flex flex-col">
                                             <span className="text-2xl font-bold text-purple-600">500k+</span>
-                                            <span className="text-sm">Invoices Sent</span>
+                                            <span className="text-sm">{t('landing.about.invoicesSent')}</span>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -432,14 +442,15 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                     <p className="text-sm text-muted-foreground">
                         © 2026 BillingTool Inc. {t('landing.footer.rights')}
                     </p>
-                    <div className="flex gap-4">
-                        <a href="#" className="text-sm text-muted-foreground hover:text-primary">{t('landing.footer.terms')}</a>
-                        <a href="#" className="text-sm text-muted-foreground hover:text-primary">{t('landing.footer.privacy')}</a>
-                        <a href="#" className="text-sm text-muted-foreground hover:text-primary">{t('landing.footer.contact')}</a>
+                    <div className="flex flex-wrap gap-4">
+                        <button onClick={() => onNavigate('impressum')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.impressum')}</button>
+                        <button onClick={() => onNavigate('privacyPolicy')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.privacy')}</button>
+                        <button onClick={() => onNavigate('termsAndConditions')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.terms')}</button>
+                        <button onClick={() => onNavigate('cookiePolicy')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.cookies')}</button>
                     </div>
                 </div>
             </footer>
-            <TicketingWidget apiKey="public" />
+            <TicketingWidget apiKey={getTicketingApiKey()} />
         </div >
     );
 }

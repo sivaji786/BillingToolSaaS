@@ -1,9 +1,10 @@
 import { ReactNode } from 'react';
 import { AdminSidebar } from './AdminSidebar';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSwitcher } from '../LanguageSwitcher';
 import { TicketingWidget } from '../TicketingWidget';
 import { useAdminStore } from '../../stores/adminStore';
-import { getApiBaseUrl } from '../../utils/config';
+import { getApiBaseUrl, getTicketingApiKey } from '../../utils/config';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -49,6 +50,7 @@ export function AdminLayout({ children, currentScreen, onNavigate, onLogout }: A
                         </h1>
                     </div>
                     <div className="flex items-center gap-4">
+                        <LanguageSwitcher />
                         <ThemeToggle />
                     </div>
                 </header>
@@ -59,7 +61,7 @@ export function AdminLayout({ children, currentScreen, onNavigate, onLogout }: A
 
             {/* Bug reporting widget for SA portal */}
             <TicketingWidget
-                apiKey="sa_portal_key_2026"
+                apiKey={getTicketingApiKey()}
                 apiBaseUrl={getApiBaseUrl()}
                 userId={adminUser?.id?.toString()}
             />

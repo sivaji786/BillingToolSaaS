@@ -1,13 +1,14 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { FileText, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { FileText, Mail, Lock, ArrowLeft, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { TicketingWidget } from '../TicketingWidget';
+import { getTicketingApiKey } from '../../utils/config';
 
 interface LoginProps {
   onLogin: (email: string, password: string) => void;
@@ -20,6 +21,18 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasPendingAction, setHasPendingAction] = useState(false);
+
+  useEffect(() => {
+    // Pre-fill email if redirected from Quick Access
+    const prefillEmail = localStorage.getItem('qa_login_email');
+    if (prefillEmail) {
+      setEmail(prefillEmail);
+      localStorage.removeItem('qa_login_email');
+    }
+    const pending = localStorage.getItem('qa_pending_action');
+    setHasPendingAction(!!pending);
+  }, []);
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -82,6 +95,13 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
 
           {/* Login Card */}
           <Card className="border-2 shadow-xl backdrop-blur-sm bg-white/80">
+            {/* Card Header + optional pending action banner */}
+            {hasPendingAction && (
+              <div className="mx-6 mt-4 mb-0 flex items-start gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-800">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+                <span>{t('login.pendingActionBanner') || 'Account found! Log in below to continue with your invoice.'}</span>
+              </div>
+            )}
             <CardHeader className="space-y-1">
               <CardTitle>{t('login.title')}</CardTitle>
               <CardDescription>
@@ -176,11 +196,10 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
         .animation-delay-2000 {
           animation-delay: 2s;
         }
-        .animation-delay-4000 {
           animation-delay: 4s;
         }
       `}</style>
-      <TicketingWidget apiKey="public" />
+      <TicketingWidget apiKey={getTicketingApiKey()} />
     </div >
   );
 }

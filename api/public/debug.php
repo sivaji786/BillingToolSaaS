@@ -469,6 +469,43 @@ echo "\n--------------------------------------------------\n";
 echo " >> ACTION: <a href='?show_schema=1' style='background:blue;color:white;padding:5px;'>CLICK HERE TO VIEW DATABASE SCHEMA (TABLES & COLUMNS)</a> <<\n";
 echo "--------------------------------------------------\n";
 
+// 6. Composer & Library Checks
+echo "\n6. COMPOSER & DEPENDENCY CHECK\n";
+echo "------------------------------\n";
+$autoload_path = $rootPath . '/vendor/autoload.php';
+
+if (file_exists($autoload_path)) {
+    echo "Vendor Autoload: [OK] Found at $autoload_path\n";
+    require_once $autoload_path;
+    
+    // Check specific critical libraries
+    echo "Checking specific critical libraries:\n";
+    
+    if (class_exists('CodeIgniter\CodeIgniter')) {
+        echo " - CodeIgniter Core: [OK] Loaded\n";
+    } else {
+        echo " - CodeIgniter Core: [MISSING]\n";
+    }
+    
+    if (class_exists('Smalot\PdfParser\Parser')) {
+        echo " - Smalot/PdfParser: [OK] Loaded\n";
+    } else {
+        echo " - Smalot/PdfParser: [MISSING] MUST run `composer install` on server.\n";
+    }
+
+} else {
+    echo "Vendor Autoload: [NOT FOUND] MUST run `composer install` on server.\n";
+}
+echo "\n";
+
+echo "7. SERVER LIMITS & CONFIG\n";
+echo "-----------------------\n";
+echo "Memory Limit: " . ini_get('memory_limit') . "\n";
+echo "Upload Max Filesize: " . ini_get('upload_max_filesize') . "\n";
+echo "Post Max Size: " . ini_get('post_max_size') . "\n";
+$disabled_functions = ini_get('disable_functions');
+echo "Disabled Functions: " . ($disabled_functions ?: "None") . "\n";
+
 echo "\n========================================\n";
 echo " END OF REPORT \n";
 echo "========================================\n";

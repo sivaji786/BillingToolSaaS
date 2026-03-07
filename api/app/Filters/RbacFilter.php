@@ -30,51 +30,55 @@ class RbacFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         try {
-            $session = session();
-            $userId = null;
-            
-            try {
-                $userId = $session->get('userId');
-            } catch (\Throwable $e) {
-                // Session failed
+            // 1. Resolve userId — prefer what UnifiedAuthFilter already injected,
+            //    fall back to session, then decode JWT directly.
+            $userId = $request->userId ?? null;
+
+            if (!$userId) {
+                try { $userId = session()->get('userId'); } catch (\Throwable $e) {}
             }
 
-            // 1. Check Authentication (should be handled by HybridAuthFilter, but double check)
             if (!$userId) {
-                // Fallback: Check for JWT in header (in case HybridAuthFilter didn't run or failed)
-                $key = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?? 'e88f7de29c95b084f1eb22e69093c3dafaa85f84eca6bbe0c8a94b8f4590df3e';
-                $header = $request->getHeaderLine('Authorization');
-                if (!$header) $header = $request->getHeaderLine('X-Authorization');
-                
+                $key    = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?? 'e88f7de29c95b084f1eb22e69093c3dafaa85f84eca6bbe0c8a94b8f4590df3e';
+                $header = $request->getHeaderLine('Authorization') ?: $request->getHeaderLine('X-Authorization');
+
                 if (!empty($header) && preg_match('/Bearer\s(\S+)/', $header, $matches)) {
-                    $token = $matches[1];
                     try {
-                        $decoded = JWT::decode($token, new Key($key, 'HS256'));
-                        $userId = $decoded->uid ?? $decoded->user_id; // Handle both key formats
+                        $decoded = \Firebase\JWT\JWT::decode($matches[1], new \Firebase\JWT\Key($key, 'HS256'));
+                        $userId  = $decoded->uid ?? $decoded->user_id ?? null;
                     } catch (\Exception $e) {
-                         return response()->setJSON(['error' => 'Invalid token'])->setStatusCode(401);
+                        return response()->setJSON(['error' => 'Invalid token'])->setStatusCode(401);
                     }
                 }
             }
 
             if (!$userId) {
-                 return response()->setJSON(['error' => 'Authentication required'])->setStatusCode(401);
+                return response()->setJSON(['error' => 'Authentication required'])->setStatusCode(401);
             }
-            
-            
-            // 2. Check Permissions if arguments provided
+
+            // 2. Skip RBAC entirely for owners / admins.
+            //    Direct raw query — bypasses TenantScope and any model caching.
+            $db   = \Config\Database::connect();
+            $user = $db->table('users')->select('role')->where('id', (int) $userId)->get()->getRow();
+            if ($user && ($user->role ?? '') === 'admin') {
+                return; // Full access — admin has all rights
+            }
+
+            // 3. No arguments = just auth check, no specific right needed
             if (empty($arguments)) {
                 return;
             }
-            
-            $requiredRight = $arguments[0]; 
-            $userModel = new UserModel();
+
+            // 4. Check specific right via user_roles → roles → role_rights → rights
+            $requiredRight = $arguments[0];
+            $userModel     = new UserModel();
             if (!$userModel->hasRight($userId, $requiredRight)) {
                 return response()->setJSON(['error' => 'Access denied: Missing right ' . $requiredRight])->setStatusCode(403);
             }
+
         } catch (\Throwable $e) {
-             file_put_contents('/tmp/billing_debug.log', "RBAC FILTER ERROR: " . $e->getMessage() . "\n", FILE_APPEND);
-             return response()->setJSON(['error' => 'Internal RBAC Error: ' . $e->getMessage()])->setStatusCode(500);
+            file_put_contents('/tmp/billing_debug.log', "RBAC FILTER ERROR: " . $e->getMessage() . "\n", FILE_APPEND);
+            return response()->setJSON(['error' => 'Internal RBAC Error: ' . $e->getMessage()])->setStatusCode(500);
         }
     }
 

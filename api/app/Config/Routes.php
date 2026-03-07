@@ -99,8 +99,18 @@ $routes->group('auth', function($routes) {
     $routes->post('logout', '\App\Controllers\Auth::logout');
     $routes->post('refresh', '\App\Controllers\Auth::refresh');
     $routes->get('me', '\App\Controllers\Auth::me');
+
+    // Quick Access – OTP-based frictionless onboarding
+    $routes->post('check-email', '\App\Controllers\QuickAccessAuth::checkEmail');
+    $routes->post('quick-access', '\App\Controllers\QuickAccessAuth::sendOtp');
+    $routes->get('quick-access/draft', '\App\Controllers\QuickAccessAuth::getDraft');
+    $routes->post('quick-access/verify', '\App\Controllers\QuickAccessAuth::verifyOtp');
 });
 
+// Profile Management (requires auth)
+$routes->group('profile', ['filter' => 'auth'], function($routes) {
+    $routes->post('set-password', '\App\Controllers\ProfileController::setPassword');
+});
 // Customer Portal API Routes (requires authentication)
 $routes->group('customer', ['filter' => 'auth'], function($routes) {
     $routes->get('dashboard', '\App\Controllers\Customer::dashboard');
@@ -144,6 +154,7 @@ $routes->group('workspace', ['filter' => 'auth'], function($routes) {
     $routes->post('open', '\App\Controllers\WorkspaceController::open');
     $routes->post('download-zip', '\App\Controllers\WorkspaceController::downloadZip');
     $routes->post('ai-search', '\App\Controllers\WorkspaceController::aiSearch');
+    $routes->get('ai-history', '\App\Controllers\WorkspaceController::getAiHistory');
 });
 
 // CORS preflight - must be BEFORE other routes

@@ -45,6 +45,10 @@ class ContentExtractor
                 case 'pptx':
                     $content = self::extractPptx($filePath);
                     break;
+
+                case 'odt':
+                    $content = self::extractOdt($filePath);
+                    break;
             }
         } catch (\Exception $e) {
             log_message('error', 'Content extraction failed for ' . $filePath . ': ' . $e->getMessage());
@@ -56,17 +60,25 @@ class ContentExtractor
     }
 
     /**
-     * Extract text from PDF using pdftotext
+     * Extract text from PDF using Smalot/PdfParser
      */
     private static function extractPdf($filePath)
     {
-        $output = [];
-        $returnCode = 0;
-        // Use pdftotext - which we've confirmed is on the system
-        exec("pdftotext " . escapeshellarg($filePath) . " -", $output, $returnCode);
-        if ($returnCode === 0) {
-            return implode("\n", $output);
+        try {
+            if (!class_exists('\Smalot\PdfParser\Parser')) {
+                log_message('error', 'ContentExtractor::extractPdf - Smalot\PdfParser\Parser class not found. Is the package installed?');
+                return '';
+            }
+            
+            $parser = new \Smalot\PdfParser\Parser();
+            $pdf = $parser->parseFile($filePath);
+            return $pdf->getText();
+        } catch (\Exception $e) {
+            log_message('error', 'ContentExtractor::extractPdf - Exception parsing PDF: ' . $e->getMessage());
+        } catch (\Error $e) {
+            log_message('error', 'ContentExtractor::extractPdf - Error parsing PDF: ' . $e->getMessage());
         }
+        
         return '';
     }
 
@@ -123,6 +135,23 @@ class ContentExtractor
                 } else {
                     break;
                 }
+            }
+            $zip->close();
+        }
+        return $content;
+    }
+
+    /**
+     * Extract text from ODT by unzipping and reading content.xml
+     */
+    private static function extractOdt($filePath)
+    {
+        $content = '';
+        $zip = new \ZipArchive();
+        if ($zip->open($filePath) === true) {
+            if (($data = $zip->getFromName('content.xml')) !== false) {
+                $data = str_replace('<', ' <', $data);
+                $content = strip_tags($data);
             }
             $zip->close();
         }

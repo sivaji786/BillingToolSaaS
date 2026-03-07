@@ -61,4 +61,11 @@ export const getBaseDomain = (): string => {
     return hostname;
 };
 
-export default { getApiBaseUrl, getBaseDomain };
+/**
+ * Get Ticketing Widget API key from environment
+ */
+export const getTicketingApiKey = (): string => {
+    return import.meta.env.VITE_TICKETING_API_KEY || 'public';
+};
+
+export default { getApiBaseUrl, getBaseDomain, getTicketingApiKey };

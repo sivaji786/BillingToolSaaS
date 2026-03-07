@@ -14,18 +14,7 @@ class TicketController extends ResourceController
     public function create()
     {
         $model = new TicketModel();
-        $projectModel = new ProjectModel();
-        
-        // Validate API Key
-        $apiKey = $this->request->getHeaderLine('X-API-Key');
-        if (empty($apiKey)) {
-            return $this->fail('API Key is required', 401);
-        }
 
-        $project = $projectModel->where('api_key', $apiKey)->first();
-        if (!$project) {
-            return $this->fail('Invalid API Key', 401);
-        }
 
         $data = $this->request->getJSON(true); // Get JSON data
 
@@ -42,7 +31,6 @@ class TicketController extends ResourceController
             return $this->fail('Subject and description are required', 400);
         }
 
-        $data['project_id'] = $project['id'];
 
         // Capture metadata
         $data['client_ip'] = $this->request->getIPAddress();

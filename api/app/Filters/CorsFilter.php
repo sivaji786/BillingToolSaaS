@@ -46,9 +46,12 @@ class CorsFilter implements FilterInterface
         $response->setHeader('Access-Control-Allow-Credentials', 'true');
         
         // GLOBAL FIX: Force 200 OK for successful responses to avoid server-level 500 overrides
-        // Only override if the current status is purely 200 or unset (0)
-        if ($response->getStatusCode() === 200 || $response->getStatusCode() === 0) {
-            $response->setStatusCode(200);
+        // Only override if the current status is purely 200 or unset (0).
+        // Skip DownloadResponse as it throws an exception when setting status code.
+        if (!($response instanceof \CodeIgniter\HTTP\DownloadResponse)) {
+            if ($response->getStatusCode() === 200 || $response->getStatusCode() === 0) {
+                $response->setStatusCode(200);
+            }
         }
         
         return $response;

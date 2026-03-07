@@ -183,6 +183,8 @@ class UnifiedAuthFilter implements FilterInterface
         $publicPatterns = [
             '/auth/login',
             '/auth/signup',
+            '/auth/check-email',    // Quick Access email check – public, no token
+            '/auth/quick-access',   // Quick Access OTP – no auth needed
             '/api/countries',
             '/onboarding/',
             '/admin/auth/login',

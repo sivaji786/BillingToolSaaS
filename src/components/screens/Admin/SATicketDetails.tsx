@@ -9,6 +9,7 @@ import { getApiBaseUrl } from '../../../utils/config';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface SATicketDetailsProps {
     ticketId: string;
@@ -17,6 +18,7 @@ interface SATicketDetailsProps {
 
 export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) {
     const queryClient = useQueryClient();
+    const { t } = useLanguage();
     const [status, setStatus] = useState<string>('');
     const [priority, setPriority] = useState<string>('');
     const [isUpdating, setIsUpdating] = useState(false);
@@ -38,7 +40,8 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
     const getImageUrl = (path: string) => {
         if (!path) return '';
         if (path.startsWith('http')) return path;
-        return `${getApiBaseUrl()}/${path.replace(/^\//, '')}`;
+        const baseUrl = getApiBaseUrl().replace(/\/index\.php\/?$/, '');
+        return `${baseUrl}/${path.replace(/^\//, '')}`;
     };
 
     const handleUpdate = async () => {
@@ -51,10 +54,10 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                 priority
             });
             await queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
-            toast.success('Ticket updated successfully');
+            toast.success(t('tickets.updateSuccess'));
         } catch (error) {
             console.error('Error updating ticket:', error);
-            toast.error('Failed to update ticket');
+            toast.error(t('tickets.updateError'));
         } finally {
             setIsUpdating(false);
         }
@@ -74,11 +77,11 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
         return (
             <div className="space-y-6">
                 <Button variant="ghost" className="mb-4" onClick={() => onNavigate('SATickets')}>
-                    <ArrowLeft className="h-4 w-4 mr-2" /> Back to Tickets
+                    <ArrowLeft className="h-4 w-4 mr-2" /> {t('tickets.backToTickets')}
                 </Button>
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center min-h-[400px]">
-                        <p className="text-xl text-muted-foreground">Ticket not found.</p>
+                        <p className="text-xl text-muted-foreground">{t('tickets.ticketNotFound')}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -89,44 +92,44 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
         <div className="space-y-6">
             <div className="flex items-center gap-4">
                 <Button variant="ghost" onClick={() => onNavigate('SATickets')}>
-                    <ArrowLeft className="h-4 w-4 mr-2" /> Back to Tickets
+                    <ArrowLeft className="h-4 w-4 mr-2" /> {t('tickets.backToTickets')}
                 </Button>
             </div>
 
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2 border-b">
                     <div>
-                        <CardTitle className="text-2xl font-bold">Ticket #{ticket.id}</CardTitle>
+                        <CardTitle className="text-2xl font-bold">{t('tickets.ticketId', { id: ticket.id.toString() })}</CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Created on {ticket.created_at ? format(new Date(ticket.created_at), 'PPP at p') : 'N/A'}
+                            {t('tickets.createdOn', { date: ticket.created_at ? format(new Date(ticket.created_at), 'PPP at p') : t('tickets.notAvailable') })}
                         </p>
                     </div>
                     <div className="flex flex-col items-end gap-3 min-w-[200px]">
                         <div className="flex items-center gap-2 w-full justify-end">
-                            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Status:</span>
+                            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">{t('tickets.status.label')}:</span>
                             <Select value={status} onValueChange={setStatus}>
                                 <SelectTrigger className="w-[130px] h-8">
-                                    <SelectValue placeholder="Status" />
+                                    <SelectValue placeholder={t('tickets.status.label')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="open">Open</SelectItem>
-                                    <SelectItem value="in_progress">In Progress</SelectItem>
-                                    <SelectItem value="resolved">Resolved</SelectItem>
-                                    <SelectItem value="closed">Closed</SelectItem>
+                                    <SelectItem value="open">{t('tickets.status.open')}</SelectItem>
+                                    <SelectItem value="in_progress">{t('tickets.status.in_progress')}</SelectItem>
+                                    <SelectItem value="resolved">{t('tickets.status.resolved')}</SelectItem>
+                                    <SelectItem value="closed">{t('tickets.status.closed')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="flex items-center gap-2 w-full justify-end">
-                            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Priority:</span>
+                            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">{t('tickets.priority.label')}:</span>
                             <Select value={priority} onValueChange={setPriority}>
                                 <SelectTrigger className="w-[130px] h-8">
-                                    <SelectValue placeholder="Priority" />
+                                    <SelectValue placeholder={t('tickets.priority.label')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="low">Low</SelectItem>
-                                    <SelectItem value="medium">Medium</SelectItem>
-                                    <SelectItem value="high">High</SelectItem>
-                                    <SelectItem value="critical">Critical</SelectItem>
+                                    <SelectItem value="low">{t('tickets.priority.low')}</SelectItem>
+                                    <SelectItem value="medium">{t('tickets.priority.medium')}</SelectItem>
+                                    <SelectItem value="high">{t('tickets.priority.high')}</SelectItem>
+                                    <SelectItem value="critical">{t('tickets.priority.critical')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -143,7 +146,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 ) : (
                                     <Save className="h-4 w-4 mr-2" />
                                 )}
-                                Save Changes
+                                {t('tickets.saveChanges')}
                             </Button>
                         )}
                     </div>
@@ -153,12 +156,12 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         {/* Primary Info */}
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Subject</h3>
+                                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">{t('tickets.columns.subject')}</h3>
                                 <p className="text-lg font-medium">{ticket.subject}</p>
                             </div>
 
                             <div>
-                                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Description</h3>
+                                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">{t('tickets.columns.description')}</h3>
                                 <div className="bg-muted/30 p-4 rounded-lg border whitespace-pre-wrap text-sm leading-relaxed">
                                     {ticket.description}
                                 </div>
@@ -168,22 +171,22 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         {/* Metadata & Attachments */}
                         <div className="space-y-6 border-l pl-8">
                             <div>
-                                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Reporter Information</h3>
+                                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">{t('tickets.reporterInfo')}</h3>
                                 <div className="space-y-2">
                                     <p className="text-sm">
-                                        <span className="font-medium mr-2">IP Address:</span>
-                                        {ticket.client_ip || 'N/A'}
+                                        <span className="font-medium mr-2">{t('tickets.columns.ip')}:</span>
+                                        {ticket.client_ip || t('tickets.notAvailable')}
                                     </p>
                                     <p className="text-sm">
-                                        <span className="font-medium mr-2">Project ID:</span>
-                                        {ticket.project_id || 'N/A'}
+                                        <span className="font-medium mr-2">{t('tickets.projectId')}:</span>
+                                        {ticket.project_id || t('tickets.notAvailable')}
                                     </p>
                                 </div>
                             </div>
 
                             {ticket.screenshot_path && (
                                 <div>
-                                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Attached Screenshot</h3>
+                                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">{t('tickets.attachedScreenshot')}</h3>
                                     <div className="border rounded-lg overflow-hidden bg-muted/10 group relative">
                                         <img
                                             src={getImageUrl(ticket.screenshot_path)}
@@ -198,7 +201,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                                 className="bg-white text-black px-4 py-2 rounded-md font-medium flex items-center shadow-lg hover:bg-gray-100 transition-colors"
                                             >
                                                 <ExternalLink className="h-4 w-4 mr-2" />
-                                                View Full Size
+                                                {t('tickets.viewFullSize')}
                                             </a>
                                         </div>
                                     </div>
