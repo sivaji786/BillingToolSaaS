@@ -51,13 +51,42 @@ trait UsageEnforcement
             }
 
             // 3. Count current resources for this tenant
-            $currentCount = $this->where('tenant_id', $tenant->id)->countAllResults();
+            if ($limitKey === 'storage_gb') {
+                $db = \Config\Database::connect();
+                $currentSizeBytes = $db->table($resource)
+                    ->selectSum('size')
+                    ->where('tenant_id', $tenant->id)
+                    ->get()
+                    ->getRow()
+                    ->size ?? 0;
+                
+                $currentGB = $currentSizeBytes / (1024 * 1024 * 1024);
+                
+                if ($currentGB >= $limitValue) {
+                    // Trigger real-time 100% notification
+                    try {
+                        (new \App\Services\UsageNotificationService())->checkTenantUsage($tenant->id);
+                    } catch (\Exception $e) {
+                        log_message('error', 'Failed to trigger real-time notification: ' . $e->getMessage());
+                    }
 
-            if ($currentCount >= $limitValue) {
-                // throw new \Exception("Limit exceeded for {$resource}. Current limit is {$limitValue}.");
-                // In CI4, we might want a more specific exception or use Validation errors
-                $errorMsg = "Usage Limit Exceeded: Your plan allows only {$limitValue} " . ucfirst($limitKey) . ". Please upgrade your plan.";
-                throw new \RuntimeException($errorMsg);
+                    $errorMsg = "Storage Limit Exceeded: Your plan allows only {$limitValue} GB. Please upgrade your plan.";
+                    throw new \RuntimeException($errorMsg);
+                }
+            } else {
+                $currentCount = $this->where('tenant_id', $tenant->id)->countAllResults();
+
+                if ($currentCount >= $limitValue) {
+                    // Trigger real-time 100% notification
+                    try {
+                        (new \App\Services\UsageNotificationService())->checkTenantUsage($tenant->id);
+                    } catch (\Exception $e) {
+                        log_message('error', 'Failed to trigger real-time notification: ' . $e->getMessage());
+                    }
+
+                    $errorMsg = "Usage Limit Exceeded: Your plan allows only {$limitValue} " . str_replace('_', ' ', $limitKey) . ". Please upgrade your plan.";
+                    throw new \RuntimeException($errorMsg);
+                }
             }
         }
 
@@ -70,9 +99,11 @@ trait UsageEnforcement
     private function getLimitKey(string $table): ?string
     {
         $map = [
-            'users'    => 'users',
-            'invoices' => 'invoices',
-            'projects' => 'projects'
+            'users'             => 'users',
+            'invoices'          => 'invoices',
+            'projects'          => 'projects',
+            'workspace_files'   => 'storage_gb',
+            'aiquery_history'   => 'api_calls'
         ];
 
         return isset($map[$table]) ? $map[$table] : null;

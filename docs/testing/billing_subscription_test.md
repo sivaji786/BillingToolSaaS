@@ -3,16 +3,16 @@
 
 ## 1. Functional Testing
 - **Unit Testing:** 
-    - `UsageTracker` calculation logic for monthly resets.
-    - Status: 🟢 **Active**
+    - `UsageEnforcement` trait logic across Workspace and AI controllers.
+    - Status: ✅ **Passed**
 - **Integration Testing:** 
-    - Stripe Webhook handler (`Webhooks.php`) with mock events.
-    - Status: 🟡 **In-Progress**
+    - `UsageNotificationService` and threshold alert emails (80%/100%).
+    - Status: ✅ **Passed**
 - **System Testing:** 
-    - Full flow: Signup -> 14-day trial auto-starts -> Plan upgrade.
-    - Status: 🟡 **In-Progress**
+    - Full flow: QuickAccess Signup -> **Trailing Plan** assignment -> Overage blocking.
+    - Status: ✅ **Passed**
 - **API Testing:** 
-    - `/api/admin/usage` endpoint accuracy verification.
+    - `/api/admin/usage` and `/api/billing/plans` (public vs private).
     - Status: ✅ **Passed**
 
 ## 2. Non-Functional Testing

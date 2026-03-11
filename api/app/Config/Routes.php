@@ -196,6 +196,7 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     
     // Admin Analytics
     $routes->get('analytics/dashboard', '\App\Controllers\AdminAnalytics::dashboard');
+    $routes->get('analytics/tenants', '\App\Controllers\AdminAnalytics::tenantUsage');
     $routes->get('usage', '\App\Controllers\AdminAnalytics::usage');
     $routes->get('usage/export', '\App\Controllers\AdminAnalytics::exportUsage');
 
@@ -214,6 +215,11 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     // Admin Tickets
     $routes->get('tickets', '\App\Controllers\TicketController::index');
     $routes->put('tickets/(:segment)', '\App\Controllers\TicketController::update/$1');
+    $routes->get('tickets/(:segment)/tracking', '\App\Controllers\TicketController::tracking/$1');
+
+    // Admin Wiki
+    $routes->get('wiki', '\App\Controllers\AdminWiki::index');
+    $routes->get('wiki/read', '\App\Controllers\AdminWiki::read');
 });
 
 

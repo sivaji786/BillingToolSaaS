@@ -1,15 +1,14 @@
-# Test Report: AI & Intelligence
-**Scope:** NL Parsing, Contextual Assistant
+**Scope:** NL Parsing, Contextual Assistant, **Workspace AI Search**
 
 ## 1. Functional Testing
 - **Unit Testing:** 
-    - Prompt cleaning and JSON extraction logic.
+    - Gemini prompt engineering for SQL generation.
     - Status: ✅ **Passed**
 - **Integration Testing:** 
-    - Conversing with AI and having it auto-fill the Invoice Editor.
-    - Status: 🟢 **Active**
+    - Conversing with AI for Invoice creation and Workspace file retrieval.
+    - Status: ✅ **Passed**
 - **API Testing:** 
-    - OpenAI API error handling (Rate limits, Timeout).
+    - **Gemini 2.5 Flash** API error handling (Rate limits, Timeout).
     - Status: ✅ **Passed**
 
 ## 2. Non-Functional Testing

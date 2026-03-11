@@ -6,7 +6,7 @@
     - `JWTHelper` token generation and expiry validation.
     - Status: ✅ **Passed**
 - **Integration Testing:** 
-    - `HybridAuthFilter` correctly identifying both Bearer tokens and Browser sessions.
+    - **`UnifiedAuthFilter`** correctly identifying JWT tokens, UUID paths, and subdomain context.
     - Status: ✅ **Passed**
 - **API Testing:** 
     - Login/Logout endpoints, invalid password error handling.

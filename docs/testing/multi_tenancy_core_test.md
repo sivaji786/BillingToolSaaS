@@ -25,8 +25,8 @@
     - Latency: < 200ms for tenant identification.
     - Status: 🟢 **Active**
 - **Security Testing:** 
-    - **Isolation Audit:** Attempted cross-tenant ID injection in API headers.
-    - Result: Request blocked by `TenantFilter`.
+    - **Isolation Audit:** Attempted cross-tenant ID injection and JWT poisoning.
+    - Result: Request blocked by `UnifiedAuthFilter`.
     - Status: ✅ **Passed**
 - **Compatibility Testing:** 
     - Verified subdomain routing works on Chrome and Safari mobile.

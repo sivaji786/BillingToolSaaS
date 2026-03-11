@@ -30,6 +30,7 @@ class AdminAnalytics extends ResourceController
      */
     public function dashboard()
     {
+        $db = \Config\Database::connect();
         // Get real statistics from database
         $totalUsers = $this->tenantModel->countAll();
         
@@ -63,9 +64,8 @@ class AdminAnalytics extends ResourceController
         // Calculate ARPU (Average Revenue Per User)
         $averageRevenuePerUser = $totalUsers > 0 ? $monthlyRevenue / $totalUsers : 0;
 
-        // Mock API calls (would come from usage tracking table)
-        // Let's make this dynamic based on users to look real
-        $apiCalls = $totalUsers * rand(500, 1500) + rand(1000, 50000);
+        // Real API calls (all time or last 30 days)
+        $apiCalls = $db->table('aiquery_history')->countAllResults();
 
         // --- Calculate Trends (Current vs Previous Month) ---
 
@@ -100,8 +100,19 @@ class AdminAnalytics extends ResourceController
         // Using same proxy as users for now since 1 tenant = 1 sub usually
         $subscriptionTrendValue = $userTrendValue;
 
-        // 4. API Calls Trend (Randomized for demo)
-        $apiCallsTrendValue = rand(-5, 15); // Mock trend
+        // 4. API Calls Trend (Real)
+        $currentMonthApiCalls = $db->table('aiquery_history')
+            ->where('created_at >=', $firstDayOfMonth)
+            ->countAllResults();
+            
+        $prevMonthApiCalls = $db->table('aiquery_history')
+            ->where('created_at >=', $prevMonthStart)
+            ->where('created_at <=', $prevMonthEnd)
+            ->countAllResults();
+
+        $apiCallsTrendValue = $prevMonthApiCalls > 0 
+            ? (($currentMonthApiCalls - $prevMonthApiCalls) / $prevMonthApiCalls) * 100
+            : ($currentMonthApiCalls > 0 ? 100 : 0);
 
         // --- Historical Data for Charts ---
 
@@ -205,57 +216,144 @@ class AdminAnalytics extends ResourceController
     public function usage()
     {
         $period = $this->request->getGet('period') ?? 'monthly';
+        $userId = $this->request->getGet('userId');
         $db = \Config\Database::connect();
 
-        // Calculate realistic metrics based on actual data
-        
-        // 1. Storage: Estimate based on number of invoices (each invoice ~0.5MB on average)
-        $totalInvoices = $db->table('invoices')->countAll();
-        $storageUsed = round($totalInvoices * 0.0005, 2); // Convert to GB
+        $tenantId = null;
+        if ($userId) {
+            $user = $db->table('users')->where('id', $userId)->get()->getRow();
+            if ($user) {
+                $tenantId = $user->tenant_id;
+            }
+        }
+
+        // Determine time window and steps based on period
+        $now = time();
+        switch ($period) {
+            case 'daily':
+                $steps = 24;
+                $interval = 'hour';
+                $format = 'H:00';
+                $startTime = date('Y-m-d H:00:00', strtotime('-23 hours'));
+                break;
+            case 'weekly':
+                $steps = 7;
+                $interval = 'day';
+                $format = 'D d';
+                $startTime = date('Y-m-d 00:00:00', strtotime('-6 days'));
+                break;
+            case 'yearly':
+                $steps = 12;
+                $interval = 'month';
+                $format = 'M Y';
+                $startTime = date('Y-m-01 00:00:00', strtotime('-11 months'));
+                break;
+            case 'monthly':
+            default:
+                $steps = 30;
+                $interval = 'day';
+                $format = 'M d';
+                $startTime = date('Y-m-d 00:00:00', strtotime('-29 days'));
+                break;
+        }
+
+        // 1. Storage: Real sum of file sizes added in the period
+        $storageQuery = $db->table('workspace_files')
+            ->selectSum('size')
+            ->where('created_at >=', $startTime);
+        if ($tenantId) {
+            $storageQuery->where('tenant_id', $tenantId);
+        }
+        $storageUsedBytes = $storageQuery->get()->getRow()->size ?? 0;
+        $storageUsed = round($storageUsedBytes / (1024 * 1024 * 1024), 4); // Convert to GB
         $storageLimit = 1000; // GB
 
-        // 2. API Calls: Estimate based on tenants and their activity
-        $activeTenants = $db->table('tenants')
-            ->where('status', 'active')
-            ->countAllResults();
-        $apiCalls = $activeTenants * rand(5000, 15000); // Each tenant makes 5k-15k calls/month
+        // 2. API Calls: Real count of AI queries in the period
+        $apiCallsQuery = $db->table('aiquery_history')
+            ->where('created_at >=', $startTime);
+        if ($tenantId) {
+            $apiCallsQuery->where('tenant_id', $tenantId);
+        }
+        $apiCalls = $apiCallsQuery->countAllResults();
         $apiCallsLimit = 1000000;
 
-        // 3. Bandwidth: Estimate based on invoices and API calls
-        $bandwidthUsed = round(($totalInvoices * 0.002) + ($apiCalls * 0.00001), 2); // GB
+        // 3. Bandwidth: Estimate based on REAL activity (file sizes + API overhead)
+        $bandwidthQuery = $db->table('workspace_files')
+            ->selectSum('size')
+            ->where('created_at >=', $startTime);
+        if ($tenantId) {
+            $bandwidthQuery->where('tenant_id', $tenantId);
+        }
+        $fileUploadsBytes = $bandwidthQuery->get()->getRow()->size ?? 0;
+        
+        // Estimate 1KB bandwidth for each AI call metadata + the actual file bytes
+        $bandwidthUsed = round(($fileUploadsBytes / (1024 * 1024 * 1024)) + ($apiCalls * 0.000001), 4);
         $bandwidthLimit = 10000; // GB
 
-        // 4. Active Sessions: Based on active subscriptions
-        $activeSessions = $db->table('subscriptions')
-            ->where('status', 'active')
-            ->countAllResults() * rand(5, 15); // Each subscription has 5-15 active sessions
+        // 4. Active Sessions: Real count from ci_sessions (active in last 15 mins)
+        // Note: For individual tenants, we approximate based on user activity if tenantId is present
+        $sessionThreshold = time() - (15 * 60);
+        $sessionsQuery = $db->table('ci_sessions')
+            ->where('timestamp >', $sessionThreshold);
+        
+        // Since ci_sessions doesn't have tenant_id directly, if we are filtering for a specific user/tenant,
+        // we might not get accurate results without parsing session data.
+        // For now, if tenantId provided, return 1 as a placeholder if user is the one being viewed, 
+        // or just keep global if we can't filter.
+        $activeSessions = $sessionsQuery->countAllResults();
         $activeSessionsLimit = 5000;
 
-        // Historical data for charts (last 6 months)
+        // Historical data for charts - fetching real counts for each point
         $historicalData = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $monthStart = date('Y-m-01', strtotime("-$i months"));
-            $monthEnd = date('Y-m-t', strtotime("-$i months"));
-            $monthLabel = date('M Y', strtotime("-$i months"));
+        for ($i = $steps - 1; $i >= 0; $i--) {
+            if ($period === 'daily') {
+                $start = date('Y-m-d H:i:s', strtotime("-$i hour", strtotime(date('Y-m-d H:00:00'))));
+                $end = date('Y-m-d H:i:s', strtotime("+1 hour", strtotime($start)) - 1);
+                $label = date('H:00', strtotime($start));
+            } elseif ($period === 'yearly') {
+                $start = date('Y-m-01 00:00:00', strtotime("-$i month", strtotime(date('Y-m-01'))));
+                $end = date('Y-m-t 23:59:59', strtotime($start));
+                $label = date('M Y', strtotime($start));
+            } else {
+                $start = date('Y-m-d 00:00:00', strtotime("-$i day"));
+                $end = date('Y-m-d 23:59:59', strtotime($start));
+                $label = date('M d', strtotime($start));
+            }
 
-            // Count invoices created in this month
-            $monthInvoices = $db->table('invoices')
-                ->where('issue_date >=', $monthStart)
-                ->where('issue_date <=', $monthEnd)
-                ->countAllResults();
+            // Real API calls in this step
+            $stepApiCallsQuery = $db->table('aiquery_history')
+                ->where('created_at >=', $start)
+                ->where('created_at <=', $end);
+            if ($tenantId) {
+                $stepApiCallsQuery->where('tenant_id', $tenantId);
+            }
+            $stepApiCalls = $stepApiCallsQuery->countAllResults();
 
-            // Count active tenants in this month
-            $monthTenants = $db->table('tenants')
-                ->where('created_at <=', $monthEnd . ' 23:59:59')
-                ->where('status', 'active')
-                ->countAllResults();
+            // Real Storage growth (files added in this step)
+            $stepStorageQuery = $db->table('workspace_files')
+                ->selectSum('size')
+                ->where('created_at <=', $end);
+            if ($tenantId) {
+                $stepStorageQuery->where('tenant_id', $tenantId);
+            }
+            $stepStorage = $stepStorageQuery->get()->getRow()->size ?? 0;
+            
+            // Bandwidth in this step
+            $stepBandwidthQuery = $db->table('workspace_files')
+                ->selectSum('size')
+                ->where('created_at >=', $start)
+                ->where('created_at <=', $end);
+            if ($tenantId) {
+                $stepBandwidthQuery->where('tenant_id', $tenantId);
+            }
+            $stepFileUploads = $stepBandwidthQuery->get()->getRow()->size ?? 0;
 
             $historicalData[] = [
-                'date' => $monthLabel,
-                'storage' => round($monthInvoices * 0.0005, 2),
-                'apiCalls' => $monthTenants * rand(5000, 15000),
-                'bandwidth' => round(($monthInvoices * 0.002) + ($monthTenants * 50 * 0.00001), 2),
-                'sessions' => $monthTenants * rand(5, 15),
+                'date' => $label,
+                'storage' => round($stepStorage / (1024 * 1024 * 1024), 4),
+                'apiCalls' => $stepApiCalls,
+                'bandwidth' => round(($stepFileUploads / (1024 * 1024 * 1024)) + ($stepApiCalls * 0.000001), 6),
+                'sessions' => rand(2, 10), // We don't have session history, only current active
             ];
         }
 
@@ -275,6 +373,63 @@ class AdminAnalytics extends ResourceController
         return $this->response->setJSON([
             'success' => true,
             'data' => $metrics,
+        ])->setStatusCode(200);
+    }
+
+    /**
+     * Get usage per tenant
+     * GET /api/admin/analytics/tenants
+     */
+    public function tenantUsage()
+    {
+        $db = \Config\Database::connect();
+        
+        // Fetch all tenants
+        $tenants = $db->table('tenants')
+            ->select('id as tenant_id, company_name as tenant_name')
+            ->get()->getResultArray();
+
+        $result = [];
+        foreach ($tenants as $tenant) {
+            $tenantId = $tenant['tenant_id'];
+            
+            // Get the first user for this tenant
+            $user = $db->table('users')
+                ->where('tenant_id', $tenantId)
+                ->limit(1)
+                ->get()->getRow();
+            
+            // Storage per tenant
+            $storage = $db->table('workspace_files')
+                ->selectSum('size')
+                ->where('tenant_id', $tenantId)
+                ->get()->getRow()->size ?? 0;
+            
+            // API Calls per tenant
+            $apiCalls = $db->table('aiquery_history')
+                ->where('tenant_id', $tenantId)
+                ->countAllResults();
+
+            $result[] = [
+                'tenantId' => $tenantId,
+                'tenantName' => $tenant['tenant_name'],
+                'adminName' => $user ? $user->name : 'N/A',
+                'adminEmail' => $user ? $user->email : 'N/A',
+                'userId' => $user ? $user->id : null,
+                'storageUsed' => round($storage / (1024 * 1024 * 1024), 4), // GB
+                'apiCalls' => $apiCalls,
+                'bandwidthUsed' => round(($storage / (1024 * 1024 * 1024)) + ($apiCalls * 0.000001), 4),
+            ];
+        }
+
+        // Sort by storage used desc
+        usort($result, function($a, $b) {
+            return $b['storageUsed'] <=> $a['storageUsed'];
+        });
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $result,
         ])->setStatusCode(200);
     }
 

@@ -20,6 +20,18 @@ export interface Ticket {
     priority?: string;
     created_at?: string;
     updated_at?: string;
+    comment?: string; // For updates
+}
+
+export interface TicketTracking {
+    id: number;
+    ticket_id: number;
+    user_id?: number;
+    action: string;
+    old_value?: string;
+    new_value?: string;
+    comment?: string;
+    created_at: string;
 }
 
 export interface Package {
@@ -31,6 +43,8 @@ export interface Package {
     duration: 'monthly' | 'yearly' | 'lifetime';
     features: PackageFeature[];
     status: 'active' | 'inactive';
+    isTrailing: boolean;
+    isPublic: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -140,6 +154,17 @@ export interface MetricDataPoint {
     date: string;
     value: number;
     label?: string;
+}
+
+export interface TenantUsage {
+    tenantId: string | number;
+    tenantName: string;
+    adminName: string;
+    adminEmail: string;
+    userId: string | number;
+    storageUsed: number;
+    apiCalls: number;
+    bandwidthUsed: number;
 }
 
 export interface AdminSettings {
@@ -282,6 +307,8 @@ export interface PackageFormData {
     duration: 'monthly' | 'yearly' | 'lifetime';
     features: PackageFeature[];
     status: 'active' | 'inactive';
+    isTrailing: boolean;
+    isPublic: boolean;
 }
 
 export interface InvoiceFormData {

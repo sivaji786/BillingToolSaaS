@@ -883,6 +883,16 @@ export const en = {
         saveChanges: 'Save Changes',
         updateSuccess: 'Ticket updated successfully',
         updateError: 'Failed to update ticket',
+        addCommentPlaceholder: 'Enter your comments here...',
+        tracking: {
+            title: 'Ticket Tracking History',
+            noActivity: 'No activity tracked for this ticket yet.',
+            changedFrom: 'Changed from',
+            created: 'Ticket Created',
+            status_change: 'Status Updated',
+            priority_change: 'Priority Updated',
+            comment: 'Comment Added',
+        },
         pagination: {
             showing: 'Showing',
             to: 'to',

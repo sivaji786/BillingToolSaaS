@@ -63,6 +63,17 @@ class Billing extends BaseController
                 $limits = []; 
             }
             
+            // Storage Usage
+            $workspaceModel = new \App\Models\WorkspaceFileModel();
+            $storageUsedBytes = $workspaceModel->where('tenant_id', $tenantId)->selectSum('size')->get()->getRow()->size ?? 0;
+            $storageLimitGB = $limits['storage_gb'] ?? 0;
+            $storageUsedGB = round($storageUsedBytes / (1024 * 1024 * 1024), 4);
+
+            // AI Query Usage
+            $aiModel = new \App\Models\AiQueryHistoryModel();
+            $aiQueryCount = $aiModel->where('tenant_id', $tenantId)->countAllResults();
+            $aiLimit = $limits['api_calls'] ?? 0;
+
             $maxInvoices = $limits['invoices'] ?? 0;
             
             $usage = [
@@ -70,6 +81,16 @@ class Billing extends BaseController
                     'used' => $invoiceCount,
                     'limit' => $maxInvoices,
                     'percentage' => ($maxInvoices > 0) ? min(100, round(($invoiceCount / $maxInvoices) * 100)) : 0
+                ],
+                'storage' => [
+                    'used' => $storageUsedGB,
+                    'limit' => $storageLimitGB,
+                    'percentage' => ($storageLimitGB > 0) ? min(100, round(($storageUsedGB / $storageLimitGB) * 100)) : 0
+                ],
+                'api_calls' => [
+                    'used' => $aiQueryCount,
+                    'limit' => $aiLimit,
+                    'percentage' => ($aiLimit > 0) ? min(100, round(($aiQueryCount / $aiLimit) * 100)) : 0
                 ]
             ];
 
@@ -144,7 +165,7 @@ class Billing extends BaseController
     public function plans()
     {
         $model = new PlanModel();
-        $plans = $model->where('is_active', 1)->findAll();
+        $plans = $model->where('is_active', 1)->where('is_public', 1)->findAll();
         return $this->response->setJSON($plans)->setStatusCode(200);
     }
 }

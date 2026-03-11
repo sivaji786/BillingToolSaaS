@@ -6,6 +6,7 @@ use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\API\ResponseTrait;
 use App\Models\TicketModel;
 use App\Models\ProjectModel;
+use App\Models\TicketTrackingModel;
 
 class TicketController extends ResourceController
 {
@@ -75,10 +76,21 @@ class TicketController extends ResourceController
 
         try {
             if ($model->save($data)) {
+                $ticketId = $model->getInsertID();
+                
+                // Initial tracking entry
+                $trackingModel = new TicketTrackingModel();
+                $trackingModel->save((object)[
+                    'ticket_id' => $ticketId,
+                    'action' => 'created',
+                    'new_value' => 'Ticket created',
+                    'comment' => 'Initial creation'
+                ]);
+
                 return $this->respondCreated([
                     'status' => 'success', 
                     'message' => 'Ticket created successfully', 
-                    'id' => $model->getInsertID(),
+                    'id' => $ticketId,
                     'path' => $data['screenshot_path'] ?? null
                 ]);
             } else {
@@ -115,29 +127,83 @@ class TicketController extends ResourceController
         }
 
         $updateData = [];
-        if (isset($data['status'])) {
+        $trackingLogs = [];
+        $comment = $data['comment'] ?? null;
+
+        if (isset($data['status']) && $data['status'] !== $ticket['status']) {
             $updateData['status'] = $data['status'];
+            $trackingLogs[] = [
+                'action' => 'status_change',
+                'old_value' => $ticket['status'],
+                'new_value' => $data['status']
+            ];
         }
-        if (isset($data['priority'])) {
+        if (isset($data['priority']) && $data['priority'] !== $ticket['priority']) {
             $updateData['priority'] = $data['priority'];
+            $trackingLogs[] = [
+                'action' => 'priority_change',
+                'old_value' => $ticket['priority'],
+                'new_value' => $data['priority']
+            ];
         }
 
-        if (empty($updateData)) {
+        if (empty($updateData) && empty($comment)) {
              return $this->fail('No valid fields to update', 400);
         }
 
         try {
-            if ($model->update($id, $updateData)) {
-                return $this->respond([
-                    'status' => 'success',
-                    'message' => 'Ticket updated successfully',
+            $db = \Config\Database::connect();
+            $db->transStart();
+
+            if (!empty($updateData)) {
+                $model->update($id, $updateData);
+            }
+
+            $trackingModel = new TicketTrackingModel();
+            
+            // If only comment is provided
+            if (empty($trackingLogs) && !empty($comment)) {
+                $trackingModel->save((object)[
+                    'ticket_id' => $id,
+                    'action' => 'comment',
+                    'comment' => $comment
                 ]);
             } else {
-                return $this->fail($model->errors());
+                // Log all changes with the comment
+                foreach ($trackingLogs as $log) {
+                    $log['ticket_id'] = $id;
+                    $log['comment'] = $comment; // Attach same comment to all changes in this update
+                    $trackingModel->save((object)$log);
+                }
             }
+
+            $db->transComplete();
+
+            if ($db->transStatus() === false) {
+                return $this->fail('Transaction failed');
+            }
+
+            return $this->respond([
+                'status' => 'success',
+                'message' => 'Ticket updated successfully',
+            ]);
         } catch (\Throwable $e) {
             log_message('error', '[TicketUpdate] ' . $e->getMessage());
             return $this->failServerError('Server Error: ' . $e->getMessage());
         }
+    }
+
+    public function tracking($id = null)
+    {
+        if (!$id) {
+            return $this->fail('Ticket ID is required', 400);
+        }
+
+        $trackingModel = new TicketTrackingModel();
+        $tracking = $trackingModel->where('ticket_id', $id)
+                                 ->orderBy('created_at', 'DESC')
+                                 ->findAll();
+
+        return $this->respond($tracking);
     }
 }

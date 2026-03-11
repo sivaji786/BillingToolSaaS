@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import { adminUserService } from '../../../services/adminApi';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
@@ -7,11 +9,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { ArrowLeft, Mail, Calendar, Activity, Ban, CheckCircle, Bell, FileText, Download, Key } from 'lucide-react';
 import { Skeleton } from '../../ui/skeleton';
 
-import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { adminBillingService, adminSettingsService } from '../../../services/adminApi';
+import { adminBillingService, adminSettingsService, adminAnalyticsService } from '../../../services/adminApi';
 import { generateInvoicePDF } from '../../../utils/invoice-pdf';
 import { Invoice as FullInvoice } from '../../../types/invoice';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+
+const formatBytes = (gb: number) => {
+    if (gb === 0) return '0 B';
+    const bytes = gb * 1024 * 1024 * 1024;
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const clampedI = Math.min(Math.max(i, 0), sizes.length - 1);
+    return parseFloat((bytes / Math.pow(k, clampedI)).toFixed(2)) + ' ' + sizes[clampedI];
+};
 
 interface SAUserDetailsProps {
     userId: string;
@@ -37,6 +50,14 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
     const { data: settings } = useQuery({
         queryKey: ['admin-settings'],
         queryFn: adminSettingsService.getSettings,
+    });
+
+    const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
+
+    const { data: usage, isLoading: isUsageLoading } = useQuery({
+        queryKey: ['user-usage', userId, period],
+        queryFn: () => adminAnalyticsService.getUsageMetrics({ userId, period }),
+        enabled: !!userId,
     });
 
     const queryClient = useQueryClient();
@@ -338,30 +359,131 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
             {/* Usage Statistics */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Usage Statistics</CardTitle>
-                    <CardDescription>Storage, API calls, and bandwidth metrics</CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                        <p className="text-lg font-semibold text-muted-foreground">Coming Soon</p>
-                        <p className="text-sm text-muted-foreground mt-1">Usage statistics will be available soon</p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Usage Statistics</CardTitle>
+                            <CardDescription>Real-time storage, API calls, and bandwidth metrics</CardDescription>
+                        </div>
+                        <Select value={period} onValueChange={(v: any) => setPeriod(v)}>
+                            <SelectTrigger className="w-[150px]">
+                                <SelectValue placeholder="Period" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="daily">Last 24 Hours</SelectItem>
+                                <SelectItem value="weekly">Last 7 Days</SelectItem>
+                                <SelectItem value="monthly">Last 30 Days</SelectItem>
+                                <SelectItem value="yearly">Last Year</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
+                </CardHeader>
+                <CardContent>
+                    {isUsageLoading ? (
+                        <div className="grid gap-4 md:grid-cols-3">
+                            <Skeleton className="h-24 w-full" />
+                            <Skeleton className="h-24 w-full" />
+                            <Skeleton className="h-24 w-full" />
+                        </div>
+                    ) : (
+                        <div className="grid gap-4 md:grid-cols-3">
+                            <Card className="bg-primary/5 border-none">
+                                <CardContent className="pt-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Storage Used</p>
+                                            <p className="text-2xl font-bold">{formatBytes(usage?.storageUsed || 0)}</p>
+                                        </div>
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <FileText className="h-5 w-5 text-primary" />
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <Card className="bg-primary/5 border-none">
+                                <CardContent className="pt-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">API Calls</p>
+                                            <p className="text-2xl font-bold">{usage?.apiCalls?.toLocaleString()}</p>
+                                        </div>
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <Activity className="h-5 w-5 text-primary" />
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <Card className="bg-primary/5 border-none">
+                                <CardContent className="pt-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Bandwidth</p>
+                                            <p className="text-2xl font-bold">{formatBytes(usage?.bandwidthUsed || 0)}</p>
+                                        </div>
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <Download className="h-5 w-5 text-primary" />
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
             {/* Usage Charts */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Usage Trends</CardTitle>
-                    <CardDescription>Storage and API usage over time</CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                        <p className="text-lg font-semibold text-muted-foreground">Coming Soon</p>
-                        <p className="text-sm text-muted-foreground mt-1">Usage trend charts will be available soon</p>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>API Calls Trend</CardTitle>
+                        <CardDescription>AI query volume over the selected period</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[300px] w-full mt-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={usage?.historicalData || []}>
+                                    <defs>
+                                        <linearGradient id="colorApi" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground))" opacity={0.1} />
+                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                                    <Tooltip 
+                                        contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                                        itemStyle={{ color: 'hsl(var(--primary))' }}
+                                    />
+                                    <Area type="monotone" dataKey="apiCalls" name="API Calls" stroke="hsl(var(--primary))" strokeWidth={2} fillOpacity={1} fill="url(#colorApi)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Bandwidth Consumption</CardTitle>
+                        <CardDescription>Data transfer in GB</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[300px] w-full mt-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={usage?.historicalData || []}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground))" opacity={0.1} />
+                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                                    <Tooltip 
+                                        contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                                        formatter={(value: number) => [`${value} GB`, 'Bandwidth']}
+                                    />
+                                    <Bar dataKey="bandwidth" name="Bandwidth" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }

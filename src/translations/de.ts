@@ -540,6 +540,16 @@ export const de = {
         saveChanges: 'Änderungen speichern',
         updateSuccess: 'Ticket erfolgreich aktualisiert',
         updateError: 'Ticket konnte nicht aktualisiert werden',
+        addCommentPlaceholder: 'Geben Sie hier Ihre Kommentare ein...',
+        tracking: {
+            title: 'Ticket-Verlauf',
+            noActivity: 'Noch keine Aktivitäten für dieses Ticket erfasst.',
+            changedFrom: 'Geändert von',
+            created: 'Ticket erstellt',
+            status_change: 'Status aktualisiert',
+            priority_change: 'Priorität aktualisiert',
+            comment: 'Kommentar hinzugefügt',
+        },
         pagination: {
             showing: 'Zeige',
             to: 'bis',

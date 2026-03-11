@@ -9,6 +9,7 @@ import {
     Menu,
     X,
     Ticket,
+    BookOpen,
 } from 'lucide-react';
 import { useAdminStore } from '../../stores/adminStore';
 import { cn } from '../../lib/utils';
@@ -35,6 +36,7 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
         { id: 'SAbilling', label: t('billing.title'), icon: Receipt },
         { id: 'SAusage', label: t('nav.reports'), icon: BarChart3 },
         { id: 'SATickets', label: 'Tickets', icon: Ticket },
+        { id: 'SAWiki', label: 'Wiki', icon: BookOpen },
         { id: 'SAsettings', label: t('nav.settings'), icon: Settings },
     ];
 
@@ -94,15 +96,17 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                                             }
                                         }}
                                         className={cn(
-                                            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                                            'w-full flex items-start gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                                             isActive
                                                 ? 'bg-purple-600 text-white'
                                                 : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                                            sidebarCollapsed && 'justify-center'
+                                            sidebarCollapsed && 'justify-center items-center'
                                         )}
                                     >
-                                        <Icon className="h-5 w-5 shrink-0" />
-                                        {!sidebarCollapsed && <span>{item.label}</span>}
+                                        <Icon className="h-5 w-5 shrink-0 mt-0.5" />
+                                        {!sidebarCollapsed && (
+                                            <span className="leading-snug text-left">{item.label}</span>
+                                        )}
                                     </button>
                                 );
                             })}

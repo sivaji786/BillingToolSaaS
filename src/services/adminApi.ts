@@ -17,6 +17,8 @@ import {
     InvoiceFormData,
     RevenueStats,
     Ticket,
+    TicketTracking,
+    TenantUsage,
 } from '../types/admin';
 import { getApiBaseUrl } from '../utils/config';
 import { useAdminStore } from '../stores/adminStore';
@@ -209,6 +211,11 @@ export const adminAnalyticsService = {
         return response.data.data;
     },
 
+    getTenantUsage: async (): Promise<TenantUsage[]> => {
+        const response = await adminApi.get<ApiResponse<TenantUsage[]>>('/analytics/tenants');
+        return response.data.data;
+    },
+
     exportUsageCsv: async (filters: UsageFilters = {}): Promise<Blob> => {
         const response = await adminApi.get('/usage/export', {
             params: filters,
@@ -263,8 +270,28 @@ export const adminTicketService = {
         const response = await adminApi.get<Ticket[]>('/tickets');
         return response.data;
     },
-    updateTicket: async (id: string, data: Partial<Ticket>): Promise<{ status: string, message: string }> => {
+    updateTicket: async (id: string, data: Partial<Ticket> & { comment?: string }): Promise<{ status: string, message: string }> => {
         const response = await adminApi.put<{ status: string, message: string }>(`/tickets/${id}`, data);
+        return response.data;
+    },
+    getTicketTracking: async (id: string): Promise<TicketTracking[]> => {
+        const response = await adminApi.get<TicketTracking[]>(`/tickets/${id}/tracking`);
+        return response.data;
+    }
+};
+
+// Wiki Services
+export const adminWikiService = {
+    getTree: async (lang = 'en'): Promise<any[]> => {
+        const response = await adminApi.get<any[]>('/wiki', {
+            params: { lang }
+        });
+        return response.data;
+    },
+    getContent: async (path: string, lang = 'en'): Promise<{ content: string; filename: string }> => {
+        const response = await adminApi.get<any>('/wiki/read', {
+            params: { path, lang }
+        });
         return response.data;
     }
 };

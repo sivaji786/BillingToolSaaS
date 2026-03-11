@@ -25,6 +25,8 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
         { name: 'Users', value: '', type: 'users' },
         { name: 'Bandwidth', value: '', type: 'bandwidth' },
     ]);
+    const [isTrailing, setIsTrailing] = useState(false);
+    const [isPublic, setIsPublic] = useState(true);
 
     // Fetch package data if editing
     const { data: packageData, isLoading } = useQuery({
@@ -37,6 +39,10 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
     useEffect(() => {
         if (packageData?.features && packageData.features.length > 0) {
             setFeatures(packageData.features);
+        }
+        if (packageData) {
+            setIsTrailing(!!packageData.isTrailing);
+            setIsPublic(packageData.isPublic !== false); // default to true
         }
     }, [packageData]);
 
@@ -102,6 +108,8 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
             currency: formDataObj.get('currency') as string,
             duration: formDataObj.get('duration') as 'monthly' | 'yearly' | 'lifetime',
             status: formDataObj.get('status') as 'active' | 'inactive',
+            isTrailing: isTrailing,
+            isPublic: isPublic,
             features: validFeatures,
         };
 
@@ -216,7 +224,6 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="status">Status</Label>
                                 <Select name="status" defaultValue={packageData?.status?.toString() || 'active'}>
                                     <SelectTrigger className="w-full md:w-[200px]">
                                         <SelectValue />
@@ -226,6 +233,38 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                                         <SelectItem value="inactive">Inactive</SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+
+                            <div className="flex items-center space-x-2 pt-2">
+                                <input
+                                    type="checkbox"
+                                    id="isTrailing"
+                                    checked={isTrailing}
+                                    onChange={(e) => setIsTrailing(e.target.checked)}
+                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                />
+                                <Label htmlFor="isTrailing" className="font-medium cursor-pointer">
+                                    Default (Trailing) Package
+                                </Label>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                    (New tenants from QuickAccess will receive this plan)
+                                </span>
+                            </div>
+
+                            <div className="flex items-center space-x-2 pt-2">
+                                <input
+                                    type="checkbox"
+                                    id="isPublic"
+                                    checked={isPublic}
+                                    onChange={(e) => setIsPublic(e.target.checked)}
+                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                />
+                                <Label htmlFor="isPublic" className="font-medium cursor-pointer">
+                                    Visible to Public
+                                </Label>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                    (Show this plan on the public pricing page)
+                                </span>
                             </div>
                         </CardContent>
                     </Card>

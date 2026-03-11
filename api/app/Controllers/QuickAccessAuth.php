@@ -241,8 +241,10 @@ class QuickAccessAuth extends ResourceController
 
         try {
             $planModel = new PlanModel();
-            $freePlan  = $planModel->where('price', 0)->first() ?? $planModel->first();
-            $planId    = $freePlan['id'] ?? 1;
+            $trailingPlan = $planModel->where('is_trailing', 1)->first();
+            $freePlan     = $planModel->where('price', 0)->first();
+            
+            $planId = $trailingPlan['id'] ?? $freePlan['id'] ?? $planModel->first()['id'] ?? 1;
 
             $emailPrefix = preg_replace('/[^a-z0-9]/', '', strtolower(explode('@', $email)[0]));
             $subdomain   = $emailPrefix ?: 'user';

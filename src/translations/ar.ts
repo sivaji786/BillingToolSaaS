@@ -540,6 +540,16 @@ export const ar = {
         saveChanges: 'حفظ التغييرات',
         updateSuccess: 'تم تحديث التذكرة بنجاح',
         updateError: 'فشل تحديث التذكرة',
+        addCommentPlaceholder: 'أدخل تعليقاتك هنا...',
+        tracking: {
+            title: 'سجل تتبع التذكرة',
+            noActivity: 'لم يتم تتبع أي نشاط لهذه التذكرة بعد.',
+            changedFrom: 'تم التغيير من',
+            created: 'تم إنشاء التذكرة',
+            status_change: 'تم تحديث الحالة',
+            priority_change: 'تم تحديث الأولوية',
+            comment: 'تم إضافة تعليق',
+        },
         pagination: {
             showing: 'عرض',
             to: 'إلى',

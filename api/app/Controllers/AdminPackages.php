@@ -41,6 +41,8 @@ class AdminPackages extends ResourceController
                 'duration' => $plan['billing_period'],
                 'features' => json_decode($plan['features'], true) ?? [],
                 'status' => $plan['is_active'] ? 'active' : 'inactive',
+                'isTrailing' => (bool)$plan['is_trailing'],
+                'isPublic' => (bool)$plan['is_public'],
                 'createdAt' => $plan['created_at'],
                 'updatedAt' => $plan['updated_at'],
             ];
@@ -79,6 +81,8 @@ class AdminPackages extends ResourceController
             'duration' => $plan['billing_period'],
             'features' => json_decode($plan['features'], true) ?? [],
             'status' => $plan['is_active'] ? 'active' : 'inactive',
+            'isTrailing' => (bool)$plan['is_trailing'],
+            'isPublic' => (bool)$plan['is_public'],
             'createdAt' => $plan['created_at'],
             'updatedAt' => $plan['updated_at'],
         ];
@@ -112,9 +116,16 @@ class AdminPackages extends ResourceController
             'price' => $data['price'],
             'billing_period' => $data['duration'] ?? 'monthly',
             'features' => json_encode($data['features'] ?? []),
-            'limits' => json_encode([]), // Can be calculated from features
+            'limits' => json_encode($this->syncLimitsFromFeatures($data['features'] ?? [])),
             'is_active' => ($data['status'] ?? 'active') === 'active',
+            'is_trailing' => (bool)($data['isTrailing'] ?? false),
+            'is_public' => (bool)($data['isPublic'] ?? true),
         ];
+
+        // If this plan is marked as trailing, unmark others
+        if ($planData['is_trailing']) {
+            $this->planModel->where('is_trailing', 1)->set(['is_trailing' => 0])->update();
+        }
 
         $id = $this->planModel->insert($planData);
 
@@ -163,10 +174,22 @@ class AdminPackages extends ResourceController
 
         if (isset($data['features'])) {
             $updateData['features'] = json_encode($data['features']);
+            $updateData['limits'] = json_encode($this->syncLimitsFromFeatures($data['features']));
         }
 
         if (isset($data['status'])) {
             $updateData['is_active'] = $data['status'] === 'active';
+        }
+
+        if (isset($data['isTrailing'])) {
+            $updateData['is_trailing'] = (bool)$data['isTrailing'];
+            if ($updateData['is_trailing']) {
+                $this->planModel->where('is_trailing', 1)->set(['is_trailing' => 0])->update();
+            }
+        }
+
+        if (isset($data['isPublic'])) {
+            $updateData['is_public'] = (bool)$data['isPublic'];
         }
 
         $success = $this->planModel->update($id, $updateData);
@@ -195,6 +218,10 @@ class AdminPackages extends ResourceController
             return $this->failNotFound('Package not found');
         }
 
+        if ($plan['is_trailing']) {
+            return $this->fail('Cannot delete the default trailing package.');
+        }
+
         // Check if any tenants are using this plan
         $tenantModel = new \App\Models\TenantModel();
         $tenants = $tenantModel->where('plan_id', $id)->findAll();
@@ -215,5 +242,51 @@ class AdminPackages extends ResourceController
             'success' => true,
             'message' => 'Package deleted successfully',
         ])->setStatusCode(200);
+    }
+
+    /**
+     * Map features to technical limits for enforcement
+     */
+    private function syncLimitsFromFeatures(array $features): array
+    {
+        $limits = [
+            'users' => -1,
+            'invoices' => -1,
+            'projects' => -1,
+            'storage_gb' => -1,
+            'api_calls' => -1
+        ];
+
+        foreach ($features as $feature) {
+            $type = $feature['type'] ?? 'custom';
+            $value = $feature['value'] ?? '';
+
+            // Clean value (e.g., "50GB" -> 50, "Unlimited" -> -1)
+            $numericValue = (int)$value;
+            if (stripos((string)$value, 'unlimited') !== false) {
+                $numericValue = -1;
+            }
+
+            switch ($type) {
+                case 'storage':
+                    $limits['storage_gb'] = $numericValue;
+                    break;
+                case 'users':
+                    $limits['users'] = $numericValue;
+                    break;
+                case 'api':
+                case 'api_calls':
+                    $limits['api_calls'] = $numericValue;
+                    break;
+                case 'invoices':
+                    $limits['invoices'] = $numericValue;
+                    break;
+                case 'projects':
+                    $limits['projects'] = $numericValue;
+                    break;
+            }
+        }
+
+        return $limits;
     }
 }

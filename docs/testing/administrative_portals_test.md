@@ -10,6 +10,7 @@
     - Status: ✅ **Passed**
 - **API Testing:** 
     - Analytics data integrity vs real database records.
+    - Verification of **Plan Visibility** (Public/Private logic) in the admin list.
     - Status: ✅ **Passed**
 - **Smoke Testing:** 
     - Verifying Super Admin portal loads immediately after CI build.

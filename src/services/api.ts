@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from "sonner";
 import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry, AIPromptRequest, AIPromptResponse, Buyer } from '../types/invoice';
 import { getApiBaseUrl } from '../utils/config';
 import { useAuthStore } from '../stores/authStore';
@@ -50,6 +51,20 @@ api.interceptors.response.use(
             console.log('Tenant mismatch detected, redirecting to correct workspace:', error.response.data.redirect_url);
             window.location.href = error.response.data.redirect_url;
         }
+
+        // Handle Limit Exceeded errors specifically
+        const message = error.response?.data?.message || '';
+        if (message.toLowerCase().includes('limit exceeded')) {
+            toast.error('Limit Reached', {
+                description: message,
+                action: {
+                    label: 'Go to Billing',
+                    onClick: () => window.location.hash = '#billing'
+                },
+                duration: 6000
+            });
+        }
+
         return Promise.reject(error);
     }
 );

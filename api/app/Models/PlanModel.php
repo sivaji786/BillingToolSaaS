@@ -14,7 +14,7 @@ class PlanModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'name', 'slug', 'price', 'billing_period', 
-        'features', 'limits', 'is_active'
+        'features', 'limits', 'is_active', 'is_trailing', 'is_public'
     ];
 
     protected $useTimestamps = true;

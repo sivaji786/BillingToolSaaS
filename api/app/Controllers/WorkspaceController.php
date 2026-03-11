@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\API\ResponseTrait;
 use App\Controllers\BaseController;
 use App\Models\WorkspaceFileModel;
+use App\Models\AiQueryHistoryModel;
 use App\Libraries\ContentExtractor;
 
 class WorkspaceController extends BaseController
@@ -182,12 +183,18 @@ class WorkspaceController extends BaseController
                             ])
                         ];
 
-                        if ($model->insert($data)) {
-                            $uploadedCount++;
-                        } else {
-                            $err = json_encode($model->errors());
-                            error_log("DB Insert failed for $safeName: $err");
-                            $errors[] = "DB Error for $safeName: $err";
+                        try {
+                            if ($model->insert($data)) {
+                                $uploadedCount++;
+                            } else {
+                                $err = json_encode($model->errors());
+                                error_log("DB Insert failed for $safeName: $err");
+                                $errors[] = "DB Error for $safeName: $err";
+                            }
+                        } catch (\RuntimeException $e) {
+                            $errors[] = $e->getMessage();
+                        } catch (\Exception $e) {
+                            $errors[] = "Error saving $safeName: " . $e->getMessage();
                         }
                     } else {
                         $errors[] = "Move failed for " . $file->getClientName() . ": " . $file->getErrorString();
@@ -415,8 +422,12 @@ class WorkspaceController extends BaseController
                     }
                 }
 
-                if (!$model->insert($data)) {
-                    throw new \Exception("DB Insert Failed for $filePath: " . json_encode($model->errors()));
+                try {
+                    if (!$model->insert($data)) {
+                        throw new \Exception("DB Insert Failed for $filePath: " . json_encode($model->errors()));
+                    }
+                } catch (\RuntimeException $e) {
+                    throw new \Exception($e->getMessage()); // Re-throw with message for the catch block
                 }
             }
         } catch (\Exception $e) {
@@ -710,14 +721,21 @@ class WorkspaceController extends BaseController
             ->get()->getRowArray();
 
         if (!$exactMatch) {
-            $db->table('aiquery_history')->insert([
-                'tenant_id' => $this->tenantId,
-                'user_id' => $this->getUserId(),
-                'prompt' => $prompt,
-                'sql_query' => $whereClause,
-                'folder_path' => $folderPath,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
+            $aiHistoryModel = new AiQueryHistoryModel();
+            try {
+                $aiHistoryModel->insert([
+                    'tenant_id' => $this->tenantId,
+                    'user_id' => $this->getUserId(),
+                    'prompt' => $prompt,
+                    'sql_query' => $whereClause,
+                    'folder_path' => $folderPath,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            } catch (\RuntimeException $e) {
+                return $this->fail($e->getMessage(), 403);
+            } catch (\Exception $e) {
+                return $this->fail('Failed to save AI search query: ' . $e->getMessage());
+            }
         }
 
         // 3. Execute Query safely with Tenant restriction

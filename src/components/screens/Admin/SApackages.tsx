@@ -81,9 +81,19 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                                         <CardTitle className="text-xl">{pkg.name}</CardTitle>
                                         <CardDescription className="mt-1">{pkg.description}</CardDescription>
                                     </div>
-                                    <Badge variant={pkg.status === 'active' ? 'default' : 'secondary'}>
-                                        {pkg.status}
-                                    </Badge>
+                                    <div className="flex flex-col items-end gap-2">
+                                        <Badge variant={pkg.status === 'active' ? 'default' : 'secondary'}>
+                                            {pkg.status}
+                                        </Badge>
+                                        {pkg.isTrailing && (
+                                            <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">
+                                                Default
+                                            </Badge>
+                                        )}
+                                        <Badge variant="outline" className={pkg.isPublic ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}>
+                                            {pkg.isPublic ? 'Public' : 'Private'}
+                                        </Badge>
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -119,19 +129,21 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                                         <Edit className="h-3 w-3 mr-1" />
                                         Edit
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex-1 text-red-600 hover:text-red-700"
-                                        onClick={() => {
-                                            if (confirm('Are you sure you want to delete this package?')) {
-                                                deleteMutation.mutate(pkg.id);
-                                            }
-                                        }}
-                                    >
-                                        <Trash2 className="h-3 w-3 mr-1" />
-                                        Delete
-                                    </Button>
+                                    {!pkg.isTrailing && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="flex-1 text-red-600 hover:text-red-700"
+                                            onClick={() => {
+                                                if (confirm('Are you sure you want to delete this package?')) {
+                                                    deleteMutation.mutate(pkg.id);
+                                                }
+                                            }}
+                                        >
+                                            <Trash2 className="h-3 w-3 mr-1" />
+                                            Delete
+                                        </Button>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
