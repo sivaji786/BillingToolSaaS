@@ -14,8 +14,8 @@ The BillingTool SaaS platform has a robust foundation for i18n, but suffers from
 | Language | Code | Codebase Status | Coverage (Est.) | RTL Support |
 | :--- | :--- | :--- | :--- | :--- |
 | **English** | `en` | ✅ Master | 100% | LTR |
-| **German** | `de` | ✅ Implemented | 96% | LTR |
-| **Arabic** | `ar` | ✅ Implemented | 96% | ✅ RTL Native |
+| **German** | `de` | ✅ Implemented | 100% | LTR |
+| **Arabic** | `ar` | ✅ Implemented | 88% | ✅ RTL Native |
 
 > [!NOTE]
 > Polish, French, and Italian are currently out of scope for the immediate roadmap as per PM direction.
@@ -26,9 +26,9 @@ The BillingTool SaaS platform has a robust foundation for i18n, but suffers from
 - **Framework:** Custom Context-based provider (`LanguageContext.tsx`) with a centralized utility (`i18n.ts`).
 - **Storage:** TypeScript-based key-value pairs (`src/translations/*.ts`).
 - **Key Count Analysis:**
-  - `en.ts`: 594 active keys
-  - `de.ts`: 572 active keys (Needs 22 more for 100% parity)
-  - `ar.ts`: 572 active keys (Needs 22 more for 100% parity)
+  - `en.ts`: 1,093 active keys
+  - `de.ts`: 1,093 active keys (100% parity with English)
+  - `ar.ts`: 970 active keys (Coverage improvement in progress)
 
 ### 3.2 Backend (CodeIgniter 4)
 - **Current State:** Significantly lagging behind the frontend.
@@ -43,9 +43,8 @@ The platform demonstrates **Enterprise-grade RTL support**:
 
 ## 4. Key Coverage Gaps
 The following features are fully localized in English but have minor missing keys in German/Arabic:
-1. **AI Assistant:** Recent additions to the AI Parsing logic terminology.
-2. **Admin Portals:** Newer User Management and RBAC strings.
-3. **Usage Enforcement:** Limit-exceeded messages (Recently implemented).
+4. **Buyer Selection (NEW):** Integrated directory dropdown in preview (Localized in EN, DE, AR).
+5. **View Toggle (NEW):** Switch between Web and Print views (Localized in EN, DE, AR).
 
 ## 5. Recommendations
 

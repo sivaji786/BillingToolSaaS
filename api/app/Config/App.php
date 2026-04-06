@@ -25,11 +25,20 @@ class App extends BaseConfig
         // Allow dynamic base URL for multi-tenancy
         if (isset($_SERVER['HTTP_HOST'])) {
             $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http');
-            $dynamicBaseURL = $protocol . '://' . $_SERVER['HTTP_HOST'] . '/';
+            $hostname = $_SERVER['HTTP_HOST'];
+            $dynamicBaseURL = $protocol . '://' . $hostname . '/';
             
-            // Validate the dynamic URL but be lenient for local dev underscores
-            if (filter_var($dynamicBaseURL, FILTER_VALIDATE_URL) || strpos($_SERVER['HTTP_HOST'], '.localhost') !== false) {
-                $this->baseURL = $dynamicBaseURL;
+            // CodeIgniter 4's SiteURI is strict about underscores as per RFC 1123.
+            // If the hostname contains an underscore, setting it as baseURL will throw a ConfigException.
+            // We only set the dynamic baseURL if it's strictly valid (no underscores).
+            if (preg_match('/^[a-z0-9.-]+(:[0-9]+)?$/i', str_replace(['http://', 'https://'], '', $hostname))) {
+                if (filter_var($dynamicBaseURL, FILTER_VALIDATE_URL) || strpos($hostname, '.localhost') !== false) {
+                    $this->baseURL = $dynamicBaseURL;
+                }
+            } else {
+                // FALLBACK: Use a safe localhost URL if the subdomain contains underscores (like "nexus_ai")
+                // This prevents the framework from crashing, although generated links may use "localhost".
+                $this->baseURL = $protocol . '://localhost:' . (explode(':', $hostname)[1] ?? '8080') . '/';
             }
         }
     }

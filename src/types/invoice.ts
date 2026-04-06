@@ -62,6 +62,7 @@ export interface PaymentTerms {
 
 export interface Invoice {
   id?: string;
+  templateId?: string; // Links to the InvoiceTemplate used for this invoice
   invoiceNumber: string;
   issueDate: string; // ISO 8601 date (YYYY-MM-DD)
   dueDate?: string;
@@ -152,6 +153,7 @@ export interface CompanyProfile {
   headerText?: string;
   footerText?: string;
   companyTypeId?: number;
+  defaultTemplateId?: string;
 }
 
 export interface ExportOptions {

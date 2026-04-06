@@ -32,7 +32,8 @@ class CompanyProfileModel extends BaseModel
         'logo_url',
         'header_text',
         'footer_text',
-        'company_type_id'
+        'company_type_id',
+        'default_template_id'
     ];
 
     protected bool $allowEmptyInserts = false;

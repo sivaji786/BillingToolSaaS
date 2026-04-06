@@ -1,33 +1,7 @@
 export const de = {
-    common: {
-        save: 'Speichern',
-        saved: 'Gespeichert',
-        cancel: 'Abbrechen',
-        delete: 'Löschen',
-        edit: 'Bearbeiten',
-        close: 'Schließen',
-        note: 'Hinweis',
-        back: 'Zurück',
-        search: 'Suchen',
-        filter: 'Filtern',
-        clear: 'Löschen',
-        apply: 'Anwenden',
-        copied: 'Kopiert',
-        downloaded: 'Heruntergeladen',
-        reset: 'Zurücksetzen',
-        loading: 'Lädt...',
-        error: 'Fehler',
-        success: 'Erfolg',
-        warning: 'Warnung',
-        info: 'Info',
-        discard: 'Verwerfen',
-        theme: {
-            light: 'Hell',
-            dark: 'Dunkel',
-            system: 'System',
-            toggle: 'Design umschalten',
-        }
-    },
+    appName: '[mn]BillingTool',
+    appSubtitle: 'UBL 2.1 Compliant E-Invoicing',
+    logout: 'Logout',
     login: {
         title: 'Willkommen zurück',
         subtitle: 'Professionelle UBL 2.1 konforme E-Invoicing-Plattform',
@@ -36,11 +10,23 @@ export const de = {
         password: 'Passwort',
         signIn: 'Anmelden',
         loggingIn: 'Anmeldung...',
+        orTryDemo: 'Or try demo',
+        autoFillDemo: 'Auto-fill Demo Credentials',
+        footer1: 'Built with compliance for European e-invoicing standards',
+        footer2: 'EN 16931 • UBL 2.1 • WCAG 2.1 AA',
+        welcomeBack: 'Welcome back!',
+        welcomeBackDesc: 'Successfully logged in to your account.',
+        welcomeDemo: 'Welcome to Demo!',
+        welcomeDemoDesc: 'Logged in with demo credentials.',
+        loginFailed: 'Anmeldung fehlgeschlagen',
+        loginFailedDesc: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
+        loggedOut: 'Logged out successfully',
+        loggedOutDesc: 'You have been logged out of your account.',
         noAccount: 'Noch kein Konto?',
         signup: 'Jetzt registrieren',
         backToHome: 'Zurück zur Startseite',
-        loginFailed: 'Anmeldung fehlgeschlagen',
-        loginFailedDesc: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
+        pendingActionBanner: 'Account found! Log in below to continue with your invoice.',
+        resumingAction: 'Resuming your invoice action…'
     },
     nav: {
         dashboard: 'Dashboard',
@@ -50,116 +36,417 @@ export const de = {
         products: 'Pakete',
         clients: 'Kunden',
         reports: 'Berichte',
-        workspace: 'Mein Workspace',
+        workspace: 'Mein Workspace'
     },
-    invoice: {
-        new: 'Neue Rechnung',
-        edit: 'Rechnung bearbeiten',
-        draft: 'Entwurf',
-        validated: 'Validiert',
-        sent: 'Gesendet',
-        paid: 'Bezahlt',
-        cancelled: 'Storniert',
-        number: 'Rechnungsnummer',
-        numberPlaceholder: 'INV-001',
-        date: 'Datum',
+    dashboard: {
+        title: 'Invoice Dashboard',
+        subtitle: 'EN 16931-compliant e-invoice management',
+        newInvoice: 'New Invoice',
+        totalInvoices: 'Total Invoices',
+        draft: 'Draft',
+        sent: 'Sent',
+        totalValue: 'Total Value',
+        paidRevenue: 'Paid Revenue',
+        pendingRevenue: 'Pending Revenue',
+        draftValue: 'Draft Value',
+        overdue: 'Overdue',
+        invoices: 'invoices',
+        pending: 'Pending',
+        revenueBreakdown: 'Revenue Breakdown',
+        statusDistribution: 'Status Distribution',
+        monthlyTrend: 'Monthly Trend',
+        quickActions: 'Schnellaktionen',
+        createInvoice: 'Create Invoice',
+        createInvoiceDesc: 'Start a new EN 16931 invoice',
+        importData: 'Import Data',
+        importDataDesc: 'Import invoices from files',
+        validateBatch: 'Validate Batch',
+        validateBatchDesc: 'Validate all draft invoices',
+        validating: 'Validating...',
+        recentInvoices: 'Recent Invoices',
+        noInvoices: 'No invoices yet',
+        noInvoicesDesc: 'Create your first invoice to get started',
+        due: 'Due'
+    },
+    status: {
+        draft: 'Draft',
+        validated: 'Validated',
+        sent: 'Sent',
+        paid: 'Paid',
+        cancelled: 'Cancelled',
+        signed: 'Signed'
+    },
+    editor: {
+        back: 'Zurück',
+        newInvoice: 'Neue Rechnung',
+        unsavedChanges: 'Ungespeicherte Änderungen',
+        saveDraft: 'Entwurf speichern',
+        validate: 'Überprüfen',
+        backToDashboard: 'Zurück zum Dashboard',
+        saveInvoice: 'Rechnung speichern',
+        preview: 'Vorschau',
+        export: 'Exportieren',
+        invoiceDetails: 'Rechnungsdetails',
+        invoiceNumber: 'Rechnungsnummer',
+        issueDate: 'Ausstellungsdatum',
         dueDate: 'Fälligkeitsdatum',
         currency: 'Währung',
+        invoiceType: 'Rechnungstyp',
+        standard: 'Standardrechnung',
+        creditNote: 'Gutschrift',
         seller: 'Verkäufer',
         buyer: 'Käufer',
-        lineItems: 'Rechnungspositionen',
-        addItem: 'Position hinzufügen',
-        description: 'Beschreibung',
+        lineItems: 'Positionen',
+        addLine: 'Position hinzufügen',
+        noLineItems: 'Noch keine Positionen',
+        noLineItemsDesc: 'Fügen Sie Ihrer Rechnung Artikel oder Dienstleistungen hinzu',
+        addFirstLine: 'Erste Position hinzufügen',
+        lineAdded: 'Position hinzugefügt',
+        lineDeleted: 'Position gelöscht',
+        lineItem: {
+            description: 'Beschreibung',
+            descriptionPlaceholder: 'Artikelbeschreibung',
+            descriptionAria: 'Beschreibung der Position {index}',
+            qty: 'Menge',
+            qtyAria: 'Menge der Position {index}',
+            price: 'Preis',
+            unitPriceAria: 'Einzelpreis der Position {index}',
+            tax: 'Steuer',
+            taxPercent: 'Steuer %',
+            taxPercentPlaceholder: '%',
+            taxPercentAria: 'Steuerprozentsatz der Position {index}',
+            dragToReorder: 'Zum Neuordnen ziehen',
+            expandDetails: 'Details erweitern',
+            collapseDetails: 'Details minimieren',
+            deleteLine: 'Position löschen',
+            deleteAria: 'Position {index} löschen',
+            lineId: 'Positions-ID',
+            ublId: 'UBL: Invoice/InvoiceLine/ID',
+            unitCode: 'Einheitscode',
+            unitCodeAria: 'Einheitscode',
+            selectUnit: 'Einheit wählen',
+            ublUnit: 'UN/ECE Empfehlung 20',
+            taxCategory: 'Steuerkategorie',
+            taxCategoryAria: 'Steuerkategorie',
+            selectCategory: 'Kategorie wählen',
+            ublCategory: 'UBL: Item/ClassifiedTaxCategory/ID',
+            ublTaxPercent: 'UBL: Item/ClassifiedTaxCategory/Percent',
+            notes: 'Zusätzliche Notizen',
+            notesPlaceholder: 'Optionale Positionsnotizen',
+            notesAria: 'Positionsnotizen',
+            netAmount: 'Nettobetrag',
+            taxAmount: 'Steuerbetrag',
+            grossAmount: 'Bruttobetrag'
+        },
+        taxSummary: 'Steuerzusammenfassung & Summen',
+        subtotal: 'Zwischensumme',
+        subtotalExclTax: 'Zwischensumme (exkl. Steuer)',
+        discount: 'Rabatt',
+        additionalCharges: 'Zusätzliche Gebühren',
+        on: 'auf',
+        totalInclTax: 'Summe inkl. Steuer',
+        prepaidAmount: 'Vorausbezahlter Betrag',
+        amountDue: 'Fälliger Betrag',
+        ublMappings: 'UBL-Zuordnungen:',
+        total: 'Gesamt',
+        paymentTerms: 'Zahlungsbedingungen',
+        notes: 'Notizen',
+        validation: 'EN 16931 Überprüfung',
+        validInvoice: 'Gültige Rechnung',
+        validInvoiceDesc: 'Diese Rechnung erfüllt alle EN 16931 Anforderungen.',
+        invoiceSaved: 'Rechnung erfolgreich gespeichert',
+        invoiceSavedDesc: 'Ihre Rechnung wurde erfolgreich gespeichert.',
+        validationSuccess: 'Rechnung ist gültig!',
+        validationSuccessDesc: 'Alle EN 16931 Anforderungen sind erfüllt',
+        validationFailed: 'Überprüfung fehlgeschlagen',
+        amount: 'Betrag',
+        status: 'Status',
+        statusUpdated: 'Status aktualisiert',
+        invoiceStatusChangedTo: 'Rechnungsstatus geändert in',
+        sellerInfo: 'Verkäuferinformationen',
+        companyName: 'Firmenname',
+        vatId: 'USt-IdNr.',
+        email: 'E-Mail',
+        phone: 'Telefon',
+        street: 'Straße',
+        city: 'Stadt',
+        postalCode: 'Postleitzahl',
+        country: 'Land',
+        taxRate: 'Steuersatz'
+    },
+    party: {
+        name: 'Name',
+        vatId: 'USt-IdNr.',
+        legalOrgId: 'Rechtliche Organisations-ID',
+        street: 'Straße',
+        city: 'Stadt',
+        postalCode: 'Postleitzahl',
+        country: 'Land',
+        email: 'E-Mail',
+        phone: 'Telefon'
+    },
+    validation: {
+        title: 'Validation Results',
+        allValid: 'All validation checks passed',
+        allValidDesc: 'Invoice is EN 16931 compliant',
+        issuesFound: 'issues found',
+        errors: 'Errors',
+        warnings: 'Warnings',
+        info: 'Info',
+        requiredField: 'Required field',
+        invalidFormat: 'Invalid format',
+        checkPassed: 'Check passed',
+        noDrafts: 'No draft invoices',
+        noDraftsDesc: 'There are no draft invoices to validate',
+        batchSuccess: 'Batch validation complete',
+        batchSuccessDesc: '{count} invoices validated successfully. {errors} errors found.',
+        batchError: 'Validation errors',
+        batchErrorDesc: 'Unable to validate invoices. Please check for errors.'
+    },
+    exportModal: {
+        title: 'Rechnung exportieren',
+        description: '{number} in Ihr bevorzugtes Format exportieren',
+        exportFormat: 'Exportformat',
+        pdf: 'PDF',
+        pdfDesc: 'Für Menschen lesbares PDF-Dokument',
+        ublXml: 'UBL 2.1 XML',
+        ublXmlDesc: 'EN 16931 konformes maschinenlesbares XML',
+        peppolBis: 'Peppol BIS Paket',
+        peppolBisDesc: 'Peppol Interoperabilitätsspezifikation',
+        json: 'JSON',
+        jsonDesc: 'Strukturierter JSON-Datenexport',
+        csv: 'CSV',
+        csvDesc: 'Rechnungspositionen in CSV-Tabelle',
+        exportOptions: 'Exportoptionen',
+        embedPdf: 'PDF/A-3 in UBL einbetten',
+        embedPdfDesc: 'Lesbares PDF in XML-Paket aufnehmen',
+        includeAttachments: 'Anhänge einschließen',
+        includeAttachmentsDesc: 'Mit allen angehängten Begleitdokumenten exportieren',
+        digitalSignature: 'Digitale Signatur anwenden',
+        digitalSignatureDesc: 'Dokument mit Ihrem digitalen Zertifikat signieren',
+        exporting: 'Exportieren...',
+        cancel: 'Abbrechen',
+        export: 'Exportieren',
+        exportSuccess: 'Export erfolgreich',
+        exportSuccessDesc: 'Rechnung als {format} exportiert'
+    },
+    import: {
+        selectFile: 'Bitte wählen Sie eine Datei',
+        selectFileDesc: 'Wählen Sie eine Datei zum Importieren von Rechnungen',
+        selectedFile: 'Ausgewählte Datei',
+        supportedFormats: 'Unterstützte Formate',
+        importing: 'Importieren',
+        import: 'Importieren',
+        success: 'Import erfolgreich',
+        successDesc: '{count} Rechnung(en) erfolgreich importiert',
+        error: 'Import fehlgeschlagen',
+        errorDesc: 'Rechnungen konnten nicht importiert werden. Bitte überprüfen Sie das Format.'
+    },
+    previewModal: {
+        title: 'Rechnungsvorschau',
+        noChangesToSave: 'Keine neuen Änderungen zum Speichern',
+        description: 'Vorschau Ihrer Rechnung im PDF- oder UBL-XML-Format',
+        backToEditor: 'Zurück zum Editor',
+        pdfPreview: 'PDF-Vorschau',
+        ublXml: 'UBL XML',
+        invoice: 'RECHNUNG',
+        issueDate: 'Ausstellungsdatum',
+        dueDate: 'Fälligkeitsdatum',
+        from: 'Von',
+        billTo: 'Rechnung an',
+        vat: 'MwSt.',
+        items: 'Artikel',
+        colDescription: 'Beschreibung',
         quantity: 'Menge',
         unitPrice: 'Einzelpreis',
         tax: 'Steuer',
         amount: 'Betrag',
         subtotal: 'Zwischensumme',
-        taxTotal: 'Steuer gesamt',
-        total: 'Gesamtsumme',
-        notes: 'Notizen',
-        notesPlaceholder: 'Vielen Dank für Ihren Auftrag!',
+        total: 'Gesamt',
+        paymentInfo: 'Zahlungsinformationen',
         paymentTerms: 'Zahlungsbedingungen',
-        paymentTermsPlaceholder: 'Zahlbar innerhalb von 14 Tagen',
-        saveAsDraft: 'Als Entwurf speichern',
-        saveAndValidate: 'Speichern & Validieren',
-        preview: 'Vorschau',
-        export: 'Exportieren',
-        import: 'Importieren',
-        duplicate: 'Duplizieren',
-        delete: 'Löschen',
-        deleteConfirm: 'Sind Sie sicher, dass Sie diese Rechnung löschen möchten?',
-        validationErrors: 'Validierungsfehler',
-        validationWarnings: 'Validierungswarnungen',
-        compliant: 'EN 16931-konform',
-        nonCompliant: 'Nicht konform',
-        ublXml: 'UBL XML',
-        pdf: 'PDF',
-        json: 'JSON',
-        csv: 'CSV',
-        summary: 'Zusammenfassung',
-        details: 'Details',
+        notes: 'Notizen',
+        iban: 'IBAN',
+        bic: 'BIC',
+        copyXml: 'XML kopieren',
+        downloadPdf: 'PDF herunterladen',
+        downloadUblXml: 'UBL XML herunterladen',
+        copiedToClipboard: 'In die Zwischenablage kopiert',
+        xmlCopied: 'XML in die Zwischenablage kopiert',
+        xmlDownloaded: 'UBL XML heruntergeladen',
+        pdfDownloadStarted: 'PDF-Download gestartet',
+        pdfDownloadDesc: 'Ihre Rechnung wird generiert',
+        pdfExportNotice: 'PDF-Export erfordert serverseitiges Rendering',
+        generatingPdf: 'PDF wird generiert...',
+        pdfGenerationFailed: 'PDF konnte nicht generiert werden',
+        invoiceUpdated: 'Rechnung erfolgreich aktualisiert',
+        colTax: 'Steuer %',
+        totalPayable: 'Rechnungsbetrag',
+        taxSummary: 'Steuerübersicht',
+        colTaxType: 'Steuerart',
+        colTaxPercent: 'Prozent',
+        selectFromDirectory: 'Aus Verzeichnis wählen',
+        buyerSelected: 'Käuferinformationen aktualisiert',
+        switchLayout: 'Layout wechseln',
+        webView: 'Web-Ansicht',
+        printView: 'Druckansicht',
+        colTaxableAmount: 'Steuerpflichtiger Betrag',
+        vatPlaceholder: 'USt-IdNr.',
+        streetPlaceholder: 'Straße / Hausnummer',
+        zipPlaceholder: 'PLZ',
+        cityPlaceholder: 'Ort',
+        countryPlaceholder: 'Land',
+        companyNamePlaceholder: 'Firmenname',
+        addLineItem: 'Position hinzufügen',
+        placeholderInvoiceNumber: 'Rechnungsnummer',
+        placeholderIssueDate: 'Ausstellungsdatum',
+        placeholderDueDate: 'Fälligkeitsdatum',
+        paymentDetails: 'Zahlungsdetails',
+        bankName: 'Bankname',
+        accountOwner: 'Kontoinhaber',
+        placeholderSellerName: 'Ihr Unternehmen',
+        placeholderBuyerName: 'Kundenunternehmen',
+        placeholderStreet: 'Straße / Hausnummer',
+        placeholderCity: 'Ort',
+        placeholderZip: 'PLZ',
+        placeholderCountry: 'Land',
     },
-    client: {
-        new: 'Neuer Kunde',
-        edit: 'Kunde bearbeiten',
-        name: 'Name',
-        email: 'E-Mail',
-        phone: 'Telefon',
-        vatId: 'USt-IdNr.',
-        address: 'Adresse',
-        city: 'Stadt',
-        country: 'Land',
-        postalCode: 'Postleitzahl',
-        save: 'Kunde speichern',
-        delete: 'Kunde löschen',
+    qrCode: {
+        scanToPay: 'Zum Bezahlen scannen',
+        noPaymentInfo: 'IBAN für QR-Code-Generierung erforderlich',
+        epcQrCode: 'EPC QR-Code',
+        swissQr: 'Schweizer QR-Rechnung',
+        giroCode: 'GiroCode',
+        paymentQrCode: 'Zahlungs-QR-Code',
+        scanWithBanking: 'Mit Ihrer Banking-App scannen, um zu bezahlen',
+        giroTitle: 'Giro / QR-Code',
+        giroNote: 'Scannen Sie mit Ihrer Banking-App, um die Zahlung sofort vorzunehmen.'
     },
-    dashboard: {
-        totalRevenue: 'Gesamtumsatz',
-        pendingAmount: 'Ausstehend',
-        paidInvoices: 'Bezahlte Rechnungen',
-        draftInvoices: 'Entwürfe',
-        recentActivity: 'Kürzliche Aktivitäten',
-        revenueByMonth: 'Umsatz nach Monat',
-        invoiceStatus: 'Rechnungsstatus',
-        quickActions: 'Schnellaktionen',
+    templates: {
+        title: 'Rechnungsvorlagen',
+        subtitle: 'Wiederverwendbare Vorlagen für häufige Rechnungstypen',
+        searchPlaceholder: 'Vorlagen durchsuchen...',
+        newTemplate: 'Neue Vorlage',
+        editTemplate: 'Vorlage bearbeiten',
+        noTemplates: 'Keine Vorlagen gefunden',
+        noTemplatesDesc: 'Erstellen Sie Ihre erste Vorlage, um zu beginnen',
+        useTemplate: 'Vorlage verwenden',
+        defaultTax: 'Standardsteuer',
+        defaultCurrency: 'Standardwährung',
+        newTemplateInfo: 'Neue Vorlage erstellen',
+        newTemplateInfoDesc: 'Standardwerte für Ihre Vorlage konfigurieren',
+        aboutTemplates: 'Über Vorlagen',
+        aboutTemplatesDesc: 'Vorlagen helfen Ihnen, Rechnungen schneller zu erstellen, indem sie Verkäuferinformationen vorab ausfüllen.',
+        preConfiguredFor: 'Vorkonfiguriert für',
+        invoices: 'Rechnungen',
+        seller: 'Verkäufer',
+        templateEditor: 'Vorlageneditor',
+        templateEditorDesc: 'Vorlagendetails, Branding und Standardeinstellungen.',
+        templateDetails: 'Vorlagendetails',
+        templateName: 'Vorlagenname',
+        templateNameDesc: 'Ein aussagekräftiger Name für diese Vorlage',
+        saveTemplate: 'Vorlage speichern',
+        templateInfo: 'Vorlageninformationen',
+        templateInfoDesc: 'Konfigurieren Sie Standard-Verkäuferinformationen.',
+        description: 'Beschreibung',
+        descriptionPlaceholder: 'z.B. Beratungsleistungen Vorlage',
+        defaultLineItems: 'Standard-Positionen (Optional)',
+        lineItemsDesc: 'Standardpositionen hinzufügen, die vorab ausgefüllt werden.',
+        templateSaved: 'Vorlage gespeichert',
+        templateSavedDesc: 'Vorlage wurde in Ihrer Bibliothek gespeichert',
+        templateUpdated: 'Vorlage aktualisiert',
+        loadTemplate: 'Vorlage laden',
+        selectTemplate: 'Wählen Sie eine Vorlage',
+        templateLoaded: 'Vorlage geladen',
+        editingTemplate: 'Vorlage wird bearbeitet',
+        templateDeleted: 'Vorlage gelöscht',
+        basicInfo: 'Grundinformationen',
+        branding: 'Branding',
+        logo: 'Logo',
+        uploadLogo: 'Logo hochladen',
+        changeLogo: 'Logo ändern',
+        logoRequirements: 'PNG, JPG oder SVG. Max 2MB. Transparenter Hintergrund empfohlen.',
+        headerText: 'Kopfzeilentext',
+        headerDesc: 'Dieser Text erscheint oben auf Ihren Rechnungen.',
+        footerText: 'Fußzeilentext',
+        footerDesc: 'Dieser Text erscheint unten auf Ihren Rechnungen.',
+        defaultTaxSettings: 'Standard-Steuereinstellungen',
+        defaultPaymentTerms: 'Standard-Zahlungsbedingungen'
     },
     activity: {
         title: 'Aktivitätsprotokoll',
-        description: 'Verfolgen Sie alle Aktionen im System.',
-        user: 'Benutzer',
-        action: 'Aktion',
-        resource: 'Ressource',
-        date: 'Datum',
-        details: 'Details',
+        subtitle: 'Audit trail of all invoice operations',
+        searchPlaceholder: 'Search activity...',
+        filterType: 'Filter by type',
+        allTypes: 'All Types',
+        created: 'Created',
+        updated: 'Updated',
+        exported: 'Exported',
+        validated: 'Validated',
+        sent: 'Sent',
+        noActivity: 'No activity yet',
+        noActivityDesc: 'Activity will appear here as you work with invoices'
     },
     settings: {
         title: 'Einstellungen',
-        profile: 'Profil',
-        company: 'Unternehmen',
-        appearance: 'Erscheinungsbild',
-        notifications: 'Benachrichtigungen',
-        security: 'Sicherheit',
-        language: 'Sprache',
+        subtitle: 'Configure your company profile and preferences',
+        companyProfile: 'Company Profile',
+        invoiceDefaults: 'Invoice Defaults',
+        paymentInfo: 'Payment Information',
         theme: 'Thema',
-        darkMode: 'Dunkelmodus',
-        lightMode: 'Hellmodus',
+        advanced: 'Advanced',
+        displayPreferences: 'Display Preferences',
+        exportDefaults: 'Export Defaults',
         saveChanges: 'Änderungen speichern',
+        settingsSaved: 'Settings saved',
+        settingsSavedDesc: 'Your settings have been updated successfully.',
+        defaultFormat: 'Default Export Format',
+        autoValidate: 'Auto-validate on save',
+        autoValidateDesc: 'Automatically validate invoices when saving',
+        showLineNumbers: 'Show line numbers',
+        showLineNumbersDesc: 'Display line numbers in the invoice editor',
+        advancedSettings: 'Advanced Settings',
+        advancedSettingsDesc: 'EN 16931 compliance and export options',
+        ublVersion: 'UBL Version',
+        compliantWith: 'Compliant With',
+        defaultInvoiceTypeCode: 'Default Invoice Type Code',
+        digitalSignatureProvider: 'Digital Signature Provider',
+        notConfigured: 'Not configured',
+        colorPresets: 'Color Presets',
+        colorPresetsDesc: 'Quick start with predefined color schemes',
+        customColors: 'Custom Colors',
+        customColorsDesc: 'Fine-tune individual color values',
+        primaryColor: 'Primary Color',
+        secondaryColor: 'Secondary Color',
+        accentColor: 'Accent Color',
+        backgroundColor: 'Background Color',
+        cardColor: 'Card Color',
+        borderColor: 'Border Color',
+        mutedColor: 'Muted Color',
+        foregroundColor: 'Foreground Color',
+        saveTheme: 'Save Theme',
+        resetTheme: 'Reset to Default',
+        themeSaved: 'Theme saved successfully',
+        themeSavedDesc: 'Your custom theme has been applied',
+        themeReset: 'Theme reset to default',
+        themeResetDesc: 'Default purple theme has been restored',
+        presetPurple: 'Purple (Default)',
+        presetBlue: 'Professional Blue',
+        presetGreen: 'Finance Green',
+        presetOrange: 'Energy Orange',
+        presetSlate: 'Corporate Slate',
+        presetApplied: 'Preset applied',
+        hasBeenApplied: 'has been applied',
+        themePreview: 'Theme Preview',
+        themePreviewDesc: 'See what your theme looks like',
+        secondaryBackground: 'Secondary background color preview'
     },
-    validation: {
-        required: 'Dieses Feld ist erforderlich',
-        invalidEmail: 'Ungültige E-Mail-Adresse',
-        invalidVat: 'Ungültiges USt-IdNr.-Format',
-        invalidCurrency: 'Ungültiger Währungscode',
-        invalidCountry: 'Ungültiger Ländercode',
-        calculationError: 'Rechenfehler in den Summen',
-        missingLines: 'Mindestens eine Position erforderlich',
-    },
-    invoices: {
+    invoiceList: {
         title: 'Rechnungen',
         subtitle: 'Ihre Rechnungen verwalten, exportieren und verfolgen.',
-        createNew: 'Neue Rechnung',
         searchPlaceholder: 'Nach Nummer oder Kunde suchen...',
+        filterByStatus: 'Filter by status',
+        filterByDate: 'Filter by date',
         allStatuses: 'Alle Status',
         dateRange: 'Datumsbereich',
         anyDate: 'Beliebiges Datum',
@@ -228,10 +515,32 @@ export const de = {
         statusChangedTo: 'geändert zu',
         invoices: 'Rechnungen',
         updateStatus: 'Status aktualisieren',
-        statusChangeNote: 'Dies aktualisiert den Status aller ausgewählten Rechnungen. Diese Aktion kann durch erneutes Ändern des Status rückgängig gemacht werden.',
-        fetchError: 'Rechnungen konnten nicht geladen werden',
-        exportError: 'Rechnungen konnten nicht exportiert werden',
-        statusChangedDesc: '{count} Rechnungen in {status} geändert',
+        statusChangeNote: 'Dies aktualisiert den Status aller ausgewählten Rechnungen. Diese Aktion kann durch erneutes Ändern des Status rückgängig gemacht werden.'
+    },
+    buyers: {
+        title: 'Address book',
+        subtitle: 'Manage your clients and their billing information',
+        searchPlaceholder: 'Search by name, VAT ID, email...',
+        addBuyer: 'Add Buyer',
+        editBuyer: 'Edit Buyer',
+        newBuyer: 'New Buyer',
+        buyerDetails: 'Buyer Details',
+        noBuyers: 'No buyers found',
+        noBuyersDesc: 'Add your first buyer to get started',
+        name: 'Name',
+        vatId: 'USt-IdNr.',
+        legalOrgId: 'Legal Organization ID',
+        email: 'E-Mail',
+        phone: 'Telefon',
+        address: 'Adresse',
+        street: 'Street',
+        city: 'Stadt',
+        postalCode: 'Postleitzahl',
+        country: 'Land',
+        buyerCreated: 'Buyer created successfully',
+        buyerUpdated: 'Buyer updated successfully',
+        buyerDeleted: 'Buyer deleted successfully',
+        deleteConfirm: 'Are you sure you want to delete this buyer?'
     },
     designLayout: {
         elementLibrary: 'Elementbibliothek',
@@ -260,15 +569,13 @@ export const de = {
             notes: 'Notizen',
             signature: 'Signatur',
             qr: 'QR-Code',
-            footer: 'Fußzeile',
-        },
+            footer: 'Fußzeile'
+        }
     },
-
-    // AI Assistant
     ai: {
         assistant: 'KI-Assistent',
-        welcomeCreate: 'Hallo! Ich kann Ihnen helfen, Rechnungen aus natürlicher Sprache zu erstellen. Versuchen Sie etwas wie:\n\n"Erstelle eine Rechnung für ABC Pvt Ltd, Guntur, Indien, 522002. Ich habe 10 Säcke Zement zu je 700 EUR @ 18% Steuer verkauft"',
-        welcomeEdit: 'Hallo! Ich kann Ihnen helfen, diese Rechnung zu bearbeiten. Versuchen Sie etwas wie:\n\n"Füge 5 Säcke Sand zu je 500 EUR @ 12% Steuer hinzu"',
+        welcomeCreate: 'Hallo! Ich kann Ihnen helfen, Rechnungen aus natürlicher Sprache zu erstellen. Versuchen Sie etwas wie:\n\n\'Erstelle eine Rechnung für ABC Pvt Ltd, Guntur, Indien, 522002. Ich habe 10 Säcke Zement zu je 700 EUR @ 18% Steuer verkauft\'',
+        welcomeEdit: 'Hallo! Ich kann Ihnen helfen, diese Rechnung zu bearbeiten. Versuchen Sie etwas wie:\n\n\'Füge 5 Säcke Sand zu je 500 EUR @ 12% Steuer hinzu\'',
         typeMessage: 'Geben Sie Ihre Rechnungsanfrage ein...',
         thinking: 'Nachdenken...',
         parsedSuccessfully: 'Ich habe Ihre Anfrage analysiert! Hier ist die Rechnung:',
@@ -288,17 +595,44 @@ export const de = {
         parsed: 'Analysiert',
         incomplete: 'Unvollständig',
         useThisInvoice: 'Diese Rechnung verwenden',
-        hint: 'Beschreiben Sie Ihre Rechnung in natürlicher Sprache',
+        hint: 'Beschreiben Sie Ihre Rechnung in natürlicher Sprache'
     },
-
-    // Administration
+    common: {
+        save: 'Speichern',
+        saved: 'Gespeichert',
+        cancel: 'Abbrechen',
+        delete: 'Löschen',
+        edit: 'Bearbeiten',
+        close: 'Schließen',
+        back: 'Zurück',
+        search: 'Suchen',
+        filter: 'Filtern',
+        clear: 'Löschen',
+        note: 'Hinweis',
+        apply: 'Anwenden',
+        reset: 'Zurücksetzen',
+        loading: 'Lädt...',
+        error: 'Fehler',
+        success: 'Erfolg',
+        warning: 'Warnung',
+        info: 'Info',
+        copied: 'Kopiert',
+        downloaded: 'Heruntergeladen',
+        discard: 'Verwerfen',
+        theme: {
+            light: 'Hell',
+            dark: 'Dunkel',
+            system: 'System',
+            toggle: 'Design umschalten'
+        }
+    },
     admin: {
         title: 'Administration',
         subtitle: 'Benutzer, Rollen und Systemberechtigungen verwalten.',
         tabs: {
             users: 'Benutzer',
             roles: 'Rollen & Berechtigungen',
-            companyTypes: 'Unternehmenstypen',
+            companyTypes: 'Unternehmenstypen'
         },
         users: {
             title: 'Benutzer & Zugriff',
@@ -312,7 +646,7 @@ export const de = {
             userCreated: 'Benutzer erstellt',
             userUpdated: 'Benutzer aktualisiert',
             failedToLoad: 'Benutzerdaten konnten nicht geladen werden',
-            failedToSave: 'Benutzer konnte nicht gespeichert werden',
+            failedToSave: 'Benutzer konnte nicht gespeichert werden'
         },
         roles: {
             title: 'Rollen',
@@ -333,7 +667,7 @@ export const de = {
             roleUpdated: 'Rolle aktualisiert',
             failedToLoad: 'Rollen konnten nicht geladen werden',
             failedToSave: 'Rolle konnte nicht gespeichert werden',
-            failedToDelete: 'Rolle konnte nicht gelöscht werden',
+            failedToDelete: 'Rolle konnte nicht gelöscht werden'
         },
         companyTypes: {
             title: 'Unternehmenstypen',
@@ -350,18 +684,16 @@ export const de = {
             failedToLoad: 'Unternehmenstypen konnten nicht geladen werden',
             failedToSave: 'Unternehmenstyp konnte nicht gespeichert werden',
             failedToDelete: 'Unternehmenstyp konnte nicht gelöscht werden',
-            noTypes: 'Keine Unternehmenstypen gefunden',
+            noTypes: 'Keine Unternehmenstypen gefunden'
         },
         common: {
             failedToLoadProfile: 'Unternehmensprofil konnte nicht geladen werden',
-            loading: 'Lädt...',
+            loading: 'Lädt...'
         },
         logout: 'Abmelden',
         adminPortal: 'Admin-Portal',
-        sa: 'SA',
+        sa: 'SA'
     },
-
-    // Billing & Subscription
     billing: {
         title: 'Abrechnung & Abonnement',
         subtitle: 'Verwalten Sie Ihren Plan, Ihre Limits und Ihren Rechnungsverlauf.',
@@ -387,10 +719,8 @@ export const de = {
         failedToLoad: 'Fehler beim Laden der Abrechnungsdaten',
         failedToLoadDetails: 'Fehler beim Laden der Abrechnungsdetails',
         upgradeSuccess: 'Plan erfolgreich aktualisiert',
-        upgradeFailed: 'Upgrade fehlgeschlagen',
+        upgradeFailed: 'Upgrade fehlgeschlagen'
     },
-
-    // Signup
     signup: {
         title: 'Registrieren',
         getStarted: 'Kostenlos starten',
@@ -430,15 +760,11 @@ export const de = {
         signupFailed: 'Registrierung fehlgeschlagen',
         creatingAccount: 'Konto wird erstellt...',
         alreadyHaveAccount: 'Haben Sie bereits ein Konto?',
-        login: 'Anmelden',
+        login: 'Anmelden'
     },
-
-    // Stats
     stats: {
-        fromLastMonth: 'vom letzten Monat',
+        fromLastMonth: 'vom letzten Monat'
     },
-
-    // Landing Page
     landing: {
         login: 'Anmelden',
         signup: 'Registrieren',
@@ -450,7 +776,7 @@ export const de = {
             titleSuffix: 'Unternehmen',
             subtitle: 'Optimieren Sie Ihre Abrechnung mit unserer konformen, mandantenfähigen SaaS-Plattform. Erstellen, verwalten und verfolgen Sie Rechnungen mit Sicherheit und Design auf Enterprise-Niveau.',
             getStarted: 'Loslegen',
-            tryNow: 'Rechnung erstellen – Ohne Anmeldung',
+            tryNow: 'Rechnung erstellen – Ohne Anmeldung'
         },
         features: {
             tag: 'Alles was Sie brauchen',
@@ -477,24 +803,22 @@ export const de = {
             subtitle: 'Wählen Sie den Plan, der zu Ihren geschäftlichen Anforderungen passt. Keine versteckten Gebühren.',
             popular: 'Am beliebtesten',
             contactSales: 'Vertrieb kontaktieren',
-            contactUs: 'Kontaktieren Sie uns',
+            contactUs: 'Kontaktieren Sie uns'
         },
         footer: {
             rights: 'Alle Rechte vorbehalten.',
             terms: 'Bedingungen',
             privacy: 'Datenschutz',
             contact: 'Kontakt',
-            impressum: 'Impressum',
+            impressum: 'Impressum'
         },
         about: {
             desc1: 'BillingTool ist eine moderne Rechnungsstellungsplattform, die entwickelt wurde, um den Abrechnungsprozess für Unternehmen jeder Größe zu vereinfachen. Wir glauben, dass professionelle Rechnungsstellung zugänglich, sicher und mit den neuesten Standards konform sein sollte.',
             desc2: 'Unsere Plattform wurde mit Fokus auf Benutzerfreundlichkeit und Einhaltung gesetzlicher Vorschriften entwickelt. So wird sichergestellt, dass Ihre Rechnungen nicht nur gut aussehen, sondern auch alle gesetzlichen Anforderungen wie EN 16931 und UBL 2.1 erfüllen.',
             activeUsers: 'Aktive Nutzer',
-            invoicesSent: 'Gesendete Rechnungen',
+            invoicesSent: 'Gesendete Rechnungen'
         }
     },
-
-    // Tickets
     tickets: {
         title: 'Support-Tickets',
         subtitle: 'Verwalten und beantworten Sie Support-Anfragen von Benutzern.',
@@ -508,7 +832,7 @@ export const de = {
             ip: 'IP-Adresse',
             date: 'Datum',
             screenshot: 'Screenshot',
-            actions: 'Aktionen',
+            actions: 'Aktionen'
         },
         viewDetails: 'Details anzeigen',
         more: '...mehr',
@@ -528,14 +852,14 @@ export const de = {
             open: 'Offen',
             in_progress: 'In Bearbeitung',
             resolved: 'Gelöst',
-            closed: 'Geschlossen',
+            closed: 'Geschlossen'
         },
         priority: {
             label: 'Priorität',
             low: 'Niedrig',
             medium: 'Mittel',
             high: 'Hoch',
-            critical: 'Kritisch',
+            critical: 'Kritisch'
         },
         saveChanges: 'Änderungen speichern',
         updateSuccess: 'Ticket erfolgreich aktualisiert',
@@ -548,7 +872,7 @@ export const de = {
             created: 'Ticket erstellt',
             status_change: 'Status aktualisiert',
             priority_change: 'Priorität aktualisiert',
-            comment: 'Kommentar hinzugefügt',
+            comment: 'Kommentar hinzugefügt'
         },
         pagination: {
             showing: 'Zeige',
@@ -558,11 +882,9 @@ export const de = {
             rowsPerPage: 'Zeilen pro Seite:',
             page: 'Seite',
             previous: 'Zurück',
-            next: 'Weiter',
+            next: 'Weiter'
         }
     },
-
-    // Quick Access
     quickAccess: {
         title: 'Schnellzugriff',
         autoSavedLocally: 'Ihr Entwurf wird automatisch lokal gespeichert',
@@ -580,7 +902,7 @@ export const de = {
             atLeastOneItem: 'Fügen Sie mindestens eine Position hinzu',
             itemDescriptionRequired: 'Jede Position muss eine Beschreibung haben',
             itemPriceRequired: 'Jede Position muss einen Preis größer als 0 haben',
-            fixErrors: 'Bitte korrigieren Sie die markierten Felder, bevor Sie fortfahren',
+            fixErrors: 'Bitte korrigieren Sie die markierten Felder, bevor Sie fortfahren'
         },
         saveDraft: 'Entwurf speichern',
         yourCompanyName: 'Ihr Firmenname',
@@ -596,6 +918,9 @@ export const de = {
         restoreFailed: 'Entwurf konnte nicht aus dem Link wiederhergestellt werden. Ihre lokale Kopie ist noch vorhanden.',
         invoiceSaved: 'Rechnung gespeichert!',
         invoiceSavedDesc: 'Willkommen — Ihre Rechnung ist fertig.',
+        savingInvoice: 'Saving your invoice…',
+        invoiceSaveWarning: 'Account created, but invoice save failed. Your draft is still stored locally.',
+        actionResumed: 'Resuming your invoice action…',
         zip: 'PLZ',
         city: 'Stadt',
         country: 'Land',
@@ -617,27 +942,40 @@ export const de = {
         bottomNote: 'Alles, was Sie eingeben, bleibt in Ihrem Browser, bis Sie speichern. Sobald Sie Ihre E-Mail verifizieren, wird Ihr Konto erstellt und diese Rechnung automatisch in Ihrem Arbeitsbereich gespeichert.',
         guidePanel: {
             title: 'Rechnungsführer',
-            seller: { title: 'Verkäufer (Ihr Unternehmen)', desc: 'Geben Sie Ihren Firmennamen, die USt-ID und die Adresse ein. Dies erscheint oben links auf der Rechnung.' },
-            buyer: { title: 'Käufer (Kunde)', desc: 'Geben Sie den Firmennamen und die Adresse Ihres Kunden ein. Dies ist die Person, die Sie in Rechnung stellen.' },
-            lines: { title: 'Positionen', desc: 'Listen Sie jedes Produkt oder jede Dienstleistung mit Menge, Stückpreis und Steuersatz auf. Zwischensummen werden automatisch berechnet.' },
-            totals: { title: 'Summen & Steuer', desc: 'Zwischensumme, MwSt. und Gesamtbetrag werden automatisch aus Ihren Positionen berechnet.' },
-            giro: { title: 'GiroCode / QR-Zahlung', desc: 'Fügen Sie nach dem Speichern Ihre IBAN hinzu, um einen EPC/GiroCode-kompatiblen QR-Code zu generieren.' },
+            seller: {
+                title: 'Verkäufer (Ihr Unternehmen)',
+                desc: 'Geben Sie Ihren Firmennamen, die USt-ID und die Adresse ein. Dies erscheint oben links auf der Rechnung.'
+            },
+            buyer: {
+                title: 'Käufer (Kunde)',
+                desc: 'Geben Sie den Firmennamen und die Adresse Ihres Kunden ein. Dies ist die Person, die Sie in Rechnung stellen.'
+            },
+            lines: {
+                title: 'Positionen',
+                desc: 'Listen Sie jedes Produkt oder jede Dienstleistung mit Menge, Stückpreis und Steuersatz auf. Zwischensummen werden automatisch berechnet.'
+            },
+            totals: {
+                title: 'Summen & Steuer',
+                desc: 'Zwischensumme, MwSt. und Gesamtbetrag werden automatisch aus Ihren Positionen berechnet.'
+            },
+            giro: {
+                title: 'GiroCode / QR-Zahlung',
+                desc: 'Fügen Sie nach dem Speichern Ihre IBAN hinzu, um einen EPC/GiroCode-kompatiblen QR-Code zu generieren.'
+            },
             tipLabel: 'Tipp:',
             tipText: 'Klicken Sie auf ein Textfeld, um es zu bearbeiten. Ihr Entwurf wird lokal automatisch gespeichert.',
             ctaTitle: 'Bereit zum Speichern?',
             ctaDesc: 'Erstellen Sie ein kostenloses Konto, um PDFs herunterzuladen, E-Rechnungen zu erstellen und auf Ihr Dashboard zuzugreifen.',
-            ctaButton: 'Speichern & Konto erstellen',
-        },
+            ctaButton: 'Speichern & Konto erstellen'
+        }
     },
-
-    // Inline Quick Access
     inlineQuickAccess: {
         title: 'Schnellzugriff',
         reasons: {
             save: 'speichern und später auf Ihre Rechnung zugreifen',
             download: 'Ihre Rechnung als PDF herunterladen',
             send: 'diese Rechnung an Ihren Kunden senden',
-            export: 'diese Rechnung exportieren',
+            export: 'diese Rechnung exportieren'
         },
         emailPrompt: 'Um {reason}, geben Sie Ihre E-Mail-Adresse ein und bestätigen Sie mit einem Klick.',
         companyDetailsNote: 'Ihre Firmendaten werden direkt aus dem obigen Abschnitt {sellerName} übernommen.',
@@ -667,10 +1005,9 @@ export const de = {
             passwordMismatch: 'Die Passwörter stimmen nicht überein',
             passwordSet: 'Passwort erfolgreich festgelegt!',
             passwordSetFailed: 'Passwort konnte nicht festgelegt werden — Sie können es später in Ihrem Profil einrichten.',
+            existingAccount: 'Account found! Redirecting you to login to continue…'
         }
     },
-
-    // Quick Access Tour
     quickAccessTour: {
         sellerTitle: 'Willkommen bei Quick Access!',
         sellerDesc: 'Doppelklicken Sie auf ein beliebiges Feld, um mit der Bearbeitung zu beginnen. Versuchen Sie es hier, um Ihren Firmennamen festzulegen.',
@@ -691,8 +1028,6 @@ export const de = {
         finish: 'Fertig',
         next: 'Weiter'
     },
-
-    // Impressum
     impressum: {
         title: 'Impressum',
         subtitle: 'Angaben gemäß § 5 TMG',
@@ -703,171 +1038,163 @@ export const de = {
         sections: {
             legalNotice: {
                 title: 'Angaben gemäß § 5 TMG',
-                content: '',
+                content: ''
             },
             vat: {
                 title: 'Umsatzsteuer',
-                content: 'Umsatzsteuer-Identifikationsnummer gemäß §27 a Umsatzsteuergesetz:\nDE 362.250.524',
+                content: 'Umsatzsteuer-Identifikationsnummer gemäß §27 a Umsatzsteuergesetz:\nDE 362.250.524'
             },
             dispute: {
                 title: 'Streitschlichtung',
-                content: 'Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: https://ec.europa.eu/consumers/odr.\nUnsere E-Mail-Adresse finden Sie oben im Impressum.\n\nWir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.',
+                content: 'Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: https://ec.europa.eu/consumers/odr.\nUnsere E-Mail-Adresse finden Sie oben im Impressum.\n\nWir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.'
             },
             liability: {
                 title: 'Haftung für Inhalte',
-                content: 'Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.\n\nVerpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.',
+                content: 'Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.\n\nVerpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.'
             },
             links: {
                 title: 'Haftung für Links',
-                content: 'Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar.\n\nEine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.',
+                content: 'Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar.\n\nEine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.'
             },
             copyright: {
                 title: 'Urheberrecht',
-                content: 'Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und Kopien dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet.\n\nSoweit die Inhalte auf dieser Seite nicht vom Betreiber erstellt wurden, werden die Urheberrechte Dritter beachtet. Insbesondere werden Inhalte Dritter als solche gekennzeichnet. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitten wir um einen entsprechenden Hinweis. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Inhalte umgehend entfernen.',
-            },
-        },
+                content: 'Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und Kopien dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet.\n\nSoweit die Inhalte auf dieser Seite nicht vom Betreiber erstellt wurden, werden die Urheberrechte Dritter beachtet. Insbesondere werden Inhalte Dritter als solche gekennzeichnet. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitten wir um einen entsprechenden Hinweis. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Inhalte umgehend entfernen.'
+            }
+        }
     },
-
-    // Gemeinsame rechtliche Begriffe
     legal: {
         back: 'Zurück',
         footer: {
             impressum: 'Impressum',
             privacy: 'Datenschutz',
             terms: 'AGB',
-            cookies: 'Cookie-Einstellungen',
-        },
+            cookies: 'Cookie-Einstellungen'
+        }
     },
-
-    // Datenschutzerklärung
     privacyPolicy: {
         title: 'Datenschutzerklärung',
         subtitle: 'Informationen gemäß Art. 13 DSGVO – zuletzt aktualisiert März 2026',
         sections: {
             controller: {
                 title: 'Verantwortlicher für die Datenverarbeitung',
-                content: '[mn]medianet, Bernhard Hnida\nAm Taubhaus 29, 63303 Dreieich\nTelefon: +49 (0) 6103 / 69 77 84\nE-Mail: info@medianet-home.de',
+                content: '[mn]medianet, Bernhard Hnida\nAm Taubhaus 29, 63303 Dreieich\nTelefon: +49 (0) 6103 / 69 77 84\nE-Mail: info@medianet-home.de'
             },
             general: {
                 title: 'Allgemeine Hinweise zur Datenverarbeitung',
-                content: 'Wir verarbeiten personenbezogene Daten nur, soweit dies zur Bereitstellung einer funktionsfähigen Website sowie unserer Inhalte und Leistungen erforderlich ist. Die Erhebung und Verwendung personenbezogener Daten erfolgt regelmäßig nur nach Einwilligung der betroffenen Person und im Einklang mit der DSGVO sowie dem BDSG.',
+                content: 'Wir verarbeiten personenbezogene Daten nur, soweit dies zur Bereitstellung einer funktionsfähigen Website sowie unserer Inhalte und Leistungen erforderlich ist. Die Erhebung und Verwendung personenbezogener Daten erfolgt regelmäßig nur nach Einwilligung der betroffenen Person und im Einklang mit der DSGVO sowie dem BDSG.'
             },
             legalBasis: {
                 title: 'Rechtsgrundlagen der Verarbeitung gemäß DSGVO',
-                content: 'Wir verarbeiten personenbezogene Daten auf Grundlage folgender Rechtsgrundlagen:\n\n• Art. 6 Abs. 1 lit. a DSGVO – Einwilligung\n• Art. 6 Abs. 1 lit. b DSGVO – Vertragserfüllung oder vorvertragliche Maßnahmen\n• Art. 6 Abs. 1 lit. c DSGVO – Erfüllung rechtlicher Verpflichtungen\n• Art. 6 Abs. 1 lit. f DSGVO – Wahrung berechtigter Interessen',
+                content: 'Wir verarbeiten personenbezogene Daten auf Grundlage folgender Rechtsgrundlagen:\n\n• Art. 6 Abs. 1 lit. a DSGVO – Einwilligung\n• Art. 6 Abs. 1 lit. b DSGVO – Vertragserfüllung oder vorvertragliche Maßnahmen\n• Art. 6 Abs. 1 lit. c DSGVO – Erfüllung rechtlicher Verpflichtungen\n• Art. 6 Abs. 1 lit. f DSGVO – Wahrung berechtigter Interessen'
             },
             hosting: {
                 title: 'Hosting und Server-Logfiles',
-                content: 'Unsere Website wird auf Servern innerhalb der Europäischen Union gehostet. Beim Aufruf unserer Website werden durch den Webserver automatisch Server-Logfiles gespeichert, darunter IP-Adresse, Browsertyp, Betriebssystem, Referrer-URL sowie Datum und Uhrzeit des Zugriffs. Diese Daten werden aus Sicherheitsgründen bis zu 7 Tage gespeichert und anschließend gelöscht. Eine Zusammenführung mit anderen Daten findet nicht statt.',
+                content: 'Unsere Website wird auf Servern innerhalb der Europäischen Union gehostet. Beim Aufruf unserer Website werden durch den Webserver automatisch Server-Logfiles gespeichert, darunter IP-Adresse, Browsertyp, Betriebssystem, Referrer-URL sowie Datum und Uhrzeit des Zugriffs. Diese Daten werden aus Sicherheitsgründen bis zu 7 Tage gespeichert und anschließend gelöscht. Eine Zusammenführung mit anderen Daten findet nicht statt.'
             },
             registration: {
                 title: 'Nutzerregistrierung und Konten',
-                content: 'Bei der Registrierung erheben wir Ihre E-Mail-Adresse sowie freiwillig angegebene Profildaten. Diese Daten werden zur Einrichtung und Verwaltung Ihres Kontos verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung). Sie können Ihr Konto jederzeit löschen; personenbezogene Daten werden innerhalb von 30 Tagen gelöscht.',
+                content: 'Bei der Registrierung erheben wir Ihre E-Mail-Adresse sowie freiwillig angegebene Profildaten. Diese Daten werden zur Einrichtung und Verwaltung Ihres Kontos verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung). Sie können Ihr Konto jederzeit löschen; personenbezogene Daten werden innerhalb von 30 Tagen gelöscht.'
             },
             invoiceData: {
                 title: 'Verarbeitung von Rechnungs- und Kundendaten',
-                content: 'Zur Erbringung des Rechnungsstellungsdienstes verarbeiten wir von Ihnen eingegebene Unternehmensdaten, wie Firmennamen, Adressen, Umsatzsteuer-Identifikationsnummern, Bankdaten und Rechnungsbeträge. Die Verarbeitung erfolgt ausschließlich in Ihrem Auftrag und ist für die Vertragserfüllung erforderlich (Art. 6 Abs. 1 lit. b DSGVO). Eine Weitergabe an Dritte zu anderen als den vertraglich vereinbarten Zwecken findet nicht statt.',
+                content: 'Zur Erbringung des Rechnungsstellungsdienstes verarbeiten wir von Ihnen eingegebene Unternehmensdaten, wie Firmennamen, Adressen, Umsatzsteuer-Identifikationsnummern, Bankdaten und Rechnungsbeträge. Die Verarbeitung erfolgt ausschließlich in Ihrem Auftrag und ist für die Vertragserfüllung erforderlich (Art. 6 Abs. 1 lit. b DSGVO). Eine Weitergabe an Dritte zu anderen als den vertraglich vereinbarten Zwecken findet nicht statt.'
             },
             cookies: {
                 title: 'Cookies und Tracking-Technologien',
-                content: 'Wir verwenden ausschließlich technisch notwendige Cookies, die für den ordnungsgemäßen Betrieb der Website erforderlich sind. Dazu gehören Session-Cookies zur Authentifizierung, CSRF-Schutz-Cookies sowie ein Cookie zur Speicherung Ihrer Spracheinstellung. Analyse-, Werbe- oder Drittanbieter-Tracking-Cookies werden nicht eingesetzt. Weitere Informationen entnehmen Sie bitte unserer Cookie-Information.',
+                content: 'Wir verwenden ausschließlich technisch notwendige Cookies, die für den ordnungsgemäßen Betrieb der Website erforderlich sind. Dazu gehören Session-Cookies zur Authentifizierung, CSRF-Schutz-Cookies sowie ein Cookie zur Speicherung Ihrer Spracheinstellung. Analyse-, Werbe- oder Drittanbieter-Tracking-Cookies werden nicht eingesetzt. Weitere Informationen entnehmen Sie bitte unserer Cookie-Information.'
             },
             retention: {
                 title: 'Datenspeicherung und Löschung',
-                content: 'Personenbezogene Daten werden nur so lange gespeichert, wie dies für den jeweiligen Verarbeitungszweck erforderlich ist oder gesetzliche Aufbewahrungsfristen bestehen (z. B. steuer- und handelsrechtliche Aufbewahrungsfristen für Rechnungsunterlagen von bis zu 10 Jahren). Kontodaten werden innerhalb von 30 Tagen nach Kontolöschung gelöscht. Server-Logfiles werden nach 7 Tagen gelöscht.',
+                content: 'Personenbezogene Daten werden nur so lange gespeichert, wie dies für den jeweiligen Verarbeitungszweck erforderlich ist oder gesetzliche Aufbewahrungsfristen bestehen (z. B. steuer- und handelsrechtliche Aufbewahrungsfristen für Rechnungsunterlagen von bis zu 10 Jahren). Kontodaten werden innerhalb von 30 Tagen nach Kontolöschung gelöscht. Server-Logfiles werden nach 7 Tagen gelöscht.'
             },
             rights: {
                 title: 'Rechte der betroffenen Personen',
-                content: 'Gemäß DSGVO haben Sie folgende Rechte:\n\n• Auskunftsrecht (Art. 15 DSGVO)\n• Recht auf Berichtigung (Art. 16 DSGVO)\n• Recht auf Löschung (Art. 17 DSGVO)\n• Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)\n• Recht auf Datenübertragbarkeit (Art. 20 DSGVO)\n• Widerspruchsrecht (Art. 21 DSGVO)\n\nZur Ausübung Ihrer Rechte wenden Sie sich an info@medianet-home.de. Sie haben zudem das Recht, sich bei der zuständigen Aufsichtsbehörde zu beschweren: Der Hessische Beauftragte für Datenschutz und Informationsfreiheit (HBDI), Wiesbaden.',
+                content: 'Gemäß DSGVO haben Sie folgende Rechte:\n\n• Auskunftsrecht (Art. 15 DSGVO)\n• Recht auf Berichtigung (Art. 16 DSGVO)\n• Recht auf Löschung (Art. 17 DSGVO)\n• Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)\n• Recht auf Datenübertragbarkeit (Art. 20 DSGVO)\n• Widerspruchsrecht (Art. 21 DSGVO)\n\nZur Ausübung Ihrer Rechte wenden Sie sich an info@medianet-home.de. Sie haben zudem das Recht, sich bei der zuständigen Aufsichtsbehörde zu beschweren: Der Hessische Beauftragte für Datenschutz und Informationsfreiheit (HBDI), Wiesbaden.'
             },
             contact: {
                 title: 'Datenschutzkontakt',
-                content: 'Bei Fragen zum Datenschutz oder zur Ausübung Ihrer Rechte wenden Sie sich bitte an:\n\ninfo@medianet-home.de\n+49 (0) 6103 / 69 77 84\n\n[mn]medianet, Bernhard Hnida, Am Taubhaus 29, 63303 Dreieich',
-            },
-        },
+                content: 'Bei Fragen zum Datenschutz oder zur Ausübung Ihrer Rechte wenden Sie sich bitte an:\n\ninfo@medianet-home.de\n+49 (0) 6103 / 69 77 84\n\n[mn]medianet, Bernhard Hnida, Am Taubhaus 29, 63303 Dreieich'
+            }
+        }
     },
-
-    // Allgemeine Geschäftsbedingungen
     termsAndConditions: {
         title: 'Allgemeine Geschäftsbedingungen',
         subtitle: 'AGB – [mn]medianet / BillingTool',
         sections: {
             scope: {
                 title: 'Geltungsbereich',
-                content: 'Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Verträge zwischen [mn]medianet, Bernhard Hnida, Am Taubhaus 29, 63303 Dreieich (nachfolgend „Anbieter") und den Nutzern der BillingTool-Plattform (nachfolgend „Nutzer"). Abweichende Bedingungen des Nutzers werden nicht anerkannt, sofern der Anbieter ihrer Geltung nicht ausdrücklich schriftlich zugestimmt hat.',
+                content: 'Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Verträge zwischen [mn]medianet, Bernhard Hnida, Am Taubhaus 29, 63303 Dreieich (nachfolgend „Anbieter\') und den Nutzern der BillingTool-Plattform (nachfolgend „Nutzer\'). Abweichende Bedingungen des Nutzers werden nicht anerkannt, sofern der Anbieter ihrer Geltung nicht ausdrücklich schriftlich zugestimmt hat.'
             },
             subject: {
                 title: 'Vertragsgegenstand (SaaS-Dienst)',
-                content: 'BillingTool ist eine Software-as-a-Service (SaaS)-Plattform zur Erstellung, Verwaltung und Versendung von Rechnungen. Der Zugang zur Software erfolgt über das Internet. Der Anbieter räumt dem Nutzer ein nicht ausschließliches, nicht übertragbares Nutzungsrecht an der Plattform im Umfang des gewählten Abonnementplans für die Vertragslaufzeit ein.',
+                content: 'BillingTool ist eine Software-as-a-Service (SaaS)-Plattform zur Erstellung, Verwaltung und Versendung von Rechnungen. Der Zugang zur Software erfolgt über das Internet. Der Anbieter räumt dem Nutzer ein nicht ausschließliches, nicht übertragbares Nutzungsrecht an der Plattform im Umfang des gewählten Abonnementplans für die Vertragslaufzeit ein.'
             },
             registration: {
                 title: 'Registrierung und Nutzerkonto',
-                content: 'Die Nutzung der Plattform setzt eine Registrierung mit einer gültigen E-Mail-Adresse voraus. Der Nutzer ist für die Vertraulichkeit seiner Zugangsdaten und alle unter seinem Konto vorgenommenen Aktivitäten verantwortlich. Unbefugte Nutzung ist dem Anbieter unverzüglich zu melden. Der Anbieter behält sich das Recht vor, Registrierungen ohne Angabe von Gründen abzulehnen.',
+                content: 'Die Nutzung der Plattform setzt eine Registrierung mit einer gültigen E-Mail-Adresse voraus. Der Nutzer ist für die Vertraulichkeit seiner Zugangsdaten und alle unter seinem Konto vorgenommenen Aktivitäten verantwortlich. Unbefugte Nutzung ist dem Anbieter unverzüglich zu melden. Der Anbieter behält sich das Recht vor, Registrierungen ohne Angabe von Gründen abzulehnen.'
             },
             service: {
                 title: 'Beschreibung des Software-Dienstes',
-                content: 'BillingTool umfasst die Funktionen: Rechnungserstellung und -verwaltung, PDF-Export, E-Rechnungserstellung (konform mit EN 16931 / ZUGFeRD / XRechnung), Kundenverwaltung und persönliches Dashboard. Der verfügbare Funktionsumfang richtet sich nach dem gewählten Abonnementplan. Der Anbieter ist berechtigt, Funktionen mit angemessener Vorankündigung zu erweitern, zu ändern oder einzuschränken.',
+                content: 'BillingTool umfasst die Funktionen: Rechnungserstellung und -verwaltung, PDF-Export, E-Rechnungserstellung (konform mit EN 16931 / ZUGFeRD / XRechnung), Kundenverwaltung und persönliches Dashboard. Der verfügbare Funktionsumfang richtet sich nach dem gewählten Abonnementplan. Der Anbieter ist berechtigt, Funktionen mit angemessener Vorankündigung zu erweitern, zu ändern oder einzuschränken.'
             },
             pricing: {
                 title: 'Preise und Zahlungsbedingungen',
-                content: 'Der Dienst wird auf Abonnementbasis angeboten. Aktuelle Preise sind auf der Website einsehbar und können mit 30-tägiger Frist geändert werden. Ein kostenloser Tarif mit eingeschränktem Funktionsumfang ist verfügbar. Bezahlte Abonnements werden im Voraus für den vereinbarten Zeitraum abgerechnet. Alle Preise sind Nettopreise zuzüglich der gesetzlichen Umsatzsteuer. Die Zahlung erfolgt über die auf der Website genannten Zahlungsanbieter.',
+                content: 'Der Dienst wird auf Abonnementbasis angeboten. Aktuelle Preise sind auf der Website einsehbar und können mit 30-tägiger Frist geändert werden. Ein kostenloser Tarif mit eingeschränktem Funktionsumfang ist verfügbar. Bezahlte Abonnements werden im Voraus für den vereinbarten Zeitraum abgerechnet. Alle Preise sind Nettopreise zuzüglich der gesetzlichen Umsatzsteuer. Die Zahlung erfolgt über die auf der Website genannten Zahlungsanbieter.'
             },
             duration: {
                 title: 'Vertragslaufzeit und Kündigung',
-                content: 'Abonnements werden für die vereinbarte Vertragslaufzeit (monatlich oder jährlich) abgeschlossen. Sie verlängern sich automatisch, sofern sie nicht mit einer Frist von mindestens 30 Tagen vor Ablauf des aktuellen Zeitraums gekündigt werden. Kostenlose Konten können jederzeit gelöscht werden. Das Recht zur außerordentlichen Kündigung bleibt unberührt. Nach Kündigung werden Nutzerdaten innerhalb von 30 Tagen gelöscht, sofern keine gesetzlichen Aufbewahrungsfristen entgegenstehen.',
+                content: 'Abonnements werden für die vereinbarte Vertragslaufzeit (monatlich oder jährlich) abgeschlossen. Sie verlängern sich automatisch, sofern sie nicht mit einer Frist von mindestens 30 Tagen vor Ablauf des aktuellen Zeitraums gekündigt werden. Kostenlose Konten können jederzeit gelöscht werden. Das Recht zur außerordentlichen Kündigung bleibt unberührt. Nach Kündigung werden Nutzerdaten innerhalb von 30 Tagen gelöscht, sofern keine gesetzlichen Aufbewahrungsfristen entgegenstehen.'
             },
             obligations: {
                 title: 'Nutzerpflichten',
-                content: 'Der Nutzer verpflichtet sich:\n\n• Die Plattform nur in Übereinstimmung mit geltendem Recht und diesen AGB zu verwenden\n• Den Dienst nicht zu missbrauchen, zu dekompilieren oder zu stören\n• Die Richtigkeit der für Rechnungszwecke eingegebenen Daten sicherzustellen\n• Zugangsdaten vertraulich zu behandeln und nicht an Dritte weiterzugeben\n• Die Plattform nicht zur Erstellung betrügerischer oder rechtswidriger Rechnungen zu nutzen',
+                content: 'Der Nutzer verpflichtet sich:\n\n• Die Plattform nur in Übereinstimmung mit geltendem Recht und diesen AGB zu verwenden\n• Den Dienst nicht zu missbrauchen, zu dekompilieren oder zu stören\n• Die Richtigkeit der für Rechnungszwecke eingegebenen Daten sicherzustellen\n• Zugangsdaten vertraulich zu behandeln und nicht an Dritte weiterzugeben\n• Die Plattform nicht zur Erstellung betrügerischer oder rechtswidriger Rechnungen zu nutzen'
             },
             availability: {
                 title: 'Verfügbarkeit der Plattform',
-                content: 'Der Anbieter strebt eine monatliche Verfügbarkeit von 99 % des Dienstes an (24/7, ohne geplante Wartungsfenster). Geplante Wartungsarbeiten werden nach Möglichkeit im Voraus angekündigt. Der Anbieter übernimmt keine Garantie für einen vollständig unterbrechungsfreien Betrieb und haftet nicht für vorübergehende Nichtverfügbarkeit aufgrund technischer Ursachen, die außerhalb seines Einflussbereichs liegen.',
+                content: 'Der Anbieter strebt eine monatliche Verfügbarkeit von 99 % des Dienstes an (24/7, ohne geplante Wartungsfenster). Geplante Wartungsarbeiten werden nach Möglichkeit im Voraus angekündigt. Der Anbieter übernimmt keine Garantie für einen vollständig unterbrechungsfreien Betrieb und haftet nicht für vorübergehende Nichtverfügbarkeit aufgrund technischer Ursachen, die außerhalb seines Einflussbereichs liegen.'
             },
             liability: {
                 title: 'Haftungsbeschränkung',
-                content: 'Der Anbieter haftet unbeschränkt für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit sowie für Schäden, die auf Vorsatz oder grober Fahrlässigkeit beruhen. Bei einfacher Fahrlässigkeit haftet der Anbieter nur bei Verletzung wesentlicher Vertragspflichten auf den vorhersehbaren, vertragstypischen Schaden. Die Gesamthaftung des Anbieters ist auf die vom Nutzer im Zeitraum von 12 Monaten vor dem schadensbegründenden Ereignis gezahlten Entgelte begrenzt.',
+                content: 'Der Anbieter haftet unbeschränkt für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit sowie für Schäden, die auf Vorsatz oder grober Fahrlässigkeit beruhen. Bei einfacher Fahrlässigkeit haftet der Anbieter nur bei Verletzung wesentlicher Vertragspflichten auf den vorhersehbaren, vertragstypischen Schaden. Die Gesamthaftung des Anbieters ist auf die vom Nutzer im Zeitraum von 12 Monaten vor dem schadensbegründenden Ereignis gezahlten Entgelte begrenzt.'
             },
             dataProtection: {
                 title: 'Datenschutz und Datenverarbeitung',
-                content: 'Die Verarbeitung personenbezogener Daten richtet sich nach der Datenschutzerklärung des Anbieters, die Bestandteil dieser AGB ist. Soweit der Nutzer über die Plattform personenbezogene Daten Dritter verarbeitet (z. B. Kundendaten), ist er für die Sicherstellung einer rechtlichen Grundlage verantwortlich. Ein Auftragsverarbeitungsvertrag (AVV) gemäß Art. 28 DSGVO wird auf Anfrage bereitgestellt.',
+                content: 'Die Verarbeitung personenbezogener Daten richtet sich nach der Datenschutzerklärung des Anbieters, die Bestandteil dieser AGB ist. Soweit der Nutzer über die Plattform personenbezogene Daten Dritter verarbeitet (z. B. Kundendaten), ist er für die Sicherstellung einer rechtlichen Grundlage verantwortlich. Ein Auftragsverarbeitungsvertrag (AVV) gemäß Art. 28 DSGVO wird auf Anfrage bereitgestellt.'
             },
             changes: {
                 title: 'Änderungen des Dienstes und der AGB',
-                content: 'Der Anbieter behält sich vor, diese AGB und den Leistungsumfang zu ändern. Wesentliche Änderungen werden dem Nutzer mindestens 30 Tage vor Inkrafttreten per E-Mail mitgeteilt. Die weitere Nutzung des Dienstes nach Inkrafttreten der Änderungen gilt als Zustimmung. Lehnt der Nutzer die Änderungen ab, kann er sein Konto vor Inkrafttreten kündigen.',
+                content: 'Der Anbieter behält sich vor, diese AGB und den Leistungsumfang zu ändern. Wesentliche Änderungen werden dem Nutzer mindestens 30 Tage vor Inkrafttreten per E-Mail mitgeteilt. Die weitere Nutzung des Dienstes nach Inkrafttreten der Änderungen gilt als Zustimmung. Lehnt der Nutzer die Änderungen ab, kann er sein Konto vor Inkrafttreten kündigen.'
             },
             governing: {
                 title: 'Schlussbestimmungen und Gerichtsstand',
-                content: 'Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts (CISG). Ausschließlicher Gerichtsstand für alle Streitigkeiten aus oder im Zusammenhang mit diesen AGB ist Darmstadt, sofern der Nutzer Kaufmann, juristische Person des öffentlichen Rechts oder öffentlich-rechtliches Sondervermögen ist. Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.',
-            },
-        },
+                content: 'Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts (CISG). Ausschließlicher Gerichtsstand für alle Streitigkeiten aus oder im Zusammenhang mit diesen AGB ist Darmstadt, sofern der Nutzer Kaufmann, juristische Person des öffentlichen Rechts oder öffentlich-rechtliches Sondervermögen ist. Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.'
+            }
+        }
     },
-
-    // Cookie-Information
     cookiePolicy: {
         title: 'Cookie-Information',
         subtitle: 'Wie BillingTool Cookies auf dieser Website einsetzt',
         sections: {
             whatAre: {
                 title: 'Was sind Cookies?',
-                content: 'Cookies sind kleine Textdateien, die beim Besuch einer Website von Ihrem Browser auf Ihrem Gerät (Computer, Tablet oder Smartphone) gespeichert werden. Sie dienen dazu, die Website funktionsfähig zu halten, die Nutzererfahrung zu verbessern und dem Websitebetreiber Informationen bereitzustellen. Es gibt „Session-Cookies" (die beim Schließen des Browsers gelöscht werden) und „persistente Cookies" (die für einen bestimmten Zeitraum auf Ihrem Gerät verbleiben).',
+                content: 'Cookies sind kleine Textdateien, die beim Besuch einer Website von Ihrem Browser auf Ihrem Gerät (Computer, Tablet oder Smartphone) gespeichert werden. Sie dienen dazu, die Website funktionsfähig zu halten, die Nutzererfahrung zu verbessern und dem Websitebetreiber Informationen bereitzustellen. Es gibt „Session-Cookies\' (die beim Schließen des Browsers gelöscht werden) und „persistente Cookies\' (die für einen bestimmten Zeitraum auf Ihrem Gerät verbleiben).'
             },
             necessary: {
                 title: 'Technisch notwendige Cookies',
-                content: 'BillingTool verwendet ausschließlich technisch notwendige Cookies, die für den Betrieb der Website unerlässlich sind und ohne deren Deaktivierung die Funktionsfähigkeit beeinträchtigt wird. Dazu gehören:\n\n• Session-Cookie – hält Sie während Ihres Besuchs eingeloggt\n• CSRF-Schutz-Cookie – schützt vor Cross-Site-Request-Forgery-Angriffen\n• Sprachpräferenz-Cookie – speichert Ihre gewählte Anzeigesprache\n\nDiese Cookies werden auf Grundlage unseres berechtigten Interesses (Art. 6 Abs. 1 lit. f DSGVO) an einem funktionsfähigen und sicheren Dienst gesetzt.',
+                content: 'BillingTool verwendet ausschließlich technisch notwendige Cookies, die für den Betrieb der Website unerlässlich sind und ohne deren Deaktivierung die Funktionsfähigkeit beeinträchtigt wird. Dazu gehören:\n\n• Session-Cookie – hält Sie während Ihres Besuchs eingeloggt\n• CSRF-Schutz-Cookie – schützt vor Cross-Site-Request-Forgery-Angriffen\n• Sprachpräferenz-Cookie – speichert Ihre gewählte Anzeigesprache\n\nDiese Cookies werden auf Grundlage unseres berechtigten Interesses (Art. 6 Abs. 1 lit. f DSGVO) an einem funktionsfähigen und sicheren Dienst gesetzt.'
             },
             analytics: {
                 title: 'Analyse- oder Tracking-Cookies',
-                content: 'Wir setzen derzeit keine Analyse-, Werbe- oder Drittanbieter-Tracking-Cookies ein. Sollten wir solche Technologien in Zukunft einsetzen, wird diese Cookie-Information entsprechend aktualisiert und wir werden Ihre ausdrückliche Einwilligung einholen, bevor nicht notwendige Cookies gesetzt werden – in Übereinstimmung mit der DSGVO und dem TTDSG.',
+                content: 'Wir setzen derzeit keine Analyse-, Werbe- oder Drittanbieter-Tracking-Cookies ein. Sollten wir solche Technologien in Zukunft einsetzen, wird diese Cookie-Information entsprechend aktualisiert und wir werden Ihre ausdrückliche Einwilligung einholen, bevor nicht notwendige Cookies gesetzt werden – in Übereinstimmung mit der DSGVO und dem TTDSG.'
             },
             settings: {
                 title: 'Cookie-Einstellungen ändern',
-                content: 'Sie können Cookies in den Einstellungen Ihres Browsers verwalten. Bitte beachten Sie, dass die Deaktivierung technisch notwendiger Cookies die Funktionsfähigkeit von BillingTool beeinträchtigt und Sie möglicherweise nicht einloggen können.\n\nDie meisten Browser bieten folgende Möglichkeiten:\n• Gespeicherte Cookies anzeigen\n• Cookies von bestimmten Websites blockieren\n• Alle Cookies beim Schließen des Browsers löschen\n\nHinweise zu Ihrem Browser finden Sie in der jeweiligen Hilfedokumentation (Chrome, Firefox, Safari, Edge usw.).',
+                content: 'Sie können Cookies in den Einstellungen Ihres Browsers verwalten. Bitte beachten Sie, dass die Deaktivierung technisch notwendiger Cookies die Funktionsfähigkeit von BillingTool beeinträchtigt und Sie möglicherweise nicht einloggen können.\n\nDie meisten Browser bieten folgende Möglichkeiten:\n• Gespeicherte Cookies anzeigen\n• Cookies von bestimmten Websites blockieren\n• Alle Cookies beim Schließen des Browsers löschen\n\nHinweise zu Ihrem Browser finden Sie in der jeweiligen Hilfedokumentation (Chrome, Firefox, Safari, Edge usw.).'
             },
             retention: {
                 title: 'Speicherdauer der Cookies',
-                content: 'Session-Cookies werden beim Schließen des Browsers automatisch gelöscht. Persistente Cookies für Einstellungen (z. B. Sprachpräferenz) werden für maximal 12 Monate gespeichert und bei jeder Nutzung des Dienstes erneuert. Sie können Cookies jederzeit über die Einstellungen Ihres Browsers löschen.',
-            },
-        },
-    },
+                content: 'Session-Cookies werden beim Schließen des Browsers automatisch gelöscht. Persistente Cookies für Einstellungen (z. B. Sprachpräferenz) werden für maximal 12 Monate gespeichert und bei jeder Nutzung des Dienstes erneuert. Sie können Cookies jederzeit über die Einstellungen Ihres Browsers löschen.'
+            }
+        }
+    }
 };

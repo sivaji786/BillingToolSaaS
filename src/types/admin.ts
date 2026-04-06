@@ -53,7 +53,18 @@ export interface PackageFeature {
     id?: string;
     name: string;
     value: string | number | boolean;
-    type: 'storage' | 'users' | 'bandwidth' | 'api_calls' | 'custom';
+    type: 'storage' | 'users' | 'bandwidth' | 'api_calls' | 'custom' | string;
+}
+
+export interface PackageSystemService {
+    id: string;
+    name: string;
+    type: string;
+    displayOrder: number;
+    description: string | null;
+    isActive: boolean;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export interface SaasUser {

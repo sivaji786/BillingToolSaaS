@@ -17,6 +17,7 @@ class Customer extends BaseController
     protected $planModel;
     protected $invoiceModel;
     protected $userModel;
+    protected $usageModel;
 
     public function __construct()
     {
@@ -25,6 +26,7 @@ class Customer extends BaseController
         $this->planModel = new PlanModel();
         $this->invoiceModel = new InvoiceModel();
         $this->userModel = new UserModel();
+        $this->usageModel = new \App\Models\TenantUsageModel();
     }
 
     /**
@@ -68,29 +70,39 @@ class Customer extends BaseController
                 ->orderBy('created_at', 'DESC')
                 ->findAll(5);
 
-            // Calculate usage (mock for now - will be real with usage tracking)
-            $usage = [
-                'storage' => [
-                    'used' => 2500000000, // 2.5GB in bytes
-                    'limit' => $plan['limits']['storage'] ?? 5000000000,
-                    'percentage' => 50
-                ],
-                'api_calls' => [
-                    'used' => 5000,
-                    'limit' => $plan['limits']['api_calls'] ?? 10000,
-                    'percentage' => 50
-                ],
-                'bandwidth' => [
-                    'used' => 25000000000, // 25GB
-                    'limit' => $plan['limits']['bandwidth'] ?? 50000000000,
-                    'percentage' => 50
-                ],
-                'users' => [
-                    'used' => 1,
-                    'limit' => $plan['limits']['users'] ?? 1,
-                    'percentage' => 100
-                ]
-            ];
+            // Calculate usage (real from usage tracking)
+            $usage = [];
+            $resourceKeys = ['storage', 'api_calls', 'bandwidth', 'users', 'invoices'];
+            
+            foreach ($resourceKeys as $key) {
+                // If it's invoices or users, we can count directly for absolute truth
+                if ($key === 'invoices') {
+                    $used = $this->invoiceModel->where('tenant_id', $tenantId)->countAllResults();
+                } elseif ($key === 'users') {
+                    $used = $this->userModel->where('tenant_id', $tenantId)->countAllResults();
+                } else {
+                    $usageRecord = $this->usageModel->getUsage($tenantId, $key);
+                    $used = $usageRecord ? (int)$usageRecord['used_amount'] : 0;
+                }
+
+                $limit = $plan['limits'][$key] ?? 0;
+                if ($key === 'storage' && !isset($plan['limits'][$key])) $limit = 5000000000;
+                if ($key === 'api_calls' && !isset($plan['limits'][$key])) $limit = 10000;
+                if ($key === 'bandwidth' && !isset($plan['limits'][$key])) $limit = 50000000000;
+
+                $percentage = 0;
+                if ($limit == -1) {
+                    $percentage = 0; // Unlimited
+                } elseif ($limit > 0) {
+                    $percentage = min(100, round(($used / $limit) * 100));
+                }
+
+                $usage[$key] = [
+                    'used' => $used,
+                    'limit' => $limit,
+                    'percentage' => $percentage
+                ];
+            }
 
             return $this->response->setJSON([
                 'success' => true,
@@ -331,29 +343,33 @@ class Customer extends BaseController
             $plan = $this->planModel->find($subscription['plan_id']);
             $limits = json_decode($plan['limits'], true);
 
-            // Mock usage data (will be real with usage tracking)
-            $usage = [
-                'storage' => [
-                    'used' => 2500000000,
-                    'limit' => $limits['storage'] ?? 5000000000,
-                    'unit' => 'bytes'
-                ],
-                'api_calls' => [
-                    'used' => 5000,
-                    'limit' => $limits['api_calls'] ?? 10000,
-                    'unit' => 'calls'
-                ],
-                'bandwidth' => [
-                    'used' => 25000000000,
-                    'limit' => $limits['bandwidth'] ?? 50000000000,
-                    'unit' => 'bytes'
-                ],
-                'users' => [
-                    'used' => 1,
-                    'limit' => $limits['users'] ?? 1,
-                    'unit' => 'users'
-                ]
+            // Real usage data
+            $usage = [];
+            $resourceKeys = ['storage', 'api_calls', 'bandwidth', 'users', 'invoices'];
+            $units = [
+                'storage'   => 'bytes',
+                'api_calls' => 'calls',
+                'bandwidth' => 'bytes',
+                'users'     => 'users',
+                'invoices'  => 'invoices'
             ];
+            
+            foreach ($resourceKeys as $key) {
+                if ($key === 'invoices') {
+                    $used = $this->invoiceModel->where('tenant_id', $tenantId)->countAllResults();
+                } elseif ($key === 'users') {
+                    $used = $this->userModel->where('tenant_id', $tenantId)->countAllResults();
+                } else {
+                    $usageRecord = $this->usageModel->getUsage($tenantId, $key);
+                    $used = $usageRecord ? (int)$usageRecord['used_amount'] : 0;
+                }
+
+                $usage[$key] = [
+                    'used' => $used,
+                    'limit' => $limits[$key] ?? 0,
+                    'unit' => $units[$key] ?? ''
+                ];
+            }
 
             return $this->response->setJSON([
                 'success' => true,

@@ -25,7 +25,9 @@
     - Status: ✅ **Passed**
 - **Usability & UX Testing:** 
     - Verified autocomplete behavior in the Invoice Editor line items.
-    - Status: 🟢 **Active**
+    - **T-INV-010**: Verified default template persistence in profile after save. (✅ Passed)
+    - **T-INV-011**: Verified directory selection popup in Invoice Preview. (✅ Passed)
+    - Status: ✅ **Passed**
 - **Accessibility Testing:** 
     - WCAG 2.1 Color contrast audit on the purple premium design.
     - Status: ✅ **Passed**

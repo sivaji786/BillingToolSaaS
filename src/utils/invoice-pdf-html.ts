@@ -24,197 +24,177 @@ export function generateInvoiceHTML(
   template?: InvoiceTemplate,
   profile?: CompanyProfile | null
 ): string {
-  // Helper values
-  const logoUrl = template?.logoUrl || profile?.logoUrl;
-  const headerText = template?.headerText || profile?.headerText;
-  const footerText = template?.footerText || profile?.footerText;
+  // Create effective data with hierarchical fallbacks
+  const effectiveLogo = template?.logoUrl || profile?.logoUrl;
+  const effectiveHeaderHtml = template?.headerText || profile?.headerText;
+  const effectiveFooterHtml = template?.footerText || profile?.footerText;
+  const effectiveNote = invoice.note || template?.defaultPaymentTerms?.note || '';
 
-  // Fallback payment means
-  const effectivePaymentMeans = invoice.paymentMeans?.iban
-    ? invoice.paymentMeans
-    : (profile?.bankAccount ? {
-      type: 'BankTransfer' as const,
-      iban: profile.bankAccount.iban,
-      bic: profile.bankAccount.bic,
-      accountName: profile.bankAccount.accountName,
-    } : undefined);
+  const effectiveSeller = {
+    ...profile,
+    ...(template?.seller || {}),
+    ...invoice.seller,
+    address: {
+        ...(profile?.address || {}),
+        ...(template?.seller?.address || {}),
+        ...(invoice.seller?.address || {})
+    }
+  };
 
-  // Generate line items rows
-  const lineItemsRows = invoice.lines.map((line, index) => {
-    const lineTotal = line.quantity * line.unitPrice;
-    return `
-      <tr>
-        <td style="padding: 8px; text-align: center; border: 1px solid #222222;">${index + 1}</td>
-        <td style="padding: 8px; text-align: left; border: 1px solid #222222;">${line.description}</td>
-        <td style="padding: 8px; text-align: right; border: 1px solid #222222;">${line.quantity}</td>
-        <td style="padding: 8px; text-align: right; border: 1px solid #222222;">${formatCurrency(line.unitPrice, invoice.currency)}</td>
-        <td style="padding: 8px; text-align: right; border: 1px solid #222222;">${line.taxPercent}%</td>
-        <td style="padding: 8px; text-align: right; border: 1px solid #222222;">${formatCurrency(lineTotal, invoice.currency)}</td>
-      </tr>`;
-  }).join('');
+  const effectivePaymentMeans = invoice.paymentMeans?.iban ? invoice.paymentMeans : 
+                               (profile?.bankAccount ? {
+                                  type: 'BankTransfer' as const,
+                                  iban: profile.bankAccount.iban,
+                                  bic: profile.bankAccount.bic,
+                                  accountName: profile.bankAccount.accountName,
+                                } : undefined);
 
-  // Generate tax breakdown rows
-  const taxBreakdownRows = invoice.taxTotals.map(tax => `
-    <tr>
-      <td style="padding: 6px 12px; text-align: left; border-bottom: 1px solid #cccccc;">${tax.taxType} (${tax.taxPercent}%)</td>
-      <td style="padding: 6px 12px; text-align: right; border-bottom: 1px solid #cccccc;">${formatCurrency(tax.taxAmount, invoice.currency)}</td>
+  // Generate Items Rows
+  const lineItemsRows = invoice.lines.map((line, index) => `
+    <tr style="border-bottom: 1px solid #f3f4f6;">
+      <td style="padding: 12px; text-align: center; color: #9ca3af; font-size: 11px;">${index + 1}</td>
+      <td style="padding: 12px; font-weight: 500; color: #1f2937;">${line.description}</td>
+      <td style="padding: 12px; text-align: right;">${line.quantity}</td>
+      <td style="padding: 12px; text-align: right;">${formatCurrency(line.unitPrice, invoice.currency)}</td>
+      <td style="padding: 12px; text-align: right; color: #6b7280;">${line.taxPercent}%</td>
+      <td style="padding: 12px; text-align: right; font-weight: 600; color: #111827;">${formatCurrency(line.quantity * line.unitPrice, invoice.currency)}</td>
     </tr>`).join('');
+
+  // Generate Tax Summary Rows
+  const taxSummaryRows = invoice.taxTotals.map(tax => `
+    <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #6b7280; font-size: 11px;">
+      <span>VAT ${tax.taxPercent}%</span>
+      <span>${formatCurrency(tax.taxAmount, invoice.currency)}</span>
+    </div>`).join('');
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice ${invoice.invoiceNumber}</title>
   <style>
-    @page {
-      size: A4;
-      margin: 15mm;
-    }
-    @media print {
-      body {
-        margin: 0;
-        padding: 0;
-      }
-    }
+    @font-face { font-family: 'Inter'; src: url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); }
+    body { font-family: 'Inter', system-ui, sans-serif; color: #1f2937; margin: 0; padding: 40px; line-height: 1.5; background: #fff; }
+    .page { width: 210mm; min-height: 297mm; margin: 0 auto; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .purple-badge { background: #f5f3ff; color: #7c3aed; }
   </style>
 </head>
-<body style="font-family: Arial, Helvetica, sans-serif; color: #000000; background-color: #ffffff; margin: 0 auto; padding: 20px; max-width: 210mm; line-height: 1.4;">
-  
-  <!-- Company Logo (if provided) -->
-  ${logoUrl ? `
-  <table style="width: 100%; margin-bottom: 15px; border-collapse: collapse;">
-    <tr>
-      <td style="text-align: left;">
-        <img src="${logoUrl}" alt="Company Logo" style="height: 60px; display: block;">
-      </td>
-    </tr>
-  </table>` : ''}
+<body>
+  <div class="page">
+    <!-- Top Accent Bar -->
+    <div style="height: 6px; background: #7c3aed; position: fixed; top: 0; left: 0; right: 0;"></div>
 
-  <!-- Header Text (if provided) - Preserve HTML content -->
-  ${headerText ? `
-  <div style="width: 100%; margin-bottom: 15px; color: #222222; font-size: 11px; text-align: left;">
-    ${headerText}
-  </div>` : ''}
+    <!-- Header Area -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px;">
+      <div>
+        ${effectiveLogo ? `<img src="${effectiveLogo}" style="max-height: 50px; margin-bottom: 15px;">` : ''}
+        ${effectiveHeaderHtml ? `<div style="font-size: 10px; color: #9ca3af; margin-top: 10px;">${effectiveHeaderHtml}</div>` : ''}
+      </div>
+      <div style="text-align: right;">
+        <h1 style="font-size: 32px; font-weight: 800; color: #7c3aed; margin: 0;">INVOICE</h1>
+        <p style="font-size: 14px; color: #6b7280; margin-top: 5px;"># ${invoice.invoiceNumber}</p>
+      </div>
+    </div>
 
-  <!-- Invoice Title and Details -->
-  <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
-    <tr>
-      <td style="width: 50%; vertical-align: top;">
-        <h1 style="margin: 0; font-size: 24px; font-weight: bold; color: #000000;">INVOICE</h1>
-        <p style="margin: 5px 0 0 0; font-size: 13px; color: #222222;"><strong>Invoice Number:</strong> ${invoice.invoiceNumber}</p>
-      </td>
-      <td style="width: 50%; vertical-align: top; text-align: right;">
-        <p style="margin: 0; font-size: 11px; color: #222222;"><strong>Issue Date:</strong> ${formatDate(invoice.issueDate)}</p>
-        ${invoice.dueDate ? `<p style="margin: 5px 0 0 0; font-size: 11px; color: #222222;"><strong>Due Date:</strong> ${formatDate(invoice.dueDate)}</p>` : ''}
-      </td>
-    </tr>
-  </table>
+    <!-- Dates Information -->
+    <div style="display: flex; justify-content: flex-end; gap: 40px; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #f3f4f6;">
+      <div style="text-align: right;">
+        <p style="font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 5px;">Issue Date</p>
+        <p style="font-size: 13px; font-weight: 500;">${formatDate(invoice.issueDate)}</p>
+      </div>
+      ${invoice.dueDate ? `<div style="text-align: right;">
+        <p style="font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 5px;">Due Date</p>
+        <p style="font-size: 13px; font-weight: 500;">${formatDate(invoice.dueDate)}</p>
+      </div>` : ''}
+    </div>
 
-  <!-- Seller and Buyer Information -->
-  <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
-    <tr>
-      <td style="width: 50%; vertical-align: top; padding-right: 15px;">
-        <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: bold; color: #000000;">FROM:</p>
-        <p style="margin: 0; font-size: 13px; font-weight: bold; color: #000000;">${invoice.seller.name}</p>
-        ${invoice.seller.vatId ? `<p style="margin: 2px 0; font-size: 10px; color: #222222;">VAT ID: ${invoice.seller.vatId}</p>` : ''}
-        <p style="margin: 2px 0; font-size: 10px; color: #222222;">${invoice.seller.address.street}</p>
-        <p style="margin: 2px 0; font-size: 10px; color: #222222;">${invoice.seller.address.postalCode} ${invoice.seller.address.city}</p>
-        <p style="margin: 2px 0; font-size: 10px; color: #222222;">${invoice.seller.address.country}</p>
-        ${invoice.seller.contactEmail ? `<p style="margin: 2px 0; font-size: 10px; color: #222222;">${invoice.seller.contactEmail}</p>` : ''}
-        ${invoice.seller.contactPhone ? `<p style="margin: 2px 0; font-size: 10px; color: #222222;">${invoice.seller.contactPhone}</p>` : ''}
-      </td>
-      <td style="width: 50%; vertical-align: top; padding-left: 15px;">
-        <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: bold; color: #000000;">BILL TO:</p>
-        <p style="margin: 0; font-size: 13px; font-weight: bold; color: #000000;">${invoice.buyer.name}</p>
-        ${invoice.buyer.vatId ? `<p style="margin: 2px 0; font-size: 10px; color: #222222;">VAT ID: ${invoice.buyer.vatId}</p>` : ''}
-        <p style="margin: 2px 0; font-size: 10px; color: #222222;">${invoice.buyer.address.street}</p>
-        <p style="margin: 2px 0; font-size: 10px; color: #222222;">${invoice.buyer.address.postalCode} ${invoice.buyer.address.city}</p>
-        <p style="margin: 2px 0; font-size: 10px; color: #222222;">${invoice.buyer.address.country}</p>
-        ${invoice.buyer.contactEmail ? `<p style="margin: 2px 0; font-size: 10px; color: #222222;">${invoice.buyer.contactEmail}</p>` : ''}
-      </td>
-    </tr>
-  </table>
+    <!-- Parties Area -->
+    <div style="display: flex; gap: 60px; margin-bottom: 40px;">
+      <div style="flex: 1;">
+        <p style="font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 10px;">Bill To</p>
+        <p style="font-size: 14px; font-weight: 700; margin-bottom: 5px;">${invoice.buyer.name}</p>
+        <div style="font-size: 12px; color: #6b7280; line-height: 1.6;">
+          ${invoice.buyer.vatId ? `<div>VAT ID: ${invoice.buyer.vatId}</div>` : ''}
+          <div>${invoice.buyer.address.street}</div>
+          <div>${invoice.buyer.address.postalCode} ${invoice.buyer.address.city}</div>
+          <div>${invoice.buyer.address.country}</div>
+        </div>
+      </div>
+      <div style="flex: 1;">
+        <p style="font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 10px;">From</p>
+        <p style="font-size: 14px; font-weight: 700; margin-bottom: 5px;">${effectiveSeller.name}</p>
+        <div style="font-size: 12px; color: #6b7280; line-height: 1.6;">
+          ${effectiveSeller.vatId ? `<div>VAT ID: ${effectiveSeller.vatId}</div>` : ''}
+          <div>${effectiveSeller.address.street}</div>
+          <div>${effectiveSeller.address.postalCode} ${effectiveSeller.address.city}</div>
+          <div>${effectiveSeller.address.country}</div>
+        </div>
+      </div>
+    </div>
 
-  <!-- Line Items Table -->
-  <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse; border: 1px solid #222222;">
-    <thead>
-      <tr style="background-color: #ffffff;">
-        <th style="padding: 8px; text-align: center; border: 1px solid #222222; font-weight: bold; color: #000000; font-size: 11px;">#</th>
-        <th style="padding: 8px; text-align: left; border: 1px solid #222222; font-weight: bold; color: #000000; font-size: 11px;">Description</th>
-        <th style="padding: 8px; text-align: right; border: 1px solid #222222; font-weight: bold; color: #000000; font-size: 11px;">Quantity</th>
-        <th style="padding: 8px; text-align: right; border: 1px solid #222222; font-weight: bold; color: #000000; font-size: 11px;">Unit Price</th>
-        <th style="padding: 8px; text-align: right; border: 1px solid #222222; font-weight: bold; color: #000000; font-size: 11px;">Tax %</th>
-        <th style="padding: 8px; text-align: right; border: 1px solid #222222; font-weight: bold; color: #000000; font-size: 11px;">Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${lineItemsRows}
-    </tbody>
-  </table>
-
-  <!-- Totals Summary -->
-  <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
-    <tr>
-      <td style="width: 60%;"></td>
-      <td style="width: 40%;">
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <td style="padding: 5px 10px; text-align: left; border-bottom: 1px solid #cccccc; font-size: 11px; color: #222222;">Subtotal</td>
-            <td style="padding: 5px 10px; text-align: right; border-bottom: 1px solid #cccccc; font-size: 11px; color: #222222;">${formatCurrency(invoice.lineExtensionAmount, invoice.currency)}</td>
+    <!-- Items Table -->
+    <div style="border-radius: 12px; border: 1px solid #f3f4f6; overflow: hidden; margin-bottom: 30px;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+          <tr style="background: #f5f3ff;">
+            <th style="padding: 12px; text-align: center; color: #7c3aed; font-weight: 700; width: 40px;">#</th>
+            <th style="padding: 12px; text-align: left; color: #7c3aed; font-weight: 700;">Description</th>
+            <th style="padding: 12px; text-align: right; color: #7c3aed; font-weight: 700;">Qty</th>
+            <th style="padding: 12px; text-align: right; color: #7c3aed; font-weight: 700;">Price</th>
+            <th style="padding: 12px; text-align: right; color: #7c3aed; font-weight: 700;">Tax</th>
+            <th style="padding: 12px; text-align: right; color: #7c3aed; font-weight: 700;">Amount</th>
           </tr>
-          ${taxBreakdownRows}
-          <tr>
-            <td style="padding: 8px 10px; text-align: left; border-top: 2px solid #000000; font-weight: bold; font-size: 13px; color: #000000;">TOTAL</td>
-            <td style="padding: 8px 10px; text-align: right; border-top: 2px solid #000000; font-weight: bold; font-size: 13px; color: #000000;">${formatCurrency(invoice.payableAmount, invoice.currency)}</td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
+        </thead>
+        <tbody>${lineItemsRows}</tbody>
+      </table>
+    </div>
 
-  <!-- Payment Information -->
-  ${effectivePaymentMeans?.iban ? `
-  <table style="width: 100%; margin-bottom: 15px; border-collapse: collapse;">
-    <tr>
-      <td style="padding: 12px; border: 1px solid #222222; background-color: #ffffff;">
-        <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: bold; color: #000000;">PAYMENT INFORMATION</p>
-        <p style="margin: 2px 0; font-size: 10px; color: #222222;"><strong>IBAN:</strong> ${effectivePaymentMeans.iban}</p>
-        ${effectivePaymentMeans.bic ? `<p style="margin: 2px 0; font-size: 10px; color: #222222;"><strong>BIC:</strong> ${effectivePaymentMeans.bic}</p>` : ''}
-        ${effectivePaymentMeans.accountName ? `<p style="margin: 2px 0; font-size: 10px; color: #222222;"><strong>Account Name:</strong> ${effectivePaymentMeans.accountName}</p>` : ''}
-      </td>
-    </tr>
-  </table>` : ''}
+    <!-- Financial Summary Area -->
+    <div style="display: flex; justify-content: flex-end;">
+      <div style="width: 250px;">
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; color: #6b7280; font-size: 13px;">
+          <span>Subtotal</span>
+          <span>${formatCurrency(invoice.lineExtensionAmount, invoice.currency)}</span>
+        </div>
+        ${taxSummaryRows}
+        <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 2px solid #7c3aed; margin-top: 10px; color: #7c3aed; font-weight: 800; font-size: 18px;">
+          <span>Total</span>
+          <span>${formatCurrency(invoice.payableAmount, invoice.currency)}</span>
+        </div>
+      </div>
+    </div>
 
-  <!-- Payment Terms -->
-  ${invoice.paymentTerms?.note ? `
-  <table style="width: 100%; margin-bottom: 15px; border-collapse: collapse;">
-    <tr>
-      <td style="padding: 10px; border: 1px solid #222222; background-color: #ffffff;">
-        <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: bold; color: #000000;">PAYMENT TERMS</p>
-        <p style="margin: 0; font-size: 10px; color: #222222;">${invoice.paymentTerms.note}</p>
-      </td>
-    </tr>
-  </table>` : ''}
+    <!-- Notes Section -->
+    ${effectiveNote ? `
+    <div style="margin-top: 50px;">
+      <p style="font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 10px;">Notes</p>
+      <div style="font-size: 12px; color: #6b7280; background: #f9fafb; padding: 15px; border-radius: 8px; font-style: italic;">
+        ${effectiveNote}
+      </div>
+    </div>` : ''}
 
-  <!-- Notes -->
-  ${invoice.note ? `
-  <table style="width: 100%; margin-bottom: 15px; border-collapse: collapse;">
-    <tr>
-      <td style="padding: 10px; border: 1px solid #222222; background-color: #ffffff;">
-        <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: bold; color: #000000;">NOTES</p>
-        <p style="margin: 0; font-size: 10px; color: #222222;">${invoice.note}</p>
-      </td>
-    </tr>
-  </table>` : ''}
+    <!-- Payment Info & Signature -->
+    <div style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 30px;">
+      <div>
+        ${effectivePaymentMeans?.iban ? `
+        <p style="font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 10px;">Payment Details</p>
+        <div style="font-size: 11px; color: #6b7280;">
+          <div><strong>IBAN:</strong> ${effectivePaymentMeans.iban}</div>
+          ${effectivePaymentMeans.bic ? `<div><strong>BIC:</strong> ${effectivePaymentMeans.bic}</div>` : ''}
+          ${effectivePaymentMeans.accountName ? `<div><strong>Owner:</strong> ${effectivePaymentMeans.accountName}</div>` : ''}
+        </div>` : ''}
+      </div>
+      <div style="text-align: center; width: 180px;">
+        <div style="border-bottom: 1px solid #7c3aed; height: 40px; margin-bottom: 10px;"></div>
+        <p style="font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase;">Signature</p>
+      </div>
+    </div>
 
-  <!-- Footer - Preserve HTML content -->
-  ${footerText ? `
-  <hr style="border: none; border-top: 1px solid #222222; margin: 20px 0 10px 0;">
-  <div style="width: 100%; text-align: center; font-size: 9px; color: #222222;">
-    ${footerText}
-  </div>` : ''}
-
+    <!-- Global Footer -->
+    <div style="position: fixed; bottom: 40px; left: 40px; right: 40px; text-align: center; font-size: 9px; color: #9ca3af; padding-top: 20px; border-top: 1px solid #f3f4f6;">
+      ${effectiveFooterHtml || ''}
+    </div>
+  </div>
 </body>
 </html>`;
 }

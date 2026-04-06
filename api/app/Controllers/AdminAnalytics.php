@@ -16,12 +16,18 @@ class AdminAnalytics extends ResourceController
     protected $tenantModel;
     protected $planModel;
     protected $subscriptionModel;
+    protected $usageModel;
+    protected $invoiceModel;
+    protected $userModel;
 
     public function __construct()
     {
         $this->tenantModel = new TenantModel();
         $this->planModel = new PlanModel();
         $this->subscriptionModel = new SubscriptionModel();
+        $this->usageModel = new \App\Models\TenantUsageModel();
+        $this->invoiceModel = new \App\Models\InvoiceModel();
+        $this->userModel = new \App\Models\UserModel();
     }
 
     /**
@@ -64,8 +70,12 @@ class AdminAnalytics extends ResourceController
         // Calculate ARPU (Average Revenue Per User)
         $averageRevenuePerUser = $totalUsers > 0 ? $monthlyRevenue / $totalUsers : 0;
 
-        // Real API calls (all time or last 30 days)
-        $apiCalls = $db->table('aiquery_history')->countAllResults();
+        // Real API calls (summed from all tenants in usage table)
+        $apiCallsResult = $db->table('tenant_usage')
+            ->selectSum('used_amount')
+            ->where('resource_key', 'api_calls')
+            ->get()->getRow();
+        $apiCalls = (int)($apiCallsResult->used_amount ?? 0);
 
         // --- Calculate Trends (Current vs Previous Month) ---
 
@@ -257,38 +267,53 @@ class AdminAnalytics extends ResourceController
                 break;
         }
 
-        // 1. Storage: Real sum of file sizes added in the period
-        $storageQuery = $db->table('workspace_files')
-            ->selectSum('size')
-            ->where('created_at >=', $startTime);
+        // 1. Storage: Fetch from tenant_usage
         if ($tenantId) {
-            $storageQuery->where('tenant_id', $tenantId);
+            $usageRecord = $this->usageModel->getUsage($tenantId, 'storage');
+            $storageUsedBytes = $usageRecord ? (int)$usageRecord['used_amount'] : 0;
+            
+            $tenant = $this->tenantModel->find($tenantId);
+            $plan = $this->planModel->find($tenant['plan_id']);
+            $limits = json_decode($plan['limits'], true) ?: [];
+            $storageLimit = round(($limits['storage'] ?? (($limits['storage_gb'] ?? 5) * 1024 * 1024 * 1024)) / (1024 * 1024 * 1024), 2);
+        } else {
+            $storageResult = $db->table('tenant_usage')
+                ->selectSum('used_amount')
+                ->where('resource_key', 'storage')
+                ->get()->getRow();
+            $storageUsedBytes = $storageResult->used_amount ?? 0;
+            $storageLimit = 1000; // Global Default
         }
-        $storageUsedBytes = $storageQuery->get()->getRow()->size ?? 0;
         $storageUsed = round($storageUsedBytes / (1024 * 1024 * 1024), 4); // Convert to GB
-        $storageLimit = 1000; // GB
 
-        // 2. API Calls: Real count of AI queries in the period
-        $apiCallsQuery = $db->table('aiquery_history')
-            ->where('created_at >=', $startTime);
+        // 2. API Calls: Fetch from tenant_usage
         if ($tenantId) {
-            $apiCallsQuery->where('tenant_id', $tenantId);
+            $usageRecord = $this->usageModel->getUsage($tenantId, 'api_calls');
+            $apiCalls = $usageRecord ? (int)$usageRecord['used_amount'] : 0;
+            $apiCallsLimit = $limits['api_calls'] ?? 10000;
+        } else {
+            $apiCallsResult = $db->table('tenant_usage')
+                ->selectSum('used_amount')
+                ->where('resource_key', 'api_calls')
+                ->get()->getRow();
+            $apiCalls = (int)($apiCallsResult->used_amount ?? 0);
+            $apiCallsLimit = 1000000;
         }
-        $apiCalls = $apiCallsQuery->countAllResults();
-        $apiCallsLimit = 1000000;
 
-        // 3. Bandwidth: Estimate based on REAL activity (file sizes + API overhead)
-        $bandwidthQuery = $db->table('workspace_files')
-            ->selectSum('size')
-            ->where('created_at >=', $startTime);
+        // 3. Bandwidth
         if ($tenantId) {
-            $bandwidthQuery->where('tenant_id', $tenantId);
+            $usageRecord = $this->usageModel->getUsage($tenantId, 'bandwidth');
+            $bandwidthUsedBytes = $usageRecord ? (int)$usageRecord['used_amount'] : 0;
+            $bandwidthLimit = round(($limits['bandwidth'] ?? (($limits['bandwidth_gb'] ?? 100) * 1024 * 1024 * 1024)) / (1024 * 1024 * 1024), 2);
+        } else {
+            $bandwidthResult = $db->table('tenant_usage')
+                ->selectSum('used_amount')
+                ->where('resource_key', 'bandwidth')
+                ->get()->getRow();
+            $bandwidthUsedBytes = $bandwidthResult->used_amount ?? 0;
+            $bandwidthLimit = 10000; // Global Default
         }
-        $fileUploadsBytes = $bandwidthQuery->get()->getRow()->size ?? 0;
-        
-        // Estimate 1KB bandwidth for each AI call metadata + the actual file bytes
-        $bandwidthUsed = round(($fileUploadsBytes / (1024 * 1024 * 1024)) + ($apiCalls * 0.000001), 4);
-        $bandwidthLimit = 10000; // GB
+        $bandwidthUsed = round($bandwidthUsedBytes / (1024 * 1024 * 1024), 4);
 
         // 4. Active Sessions: Real count from ci_sessions (active in last 15 mins)
         // Note: For individual tenants, we approximate based on user activity if tenantId is present
@@ -400,15 +425,16 @@ class AdminAnalytics extends ResourceController
                 ->get()->getRow();
             
             // Storage per tenant
-            $storage = $db->table('workspace_files')
-                ->selectSum('size')
-                ->where('tenant_id', $tenantId)
-                ->get()->getRow()->size ?? 0;
+            $usageRecord = $this->usageModel->getUsage($tenantId, 'storage');
+            $storageUsed = $usageRecord ? (int)$usageRecord['used_amount'] : 0;
             
             // API Calls per tenant
-            $apiCalls = $db->table('aiquery_history')
-                ->where('tenant_id', $tenantId)
-                ->countAllResults();
+            $usageRecord = $this->usageModel->getUsage($tenantId, 'api_calls');
+            $apiCalls = $usageRecord ? (int)$usageRecord['used_amount'] : 0;
+
+            // Bandwidth per tenant
+            $usageRecord = $this->usageModel->getUsage($tenantId, 'bandwidth');
+            $bandwidth = $usageRecord ? (int)$usageRecord['used_amount'] : 0;
 
             $result[] = [
                 'tenantId' => $tenantId,
@@ -416,9 +442,9 @@ class AdminAnalytics extends ResourceController
                 'adminName' => $user ? $user->name : 'N/A',
                 'adminEmail' => $user ? $user->email : 'N/A',
                 'userId' => $user ? $user->id : null,
-                'storageUsed' => round($storage / (1024 * 1024 * 1024), 4), // GB
+                'storageUsed' => round($storageUsed / (1024 * 1024 * 1024), 4), // GB
                 'apiCalls' => $apiCalls,
-                'bandwidthUsed' => round(($storage / (1024 * 1024 * 1024)) + ($apiCalls * 0.000001), 4),
+                'bandwidthUsed' => round($bandwidth / (1024 * 1024 * 1024), 4),
             ];
         }
 

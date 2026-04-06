@@ -191,6 +191,7 @@ class UnifiedAuthFilter implements FilterInterface
             '/test/',
             '/debug/',
             '/billing/plans',
+            '/billing/package-services',
             '/tickets'
         ];
         foreach ($publicPatterns as $pattern) {

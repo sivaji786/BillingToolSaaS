@@ -12,6 +12,7 @@
 | **Full CRUD** | Create, Read, Update, Delete invoices and items. | ✅ Stable |
 | **Status Lifecycle** | State transitions: Draft -> Sent -> Paid. | ✅ Stable |
 | **PDF Export** | Premium, branded PDF downloads. | ✅ Stable |
+| **Buyer Selection** | Pick existing buyers from directory inside preview. | ✅ Stable |
 | **Digital Signatures** | Cryptographic signing for legal compliance. | 🟡 In-Progress |
 
 ## 3. Technical Implementation
@@ -26,3 +27,4 @@
 ## 5. Roadmap
 - Support for recurring invoices (Subscriptions).
 - Automatic email dispatch via SMTP/SendGrid.
+- Automated invoice numbering sequences per tenant.

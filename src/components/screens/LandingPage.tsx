@@ -45,13 +45,6 @@ const itemVariants: Variants = {
     }
 };
 
-const fadeInVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: { duration: 0.8, ease: "easeInOut" }
-    }
-};
 
 export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: LandingPageProps) {
     const { t } = useLanguage();
@@ -203,7 +196,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             <Button variant="ghost" onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}>
                                 {t('landing.aboutUs')}
                             </Button>
-                            <Button variant="ghost" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
+                            <Button variant="ghost" onClick={() => onNavigate('packageComparison')}>
                                 {t('nav.products')}
                             </Button>
                             {/* <Button variant="ghost" onClick={() => onNavigate('impressum')} className="text-muted-foreground">

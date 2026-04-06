@@ -110,6 +110,10 @@ export const billingService = {
         // API returns { success: true, data: [...plans] }
         return response.data.data || response.data;
     },
+    getPackageServices: async () => {
+        const response = await api.get('/billing/package-services');
+        return response.data.data || response.data;
+    },
     upgradePlan: async (planId: number) => {
         const response = await api.post('/billing/upgrade', { plan_id: planId });
         return response.data;

@@ -12,6 +12,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '../ui/button';
 import { FileText, Code, Download } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/invoice-calculations';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface PreviewModalProps {
   invoice: Invoice;
@@ -24,6 +25,7 @@ interface PreviewModalProps {
 }
 
 export function PreviewModal({ invoice, open, onOpenChange, defaultTab = 'pdf', hideTabs = false, onCopyUBL, onDownloadUBL }: PreviewModalProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'pdf' | 'ubl'>(defaultTab);
 
   useEffect(() => {
@@ -171,9 +173,9 @@ ${invoice.lines
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>{hideTabs ? 'E-Invoice (UBL XML) Preview' : `Invoice Preview - ${invoice.invoiceNumber}`}</DialogTitle>
+          <DialogTitle>{hideTabs ? t('previewModal.ublXml') || 'E-Invoice (UBL XML) Preview' : `${t('previewModal.title') || 'Invoice Preview'} - ${invoice.invoiceNumber}`}</DialogTitle>
           <DialogDescription>
-            {hideTabs ? 'UBL XML' : 'Preview your invoice in PDF format or as UBL XML'}
+            {hideTabs ? t('previewModal.ublXml') || 'UBL XML' : t('previewModal.description') || 'Preview your invoice in PDF format or as UBL XML'}
           </DialogDescription>
         </DialogHeader>
 
@@ -182,11 +184,11 @@ ${invoice.lines
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="pdf">
                 <FileText className="h-4 w-4 mr-2" />
-                PDF Preview
+                {t('previewModal.pdfPreview') || 'PDF Preview'}
               </TabsTrigger>
               <TabsTrigger value="ubl">
                 <Code className="h-4 w-4 mr-2" />
-                UBL XML
+                {t('previewModal.ublXml') || 'UBL XML'}
               </TabsTrigger>
             </TabsList>
           )}
@@ -198,15 +200,15 @@ ${invoice.lines
                 {/* Header */}
                 <div className="flex justify-between items-start">
                   <div>
-                    <h1 className="text-primary">INVOICE</h1>
+                    <h1 className="text-primary">{t('previewModal.invoice') || 'INVOICE'}</h1>
                     <p className="text-muted-foreground mt-2">{invoice.invoiceNumber}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Issue Date</p>
+                    <p className="text-sm text-muted-foreground">{t('previewModal.issueDate') || 'Issue Date'}</p>
                     <p>{formatDate(invoice.issueDate)}</p>
                     {invoice.dueDate && (
                       <>
-                        <p className="text-sm text-muted-foreground mt-2">Due Date</p>
+                        <p className="text-sm text-muted-foreground mt-2">{t('previewModal.dueDate') || 'Due Date'}</p>
                         <p>{formatDate(invoice.dueDate)}</p>
                       </>
                     )}
@@ -216,26 +218,26 @@ ${invoice.lines
                 {/* Parties */}
                 <div className="grid grid-cols-2 gap-8">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">From</p>
+                    <p className="text-sm text-muted-foreground mb-2">{t('previewModal.billTo') || 'Bill To'}</p>
+                    <p>{invoice.buyer.name}</p>
+                    {invoice.buyer.vatId && <p className="text-sm">{t('previewModal.vat') || 'VAT'}: {invoice.buyer.vatId}</p>}
+                    <p className="text-sm mt-2">{invoice.buyer.address.street}</p>
+                    <p className="text-sm">
+                      {invoice.buyer.address.postalCode} {invoice.buyer.address.city}
+                    </p>
+                    <p className="text-sm">{invoice.buyer.address.country}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">{t('previewModal.from') || 'From'}</p>
                     <p>{invoice.seller.name}</p>
                     {invoice.seller.vatId && (
-                      <p className="text-sm">VAT: {invoice.seller.vatId}</p>
+                      <p className="text-sm">{t('previewModal.vat') || 'VAT'}: {invoice.seller.vatId}</p>
                     )}
                     <p className="text-sm mt-2">{invoice.seller.address.street}</p>
                     <p className="text-sm">
                       {invoice.seller.address.postalCode} {invoice.seller.address.city}
                     </p>
                     <p className="text-sm">{invoice.seller.address.country}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Bill To</p>
-                    <p>{invoice.buyer.name}</p>
-                    {invoice.buyer.vatId && <p className="text-sm">VAT: {invoice.buyer.vatId}</p>}
-                    <p className="text-sm mt-2">{invoice.buyer.address.street}</p>
-                    <p className="text-sm">
-                      {invoice.buyer.address.postalCode} {invoice.buyer.address.city}
-                    </p>
-                    <p className="text-sm">{invoice.buyer.address.country}</p>
                   </div>
                 </div>
 
@@ -245,11 +247,11 @@ ${invoice.lines
                     <thead className="border-b">
                       <tr className="text-left">
                         <th className="pb-2 text-center w-10">#</th>
-                        <th className="pb-2">Description</th>
-                        <th className="pb-2 text-right">Qty</th>
-                        <th className="pb-2 text-right">Unit Price</th>
-                        <th className="pb-2 text-right">Tax</th>
-                        <th className="pb-2 text-right">Amount</th>
+                        <th className="pb-2">{t('previewModal.colDescription') || 'Description'}</th>
+                        <th className="pb-2 text-right">{t('previewModal.quantity') || 'Qty'}</th>
+                        <th className="pb-2 text-right">{t('previewModal.unitPrice') || 'Unit Price'}</th>
+                        <th className="pb-2 text-right">{t('previewModal.tax') || 'Tax'}</th>
+                        <th className="pb-2 text-right">{t('previewModal.amount') || 'Amount'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -277,7 +279,7 @@ ${invoice.lines
                 <div className="flex justify-end">
                   <div className="w-64 space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="text-muted-foreground">{t('previewModal.subtotal') || 'Subtotal'}</span>
                       <span>{formatCurrency(invoice.lineExtensionAmount, invoice.currency)}</span>
                     </div>
                     {invoice.taxTotals.map((tax, index) => (
@@ -289,7 +291,7 @@ ${invoice.lines
                       </div>
                     ))}
                     <div className="flex justify-between border-t pt-2">
-                      <span>Total</span>
+                      <span>{t('previewModal.total') || 'Total'}</span>
                       <span>{formatCurrency(invoice.payableAmount, invoice.currency)}</span>
                     </div>
                   </div>
@@ -298,12 +300,12 @@ ${invoice.lines
                 {/* Payment Info */}
                 {invoice.paymentMeans && (
                   <div className="border-t pt-4">
-                    <p className="text-sm mb-2">Payment Information</p>
+                    <p className="text-sm mb-2">{t('previewModal.paymentInfo') || 'Payment Information'}</p>
                     {invoice.paymentMeans.iban && (
                       <>
-                        <p className="text-sm">IBAN: {invoice.paymentMeans.iban}</p>
+                        <p className="text-sm">{t('previewModal.iban') || 'IBAN'}: {invoice.paymentMeans.iban}</p>
                         {invoice.paymentMeans.bic && (
-                          <p className="text-sm">BIC: {invoice.paymentMeans.bic}</p>
+                          <p className="text-sm">{t('previewModal.bic') || 'BIC'}: {invoice.paymentMeans.bic}</p>
                         )}
                       </>
                     )}
@@ -340,7 +342,7 @@ ${invoice.lines
                 }}
               >
                 <FileText className="h-4 w-4" />
-                Copy XML
+                {t('previewModal.copyXml') || 'Copy XML'}
               </Button>
               <Button
                 variant="default"
@@ -360,7 +362,7 @@ ${invoice.lines
                 }}
               >
                 <Download className="h-4 w-4 mr-2" />
-                Download UBL XML
+                {t('previewModal.downloadUblXml') || 'Download UBL XML'}
               </Button>
             </div>
           </TabsContent>

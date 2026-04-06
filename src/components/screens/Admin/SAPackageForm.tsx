@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { adminPackageService } from '../../../services/adminApi';
+import { adminPackageService, adminPackageServicesService } from '../../../services/adminApi';
 import { PackageFormData, PackageFeature } from '../../../types/admin';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
@@ -20,11 +20,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
     const isEditing = !!packageId;
 
     // State for dynamic features
-    const [features, setFeatures] = useState<PackageFeature[]>([
-        { name: 'Storage', value: '', type: 'storage' },
-        { name: 'Users', value: '', type: 'users' },
-        { name: 'Bandwidth', value: '', type: 'bandwidth' },
-    ]);
+    const [features, setFeatures] = useState<PackageFeature[]>([]);
     const [isTrailing, setIsTrailing] = useState(false);
     const [isPublic, setIsPublic] = useState(true);
 
@@ -35,16 +31,41 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
         enabled: isEditing,
     });
 
-    // Load features when package data is available
+    // Fetch active package services (columns)
+    const { data: availableServices, isLoading: isServicesLoading } = useQuery({
+        queryKey: ['package-services-active'],
+        queryFn: () => adminPackageServicesService.getAll(true),
+    });
+
+    // Load features when package data and available services are ready
     useEffect(() => {
-        if (packageData?.features && packageData.features.length > 0) {
-            setFeatures(packageData.features);
+        if (!availableServices) return;
+
+        const defaultFeatures: PackageFeature[] = availableServices.map(srv => {
+            const existingFeature = packageData?.features?.find(f => f.type === srv.type && f.name === srv.name);
+            return {
+                name: srv.name,
+                type: srv.type,
+                value: existingFeature ? existingFeature.value : '',
+            };
+        });
+
+        // Add any extra custom features that the package had but aren't in active services anymore
+        if (packageData?.features) {
+            packageData.features.forEach(f => {
+                if (!defaultFeatures.find(df => df.type === f.type && df.name === f.name)) {
+                    defaultFeatures.push(f);
+                }
+            });
         }
+
+        setFeatures(defaultFeatures);
+
         if (packageData) {
             setIsTrailing(!!packageData.isTrailing);
             setIsPublic(packageData.isPublic !== false); // default to true
         }
-    }, [packageData]);
+    }, [packageData, availableServices]);
 
     const createMutation = useMutation({
         mutationFn: adminPackageService.create,
@@ -76,11 +97,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
     };
 
     const handleRemoveFeature = (index: number) => {
-        if (features.length > 1) {
-            setFeatures(features.filter((_, i) => i !== index));
-        } else {
-            toast.error('Package must have at least one feature');
-        }
+        setFeatures(features.filter((_, i) => i !== index));
     };
 
     const handleFeatureChange = (index: number, field: keyof PackageFeature, value: string) => {
@@ -96,12 +113,8 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
 
         // Validate features
         const validFeatures = features.filter(f => f.name.toString().trim() && f.value.toString().trim());
-        if (validFeatures.length === 0) {
-            toast.error('Please add at least one feature');
-            return;
-        }
 
-        const packageData: PackageFormData = {
+        const packageDataPayload: PackageFormData = {
             name: formDataObj.get('name') as string,
             description: formDataObj.get('description') as string,
             price: parseFloat(formDataObj.get('price') as string),
@@ -114,13 +127,13 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
         };
 
         if (isEditing && packageId) {
-            updateMutation.mutate({ id: packageId, data: packageData });
+            updateMutation.mutate({ id: packageId, data: packageDataPayload });
         } else {
-            createMutation.mutate(packageData);
+            createMutation.mutate(packageDataPayload);
         }
     };
 
-    if (isLoading && isEditing) {
+    if ((isLoading && isEditing) || isServicesLoading) {
         return (
             <div className="space-y-6">
                 <div className="flex items-center gap-4">
@@ -272,79 +285,87 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                     {/* Package Features */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Package Features</CardTitle>
-                            <CardDescription>Define all features and limits for this package</CardDescription>
+                            <CardTitle>Package Services / Features</CardTitle>
+                            <CardDescription>Provide values for the available services on this package</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {features.map((feature, index) => (
-                                <div key={index} className="flex gap-3 items-start p-4 border rounded-lg">
-                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor={`feature-name-${index}`}>Feature Name *</Label>
-                                            <Input
-                                                id={`feature-name-${index}`}
-                                                value={feature.name}
-                                                onChange={(e) => handleFeatureChange(index, 'name', e.target.value)}
-                                                placeholder="e.g., Storage, API Calls, Support"
-                                                required
-                                            />
+                            {features.map((feature, index) => {
+                                const isPredefinedService = availableServices?.some(s => s.name === feature.name && s.type === feature.type);
+
+                                return (
+                                    <div key={index} className="flex gap-3 items-start p-4 border rounded-lg bg-slate-50">
+                                        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor={`feature-name-${index}`}>Service Name</Label>
+                                                <Input
+                                                    id={`feature-name-${index}`}
+                                                    value={feature.name}
+                                                    readOnly={isPredefinedService}
+                                                    className={isPredefinedService ? "bg-gray-100 cursor-not-allowed" : ""}
+                                                    onChange={(e) => handleFeatureChange(index, 'name', e.target.value)}
+                                                    placeholder="e.g., Storage"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="grid gap-2">
+                                                <Label htmlFor={`feature-value-${index}`}>Value</Label>
+                                                <Input
+                                                    id={`feature-value-${index}`}
+                                                    value={String(feature.value)}
+                                                    onChange={(e) => handleFeatureChange(index, 'value', e.target.value)}
+                                                    placeholder="e.g., 50GB, Unlimited"
+                                                />
+                                            </div>
+
+                                            <div className="grid gap-2">
+                                                <Label htmlFor={`feature-type-${index}`}>Type</Label>
+                                                <Select
+                                                    value={feature.type}
+                                                    disabled={isPredefinedService}
+                                                    onValueChange={(value: string) => handleFeatureChange(index, 'type', value)}
+                                                >
+                                                    <SelectTrigger className={isPredefinedService ? "bg-gray-100 cursor-not-allowed" : ""}>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="storage">Storage</SelectItem>
+                                                        <SelectItem value="users">Users</SelectItem>
+                                                        <SelectItem value="bandwidth">Bandwidth</SelectItem>
+                                                        <SelectItem value="api_calls">API Calls</SelectItem>
+                                                        <SelectItem value="invoices">Invoices</SelectItem>
+                                                        <SelectItem value="projects">Projects</SelectItem>
+                                                        <SelectItem value="support">Support</SelectItem>
+                                                        <SelectItem value="custom">Custom Feature</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
 
-                                        <div className="grid gap-2">
-                                            <Label htmlFor={`feature-value-${index}`}>Value *</Label>
-                                            <Input
-                                                id={`feature-value-${index}`}
-                                                value={String(feature.value)}
-                                                onChange={(e) => handleFeatureChange(index, 'value', e.target.value)}
-                                                placeholder="e.g., 50GB, Unlimited, 24/7"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="grid gap-2">
-                                            <Label htmlFor={`feature-type-${index}`}>Type</Label>
-                                            <Select
-                                                value={feature.type}
-                                                onValueChange={(value: string) => handleFeatureChange(index, 'type', value)}
+                                        {!isPredefinedService && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="mt-8 text-red-500 hover:text-red-700"
+                                                onClick={() => handleRemoveFeature(index)}
                                             >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="storage">Storage</SelectItem>
-                                                    <SelectItem value="users">Users</SelectItem>
-                                                    <SelectItem value="bandwidth">Bandwidth</SelectItem>
-                                                    <SelectItem value="api">API Calls</SelectItem>
-                                                    <SelectItem value="support">Support</SelectItem>
-                                                    <SelectItem value="feature">Feature</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        )}
                                     </div>
+                                );
+                            })}
 
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="mt-8"
-                                        onClick={() => handleRemoveFeature(index)}
-                                        disabled={features.length === 1}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
-
-                            <div className="mt-4">
+                            <div className="mt-4 pt-4 border-t">
                                 <Button type="button" variant="outline" size="sm" onClick={handleAddFeature}>
                                     <Plus className="h-4 w-4 mr-2" />
-                                    Add Feature
+                                    Add Custom Feature
                                 </Button>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    Add an extra feature that is unique to this package.
+                                </p>
                             </div>
-
-                            <p className="text-xs text-muted-foreground mt-4">
-                                💡 Tip: Add features like "Storage: 50GB", "Users: 5 users", "Support: 24/7 phone & chat", etc.
-                            </p>
                         </CardContent>
                     </Card>
 

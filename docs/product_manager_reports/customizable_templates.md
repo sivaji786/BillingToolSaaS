@@ -27,6 +27,7 @@ The **Customizable Templates** module is a high-impact feature that allows tenan
 - **Persistence:** Layouts are serialized as JSON and stored in the `invoice_templates.layout_json` column.
 - **Tenant Isolation:** Every template is strictly scoped to a `tenant_id` via the `TenantScope` trait in the backend.
 - **Defaults System:** Ability to set default currencies, tax categories, and payment terms per template.
+- **Session Persistence:** When a tenant selects a template in the editor, clicking "Save" automatically persists this choice as the `default_template_id` in their **Company Profile**, ensuring the same layout is used for all future invoices.
 
 ## 3. Technical Implementation
 
@@ -46,7 +47,8 @@ The **Customizable Templates** module is a high-impact feature that allows tenan
 | **Visual Canvas** | ✅ Stable | React-based drag/drop logic. |
 | **JSON Storage** | ✅ Stable | `layout_json` column in MySQL. |
 | **Tenant Scoping** | ✅ Stable | Global `TenantScope` integration. |
-| **Logo Integration** | ✅ Beta | Supports dynamic URL injection from Company Profile. |
+| **Logo Integration** | ✅ Stable | Supports dynamic URL injection from Company Profile. |
+| **Session Persistence** | ✅ Stable | Automated `default_template_id` tracking in profile. |
 | **ZUGFeRD Integration** | 🟡 Research | Mapping visual blocks to Hybrid-PDF standards. |
 
 ## 5. Risks & Limitations

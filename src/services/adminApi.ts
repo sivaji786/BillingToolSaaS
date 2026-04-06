@@ -124,6 +124,30 @@ export const adminPackageService = {
     },
 };
 
+// Package Services Configuration (Columns)
+export const adminPackageServicesService = {
+    getAll: async (activeOnly = false): Promise<any[]> => {
+        const response = await adminApi.get<ApiResponse<any[]>>('/package-services', {
+            params: { active: activeOnly }
+        });
+        return response.data.data;
+    },
+
+    create: async (data: { name: string; type: string; description?: string; isActive?: boolean }): Promise<any> => {
+        const response = await adminApi.post<ApiResponse<any>>('/package-services', data);
+        return response.data.data;
+    },
+
+    update: async (id: string, data: Partial<{ name: string; type: string; description?: string; isActive?: boolean }>): Promise<any> => {
+        const response = await adminApi.put<ApiResponse<any>>(`/package-services/${id}`, data);
+        return response.data;
+    },
+
+    delete: async (id: string): Promise<void> => {
+        await adminApi.delete(`/package-services/${id}`);
+    },
+};
+
 // User Services
 export const adminUserService = {
     getAll: async (filters: UserFilters = {}): Promise<PaginatedResponse<SaasUser>> => {

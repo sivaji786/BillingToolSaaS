@@ -1,33 +1,7 @@
 export const ar = {
-    common: {
-        save: 'حفظ',
-        saved: 'تم الحفظ',
-        cancel: 'إلغاء',
-        delete: 'حذف',
-        edit: 'تحرير',
-        close: 'إغلاق',
-        back: 'رجوع',
-        search: 'بحث',
-        filter: 'تصفية',
-        clear: 'مسح',
-        note: 'ملاحظة',
-        apply: 'تطبيق',
-        reset: 'إعادة تعيين',
-        loading: 'جاري التحميل...',
-        error: 'خطأ',
-        success: 'نجاح',
-        warning: 'تحذير',
-        info: 'معلومات',
-        copied: 'تم النسخ',
-        downloaded: 'تم التنزيل',
-        discard: 'إلغاء',
-        theme: {
-            light: 'فاتح',
-            dark: 'داكن',
-            system: 'النظام',
-            toggle: 'تبديل السمة',
-        }
-    },
+    appName: '[mn]BillingTool',
+    appSubtitle: 'UBL 2.1 Compliant E-Invoicing',
+    logout: 'Logout',
     login: {
         title: 'مرحباً بعودتك',
         subtitle: 'منصة فوترة إلكترونية احترافية متوافقة مع UBL 2.1',
@@ -36,11 +10,23 @@ export const ar = {
         password: 'كلمة المرور',
         signIn: 'تسجيل الدخول',
         loggingIn: 'جاري تسجيل الدخول...',
+        orTryDemo: 'Or try demo',
+        autoFillDemo: 'Auto-fill Demo Credentials',
+        footer1: 'Built with compliance for European e-invoicing standards',
+        footer2: 'EN 16931 • UBL 2.1 • WCAG 2.1 AA',
+        welcomeBack: 'Welcome back!',
+        welcomeBackDesc: 'Successfully logged in to your account.',
+        welcomeDemo: 'Welcome to Demo!',
+        welcomeDemoDesc: 'Logged in with demo credentials.',
+        loginFailed: 'فشل تسجيل الدخول',
+        loginFailedDesc: 'يرجى إدخال البريد الإلكتروني وكلمة المرور.',
+        loggedOut: 'Logged out successfully',
+        loggedOutDesc: 'You have been logged out of your account.',
         noAccount: 'ليس لديك حساب؟',
         signup: 'سجل الآن',
         backToHome: 'العودة للرئيسية',
-        loginFailed: 'فشل تسجيل الدخول',
-        loginFailedDesc: 'يرجى إدخال البريد الإلكتروني وكلمة المرور.',
+        pendingActionBanner: 'Account found! Log in below to continue with your invoice.',
+        resumingAction: 'Resuming your invoice action…'
     },
     nav: {
         dashboard: 'لوحة القيادة',
@@ -50,116 +36,293 @@ export const ar = {
         products: 'الباقات',
         clients: 'العملاء',
         reports: 'التقارير',
-        workspace: 'مساحة عملي',
+        workspace: 'مساحة عملي'
     },
-    invoice: {
-        new: 'فاتورة جديدة',
-        edit: 'تعديل الفاتورة',
-        draft: 'مسودة',
-        validated: 'تم التحقق',
-        sent: 'تم الإرسال',
-        paid: 'مدفوعة',
-        cancelled: 'ملغاة',
-        number: 'رقم الفاتورة',
-        numberPlaceholder: 'INV-001',
-        date: 'التاريخ',
+    dashboard: {
+        title: 'Invoice Dashboard',
+        subtitle: 'EN 16931-compliant e-invoice management',
+        newInvoice: 'New Invoice',
+        totalInvoices: 'Total Invoices',
+        draft: 'Draft',
+        sent: 'Sent',
+        totalValue: 'Total Value',
+        paidRevenue: 'Paid Revenue',
+        pendingRevenue: 'Pending Revenue',
+        draftValue: 'Draft Value',
+        overdue: 'Overdue',
+        invoices: 'invoices',
+        pending: 'Pending',
+        revenueBreakdown: 'Revenue Breakdown',
+        statusDistribution: 'Status Distribution',
+        monthlyTrend: 'Monthly Trend',
+        quickActions: 'إجراءات سريعة',
+        createInvoice: 'Create Invoice',
+        createInvoiceDesc: 'Start a new EN 16931 invoice',
+        importData: 'Import Data',
+        importDataDesc: 'Import invoices from files',
+        validateBatch: 'Validate Batch',
+        validateBatchDesc: 'Validate all draft invoices',
+        validating: 'Validating...',
+        recentInvoices: 'Recent Invoices',
+        noInvoices: 'No invoices yet',
+        noInvoicesDesc: 'Create your first invoice to get started',
+        due: 'Due'
+    },
+    status: {
+        draft: 'Draft',
+        validated: 'Validated',
+        sent: 'Sent',
+        paid: 'Paid',
+        cancelled: 'Cancelled',
+        signed: 'Signed'
+    },
+    editor: {
+        back: 'الرجوع',
+        newInvoice: 'فاتورة جديدة',
+        unsavedChanges: 'تغييرات غير محفوظة',
+        saveDraft: 'حفظ كمسودة',
+        validate: 'التحقق',
+        backToDashboard: 'العودة إلى لوحة القيادة',
+        saveInvoice: 'حفظ الفاتورة',
+        preview: 'معاينة',
+        export: 'تصدير',
+        invoiceDetails: 'تفاصيل الفاتورة',
+        invoiceNumber: 'رقم الفاتورة',
+        issueDate: 'تاريخ الإصدار',
         dueDate: 'تاريخ الاستحقاق',
         currency: 'العملة',
+        invoiceType: 'نوع الفاتورة',
+        standard: 'فاتورة قياسية',
+        creditNote: 'إشعار دائن',
         seller: 'البائع',
         buyer: 'المشتري',
-        lineItems: 'عناصر الفاتورة',
-        addItem: 'إضافة عنصر',
-        description: 'الوصف',
+        lineItems: 'العناصر',
+        addLine: 'إضافة عنصر',
+        noLineItems: 'لا توجد عناصر بعد',
+        noLineItemsDesc: 'أضف منتجات أو خدمات إلى فاتورتك',
+        addFirstLine: 'إضافة العنصر الأول',
+        lineAdded: 'تمت إضافة العنصر',
+        lineDeleted: 'تم حذف العنصر',
+        lineItem: {
+            description: 'الوصف',
+            descriptionPlaceholder: 'وصف العنصر',
+            qty: 'الكمية',
+            price: 'السعر',
+            tax: 'الضريبة',
+            taxPercent: 'الضريبة %',
+            taxPercentPlaceholder: '%'
+        },
+        taxSummary: 'ملخص الضرائب والمجاميع',
+        subtotal: 'المجموع الفرعي',
+        subtotalExclTax: 'المجموع الفرعي (باستثناء الضريبة)',
+        discount: 'خصم',
+        additionalCharges: 'رسوم إضافية',
+        on: 'على',
+        totalInclTax: 'الإجمالي (شامل الضريبة)',
+        prepaidAmount: 'المبلغ المدفوع مقدما',
+        amountDue: 'المبلغ المستحق',
+        total: 'الإجمالي',
+        paymentTerms: 'شروط الدفع',
+        notes: 'ملاحظات',
+        validation: 'تحقق من صحة EN 16931',
+        validInvoice: 'فاتورة صالحة',
+        amount: 'المبلغ',
+        status: 'الحالة',
+        sellerInfo: 'معلومات البائع',
+        companyName: 'اسم الشركة',
+        vatId: 'الرقم الضريبي',
+        email: 'البريد الإلكتروني',
+        phone: 'رقم الهاتف',
+        street: 'الشارع',
+        city: 'المدينة',
+        postalCode: 'الرمز البريدي',
+        country: 'البلد',
+        taxRate: 'نسبة الضريبة'
+    },
+    party: {
+        name: 'الاسم',
+        vatId: 'الرقم الضريبي',
+        legalOrgId: 'معرف المؤسسة القانونية',
+        street: 'الشارع',
+        city: 'المدينة',
+        postalCode: 'الرمز البريدي',
+        country: 'البلد',
+        email: 'البريد الإلكتروني',
+        phone: 'رقم الهاتف'
+    },
+    validation: {
+        title: 'Validation Results',
+        allValid: 'All validation checks passed',
+        allValidDesc: 'Invoice is EN 16931 compliant',
+        issuesFound: 'issues found',
+        errors: 'Errors',
+        warnings: 'Warnings',
+        info: 'Info',
+        requiredField: 'Required field',
+        invalidFormat: 'Invalid format',
+        checkPassed: 'Check passed',
+        noDrafts: 'No draft invoices',
+        noDraftsDesc: 'There are no draft invoices to validate',
+        batchSuccess: 'Batch validation complete',
+        batchSuccessDesc: '{count} invoices validated successfully. {errors} errors found.',
+        batchError: 'Validation errors',
+        batchErrorDesc: 'Unable to validate invoices. Please check for errors.'
+    },
+    exportModal: {
+        title: 'تصدير الفاتورة',
+        exportFormat: 'تنسيق التصدير',
+        pdf: 'PDF',
+        ublXml: 'UBL 2.1 XML',
+        peppolBis: 'حزمة Peppol BIS',
+        json: 'JSON',
+        csv: 'CSV',
+        exportOptions: 'خيارات التصدير',
+        cancel: 'إلغاء',
+        export: 'تصدير'
+    },
+    import: {
+        import: 'استيراد'
+    },
+    previewModal: {
+        title: 'معاينة الفاتورة',
+        noChangesToSave: 'لا توجد تغييرات جديدة للحفظ',
+        pdfPreview: 'معاينة PDF',
+        invoice: 'فاتورة',
+        issueDate: 'تاريخ الإصدار',
+        dueDate: 'تاريخ الاستحقاق',
+        from: 'من',
+        billTo: 'إلى',
+        vat: 'الرقم الضريبي',
+        items: 'العناصر',
+        colDescription: 'الوصف',
         quantity: 'الكمية',
         unitPrice: 'سعر الوحدة',
         tax: 'الضريبة',
         amount: 'المبلغ',
         subtotal: 'المجموع الفرعي',
-        taxTotal: 'إجمالي الضريبة',
         total: 'الإجمالي',
-        notes: 'ملاحظات',
-        notesPlaceholder: 'شكراً لتعاملك معنا!',
-        paymentTerms: 'شروط الدفع',
-        paymentTermsPlaceholder: 'مستحق خلال 14 يوماً',
-        saveAsDraft: 'حفظ كمسودة',
-        saveAndValidate: 'حفظ وتحقق',
-        preview: 'معاينة',
-        export: 'تصدير',
-        import: 'استيراد',
-        duplicate: 'تكرار',
-        delete: 'حذف',
-        deleteConfirm: 'هل أنت متأكد أنك تريد حذف هذه الفاتورة؟',
-        validationErrors: 'أخطاء التحقق',
-        validationWarnings: 'تحذيرات التحقق',
-        compliant: 'مطابق لـ EN 16931',
-        nonCompliant: 'غير مطابق',
-        ublXml: 'UBL XML',
-        pdf: 'PDF',
-        json: 'JSON',
-        csv: 'CSV',
-        summary: 'ملخص',
-        details: 'تفاصيل',
+        paymentInfo: 'معلومات الدفع',
+        colTax: 'الضريبة %',
+        totalPayable: 'إجمالي المبلغ المستحق',
+        taxSummary: 'ملخص الضريبة',
+        selectFromDirectory: 'اختر من الدليل',
+        buyerSelected: 'تم تحديث معلومات المشتري',
+        switchLayout: 'تبديل المخطط',
+        webView: 'عرض الويب',
+        printView: 'عرض الطباعة',
+        colTaxType: 'نوع الضريبة',
+        colTaxPercent: 'النسبة',
+        colTaxableAmount: 'المبلغ الخاضع للضريبة',
+        vatPlaceholder: 'الرقم الضريبي',
+        streetPlaceholder: 'الشارع / رقم المبنى',
+        zipPlaceholder: 'الرمز البريدي',
+        cityPlaceholder: 'المدينة',
+        countryPlaceholder: 'البلد',
+        companyNamePlaceholder: 'اسم الشركة',
+        addLineItem: 'إضافة بند',
+        placeholderInvoiceNumber: 'رقم الفاتورة',
+        placeholderIssueDate: 'تاريخ الإصدار',
+        placeholderDueDate: 'تاريخ الاستحقاق',
+        paymentDetails: 'تفاصيل الدفع',
+        bankName: 'اسم البنك',
+        accountOwner: 'صاحب الحساب',
+        iban: 'IBAN',
+        bic: 'BIC',
+        placeholderSellerName: 'شركتك',
+        placeholderBuyerName: 'شركة العميل',
+        placeholderStreet: 'الشارع / رقم المبنى',
+        placeholderCity: 'المدينة',
+        placeholderZip: 'الرمز البريدي',
+        placeholderCountry: 'البلد',
     },
-    client: {
-        new: 'عميل جديد',
-        edit: 'تعديل العميل',
-        name: 'الاسم',
-        email: 'البريد الإلكتروني',
-        phone: 'الهاتف',
-        vatId: 'رقم الضريبة',
-        address: 'العنوان',
-        city: 'المدينة',
-        country: 'البلد',
-        postalCode: 'الرمز البريدي',
-        save: 'حفظ العميل',
-        delete: 'حذف العميل',
+    qrCode: {
+        giroCode: 'رمز Giro',
+        paymentQrCode: 'رمز الاستجابة السريعة للدفع',
+        scanWithBanking: 'امسح باستخدام تطبيقك البنكي لإجراء الدفع',
+        giroTitle: 'رمز Giro / الاستجابة السريعة',
+        giroNote: 'امسح هذا الرمز باستخدام تطبيقك البنكي لإجراء الدفع فوراً.'
     },
-    dashboard: {
-        totalRevenue: 'إجمالي الإيرادات',
-        pendingAmount: 'المبلغ المعلق',
-        paidInvoices: 'الفواتير المدفوعة',
-        draftInvoices: 'مسودات الفواتير',
-        recentActivity: 'النشاط الأخير',
-        revenueByMonth: 'الإيرادات حسب الشهر',
-        invoiceStatus: 'حالة الفاتورة',
-        quickActions: 'إجراءات سريعة',
+    templates: {
+        title: 'قوالب الفواتير',
+        newTemplate: 'قالب جديد',
+        editTemplate: 'تحرير القالب',
+        useTemplate: 'استخدام القالب',
+        saveTemplate: 'حفظ القالب'
     },
     activity: {
         title: 'سجل النشاط',
-        description: 'تتبع جميع الإجراءات في النظام.',
-        user: 'المستخدم',
-        action: 'الإجراء',
-        resource: 'المورد',
-        date: 'التاريخ',
-        details: 'التفاصيل',
+        subtitle: 'Audit trail of all invoice operations',
+        searchPlaceholder: 'Search activity...',
+        filterType: 'Filter by type',
+        allTypes: 'All Types',
+        created: 'Created',
+        updated: 'Updated',
+        exported: 'Exported',
+        validated: 'Validated',
+        sent: 'Sent',
+        noActivity: 'No activity yet',
+        noActivityDesc: 'Activity will appear here as you work with invoices'
     },
     settings: {
         title: 'الإعدادات',
-        profile: 'الملف الشخصي',
-        company: 'الشركة',
-        appearance: 'المظهر',
-        notifications: 'الإشعارات',
-        security: 'الأمان',
-        language: 'اللغة',
+        subtitle: 'Configure your company profile and preferences',
+        companyProfile: 'Company Profile',
+        invoiceDefaults: 'Invoice Defaults',
+        paymentInfo: 'Payment Information',
         theme: 'السمة',
-        darkMode: 'الوضع الداكن',
-        lightMode: 'الوضع الفاتح',
+        advanced: 'Advanced',
+        displayPreferences: 'Display Preferences',
+        exportDefaults: 'Export Defaults',
         saveChanges: 'حفظ التغييرات',
+        settingsSaved: 'Settings saved',
+        settingsSavedDesc: 'Your settings have been updated successfully.',
+        defaultFormat: 'Default Export Format',
+        autoValidate: 'Auto-validate on save',
+        autoValidateDesc: 'Automatically validate invoices when saving',
+        showLineNumbers: 'Show line numbers',
+        showLineNumbersDesc: 'Display line numbers in the invoice editor',
+        advancedSettings: 'Advanced Settings',
+        advancedSettingsDesc: 'EN 16931 compliance and export options',
+        ublVersion: 'UBL Version',
+        compliantWith: 'Compliant With',
+        defaultInvoiceTypeCode: 'Default Invoice Type Code',
+        digitalSignatureProvider: 'Digital Signature Provider',
+        notConfigured: 'Not configured',
+        colorPresets: 'Color Presets',
+        colorPresetsDesc: 'Quick start with predefined color schemes',
+        customColors: 'Custom Colors',
+        customColorsDesc: 'Fine-tune individual color values',
+        primaryColor: 'Primary Color',
+        secondaryColor: 'Secondary Color',
+        accentColor: 'Accent Color',
+        backgroundColor: 'Background Color',
+        cardColor: 'Card Color',
+        borderColor: 'Border Color',
+        mutedColor: 'Muted Color',
+        foregroundColor: 'Foreground Color',
+        saveTheme: 'Save Theme',
+        resetTheme: 'Reset to Default',
+        themeSaved: 'Theme saved successfully',
+        themeSavedDesc: 'Your custom theme has been applied',
+        themeReset: 'Theme reset to default',
+        themeResetDesc: 'Default purple theme has been restored',
+        presetPurple: 'Purple (Default)',
+        presetBlue: 'Professional Blue',
+        presetGreen: 'Finance Green',
+        presetOrange: 'Energy Orange',
+        presetSlate: 'Corporate Slate',
+        presetApplied: 'Preset applied',
+        hasBeenApplied: 'has been applied',
+        themePreview: 'Theme Preview',
+        themePreviewDesc: 'See what your theme looks like',
+        secondaryBackground: 'Secondary background color preview'
     },
-    validation: {
-        required: 'هذا الحقل مطلوب',
-        invalidEmail: 'بريد إلكتروني غير صالح',
-        invalidVat: 'تنسيق رقم ضريبة غير صالح',
-        invalidCurrency: 'رمز عملة غير صالح',
-        invalidCountry: 'رمز بلد غير صالح',
-        calculationError: 'خطأ في حساب المجاميع',
-        missingLines: 'مطلوب عنصر واحد على الأقل',
-    },
-    invoices: {
+    invoiceList: {
         title: 'الفواتير',
         subtitle: 'إدارة وتصدير وتتبع الفواتير الخاصة بك.',
-        createNew: 'إنشاء فاتورة جديدة',
         searchPlaceholder: 'بحث بالرقم أو العميل...',
+        filterByStatus: 'Filter by status',
+        filterByDate: 'Filter by date',
         allStatuses: 'جميع الحالات',
         dateRange: 'نطاق التاريخ',
         anyDate: 'أي تاريخ',
@@ -228,10 +391,32 @@ export const ar = {
         statusChangedTo: 'تم التغيير إلى',
         invoices: 'فواتير',
         updateStatus: 'تحديث الحالة',
-        statusChangeNote: 'سيؤدي هذا إلى تحديث حالة جميع الفواتير المحددة. يمكن التراجع عن هذا الإجراء عن طريق تغيير الحالة مرة أخرى.',
-        fetchError: 'فشل في جلب الفواتير',
-        exportError: 'فشل في تصدير الفواتير',
-        statusChangedDesc: 'تم تغيير {count} فواتير إلى {status}',
+        statusChangeNote: 'سيؤدي هذا إلى تحديث حالة جميع الفواتير المحددة. يمكن التراجع عن هذا الإجراء عن طريق تغيير الحالة مرة أخرى.'
+    },
+    buyers: {
+        title: 'Address book',
+        subtitle: 'Manage your clients and their billing information',
+        searchPlaceholder: 'Search by name, VAT ID, email...',
+        addBuyer: 'Add Buyer',
+        editBuyer: 'Edit Buyer',
+        newBuyer: 'New Buyer',
+        buyerDetails: 'Buyer Details',
+        noBuyers: 'No buyers found',
+        noBuyersDesc: 'Add your first buyer to get started',
+        name: 'الاسم',
+        vatId: 'رقم الضريبة',
+        legalOrgId: 'Legal Organization ID',
+        email: 'البريد الإلكتروني',
+        phone: 'الهاتف',
+        address: 'العنوان',
+        street: 'Street',
+        city: 'المدينة',
+        postalCode: 'الرمز البريدي',
+        country: 'البلد',
+        buyerCreated: 'Buyer created successfully',
+        buyerUpdated: 'Buyer updated successfully',
+        buyerDeleted: 'Buyer deleted successfully',
+        deleteConfirm: 'Are you sure you want to delete this buyer?'
     },
     designLayout: {
         elementLibrary: 'مكتبة العناصر',
@@ -260,15 +445,13 @@ export const ar = {
             notes: 'ملاحظات',
             signature: 'التوقيع',
             qr: 'رمز الاستجابة السريعة',
-            footer: 'التذييل',
-        },
+            footer: 'التذييل'
+        }
     },
-
-    // AI Assistant
     ai: {
         assistant: 'مساعد الذكاء الاصطناعي',
-        welcomeCreate: 'مرحباً! يمكنني مساعدتك في إنشاء الفواتير من اللغة الطبيعية. جرب قول شيء مثل:\n\n"أنشئ فاتورة لشركة ABC المحدودة، غونتور، الهند، 522002. بعت 10 أكياس أسمنت سعر الكيس 700 يورو مع ضريبة 18%"',
-        welcomeEdit: 'مرحباً! يمكنني مساعدتك في تعديل هذه الفاتورة. جرب قول شيء مثل:\n\n"أضف 5 أكياس رمل بسعر 500 يورو لكل منها مع ضريبة 12%"',
+        welcomeCreate: 'مرحباً! يمكنني مساعدتك في إنشاء الفواتير من اللغة الطبيعية. جرب قول شيء مثل:\n\n\'أنشئ فاتورة لشركة ABC المحدودة، غونتور، الهند، 522002. بعت 10 أكياس أسمنت سعر الكيس 700 يورو مع ضريبة 18%\'',
+        welcomeEdit: 'مرحباً! يمكنني مساعدتك في تعديل هذه الفاتورة. جرب قول شيء مثل:\n\n\'أضف 5 أكياس رمل بسعر 500 يورو لكل منها مع ضريبة 12%\'',
         typeMessage: 'اكتب طلب الفاتورة الخاص بك...',
         thinking: 'جاري التفكير...',
         parsedSuccessfully: 'لقد قمت بتحليل طلبك! إليك الفاتورة:',
@@ -288,17 +471,44 @@ export const ar = {
         parsed: 'تم التحليل',
         incomplete: 'غير مكتمل',
         useThisInvoice: 'استخدم هذه الفاتورة',
-        hint: 'صف فاتورتك باللغة الطبيعية',
+        hint: 'صف فاتورتك باللغة الطبيعية'
     },
-
-    // Administration
+    common: {
+        save: 'حفظ',
+        saved: 'تم الحفظ',
+        cancel: 'إلغاء',
+        delete: 'حذف',
+        edit: 'تحرير',
+        close: 'إغلاق',
+        back: 'رجوع',
+        search: 'بحث',
+        filter: 'تصفية',
+        clear: 'مسح',
+        note: 'ملاحظة',
+        apply: 'تطبيق',
+        reset: 'إعادة تعيين',
+        loading: 'جاري التحميل...',
+        error: 'خطأ',
+        success: 'نجاح',
+        warning: 'تحذير',
+        info: 'معلومات',
+        copied: 'تم النسخ',
+        downloaded: 'تم التنزيل',
+        discard: 'إلغاء',
+        theme: {
+            light: 'فاتح',
+            dark: 'داكن',
+            system: 'النظام',
+            toggle: 'تبديل السمة'
+        }
+    },
     admin: {
         title: 'الإدارة',
         subtitle: 'إدارة المستخدمين والأدوار وصلاحيات النظام.',
         tabs: {
             users: 'المستخدمين',
             roles: 'الأدوار والصلاحيات',
-            companyTypes: 'أنواع الشركات',
+            companyTypes: 'أنواع الشركات'
         },
         users: {
             title: 'المستخدمين والوصول',
@@ -312,7 +522,7 @@ export const ar = {
             userCreated: 'تم إنشاء المستخدم',
             userUpdated: 'تم تحديث المستخدم',
             failedToLoad: 'فشل تحميل بيانات المستخدم',
-            failedToSave: 'فشل حفظ المستخدم',
+            failedToSave: 'فشل حفظ المستخدم'
         },
         roles: {
             title: 'الأدوار',
@@ -333,7 +543,7 @@ export const ar = {
             roleUpdated: 'تم تحديث الدور',
             failedToLoad: 'فشل تحميل الأدوار',
             failedToSave: 'فشل حفظ الدور',
-            failedToDelete: 'فشل حذف الدور',
+            failedToDelete: 'فشل حذف الدور'
         },
         companyTypes: {
             title: 'أنواع الشركات',
@@ -350,18 +560,16 @@ export const ar = {
             failedToLoad: 'فشل تحميل أنواع الشركات',
             failedToSave: 'فشل حفظ نوع الشركة',
             failedToDelete: 'فشل حذف نوع الشركة',
-            noTypes: 'لم يتم العثور على أنواع شركات',
+            noTypes: 'لم يتم العثور على أنواع شركات'
         },
         common: {
             failedToLoadProfile: 'فشل تحميل ملف الشركة',
-            loading: 'جاري التحميل...',
+            loading: 'جاري التحميل...'
         },
         logout: 'تسجيل الخروج',
         adminPortal: 'لوحة إدارة النظام',
-        sa: 'SA',
+        sa: 'SA'
     },
-
-    // Billing & Subscription
     billing: {
         title: 'الفواتير والاشتراك',
         subtitle: 'إدارة خطتك وحدودك وسجل الفواتير الخاص بك.',
@@ -387,10 +595,8 @@ export const ar = {
         failedToLoad: 'فشل في تحميل بيانات الفواتير',
         failedToLoadDetails: 'فشل في تحميل تفاصيل الفواتير',
         upgradeSuccess: 'تمت ترقية الخطة بنجاح',
-        upgradeFailed: 'فشلت الترقية',
+        upgradeFailed: 'فشلت الترقية'
     },
-
-    // Signup
     signup: {
         title: 'إنشاء حساب',
         getStarted: 'ابدأ الآن',
@@ -430,15 +636,11 @@ export const ar = {
         signupFailed: 'فشل التسجيل',
         creatingAccount: 'جاري إنشاء الحساب...',
         alreadyHaveAccount: 'لديك حساب بالفعل؟',
-        login: 'تسجيل الدخول',
+        login: 'تسجيل الدخول'
     },
-
-    // Stats
     stats: {
-        fromLastMonth: 'من الشهر الماضي',
+        fromLastMonth: 'من الشهر الماضي'
     },
-
-    // Landing Page
     landing: {
         login: 'تسجيل الدخول',
         signup: 'إنشاء حساب',
@@ -447,10 +649,10 @@ export const ar = {
             badge: 'جديد: معالجة الفواتير بالذكاء الاصطناعي',
             title: 'فوترة حديثة لـ',
             titleAccent: 'الشركات المتطورة',
-            titleSuffix: '',
+            titleSuffix: 'Businesses',
             subtitle: 'قم بتبسيط عمليات الفوترة الخاصة بك من خلال منصتنا السحابية المتوافقة ومتعددة المستأجرين. أنشئ الفواتير وأدرها وتتبعها بتصميم وأمان بمستوى الشركات الكبرى.',
             getStarted: 'ابدأ الآن',
-            tryNow: 'أنشئ فاتورة – بدون تسجيل',
+            tryNow: 'أنشئ فاتورة – بدون تسجيل'
         },
         features: {
             tag: 'كل ما تحتاجه',
@@ -478,23 +680,24 @@ export const ar = {
             popular: 'الأكثر شيوعاً',
             contactSales: 'اتصل بالمبيعات',
             contactUs: 'اتصل بنا',
+            compareTitle: 'قارن خططنا',
+            compareSubtitle: 'ابحث عن الخيار الأمثل لاحتياجات عملك',
+            features: 'الميزات',
         },
         footer: {
             rights: 'جميع الحقوق محفوظة.',
             terms: 'الشروط',
             privacy: 'الخصوصية',
             contact: 'اتصل بنا',
-            impressum: 'المعلومات القانونية',
+            impressum: 'المعلومات القانونية'
         },
         about: {
             desc1: 'BillingTool هي منصة فوترة حديثة مصممة لتبسيط عملية إعداد الفواتير للشركات من جميع الأحجام. نحن نؤمن بأن الفوترة الاحترافية يجب أن يسهل الوصول إليها، آمنة، ومتوافقة مع أحدث المعايير.',
             desc2: 'تم بناء منصتنا بتركيز على تجربة المستخدم والامتثال التنظيمي، لضمان أن فواتيرك لا تبدو رائعة فحسب، بل وتستوفي أيضًا جميع المتطلبات القانونية مثل EN 16931 وUBL 2.1.',
             activeUsers: 'المستخدمون النشطون',
-            invoicesSent: 'الفواتير المرسلة',
+            invoicesSent: 'الفواتير المرسلة'
         }
     },
-
-    // Tickets
     tickets: {
         title: 'تذاكر الدعم',
         subtitle: 'إدارة والرد على طلبات دعم المستخدمين.',
@@ -508,7 +711,7 @@ export const ar = {
             ip: 'عنوان IP',
             date: 'التاريخ',
             screenshot: 'لقطة شاشة',
-            actions: 'إجراءات',
+            actions: 'إجراءات'
         },
         viewDetails: 'عرض التفاصيل',
         more: '...المزيد',
@@ -528,14 +731,14 @@ export const ar = {
             open: 'مفتوح',
             in_progress: 'قيد التنفيذ',
             resolved: 'تم الحل',
-            closed: 'مغلق',
+            closed: 'مغلق'
         },
         priority: {
             label: 'الأولوية',
             low: 'منخفض',
             medium: 'متوسط',
             high: 'عالي',
-            critical: 'حرج',
+            critical: 'حرج'
         },
         saveChanges: 'حفظ التغييرات',
         updateSuccess: 'تم تحديث التذكرة بنجاح',
@@ -548,7 +751,7 @@ export const ar = {
             created: 'تم إنشاء التذكرة',
             status_change: 'تم تحديث الحالة',
             priority_change: 'تم تحديث الأولوية',
-            comment: 'تم إضافة تعليق',
+            comment: 'تم إضافة تعليق'
         },
         pagination: {
             showing: 'عرض',
@@ -558,11 +761,9 @@ export const ar = {
             rowsPerPage: 'صفوف لكل صفحة:',
             page: 'صفحة',
             previous: 'السابق',
-            next: 'التالي',
+            next: 'التالي'
         }
     },
-
-    // Quick Access
     quickAccess: {
         title: 'الوصول السريع',
         autoSavedLocally: 'يتم حفظ مسودتك تلقائيًا محليًا',
@@ -580,7 +781,7 @@ export const ar = {
             atLeastOneItem: 'أضف عنصرًا واحدًا على الأقل',
             itemDescriptionRequired: 'يجب أن يحتوي كل عنصر على وصف',
             itemPriceRequired: 'يجب أن يكون سعر كل عنصر أكبر من 0',
-            fixErrors: 'يرجى تصحيح الحقول المحددة قبل المتابعة',
+            fixErrors: 'يرجى تصحيح الحقول المحددة قبل المتابعة'
         },
         saveDraft: 'حفظ مسودة',
         yourCompanyName: 'اسم شركتك',
@@ -596,6 +797,9 @@ export const ar = {
         restoreFailed: 'تعذر استعادة المسودة من الرابط. نسختك المحلية لا تزال هنا.',
         invoiceSaved: 'تم حفظ الفاتورة!',
         invoiceSavedDesc: 'مرحبًا بك — فاتورتك جاهزة.',
+        savingInvoice: 'Saving your invoice…',
+        invoiceSaveWarning: 'Account created, but invoice save failed. Your draft is still stored locally.',
+        actionResumed: 'Resuming your invoice action…',
         zip: 'الرمز البريدي',
         city: 'المدينة',
         country: 'الدولة',
@@ -617,27 +821,40 @@ export const ar = {
         bottomNote: 'كل ما تدخله يظل في متصفحك حتى تقوم بالحفظ. بمجرد التحقق من بريدك الإلكتروني، يتم إنشاء حسابك ويتم تخزين هذه الفاتورة تلقائيًا في مساحة العمل الخاصة بك.',
         guidePanel: {
             title: 'دليل الفاتورة',
-            seller: { title: 'البائع (شركتك)', desc: 'أدخل اسم شركتك والرقم الضريبي والعنوان. يظهر هذا أعلى يسار الفاتورة.' },
-            buyer: { title: 'المشتري (العميل)', desc: 'أدخل اسم شركة عميلك وعنوانه. هذا هو الشخص الذي تُفوتره.' },
-            lines: { title: 'بنود الفاتورة', desc: 'أدرج كل منتج أو خدمة مع الكمية وسعر الوحدة ومعدل الضريبة. تُحسب المجاميع تلقائيًا.' },
-            totals: { title: 'الإجماليات والضريبة', desc: 'تُحسب المجاميع الفرعية وضريبة القيمة المضافة والمجموع الكلي تلقائيًا من بنود الفاتورة.' },
-            giro: { title: 'رمز QR للدفع', desc: 'بعد حفظ حسابك، أضف رقم IBAN لتوليد رمز QR متوافق مع معيار EPC/GiroCode.' },
+            seller: {
+                title: 'البائع (شركتك)',
+                desc: 'أدخل اسم شركتك والرقم الضريبي والعنوان. يظهر هذا أعلى يسار الفاتورة.'
+            },
+            buyer: {
+                title: 'المشتري (العميل)',
+                desc: 'أدخل اسم شركة عميلك وعنوانه. هذا هو الشخص الذي تُفوتره.'
+            },
+            lines: {
+                title: 'بنود الفاتورة',
+                desc: 'أدرج كل منتج أو خدمة مع الكمية وسعر الوحدة ومعدل الضريبة. تُحسب المجاميع تلقائيًا.'
+            },
+            totals: {
+                title: 'الإجماليات والضريبة',
+                desc: 'تُحسب المجاميع الفرعية وضريبة القيمة المضافة والمجموع الكلي تلقائيًا من بنود الفاتورة.'
+            },
+            giro: {
+                title: 'رمز QR للدفع',
+                desc: 'بعد حفظ حسابك، أضف رقم IBAN لتوليد رمز QR متوافق مع معيار EPC/GiroCode.'
+            },
             tipLabel: 'نصيحة:',
             tipText: 'انقر على أي حقل نصي لتحريره. يتم حفظ مسودتك تلقائيًا محليًا حتى لا تفقد عملك.',
             ctaTitle: 'جاهز للحفظ؟',
             ctaDesc: 'أنشئ حسابًا مجانيًا لتنزيل PDF وإنشاء الفواتير الإلكترونية والوصول إلى لوحة التحكم.',
-            ctaButton: 'حفظ وإنشاء حساب',
-        },
+            ctaButton: 'حفظ وإنشاء حساب'
+        }
     },
-
-    // Inline Quick Access
     inlineQuickAccess: {
         title: 'الوصول السريع',
         reasons: {
             save: 'حفظ والوصول إلى فاتورتك لاحقًا',
             download: 'تنزيل فاتورتك بصيغة PDF',
             send: 'إرسال هذه الفاتورة إلى عميلك',
-            export: 'تصدير هذه الفاتورة',
+            export: 'تصدير هذه الفاتورة'
         },
         emailPrompt: 'لـ {reason}، أدخل بريدك الإلكتروني وقم بالتأكيد بنقرة واحدة.',
         companyDetailsNote: 'يتم أخذ تفاصيل شركتك مباشرة من قسم {sellerName} أعلاه.',
@@ -667,10 +884,9 @@ export const ar = {
             passwordMismatch: 'كلمتا المرور غير متطابقتين',
             passwordSet: 'تم تعيين كلمة المرور بنجاح!',
             passwordSetFailed: 'تعذر تعيين كلمة المرور — يمكنك تعيينها لاحقًا في ملفشخصيتك.',
+            existingAccount: 'Account found! Redirecting you to login to continue…'
         }
     },
-
-    // Quick Access Tour
     quickAccessTour: {
         sellerTitle: 'مرحبًا بك في الوصول السريع!',
         sellerDesc: 'انقر نقرًا مزدوجًا فوق أي حقل لبدء التحرير. جرب ذلك هنا لتعيين اسم شركتك.',
@@ -691,8 +907,6 @@ export const ar = {
         finish: 'إنهاء',
         next: 'التالي'
     },
-
-    // Impressum (المعلومات القانونية)
     impressum: {
         title: 'المعلومات القانونية',
         subtitle: 'بيانات وفقًا لـ § 5 TMG',
@@ -703,171 +917,163 @@ export const ar = {
         sections: {
             legalNotice: {
                 title: 'بيانات وفقًا لـ § 5 TMG',
-                content: '',
+                content: ''
             },
             vat: {
                 title: 'ضريبة القيمة المضافة',
-                content: 'رقم تعريف ضريبة القيمة المضافة وفقًا لـ §27 أ من قانون ضريبة القيمة المضافة:\nDE 362.250.524',
+                content: 'رقم تعريف ضريبة القيمة المضافة وفقًا لـ §27 أ من قانون ضريبة القيمة المضافة:\nDE 362.250.524'
             },
             dispute: {
                 title: 'تسوية النزاعات',
-                content: 'توفر المفوضية الأوروبية منصة لتسوية النزاعات عبر الإنترنت: https://ec.europa.eu/consumers/odr.\nيمكنك العثور على عنوان بريدنا الإلكتروني أعلاه في المعلومات القانونية.\n\nلسنا مستعدين أو ملزمين بالمشاركة في إجراءات تسوية النزاعات أمام هيئة تحكيم المستهلكين.',
+                content: 'توفر المفوضية الأوروبية منصة لتسوية النزاعات عبر الإنترنت: https://ec.europa.eu/consumers/odr.\nيمكنك العثور على عنوان بريدنا الإلكتروني أعلاه في المعلومات القانونية.\n\nلسنا مستعدين أو ملزمين بالمشاركة في إجراءات تسوية النزاعات أمام هيئة تحكيم المستهلكين.'
             },
             liability: {
                 title: 'المسؤولية عن المحتوى',
-                content: 'بصفتنا مزود خدمات، نحن مسؤولون عن محتوى صفحاتنا وفقًا للقوانين العامة بموجب § 7 فقرة 1 TMG. وفقًا لـ §§ 8 إلى 10 TMG، لسنا ملزمين بمراقبة المعلومات الخارجية المنقولة أو المخزنة.\n\nتظل الالتزامات بإزالة المعلومات أو حظر استخدامها سارية. عند اكتشاف انتهاكات، سنقوم بإزالة هذا المحتوى فورًا.',
+                content: 'بصفتنا مزود خدمات، نحن مسؤولون عن محتوى صفحاتنا وفقًا للقوانين العامة بموجب § 7 فقرة 1 TMG. وفقًا لـ §§ 8 إلى 10 TMG، لسنا ملزمين بمراقبة المعلومات الخارجية المنقولة أو المخزنة.\n\nتظل الالتزامات بإزالة المعلومات أو حظر استخدامها سارية. عند اكتشاف انتهاكات، سنقوم بإزالة هذا المحتوى فورًا.'
             },
             links: {
                 title: 'المسؤولية عن الروابط',
-                content: 'يحتوي موقعنا على روابط لمواقع خارجية تابعة لجهات خارجية، وليس لدينا أي تأثير على محتواها. الجهة المسؤولة عن محتوى الصفحات المرتبطة هي دائمًا مزودها أو مشغلها.\n\nعند اكتشاف انتهاكات، سنقوم بإزالة هذه الروابط فورًا.',
+                content: 'يحتوي موقعنا على روابط لمواقع خارجية تابعة لجهات خارجية، وليس لدينا أي تأثير على محتواها. الجهة المسؤولة عن محتوى الصفحات المرتبطة هي دائمًا مزودها أو مشغلها.\n\nعند اكتشاف انتهاكات، سنقوم بإزالة هذه الروابط فورًا.'
             },
             copyright: {
                 title: 'حقوق النشر',
-                content: 'تخضع المحتويات والأعمال التي أنشأها مشغلو الموقع لقانون حقوق المؤلف الألماني. يستلزم استخدام هذه المواد خارج نطاق قانون حقوق المؤلف الحصول على موافقة خطية.\n\nيتم احترام حقوق النشر للأطراف الثالثة. عند اكتشاف أي انتهاكات، يرجى إخطارنا. سنقوم بإزالة هذا المحتوى فورًا.',
-            },
-        },
+                content: 'تخضع المحتويات والأعمال التي أنشأها مشغلو الموقع لقانون حقوق المؤلف الألماني. يستلزم استخدام هذه المواد خارج نطاق قانون حقوق المؤلف الحصول على موافقة خطية.\n\nيتم احترام حقوق النشر للأطراف الثالثة. عند اكتشاف أي انتهاكات، يرجى إخطارنا. سنقوم بإزالة هذا المحتوى فورًا.'
+            }
+        }
     },
-
-    // مصطلحات قانونية مشتركة
     legal: {
         back: 'رجوع',
         footer: {
             impressum: 'البيانات القانونية',
             privacy: 'سياسة الخصوصية',
             terms: 'الشروط والأحكام',
-            cookies: 'إعدادات الكوكيز',
-        },
+            cookies: 'إعدادات الكوكيز'
+        }
     },
-
-    // سياسة الخصوصية
     privacyPolicy: {
         title: 'سياسة الخصوصية',
         subtitle: 'معلومات وفقًا للمادة 13 من اللائحة الأوروبية لحماية البيانات (GDPR) — آخر تحديث: مارس 2026',
         sections: {
             controller: {
                 title: 'المسؤول عن معالجة البيانات',
-                content: '[mn]medianet, Bernhard Hnida\nAm Taubhaus 29, 63303 Dreieich, ألمانيا\nهاتف: +49 (0) 6103 / 69 77 84\nالبريد الإلكتروني: info@medianet-home.de',
+                content: '[mn]medianet, Bernhard Hnida\nAm Taubhaus 29, 63303 Dreieich, ألمانيا\nهاتف: +49 (0) 6103 / 69 77 84\nالبريد الإلكتروني: info@medianet-home.de'
             },
             general: {
                 title: 'معلومات عامة حول معالجة البيانات',
-                content: 'نعالج البيانات الشخصية فقط بالقدر اللازم لتشغيل الموقع الإلكتروني وتقديم خدماتنا. يتم جمع البيانات واستخدامها وفقًا لقوانين حماية البيانات المعمول بها، ولا سيما اللائحة الأوروبية لحماية البيانات (GDPR) والقانون الفيدرالي الألماني لحماية البيانات (BDSG).',
+                content: 'نعالج البيانات الشخصية فقط بالقدر اللازم لتشغيل الموقع الإلكتروني وتقديم خدماتنا. يتم جمع البيانات واستخدامها وفقًا لقوانين حماية البيانات المعمول بها، ولا سيما اللائحة الأوروبية لحماية البيانات (GDPR) والقانون الفيدرالي الألماني لحماية البيانات (BDSG).'
             },
             legalBasis: {
                 title: 'الأساس القانوني للمعالجة بموجب اللائحة الأوروبية',
-                content: 'نعالج البيانات الشخصية استنادًا إلى الأسس القانونية التالية:\n\n• المادة 6(1)(أ) GDPR — موافقتك\n• المادة 6(1)(ب) GDPR — تنفيذ العقد أو الإجراءات السابقة له\n• المادة 6(1)(ج) GDPR — الامتثال لالتزام قانوني\n• المادة 6(1)(و) GDPR — حماية المصالح المشروعة',
+                content: 'نعالج البيانات الشخصية استنادًا إلى الأسس القانونية التالية:\n\n• المادة 6(1)(أ) GDPR — موافقتك\n• المادة 6(1)(ب) GDPR — تنفيذ العقد أو الإجراءات السابقة له\n• المادة 6(1)(ج) GDPR — الامتثال لالتزام قانوني\n• المادة 6(1)(و) GDPR — حماية المصالح المشروعة'
             },
             hosting: {
                 title: 'الاستضافة وملفات سجل الخادم',
-                content: 'يُستضاف موقعنا على خوادم داخل الاتحاد الأوروبي. عند زيارة موقعنا، تُسجَّل بيانات معينة تلقائيًا في ملفات سجل الخادم، بما يشمل عنوان IP ونوع المتصفح ونظام التشغيل وعنوان URL المرجعي وتاريخ ووقت الطلب. تُحفظ هذه البيانات لمدة 7 أيام لأغراض أمنية ثم تُحذف ولا يتم دمجها مع بيانات أخرى.',
+                content: 'يُستضاف موقعنا على خوادم داخل الاتحاد الأوروبي. عند زيارة موقعنا، تُسجَّل بيانات معينة تلقائيًا في ملفات سجل الخادم، بما يشمل عنوان IP ونوع المتصفح ونظام التشغيل وعنوان URL المرجعي وتاريخ ووقت الطلب. تُحفظ هذه البيانات لمدة 7 أيام لأغراض أمنية ثم تُحذف ولا يتم دمجها مع بيانات أخرى.'
             },
             registration: {
                 title: 'تسجيل المستخدم والحسابات',
-                content: 'عند إنشاء حساب، نجمع عنوان بريدك الإلكتروني وبيانات الملف الشخصي التي تقدمها طوعًا. تُستخدم هذه البيانات لإنشاء حسابك وإدارته. الأساس القانوني هو المادة 6(1)(ب) GDPR (تنفيذ العقد). يمكنك حذف حسابك في أي وقت؛ وستُمحى البيانات الشخصية خلال 30 يومًا.',
+                content: 'عند إنشاء حساب، نجمع عنوان بريدك الإلكتروني وبيانات الملف الشخصي التي تقدمها طوعًا. تُستخدم هذه البيانات لإنشاء حسابك وإدارته. الأساس القانوني هو المادة 6(1)(ب) GDPR (تنفيذ العقد). يمكنك حذف حسابك في أي وقت؛ وستُمحى البيانات الشخصية خلال 30 يومًا.'
             },
             invoiceData: {
                 title: 'معالجة بيانات الفواتير وبيانات العملاء',
-                content: 'لتقديم خدمة إصدار الفواتير، نعالج البيانات التجارية التي تدخلها، بما في ذلك أسماء الشركات والعناوين وأرقام تعريف ضريبة القيمة المضافة والبيانات المصرفية ومبالغ الفواتير. تُعالج هذه البيانات حصريًا نيابةً عنك وهي ضرورية لتنفيذ عقد الخدمة. لا نبيع هذه البيانات ولا نشاركها مع أطراف ثالثة لأي غرض آخر.',
+                content: 'لتقديم خدمة إصدار الفواتير، نعالج البيانات التجارية التي تدخلها، بما في ذلك أسماء الشركات والعناوين وأرقام تعريف ضريبة القيمة المضافة والبيانات المصرفية ومبالغ الفواتير. تُعالج هذه البيانات حصريًا نيابةً عنك وهي ضرورية لتنفيذ عقد الخدمة. لا نبيع هذه البيانات ولا نشاركها مع أطراف ثالثة لأي غرض آخر.'
             },
             cookies: {
                 title: 'ملفات تعريف الارتباط (الكوكيز) وتقنيات التتبع',
-                content: 'نستخدم فقط ملفات تعريف الارتباط الضرورية تقنيًا لضمان الأداء السليم للموقع. تشمل هذه الملفات كوكيز الجلسة للمصادقة وحماية CSRF وكوكي لتذكر إعداد اللغة. لا نستخدم أي كوكيز تحليلية أو إعلانية أو خاصة بأطراف ثالثة. لمزيد من التفاصيل، راجع سياسة الكوكيز الخاصة بنا.',
+                content: 'نستخدم فقط ملفات تعريف الارتباط الضرورية تقنيًا لضمان الأداء السليم للموقع. تشمل هذه الملفات كوكيز الجلسة للمصادقة وحماية CSRF وكوكي لتذكر إعداد اللغة. لا نستخدم أي كوكيز تحليلية أو إعلانية أو خاصة بأطراف ثالثة. لمزيد من التفاصيل، راجع سياسة الكوكيز الخاصة بنا.'
             },
             retention: {
                 title: 'الاحتفاظ بالبيانات وحذفها',
-                content: 'يتم الاحتفاظ بالبيانات الشخصية فقط طالما كان ذلك ضروريًا للغرض الذي جُمعت من أجله، أو وفقًا لمتطلبات القانون (مثل متطلبات الاحتفاظ الضريبية والتجارية لسجلات الفواتير لمدة تصل إلى 10 سنوات). تُحذف بيانات الحساب خلال 30 يومًا من إغلاق الحساب، وتُحذف سجلات الخادم بعد 7 أيام.',
+                content: 'يتم الاحتفاظ بالبيانات الشخصية فقط طالما كان ذلك ضروريًا للغرض الذي جُمعت من أجله، أو وفقًا لمتطلبات القانون (مثل متطلبات الاحتفاظ الضريبية والتجارية لسجلات الفواتير لمدة تصل إلى 10 سنوات). تُحذف بيانات الحساب خلال 30 يومًا من إغلاق الحساب، وتُحذف سجلات الخادم بعد 7 أيام.'
             },
             rights: {
                 title: 'حقوق أصحاب البيانات',
-                content: 'بموجب اللائحة GDPR، تتمتع بالحقوق التالية:\n\n• حق الوصول (المادة 15)\n• حق التصحيح (المادة 16)\n• حق الحذف (المادة 17)\n• حق تقييد المعالجة (المادة 18)\n• حق نقل البيانات (المادة 20)\n• حق الاعتراض على المعالجة (المادة 21)\n\nلممارسة حقوقك، تواصل معنا على info@medianet-home.de. يحق لك أيضًا تقديم شكوى إلى مفوض حماية البيانات والمعلومات في هيسن (HBDI)، فيسبادن.',
+                content: 'بموجب اللائحة GDPR، تتمتع بالحقوق التالية:\n\n• حق الوصول (المادة 15)\n• حق التصحيح (المادة 16)\n• حق الحذف (المادة 17)\n• حق تقييد المعالجة (المادة 18)\n• حق نقل البيانات (المادة 20)\n• حق الاعتراض على المعالجة (المادة 21)\n\nلممارسة حقوقك، تواصل معنا على info@medianet-home.de. يحق لك أيضًا تقديم شكوى إلى مفوض حماية البيانات والمعلومات في هيسن (HBDI)، فيسبادن.'
             },
             contact: {
                 title: 'جهة الاتصال لحماية البيانات',
-                content: 'للاستفسار عن حماية البيانات أو ممارسة حقوقك، تواصل معنا:\n\ninfo@medianet-home.de\n+49 (0) 6103 / 69 77 84\n\n[mn]medianet, Bernhard Hnida, Am Taubhaus 29, 63303 Dreieich',
-            },
-        },
+                content: 'للاستفسار عن حماية البيانات أو ممارسة حقوقك، تواصل معنا:\n\ninfo@medianet-home.de\n+49 (0) 6103 / 69 77 84\n\n[mn]medianet, Bernhard Hnida, Am Taubhaus 29, 63303 Dreieich'
+            }
+        }
     },
-
-    // الشروط والأحكام
     termsAndConditions: {
         title: 'الشروط والأحكام العامة',
         subtitle: 'الشروط والأحكام العامة للأعمال — [mn]medianet / BillingTool',
         sections: {
             scope: {
                 title: 'نطاق التطبيق',
-                content: 'تسري هذه الشروط والأحكام العامة على جميع العقود المبرمة بين [mn]medianet، برنهارد هنيدا، Am Taubhaus 29، 63303 Dreieich، ألمانيا (يُشار إليه فيما يلي بـ "مقدم الخدمة") ومستخدمي منصة BillingTool (يُشار إليهم فيما يلي بـ "المستخدم"). لا يُقبل أي شرط مغاير من المستخدم ما لم يوافق عليه مقدم الخدمة صراحةً وكتابيًا.',
+                content: 'تسري هذه الشروط والأحكام العامة على جميع العقود المبرمة بين [mn]medianet، برنهارد هنيدا، Am Taubhaus 29، 63303 Dreieich، ألمانيا (يُشار إليه فيما يلي بـ \'مقدم الخدمة\') ومستخدمي منصة BillingTool (يُشار إليهم فيما يلي بـ \'المستخدم\'). لا يُقبل أي شرط مغاير من المستخدم ما لم يوافق عليه مقدم الخدمة صراحةً وكتابيًا.'
             },
             subject: {
                 title: 'موضوع العقد (خدمة SaaS)',
-                content: 'BillingTool منصة برمجية كخدمة (SaaS) لإنشاء الفواتير وإدارتها وإرسالها. يتم الوصول إلى البرنامج عبر الإنترنت. يمنح مقدم الخدمة المستخدم حق استخدام غير حصري وغير قابل للتحويل للمنصة ضمن نطاق خطة الاشتراك المختارة خلال مدة العقد.',
+                content: 'BillingTool منصة برمجية كخدمة (SaaS) لإنشاء الفواتير وإدارتها وإرسالها. يتم الوصول إلى البرنامج عبر الإنترنت. يمنح مقدم الخدمة المستخدم حق استخدام غير حصري وغير قابل للتحويل للمنصة ضمن نطاق خطة الاشتراك المختارة خلال مدة العقد.'
             },
             registration: {
                 title: 'التسجيل وحساب المستخدم',
-                content: 'يستلزم استخدام المنصة التسجيل ببريد إلكتروني صالح. يتحمل المستخدم مسؤولية الحفاظ على سرية بيانات تسجيل الدخول وجميع الأنشطة التي تجري عبر حسابه. يجب الإبلاغ فورًا عن أي استخدام غير مصرح به. يحتفظ مقدم الخدمة بحق رفض التسجيل دون إبداء أسباب.',
+                content: 'يستلزم استخدام المنصة التسجيل ببريد إلكتروني صالح. يتحمل المستخدم مسؤولية الحفاظ على سرية بيانات تسجيل الدخول وجميع الأنشطة التي تجري عبر حسابه. يجب الإبلاغ فورًا عن أي استخدام غير مصرح به. يحتفظ مقدم الخدمة بحق رفض التسجيل دون إبداء أسباب.'
             },
             service: {
                 title: 'وصف خدمة البرنامج',
-                content: 'توفر منصة BillingTool: إنشاء الفواتير وإدارتها، تصدير PDF، إنشاء الفواتير الإلكترونية (متوافقة مع EN 16931 / ZUGFeRD / XRechnung)، إدارة العملاء، ولوحة تحكم شخصية. يعتمد نطاق الميزات المتاحة على خطة الاشتراك المختارة، ويحق لمقدم الخدمة توسيعها أو تعديلها أو تقييدها مع إشعار مناسب.',
+                content: 'توفر منصة BillingTool: إنشاء الفواتير وإدارتها، تصدير PDF، إنشاء الفواتير الإلكترونية (متوافقة مع EN 16931 / ZUGFeRD / XRechnung)، إدارة العملاء، ولوحة تحكم شخصية. يعتمد نطاق الميزات المتاحة على خطة الاشتراك المختارة، ويحق لمقدم الخدمة توسيعها أو تعديلها أو تقييدها مع إشعار مناسب.'
             },
             pricing: {
                 title: 'الأسعار وشروط الدفع',
-                content: 'تُقدَّم الخدمة على أساس الاشتراك. الأسعار الحالية معروضة على الموقع وقابلة للتغيير بإشعار مدته 30 يومًا. تتوفر خطة مجانية بميزات محدودة. تُدفع الاشتراكات المدفوعة مقدمًا للفترة المتفق عليها، وجميع الأسعار صافية وتخضع لضريبة القيمة المضافة المعمول بها.',
+                content: 'تُقدَّم الخدمة على أساس الاشتراك. الأسعار الحالية معروضة على الموقع وقابلة للتغيير بإشعار مدته 30 يومًا. تتوفر خطة مجانية بميزات محدودة. تُدفع الاشتراكات المدفوعة مقدمًا للفترة المتفق عليها، وجميع الأسعار صافية وتخضع لضريبة القيمة المضافة المعمول بها.'
             },
             duration: {
                 title: 'مدة العقد وإنهاؤه',
-                content: 'تُبرم الاشتراكات للمدة المتفق عليها (شهرية أو سنوية) وتتجدد تلقائيًا ما لم يتم إلغاؤها بإشعار مسبق لا يقل عن 30 يومًا قبل نهاية الفترة الحالية. يمكن حذف الحسابات المجانية في أي وقت. يبقى الحق في الإنهاء الفوري لسبب وجيه محفوظًا. تُحذف بيانات المستخدم خلال 30 يومًا من الإنهاء ما لم تستوجب فترات الاحتفاظ القانونية خلاف ذلك.',
+                content: 'تُبرم الاشتراكات للمدة المتفق عليها (شهرية أو سنوية) وتتجدد تلقائيًا ما لم يتم إلغاؤها بإشعار مسبق لا يقل عن 30 يومًا قبل نهاية الفترة الحالية. يمكن حذف الحسابات المجانية في أي وقت. يبقى الحق في الإنهاء الفوري لسبب وجيه محفوظًا. تُحذف بيانات المستخدم خلال 30 يومًا من الإنهاء ما لم تستوجب فترات الاحتفاظ القانونية خلاف ذلك.'
             },
             obligations: {
                 title: 'التزامات المستخدم',
-                content: 'يلتزم المستخدم بما يلي:\n\n• استخدام المنصة وفقًا للقانون المعمول به وهذه الشروط\n• عدم إساءة استخدام الخدمة أو تفكيكها أو محاولة تعطيلها\n• ضمان دقة البيانات المدخلة لأغراض إصدار الفواتير\n• الحفاظ على سرية بيانات الدخول وعدم مشاركتها مع أطراف غير مصرح لها\n• عدم استخدام المنصة لإنشاء فواتير احتيالية أو غير ملتزمة بالقانون',
+                content: 'يلتزم المستخدم بما يلي:\n\n• استخدام المنصة وفقًا للقانون المعمول به وهذه الشروط\n• عدم إساءة استخدام الخدمة أو تفكيكها أو محاولة تعطيلها\n• ضمان دقة البيانات المدخلة لأغراض إصدار الفواتير\n• الحفاظ على سرية بيانات الدخول وعدم مشاركتها مع أطراف غير مصرح لها\n• عدم استخدام المنصة لإنشاء فواتير احتيالية أو غير ملتزمة بالقانون'
             },
             availability: {
                 title: 'توافر المنصة',
-                content: 'يستهدف مقدم الخدمة توافرًا شهريًا بنسبة 99% للخدمة (24/7) مع استثناء نوافذ الصيانة المخططة. يُعلن عن الصيانة المخططة مسبقًا كلما أمكن ذلك. لا يضمن مقدم الخدمة خدمة غير منقطعة تمامًا ولا يتحمل المسؤولية عن التوقف المؤقت الناجم عن أسباب تقنية خارج نطاق سيطرته المعقولة.',
+                content: 'يستهدف مقدم الخدمة توافرًا شهريًا بنسبة 99% للخدمة (24/7) مع استثناء نوافذ الصيانة المخططة. يُعلن عن الصيانة المخططة مسبقًا كلما أمكن ذلك. لا يضمن مقدم الخدمة خدمة غير منقطعة تمامًا ولا يتحمل المسؤولية عن التوقف المؤقت الناجم عن أسباب تقنية خارج نطاق سيطرته المعقولة.'
             },
             liability: {
                 title: 'تحديد المسؤولية',
-                content: 'يكون مقدم الخدمة مسؤولاً بشكل غير محدود عن الأضرار الناجمة عن الإهمال الجسيم أو سوء النية، وكذلك عن الأضرار الناجمة عن الإصابات الجسدية. في حالة الإهمال البسيط، تقتصر المسؤولية على الأضرار المتوقعة والنموذجية عند انتهاك التزام تعاقدي جوهري. لا تتجاوز المسؤولية الإجمالية مجموع المبالغ المدفوعة من المستخدم في 12 شهرًا قبل الحدث المُسبب للضرر.',
+                content: 'يكون مقدم الخدمة مسؤولاً بشكل غير محدود عن الأضرار الناجمة عن الإهمال الجسيم أو سوء النية، وكذلك عن الأضرار الناجمة عن الإصابات الجسدية. في حالة الإهمال البسيط، تقتصر المسؤولية على الأضرار المتوقعة والنموذجية عند انتهاك التزام تعاقدي جوهري. لا تتجاوز المسؤولية الإجمالية مجموع المبالغ المدفوعة من المستخدم في 12 شهرًا قبل الحدث المُسبب للضرر.'
             },
             dataProtection: {
                 title: 'حماية البيانات ومعالجتها',
-                content: 'تخضع معالجة البيانات الشخصية لسياسة الخصوصية الخاصة بمقدم الخدمة والتي تُشكّل جزءًا لا يتجزأ من هذه الشروط. حيثما يعالج المستخدم بيانات شخصية لأطراف ثالثة عبر المنصة (مثل بيانات العملاء)، فهو مسؤول عن ضمان وجود أساس قانوني صالح لذلك. يتوفر اتفاق معالجة البيانات وفق المادة 28 من GDPR عند الطلب.',
+                content: 'تخضع معالجة البيانات الشخصية لسياسة الخصوصية الخاصة بمقدم الخدمة والتي تُشكّل جزءًا لا يتجزأ من هذه الشروط. حيثما يعالج المستخدم بيانات شخصية لأطراف ثالثة عبر المنصة (مثل بيانات العملاء)، فهو مسؤول عن ضمان وجود أساس قانوني صالح لذلك. يتوفر اتفاق معالجة البيانات وفق المادة 28 من GDPR عند الطلب.'
             },
             changes: {
                 title: 'التغييرات على الخدمة والشروط',
-                content: 'يحتفظ مقدم الخدمة بحق تعديل هذه الشروط ونطاق الخدمة. سيتم إعلام المستخدمين بالتغييرات الجوهرية عبر البريد الإلكتروني قبل 30 يومًا على الأقل من سريانها. يُعدّ استمرار استخدام الخدمة بعد التاريخ الفعلي للتغييرات موافقةً عليها. إذا رفض المستخدم التغييرات، يحق له إنهاء حسابه قبل التاريخ الفعلي.',
+                content: 'يحتفظ مقدم الخدمة بحق تعديل هذه الشروط ونطاق الخدمة. سيتم إعلام المستخدمين بالتغييرات الجوهرية عبر البريد الإلكتروني قبل 30 يومًا على الأقل من سريانها. يُعدّ استمرار استخدام الخدمة بعد التاريخ الفعلي للتغييرات موافقةً عليها. إذا رفض المستخدم التغييرات، يحق له إنهاء حسابه قبل التاريخ الفعلي.'
             },
             governing: {
                 title: 'الأحكام الختامية والاختصاص القضائي',
-                content: 'تخضع هذه الشروط لقانون جمهورية ألمانيا الاتحادية مع استبعاد اتفاقية الأمم المتحدة بشأن عقود البيع الدولية للبضائع (CISG). يكون المحكمة الحصرية للنزاعات الناشئة عن هذه الشروط مع التجار والكيانات القانونية العامة هي دارمشتات، ألمانيا. إذا كان أي حكم من هذه الشروط غير صالح أو أصبح كذلك، تظل الأحكام المتبقية سارية المفعول بالكامل.',
-            },
-        },
+                content: 'تخضع هذه الشروط لقانون جمهورية ألمانيا الاتحادية مع استبعاد اتفاقية الأمم المتحدة بشأن عقود البيع الدولية للبضائع (CISG). يكون المحكمة الحصرية للنزاعات الناشئة عن هذه الشروط مع التجار والكيانات القانونية العامة هي دارمشتات، ألمانيا. إذا كان أي حكم من هذه الشروط غير صالح أو أصبح كذلك، تظل الأحكام المتبقية سارية المفعول بالكامل.'
+            }
+        }
     },
-
-    // معلومات الكوكيز
     cookiePolicy: {
         title: 'معلومات ملفات تعريف الارتباط (الكوكيز)',
         subtitle: 'كيف تستخدم BillingTool ملفات تعريف الارتباط على هذا الموقع',
         sections: {
             whatAre: {
                 title: 'ما هي الكوكيز؟',
-                content: 'الكوكيز هي ملفات نصية صغيرة يخزنها متصفحك على جهازك عند زيارة موقع إلكتروني. تُستخدم على نطاق واسع لجعل المواقع تعمل بكفاءة وتحسين تجربة المستخدم. تنقسم إلى "كوكيز الجلسة" (تُحذف عند إغلاق المتصفح) و"الكوكيز الدائمة" (تبقى على جهازك لفترة محددة).',
+                content: 'الكوكيز هي ملفات نصية صغيرة يخزنها متصفحك على جهازك عند زيارة موقع إلكتروني. تُستخدم على نطاق واسع لجعل المواقع تعمل بكفاءة وتحسين تجربة المستخدم. تنقسم إلى \'كوكيز الجلسة\' (تُحذف عند إغلاق المتصفح) و\'الكوكيز الدائمة\' (تبقى على جهازك لفترة محددة).'
             },
             necessary: {
                 title: 'الكوكيز الضرورية تقنيًا',
-                content: 'تستخدم BillingTool فقط الكوكيز الضرورية تقنيًا، وهي أساسية لتشغيل الموقع ولا يمكن تعطيلها دون التأثير على وظائفه. وتشمل:\n\n• كوكي الجلسة — يبقيك مسجلاً الدخول أثناء زيارتك\n• كوكي حماية CSRF — يحميك من هجمات تزوير الطلبات عبر المواقع\n• كوكي تفضيل اللغة — يتذكر لغة العرض التي اخترتها\n\nتُعيَّن هذه الكوكيز استنادًا إلى مصلحتنا المشروعة وفق المادة 6(1)(و) GDPR في تقديم خدمة آمنة وفعّالة.',
+                content: 'تستخدم BillingTool فقط الكوكيز الضرورية تقنيًا، وهي أساسية لتشغيل الموقع ولا يمكن تعطيلها دون التأثير على وظائفه. وتشمل:\n\n• كوكي الجلسة — يبقيك مسجلاً الدخول أثناء زيارتك\n• كوكي حماية CSRF — يحميك من هجمات تزوير الطلبات عبر المواقع\n• كوكي تفضيل اللغة — يتذكر لغة العرض التي اخترتها\n\nتُعيَّن هذه الكوكيز استنادًا إلى مصلحتنا المشروعة وفق المادة 6(1)(و) GDPR في تقديم خدمة آمنة وفعّالة.'
             },
             analytics: {
                 title: 'كوكيز التحليل أو التتبع',
-                content: 'لا نستخدم حاليًا أي كوكيز تحليلية أو إعلانية أو تابعة لأطراف ثالثة. إذا أدرجنا مثل هذه التقنيات في المستقبل، سيتم تحديث سياسة الكوكيز هذه وسنحصل على موافقتك الصريحة قبل تعيين أي كوكيز غير ضرورية، وفقًا للائحة GDPR وقانون حماية البيانات في مجال الاتصالات والتليميديا الألماني (TTDSG).',
+                content: 'لا نستخدم حاليًا أي كوكيز تحليلية أو إعلانية أو تابعة لأطراف ثالثة. إذا أدرجنا مثل هذه التقنيات في المستقبل، سيتم تحديث سياسة الكوكيز هذه وسنحصل على موافقتك الصريحة قبل تعيين أي كوكيز غير ضرورية، وفقًا للائحة GDPR وقانون حماية البيانات في مجال الاتصالات والتليميديا الألماني (TTDSG).'
             },
             settings: {
                 title: 'تغيير إعدادات الكوكيز',
-                content: 'يمكنك التحكم في الكوكيز وإدارتها من خلال إعدادات متصفحك. لاحظ أن تعطيل الكوكيز الضرورية تقنيًا سيؤثر على وظائف BillingTool وقد يمنعك من تسجيل الدخول.\n\nتتيح معظم المتصفحات:\n• عرض الكوكيز المخزنة على جهازك\n• حظر الكوكيز من مواقع معينة\n• حذف جميع الكوكيز عند إغلاق المتصفح\n\nللإرشادات الخاصة بمتصفحك، راجع صفحات المساعدة (Chrome، Firefox، Safari، Edge...).',
+                content: 'يمكنك التحكم في الكوكيز وإدارتها من خلال إعدادات متصفحك. لاحظ أن تعطيل الكوكيز الضرورية تقنيًا سيؤثر على وظائف BillingTool وقد يمنعك من تسجيل الدخول.\n\nتتيح معظم المتصفحات:\n• عرض الكوكيز المخزنة على جهازك\n• حظر الكوكيز من مواقع معينة\n• حذف جميع الكوكيز عند إغلاق المتصفح\n\nللإرشادات الخاصة بمتصفحك، راجع صفحات المساعدة (Chrome، Firefox، Safari، Edge...).'
             },
             retention: {
                 title: 'مدة الاحتفاظ بالكوكيز',
-                content: 'تُحذف كوكيز الجلسة تلقائيًا عند إغلاق المتصفح. تُحتفظ بالكوكيز الدائمة لتفضيلات اللغة لمدة أقصاها 12 شهرًا وتتجدد في كل مرة تستخدم فيها الخدمة. يمكنك حذف الكوكيز في أي وقت من خلال إعدادات متصفحك.',
-            },
-        },
-    },
+                content: 'تُحذف كوكيز الجلسة تلقائيًا عند إغلاق المتصفح. تُحتفظ بالكوكيز الدائمة لتفضيلات اللغة لمدة أقصاها 12 شهرًا وتتجدد في كل مرة تستخدم فيها الخدمة. يمكنك حذف الكوكيز في أي وقت من خلال إعدادات متصفحك.'
+            }
+        }
+    }
 };

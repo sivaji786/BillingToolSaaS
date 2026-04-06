@@ -18,6 +18,9 @@ class AdminUsers extends ResourceController
     protected $tenantModel;
     protected $planModel;
     protected $subscriptionModel;
+    protected $usageModel;
+    protected $invoiceModel;
+    protected $userModel;
 
     public function initController(\CodeIgniter\HTTP\RequestInterface $request, \CodeIgniter\HTTP\ResponseInterface $response, \Psr\Log\LoggerInterface $logger)
     {
@@ -25,6 +28,9 @@ class AdminUsers extends ResourceController
         $this->tenantModel = new TenantModel();
         $this->planModel = new PlanModel();
         $this->subscriptionModel = new SubscriptionModel();
+        $this->usageModel = new \App\Models\TenantUsageModel();
+        $this->invoiceModel = new \App\Models\InvoiceModel();
+        $this->userModel = new \App\Models\UserModel();
     }
 
     /**
@@ -76,13 +82,13 @@ class AdminUsers extends ResourceController
                     'joinedDate' => $tenant['created_at'],
                     'lastLogin' => date('Y-m-d\TH:i:s\Z'), // Mock last login
                     'usageStats' => [
-                        'storageUsed' => rand(1, $limits['storage_gb'] > 0 ? $limits['storage_gb'] : 100),
-                        'storageLimit' => $limits['storage_gb'],
-                        'apiCalls' => rand(1000, $limits['api_calls'] > 0 ? $limits['api_calls'] : 100000),
+                        'storageUsed' => round(($this->usageModel->getUsage($tenant['id'], 'storage')['used_amount'] ?? 0) / (1024 * 1024 * 1024), 2),
+                        'storageLimit' => $limits['storage_gb'] ?? round(($limits['storage'] ?? 0) / (1024 * 1024 * 1024), 2),
+                        'apiCalls' => (int)($this->usageModel->getUsage($tenant['id'], 'api_calls')['used_amount'] ?? 0),
                         'apiCallsLimit' => $limits['api_calls'],
-                        'bandwidthUsed' => rand(10, $limits['bandwidth_gb'] > 0 ? $limits['bandwidth_gb'] : 500),
-                        'bandwidthLimit' => $limits['bandwidth_gb'],
-                        'activeUsers' => rand(1, $limits['users'] > 0 ? $limits['users'] : 10),
+                        'bandwidthUsed' => round(($this->usageModel->getUsage($tenant['id'], 'bandwidth')['used_amount'] ?? 0) / (1024 * 1024 * 1024), 2),
+                        'bandwidthLimit' => $limits['bandwidth_gb'] ?? round(($limits['bandwidth'] ?? 0) / (1024 * 1024 * 1024), 2),
+                        'activeUsers' => $this->userModel->where('tenant_id', $tenant['id'])->countAllResults(),
                         'activeUsersLimit' => $limits['users'],
                     ],
                 ];
@@ -133,13 +139,13 @@ class AdminUsers extends ResourceController
             'joinedDate' => $tenant['created_at'],
             'lastLogin' => date('Y-m-d\TH:i:s\Z'),
             'usageStats' => [
-                'storageUsed' => rand(1, $limits['storage_gb']),
-                'storageLimit' => $limits['storage_gb'],
-                'apiCalls' => rand(1000, $limits['api_calls']),
+                'storageUsed' => round(($this->usageModel->getUsage($tenant['id'], 'storage')['used_amount'] ?? 0) / (1024 * 1024 * 1024), 2),
+                'storageLimit' => $limits['storage_gb'] ?? round(($limits['storage'] ?? 0) / (1024 * 1024 * 1024), 2),
+                'apiCalls' => (int)($this->usageModel->getUsage($tenant['id'], 'api_calls')['used_amount'] ?? 0),
                 'apiCallsLimit' => $limits['api_calls'],
-                'bandwidthUsed' => rand(10, $limits['bandwidth_gb']),
-                'bandwidthLimit' => $limits['bandwidth_gb'],
-                'activeUsers' => rand(1, $limits['users']),
+                'bandwidthUsed' => round(($this->usageModel->getUsage($tenant['id'], 'bandwidth')['used_amount'] ?? 0) / (1024 * 1024 * 1024), 2),
+                'bandwidthLimit' => $limits['bandwidth_gb'] ?? round(($limits['bandwidth'] ?? 0) / (1024 * 1024 * 1024), 2),
+                'activeUsers' => $this->userModel->where('tenant_id', $tenant['id'])->countAllResults(),
                 'activeUsersLimit' => $limits['users'],
             ],
         ];

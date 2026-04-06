@@ -8,14 +8,10 @@ import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Separator } from '../ui/separator';
-import { Building2, Settings as SettingsIcon, CreditCard, FileText, Palette } from 'lucide-react';
-import { ThemeBuilder } from '../ThemeBuilder';
+import { Building2, CreditCard, FileText } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { RichTextEditor } from '../ui/RichTextEditor';
-import { useAuthStore } from '../../stores/authStore';
-import { customerService } from '../../services/customerApi';
-import { toast } from 'sonner';
-import { Sparkles, Save, Eye, EyeOff } from 'lucide-react';
+
 
 interface SettingsProps {
   profile: CompanyProfile;
@@ -24,23 +20,10 @@ interface SettingsProps {
 
 export function Settings({ profile, onUpdateProfile }: SettingsProps) {
   const { t } = useLanguage();
-  const token = useAuthStore((state) => state.token);
-  const tenant = useAuthStore((state) => state.tenant);
-  const login = useAuthStore((state) => state.login);
-  const user = useAuthStore((state) => state.user);
 
   const [editedProfile, setEditedProfile] = useState<CompanyProfile>(profile);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSavingAI, setIsSavingAI] = useState(false);
   const [companyTypes, setCompanyTypes] = useState<CompanyType[]>([]);
-
-  const [aiSettings, setAiSettings] = useState({
-    ai_provider: tenant?.ai_provider || 'gemini',
-    gemini_api_key: tenant?.gemini_api_key || '',
-    openai_api_key: tenant?.openai_api_key || '',
-  });
-
-  const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
     const fetchTypes = async () => {
@@ -71,27 +54,6 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
     }
   };
 
-  const handleSaveAI = async () => {
-    if (!token) return;
-    setIsSavingAI(true);
-    try {
-      const response = await customerService.updateProfile(token, aiSettings);
-      if (response.success) {
-        toast.success('AI Settings updated successfully');
-        // Update local store to reflect changes immediately in AI assistant
-        if (user) {
-          login(token, user, response.data);
-        }
-      } else {
-        toast.error(response.message || 'Failed to update AI settings');
-      }
-    } catch (error) {
-      console.error('Failed to update AI settings:', error);
-      toast.error('An error occurred while saving AI settings');
-    } finally {
-      setIsSavingAI(false);
-    }
-  };
 
   const handleChange = (field: keyof CompanyProfile | string, value: string) => {
     if (field.startsWith('address.')) {
@@ -148,18 +110,6 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
           <TabsTrigger value="payment">
             <CreditCard className="h-4 w-4 mr-2" />
             {t('settings.paymentInfo') || 'Payment Info'}
-          </TabsTrigger>
-          <TabsTrigger value="theme">
-            <Palette className="h-4 w-4 mr-2" />
-            {t('settings.theme') || 'Theme'}
-          </TabsTrigger>
-          <TabsTrigger value="advanced">
-            <SettingsIcon className="h-4 w-4 mr-2" />
-            {t('settings.advanced') || 'Advanced'}
-          </TabsTrigger>
-          <TabsTrigger value="ai">
-            <Sparkles className="h-4 w-4 mr-2" />
-            AI Assistant
           </TabsTrigger>
         </TabsList>
 
@@ -489,134 +439,6 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
           </Card>
         </TabsContent>
 
-        {/* Theme */}
-        <TabsContent value="theme">
-          <ThemeBuilder />
-        </TabsContent>
-
-        {/* Advanced */}
-        <TabsContent value="advanced">
-          <Card className="p-6 space-y-6">
-            <div>
-              <h2>{t('settings.advancedSettings') || 'Advanced Settings'}</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('settings.advancedSettingsDesc') || 'EN 16931 compliance and export options'}
-              </p>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-4">
-              <div>
-                <Label>{t('settings.ublVersion') || 'UBL Version'}</Label>
-                <Input value="UBL 2.1" disabled className="mt-1" />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('settings.compliantWith') || 'Compliant with'} EN 16931:2017
-                </p>
-              </div>
-
-              <div>
-                <Label>{t('settings.defaultInvoiceTypeCode') || 'Default Invoice Type Code'}</Label>
-                <Input value="380 - Commercial Invoice" disabled className="mt-1" />
-              </div>
-
-              <div>
-                <Label>{t('settings.digitalSignatureProvider') || 'Digital Signature Provider'}</Label>
-                <Input value={t('settings.notConfigured') || 'Not configured'} disabled className="mt-1" />
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-        {/* AI Assistant Settings */}
-        <TabsContent value="ai">
-          <Card className="p-6 space-y-6">
-            <div>
-              <h2>AI Assistant Settings</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Configure your preferred AI provider and API keys for the intelligent invoice assistant.
-              </p>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="ai_provider">Preferred AI Provider</Label>
-                <select
-                  id="ai_provider"
-                  className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={aiSettings.ai_provider}
-                  onChange={(e) => setAiSettings({ ...aiSettings, ai_provider: e.target.value as 'gemini' | 'openai' })}
-                >
-                  <option value="gemini">Google Gemini (Recommended)</option>
-                  <option value="openai">OpenAI (GPT-4o mini)</option>
-                </select>
-                <p className="text-xs text-muted-foreground">
-                  Choose which AI engine will power your natural language invoice generation.
-                </p>
-              </div>
-
-              {aiSettings.ai_provider === 'gemini' ? (
-                <div className="space-y-2">
-                  <Label htmlFor="gemini_api_key">Gemini API Key</Label>
-                  <div className="relative">
-                    <Input
-                      id="gemini_api_key"
-                      type={showApiKey ? "text" : "password"}
-                      placeholder="Enter your Google Gemini API Key"
-                      value={aiSettings.gemini_api_key}
-                      onChange={(e) => setAiSettings({ ...aiSettings, gemini_api_key: e.target.value })}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      title={showApiKey ? "Hide API Key" : "Show API Key"}
-                    >
-                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Get your free or paid key from the <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">Google AI Studio</a>.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label htmlFor="openai_api_key">OpenAI API Key</Label>
-                  <div className="relative">
-                    <Input
-                      id="openai_api_key"
-                      type={showApiKey ? "text" : "password"}
-                      placeholder="Enter your OpenAI API Key"
-                      value={aiSettings.openai_api_key}
-                      onChange={(e) => setAiSettings({ ...aiSettings, openai_api_key: e.target.value })}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      title={showApiKey ? "Hide API Key" : "Show API Key"}
-                    >
-                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Get your key from the <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">OpenAI Dashboard</a>. Ensure your account has a prepaid balance.
-                  </p>
-                </div>
-              )}
-
-              <div className="pt-4">
-                <Button onClick={handleSaveAI} disabled={isSavingAI}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {isSavingAI ? 'Saving AI Settings...' : 'Save AI Settings'}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       {/* Save Button */}

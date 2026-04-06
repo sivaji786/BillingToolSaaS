@@ -11,6 +11,7 @@ $routes->get('database/migrate', '\App\Controllers\Database::migrate');
 $routes->get('database/seed', '\App\Controllers\Database::seed');
 
 $routes->get('billing/plans', '\App\Controllers\Billing::plans');
+$routes->get('billing/package-services', '\App\Controllers\Billing::packageServices');
 $routes->group('billing', ['filter' => 'auth'], function($routes) {
     $routes->get('subscription', '\App\Controllers\Billing::subscription');
     $routes->post('upgrade', '\App\Controllers\Billing::upgrade');
@@ -142,19 +143,43 @@ $routes->group('users', ['filter' => 'rbac:users.manage'], function($routes) {
 
 // Workspace Filesystem
 $routes->group('workspace', ['filter' => 'auth'], function($routes) {
-    $routes->get('list', '\App\Controllers\WorkspaceController::list');
-    $routes->post('upload', '\App\Controllers\WorkspaceController::upload');
-    $routes->post('mkdir', '\App\Controllers\WorkspaceController::mkdir');
-    $routes->post('delete', '\App\Controllers\WorkspaceController::delete');
-    $routes->get('download', '\App\Controllers\WorkspaceController::download');
-    $routes->get('search', '\App\Controllers\WorkspaceController::search');
+    // Read operations
+    $routes->group('', ['filter' => 'rbac:workspace.read'], function($routes) {
+        $routes->get('list', '\App\Controllers\WorkspaceController::list');
+        $routes->get('download', '\App\Controllers\WorkspaceController::download');
+        $routes->get('search', '\App\Controllers\WorkspaceController::search');
+        $routes->get('ai-history', '\App\Controllers\WorkspaceController::getAiHistory');
+    });
+
+    // Create operations
+    $routes->group('', ['filter' => 'rbac:workspace.create'], function($routes) {
+        $routes->post('upload', '\App\Controllers\WorkspaceController::upload');
+        $routes->post('mkdir', '\App\Controllers\WorkspaceController::mkdir');
+        $routes->post('extract-zip', '\App\Controllers\WorkspaceController::extractZip');
+    });
+
+    // Update operations
+    $routes->group('', ['filter' => 'rbac:workspace.update'], function($routes) {
+        $routes->post('rename', '\App\Controllers\WorkspaceController::rename');
+    });
+
+    // Delete operations
+    $routes->group('', ['filter' => 'rbac:workspace.delete'], function($routes) {
+        $routes->post('delete', '\App\Controllers\WorkspaceController::delete');
+    });
+
+    // AI operations
+    $routes->group('', ['filter' => 'rbac:workspace.ai'], function($routes) {
+        $routes->post('ai-search', '\App\Controllers\WorkspaceController::aiSearch');
+    });
+
+    // Open (Local xdg-open) - treating as read for now
+    $routes->post('open', '\App\Controllers\WorkspaceController::open', ['filter' => 'rbac:workspace.read']);
+    
+    // Download multiple as zip - read access
+    $routes->post('download-zip', '\App\Controllers\WorkspaceController::downloadZip', ['filter' => 'rbac:workspace.read']);
+
     $routes->get('ping', function() { return 'pong'; });
-    $routes->post('extract-zip', '\App\Controllers\WorkspaceController::extractZip');
-    $routes->post('rename', '\App\Controllers\WorkspaceController::rename');
-    $routes->post('open', '\App\Controllers\WorkspaceController::open');
-    $routes->post('download-zip', '\App\Controllers\WorkspaceController::downloadZip');
-    $routes->post('ai-search', '\App\Controllers\WorkspaceController::aiSearch');
-    $routes->get('ai-history', '\App\Controllers\WorkspaceController::getAiHistory');
 });
 
 // CORS preflight - must be BEFORE other routes
@@ -176,6 +201,12 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     $routes->post('packages', '\App\Controllers\AdminPackages::create');
     $routes->put('packages/(:segment)', '\App\Controllers\AdminPackages::update/$1');
     $routes->delete('packages/(:segment)', '\App\Controllers\AdminPackages::delete/$1');
+    
+    // Admin Package Services
+    $routes->get('package-services', '\App\Controllers\AdminPackageServices::index');
+    $routes->post('package-services', '\App\Controllers\AdminPackageServices::create');
+    $routes->put('package-services/(:segment)', '\App\Controllers\AdminPackageServices::update/$1');
+    $routes->delete('package-services/(:segment)', '\App\Controllers\AdminPackageServices::delete/$1');
     
     
     // Admin Users

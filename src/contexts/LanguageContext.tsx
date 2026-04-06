@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Language, translations, getTranslation, formatTranslation } from '../utils/i18n';
+import { Language, getTranslation, formatTranslation } from '../utils/i18n';
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string, values?: Record<string, string>) => string;
+  isRtl: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -12,12 +13,13 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
 
+  const isRtl = language === 'ar';
+
   // Set document direction based on language
   useEffect(() => {
-    const isRTL = language === 'ar';
-    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+    document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.lang = language;
-  }, [language]);
+  }, [language, isRtl]);
 
   const t = (key: string, values?: Record<string, string>): string => {
     const translation = getTranslation(language, key);
@@ -25,7 +27,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, isRtl }}>
       {children}
     </LanguageContext.Provider>
   );

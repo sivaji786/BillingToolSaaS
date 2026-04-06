@@ -592,66 +592,6 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
 
                                     {/* ── Parties ── */}
                                     <div className="grid grid-cols-2 gap-10">
-                                        {/* From */}
-                                        <div>
-                                            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">{t('quickAccess.from')}</p>
-                                            <div className="space-y-1 text-sm">
-                                                <div className="font-medium">
-                                                    {renderField(
-                                                        'seller.name2',
-                                                        invoice.seller.name,
-                                                        (v) => handleFieldChange('seller.name', v),
-                                                        'text-base',
-                                                        false,
-                                                        t('quickAccess.yourCompanyName'),
-                                                        'seller.name'
-                                                    )}
-                                                </div>
-                                                {renderField(
-                                                    'seller.vatId',
-                                                    invoice.seller.vatId || '',
-                                                    (v) => handleFieldChange('seller.vatId', v),
-                                                    'text-gray-500',
-                                                    false,
-                                                    t('quickAccess.vatId')
-                                                )}
-                                                {renderField(
-                                                    'seller.address.street',
-                                                    invoice.seller.address.street,
-                                                    (v) => handleFieldChange('seller.address.street', v),
-                                                    'block text-gray-500',
-                                                    false,
-                                                    t('quickAccess.streetAddress')
-                                                )}
-                                                <div>
-                                                    {renderField(
-                                                        'seller.address.postalCode',
-                                                        invoice.seller.address.postalCode,
-                                                        (v) => handleFieldChange('seller.address.postalCode', v),
-                                                        'inline-block mr-1 text-gray-500',
-                                                        false,
-                                                        t('quickAccess.zip')
-                                                    )}
-                                                    {renderField(
-                                                        'seller.address.city',
-                                                        invoice.seller.address.city,
-                                                        (v) => handleFieldChange('seller.address.city', v),
-                                                        'inline-block text-gray-500',
-                                                        false,
-                                                        t('quickAccess.city')
-                                                    )}
-                                                </div>
-                                                {renderField(
-                                                    'seller.address.country',
-                                                    invoice.seller.address.country,
-                                                    (v) => handleFieldChange('seller.address.country', v),
-                                                    'block text-gray-500',
-                                                    false,
-                                                    t('quickAccess.country')
-                                                )}
-                                            </div>
-                                        </div>
-
                                         {/* Bill To */}
                                         <div>
                                             <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">{t('quickAccess.billTo')}</p>
@@ -705,6 +645,66 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                                     'buyer.address.country',
                                                     invoice.buyer.address.country,
                                                     (v) => handleFieldChange('buyer.address.country', v),
+                                                    'block text-gray-500',
+                                                    false,
+                                                    t('quickAccess.country')
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* From */}
+                                        <div>
+                                            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">{t('quickAccess.from')}</p>
+                                            <div className="space-y-1 text-sm">
+                                                <div className="font-medium">
+                                                    {renderField(
+                                                        'seller.name2',
+                                                        invoice.seller.name,
+                                                        (v) => handleFieldChange('seller.name', v),
+                                                        'text-base',
+                                                        false,
+                                                        t('quickAccess.yourCompanyName'),
+                                                        'seller.name'
+                                                    )}
+                                                </div>
+                                                {renderField(
+                                                    'seller.vatId',
+                                                    invoice.seller.vatId || '',
+                                                    (v) => handleFieldChange('seller.vatId', v),
+                                                    'text-gray-500',
+                                                    false,
+                                                    t('quickAccess.vatId')
+                                                )}
+                                                {renderField(
+                                                    'seller.address.street',
+                                                    invoice.seller.address.street,
+                                                    (v) => handleFieldChange('seller.address.street', v),
+                                                    'block text-gray-500',
+                                                    false,
+                                                    t('quickAccess.streetAddress')
+                                                )}
+                                                <div>
+                                                    {renderField(
+                                                        'seller.address.postalCode',
+                                                        invoice.seller.address.postalCode,
+                                                        (v) => handleFieldChange('seller.address.postalCode', v),
+                                                        'inline-block mr-1 text-gray-500',
+                                                        false,
+                                                        t('quickAccess.zip')
+                                                    )}
+                                                    {renderField(
+                                                        'seller.address.city',
+                                                        invoice.seller.address.city,
+                                                        (v) => handleFieldChange('seller.address.city', v),
+                                                        'inline-block text-gray-500',
+                                                        false,
+                                                        t('quickAccess.city')
+                                                    )}
+                                                </div>
+                                                {renderField(
+                                                    'seller.address.country',
+                                                    invoice.seller.address.country,
+                                                    (v) => handleFieldChange('seller.address.country', v),
                                                     'block text-gray-500',
                                                     false,
                                                     t('quickAccess.country')

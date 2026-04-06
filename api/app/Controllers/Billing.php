@@ -110,7 +110,7 @@ class Billing extends BaseController
         $newPlanId = $json->plan_id ?? null; // In reality this should be price_id or we look up price_id from plan_id
 
         if (!$newPlanId) {
-            return $this->failValidationError('Plan ID is required');
+            return $this->fail('Plan ID is required', 400);
         }
 
         $tenant = config('App')->currentTenant;
@@ -166,6 +166,30 @@ class Billing extends BaseController
     {
         $model = new PlanModel();
         $plans = $model->where('is_active', 1)->where('is_public', 1)->findAll();
-        return $this->response->setJSON($plans)->setStatusCode(200);
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $plans
+        ])->setStatusCode(200);
+    }
+
+    public function packageServices()
+    {
+        $model = new \App\Models\PackageServiceModel();
+        $services = $model->where('is_active', 1)->orderBy('display_order', 'ASC')->findAll();
+        
+        $mapped = array_map(function($service) {
+            return [
+                'id' => (string)$service['id'],
+                'name' => $service['name'],
+                'type' => $service['type'],
+                'displayOrder' => (int)$service['display_order'],
+                'description' => $service['description'],
+            ];
+        }, $services);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $mapped,
+        ])->setStatusCode(200);
     }
 }

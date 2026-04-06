@@ -28,11 +28,13 @@ const CookiePolicy = lazy(() => import('./components/screens/CookiePolicy').then
 const Buyers = lazy(() => import('./components/screens/Buyers').then(module => ({ default: module.Buyers })));
 const Workspace = lazy(() => import('./components/screens/Workspace').then(module => ({ default: module.Workspace })));
 const AIHistory = lazy(() => import('./components/screens/AIHistory').then(module => ({ default: module.AIHistory })));
+const PackageComparison = lazy(() => import('./components/screens/PackageComparison').then(module => ({ default: module.PackageComparison })));
 
 // Admin Portal Components
 const SALogin = lazy(() => import('./components/screens/Admin/SALogin').then(module => ({ default: module.SALogin })));
 const SAdashboard = lazy(() => import('./components/screens/Admin/SAdashboard').then(module => ({ default: module.SAdashboard })));
 const SApackages = lazy(() => import('./components/screens/Admin/SApackages').then(module => ({ default: module.SApackages })));
+const SAPackageServices = lazy(() => import('./components/screens/Admin/SAPackageServices').then(module => ({ default: module.SAPackageServices })));
 const SAPackageForm = lazy(() => import('./components/screens/Admin/SAPackageForm').then(module => ({ default: module.SAPackageForm })));
 const SAASusers = lazy(() => import('./components/screens/Admin/SAASusers').then(module => ({ default: module.SAASusers })));
 const SAUserDetails = lazy(() => import('./components/screens/Admin/SAUserDetails').then(module => ({ default: module.SAUserDetails })));
@@ -75,9 +77,10 @@ import { getApiBaseUrl, getTicketingApiKey } from './utils/config';
 import { calculateInvoiceTotals } from './utils/invoice-calculations';
 import { toast } from 'sonner';
 import { authService, invoiceService } from './services/api';
+import { PLATFORM_TEMPLATES } from './utils/invoice-templates-defaults';
 // hasPermissionSync removed
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -87,7 +90,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
-      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy'].includes(hash)) {
+      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'].includes(hash)) {
         return hash as Screen;
       }
       // Handle parameterized routes like designLayout/123
@@ -158,7 +161,7 @@ function AppContent() {
       const hash = window.location.hash.replace('#', '');
       console.log('Hash changed:', hash);
       if (hash && [
-        'landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy'
+        'landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'
       ].includes(hash)) {
         console.log('Setting screen from hash change:', hash);
         setCurrentScreen(hash as Screen);
@@ -208,7 +211,7 @@ function AppContent() {
   // Update hash when screen changes
   useEffect(() => {
     if ([
-      'dashboard', 'invoices', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory'
+      'dashboard', 'invoices', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory', 'packageComparison'
     ].includes(currentScreen)) {
       if (window.location.hash.replace('#', '') !== currentScreen) {
         window.location.hash = currentScreen;
@@ -223,11 +226,13 @@ function AppContent() {
     enabled: isAuthenticated
   });
 
-  const { data: templates = [], refetch: refetchTemplates } = useQuery({
+  const { data: userTemplates = [], refetch: refetchTemplates } = useQuery({
     queryKey: ['templates'],
     queryFn: () => invoiceTemplateService.getAll(),
     enabled: isAuthenticated
   });
+
+  const templates = [...PLATFORM_TEMPLATES, ...userTemplates];
 
   const { data: companyProfiles = [], refetch: refetchProfile } = useQuery({
     queryKey: ['profile'],
@@ -305,6 +310,7 @@ function AppContent() {
         contactEmail: profile?.email,
         contactPhone: profile?.phone,
       },
+      templateId: profile?.defaultTemplateId,
       buyer: {
         name: '',
         address: {
@@ -416,9 +422,10 @@ function AppContent() {
   const handleSelectTemplate = (template: InvoiceTemplate) => {
     const newInvoice: Invoice = {
       id: String(Date.now()),
-      invoiceNumber: `INV-2025-${String(invoices.length + 1).padStart(5, '0')}`,
+      templateId: template.id || profile?.defaultTemplateId || PLATFORM_TEMPLATES[0].id,
+      invoiceNumber: `INV-2026-${String(invoices.length + 1).padStart(5, '0')}`,
       issueDate: new Date().toISOString().split('T')[0],
-      currency: template.defaultCurrency,
+      currency: template.defaultCurrency || 'EUR',
       seller: {
         name: template.seller.name || profile?.name || '',
         vatId: template.seller.vatId || profile?.vatId || '',
@@ -494,6 +501,7 @@ function AppContent() {
     // We just need to update the app-level state and refresh the invoice list
     setCurrentInvoice(invoice);
     refetchInvoices();
+    refetchProfile(); // Refresh profile to get updated defaultTemplateId
   };
 
   const handleNewTemplate = () => {
@@ -502,6 +510,10 @@ function AppContent() {
   };
 
   const handleEditTemplate = (template: InvoiceTemplate) => {
+    if (PLATFORM_TEMPLATES.some(t => t.id === template.id)) {
+      toast.error('Platform templates cannot be edited directly.');
+      return;
+    }
     setEditingTemplate(template);
     setCurrentScreen('templateEditor');
   };
@@ -536,6 +548,10 @@ function AppContent() {
 
   const handleDeleteTemplate = async (template: InvoiceTemplate) => {
     if (!template.id) return;
+    if (PLATFORM_TEMPLATES.some(t => t.id === template.id)) {
+      toast.error('Platform templates cannot be deleted.');
+      return;
+    }
     try {
       await invoiceTemplateService.delete(template.id);
       toast.success(t('templates.templateDeleted') || 'Template deleted', {
@@ -633,15 +649,25 @@ function AppContent() {
 
     return (
       <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
-        <LandingPage
-          onLogin={() => setCurrentScreen('login')}
-          onSignup={(planId) => {
-            setSelectedPlan(planId);
-            setCurrentScreen('signup');
-          }}
-          onTryNow={() => setCurrentScreen('quickAccess')}
-          onNavigate={navigate}
-        />
+        {currentScreen === 'packageComparison' ? (
+          <PackageComparison
+            onBack={() => setCurrentScreen('landing')}
+            onSignup={(planId) => {
+              setSelectedPlan(planId);
+              setCurrentScreen('signup');
+            }}
+          />
+        ) : (
+          <LandingPage
+            onLogin={() => setCurrentScreen('login')}
+            onSignup={(planId) => {
+              setSelectedPlan(planId);
+              setCurrentScreen('signup');
+            }}
+            onTryNow={() => setCurrentScreen('quickAccess')}
+            onNavigate={navigate}
+          />
+        )}
         <Toaster />
       </Suspense>
     );
@@ -660,29 +686,31 @@ function AppContent() {
         collapsible="icon"
       />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-data-[collapsible=icon]:h-16 sticky top-0 bg-purple-600 text-white z-10 shadow-md">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1 text-white hover:bg-white/10 hover:text-white" />
-            <Separator orientation="vertical" className="mr-2 h-4 bg-white/30" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#" onClick={() => setCurrentScreen('dashboard')} className="text-white/90 hover:text-white">
-                    {t('appName')}
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="capitalize text-white font-semibold">{currentScreen === 'invoices' ? 'Invoices' : currentScreen}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-          <div className="ml-auto flex items-center gap-4">
-            <LanguageSwitcher />
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        {currentScreen !== 'designLayout' && (
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-data-[collapsible=icon]:h-16 sticky top-0 bg-purple-600 text-white z-10 shadow-md">
+            <div className="flex items-center gap-2 px-4">
+              <SidebarTrigger className="-ml-1 text-white hover:bg-white/10 hover:text-white" />
+              <Separator orientation="vertical" className="mr-2 h-4 bg-white/30" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem className="hidden md:block">
+                    <BreadcrumbLink href="#" onClick={() => setCurrentScreen('dashboard')} className="text-white/90 hover:text-white">
+                      {t('appName')}
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="hidden md:block" />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="capitalize text-white font-semibold">{currentScreen === 'invoices' ? 'Invoices' : currentScreen}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            <div className="ml-auto flex items-center gap-4">
+              <LanguageSwitcher />
+            </div>
+          </header>
+        )}
+        <div className={`flex flex-1 flex-col gap-4 ${currentScreen === 'designLayout' ? 'p-0' : 'p-4 pt-0'}`}>
           <Suspense fallback={
             <div className="flex h-[50vh] items-center justify-center">
               <div className="flex flex-col items-center gap-2">
@@ -703,6 +731,7 @@ function AppContent() {
                 onLoadTemplate={(template) => {
                   const updatedInvoice = {
                     ...currentInvoice,
+                    templateId: template.id,
                     currency: template.defaultCurrency,
                     seller: {
                       name: template.seller.name || currentInvoice.seller.name,
@@ -733,7 +762,13 @@ function AppContent() {
                 invoice={currentInvoice}
                 onBack={handleBackToEditor}
                 onSave={handleSaveFromPreview}
-                template={templates.find(t => t.seller.name === currentInvoice.seller.name)}
+                template={templates.find(t => t.id === currentInvoice.templateId) || 
+                          templates.find(t => t.id === profile?.defaultTemplateId) ||
+                          templates[0]}
+                allTemplates={templates}
+                onTemplateChange={(templateId) => {
+                  setCurrentInvoice(prev => prev ? ({ ...prev, templateId }) : null);
+                }}
                 profile={profile}
               />
             ) : currentScreen === 'templateEditor' ? (
@@ -848,7 +883,7 @@ function AdminPortalRouter() {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
       // Check if it's an admin route
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki'].includes(hash)) {
         return hash as Screen;
       }
     }
@@ -864,7 +899,7 @@ function AdminPortalRouter() {
     if (!_hasHydrated) return;
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki'].includes(hash)) {
         setCurrentScreen(hash as Screen);
       }
     };
@@ -880,7 +915,7 @@ function AdminPortalRouter() {
   };
 
   // Admin Portal Routes
-  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki'].includes(currentScreen);
+  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki'].includes(currentScreen);
 
   if (isAdminRoute) {
     // Wait for hydration before checking auth
@@ -931,6 +966,7 @@ function AdminPortalRouter() {
             window.location.hash = `#/${screen}`;
           }} />}
           {currentScreen === 'SApackages' && <SApackages onNavigate={handleNavigate} />}
+          {currentScreen === 'SAPackageServices' && <SAPackageServices onNavigate={handleNavigate} />}
           {currentScreen === 'SAPackageForm' && <SAPackageForm packageId={navigationParams.packageId} onNavigate={handleNavigate} />}
           {currentScreen === 'SAASusers' && <SAASusers onNavigate={handleNavigate} />}
           {currentScreen === 'SAUserDetails' && <SAUserDetails userId={navigationParams.userId || ''} onNavigate={handleNavigate} />}

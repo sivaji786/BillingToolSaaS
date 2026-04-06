@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { InvoiceTemplate } from '../types/invoice';
 import { TemplateDesignLayout } from '../components/invoice/TemplateDesignLayout';
-import { Button } from '../components/ui/button';
-import { ArrowLeft, X, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { invoiceTemplateService } from '../services/api';
 
@@ -118,36 +116,15 @@ export function DesignLayoutPage() {
     }
 
     return (
-        <div className="relative">
-            {/* Design Layout Component */}
-            < div className="pt-20" >
-                <TemplateDesignLayout
-                    template={template}
-                    onLayoutChange={handleLayoutChange}
-                />
-            </div >
-            {/* Floating Header */}
-            <div className="top-0 left-0 right-0 z-50">
-                <div className="flex gap-4">
-                    <Button
-                        variant="outline"
-                        onClick={() => window.location.hash = 'templates'}
-                        className="gap-2"
-                    >
-                        <X className="h-4 w-4" />
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-lg gap-2"
-                    >
-                        <Save className="h-4 w-4" />
-                        Save
-                    </Button>
-                </div>
-            </div >
-
-
-        </div >
+        <div className="w-full h-full overflow-hidden">
+            <TemplateDesignLayout
+                template={template}
+                onLayoutChange={handleLayoutChange}
+                onSave={handleSave}
+                onCancel={() => window.location.hash = 'templates'}
+            />
+        </div>
     );
 }
+
+export default DesignLayoutPage;

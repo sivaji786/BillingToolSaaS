@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { FileText, Plus, Edit, Trash2, Layout } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { PLATFORM_TEMPLATES } from '../../utils/invoice-templates-defaults';
 
 interface TemplateLibraryProps {
   templates: InvoiceTemplate[];
@@ -52,7 +53,14 @@ export function TemplateLibrary({
               ) : (
                 <FileText className="h-8 w-8 text-primary" />
               )}
-              <Badge variant="secondary">{template.defaultCurrency}</Badge>
+              <div className="flex gap-2">
+                {PLATFORM_TEMPLATES.some(pt => pt.id === template.id) && (
+                  <Badge variant="outline" className="text-purple-600 border-purple-200 bg-purple-50">
+                    System Default
+                  </Badge>
+                )}
+                <Badge variant="secondary">{template.defaultCurrency}</Badge>
+              </div>
             </div>
 
             <div>
@@ -84,34 +92,42 @@ export function TemplateLibrary({
               >
                 {t('templates.useTemplate')}
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  if (template.id) {
-                    window.location.hash = `designLayout/${template.id}`;
-                  }
-                }}
-                title="Design Layout"
-              >
-                <Layout className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => onEditTemplate?.(template)}
-                title={t('common.edit')}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => onDeleteTemplate?.(template)}
-                title={t('common.delete')}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {!PLATFORM_TEMPLATES.some(pt => pt.id === template.id) ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      if (template.id) {
+                        window.location.hash = `designLayout/${template.id}`;
+                      }
+                    }}
+                    title="Design Layout"
+                  >
+                    <Layout className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onEditTemplate?.(template)}
+                    title={t('common.edit')}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onDeleteTemplate?.(template)}
+                    title={t('common.delete')}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <div className="flex-1 text-right">
+                   <Badge variant="outline" className="text-[10px] text-muted-foreground uppercase tracking-wider border-none">ReadOnly</Badge>
+                </div>
+              )}
             </div>
 
             <div className="pt-2 border-t text-xs text-muted-foreground">

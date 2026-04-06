@@ -61,45 +61,85 @@ class MainSeeder extends Seeder
             [
                 'name' => 'Starter', 'slug' => 'starter', 'price' => 19.00, 'billing_period' => 'monthly',
                 'features' => json_encode([
-                    ['name' => 'Invoices per Month', 'value' => '50', 'type' => 'feature'],
-                    ['name' => 'Users', 'value' => '1', 'type' => 'users'],
-                    ['name' => 'Templates', 'value' => '3', 'type' => 'feature'],
-                    ['name' => 'Support', 'value' => 'Email', 'type' => 'support']
+                    ['name' => 'Monthly Invoices', 'value' => '50', 'type' => 'usage'],
+                    ['name' => 'Staff Accounts', 'value' => '1', 'type' => 'usage'],
+                    ['name' => 'Storage Capacity', 'value' => '2 GB', 'type' => 'usage'],
+                    ['name' => 'API Requests', 'value' => '1,000', 'type' => 'usage'],
+                    ['name' => 'Monthly Bandwidth', 'value' => '10 GB', 'type' => 'usage'],
+                    ['name' => 'AI-Powered Invoicing', 'value' => 'No', 'type' => 'feature'],
+                    ['name' => 'Ticketing Support', 'value' => 'Email Only', 'type' => 'feature'],
+                    ['name' => 'Custom Templates', 'value' => '3', 'type' => 'feature'],
+                    ['name' => 'White Labeling', 'value' => 'No', 'type' => 'feature'],
+                    ['name' => 'Advanced Designer Tool', 'value' => 'No', 'type' => 'feature'],
+                    ['name' => 'Activity & Audit Logs', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Buyers Directory (CRM)', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Cloud Workspace Management', 'value' => 'Basic', 'type' => 'feature'],
+                    ['name' => 'Role-Based Permissions (RBAC)', 'value' => 'No', 'type' => 'feature'],
                 ]),
-                'limits' => json_encode(['invoices' => 50, 'users' => 1, 'storage_gb' => 2, 'bandwidth_gb' => 10, 'api_calls' => 1000]),
+                'limits' => json_encode(['invoices' => 50, 'users' => 1, 'storage' => 2000000000, 'bandwidth' => 10000000000, 'api_calls' => 1000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
                 'name' => 'Professional', 'slug' => 'professional', 'price' => 49.00, 'billing_period' => 'monthly',
                 'features' => json_encode([
-                    ['name' => 'Invoices per Month', 'value' => '500', 'type' => 'feature'],
-                    ['name' => 'Users', 'value' => '3', 'type' => 'users'],
-                    ['name' => 'Templates', 'value' => 'Unlimited', 'type' => 'feature'],
-                    ['name' => 'Support', 'value' => 'Priority', 'type' => 'support']
+                    ['name' => 'Monthly Invoices', 'value' => '500', 'type' => 'usage'],
+                    ['name' => 'Staff Accounts', 'value' => '3', 'type' => 'usage'],
+                    ['name' => 'Storage Capacity', 'value' => '10 GB', 'type' => 'usage'],
+                    ['name' => 'API Requests', 'value' => '10,000', 'type' => 'usage'],
+                    ['name' => 'Monthly Bandwidth', 'value' => '50 GB', 'type' => 'usage'],
+                    ['name' => 'AI-Powered Invoicing', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Ticketing Support', 'value' => 'Priority Email', 'type' => 'feature'],
+                    ['name' => 'Custom Templates', 'value' => 'Unlimited', 'type' => 'feature'],
+                    ['name' => 'White Labeling', 'value' => 'No', 'type' => 'feature'],
+                    ['name' => 'Advanced Designer Tool', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Activity & Audit Logs', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Buyers Directory (CRM)', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Cloud Workspace Management', 'value' => 'Advanced', 'type' => 'feature'],
+                    ['name' => 'Role-Based Permissions (RBAC)', 'value' => 'Yes', 'type' => 'feature'],
                 ]),
-                'limits' => json_encode(['invoices' => 500, 'users' => 3, 'storage_gb' => 10, 'bandwidth_gb' => 50, 'api_calls' => 10000]),
+                'limits' => json_encode(['invoices' => 500, 'users' => 3, 'storage' => 10000000000, 'bandwidth' => 50000000000, 'api_calls' => 10000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
                 'name' => 'Business', 'slug' => 'business', 'price' => 99.00, 'billing_period' => 'monthly',
                 'features' => json_encode([
-                    ['name' => 'Invoices per Month', 'value' => '2000', 'type' => 'feature'],
-                    ['name' => 'Users', 'value' => '10', 'type' => 'users'],
-                    ['name' => 'Templates', 'value' => 'Unlimited', 'type' => 'feature'],
-                    ['name' => 'Support', 'value' => 'Priority Phone', 'type' => 'support']
+                    ['name' => 'Monthly Invoices', 'value' => '2,000', 'type' => 'usage'],
+                    ['name' => 'Staff Accounts', 'value' => '10', 'type' => 'usage'],
+                    ['name' => 'Storage Capacity', 'value' => '50 GB', 'type' => 'usage'],
+                    ['name' => 'API Requests', 'value' => '100,000', 'type' => 'usage'],
+                    ['name' => 'Monthly Bandwidth', 'value' => '200 GB', 'type' => 'usage'],
+                    ['name' => 'AI-Powered Invoicing', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Ticketing Support', 'value' => '24/7 Priority', 'type' => 'feature'],
+                    ['name' => 'Custom Templates', 'value' => 'Unlimited', 'type' => 'feature'],
+                    ['name' => 'White Labeling', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Advanced Designer Tool', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Activity & Audit Logs', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Buyers Directory (CRM)', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Cloud Workspace Management', 'value' => 'Advanced', 'type' => 'feature'],
+                    ['name' => 'Role-Based Permissions (RBAC)', 'value' => 'Yes', 'type' => 'feature'],
                 ]),
-                'limits' => json_encode(['invoices' => 2000, 'users' => 10, 'storage_gb' => 50, 'bandwidth_gb' => 200, 'api_calls' => 100000]),
+                'limits' => json_encode(['invoices' => 2000, 'users' => 10, 'storage' => 50000000000, 'bandwidth' => 200000000000, 'api_calls' => 100000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
                 'name' => 'Enterprise', 'slug' => 'enterprise', 'price' => 299.00, 'billing_period' => 'monthly',
                 'features' => json_encode([
-                    ['name' => 'Invoices per Month', 'value' => 'Unlimited', 'type' => 'feature'],
-                    ['name' => 'Users', 'value' => 'Unlimited', 'type' => 'users'],
-                    ['name' => 'Templates', 'value' => 'Unlimited', 'type' => 'feature'],
-                    ['name' => 'Support', 'value' => 'Dedicated Manager', 'type' => 'support']
+                    ['name' => 'Monthly Invoices', 'value' => 'Unlimited', 'type' => 'usage'],
+                    ['name' => 'Staff Accounts', 'value' => 'Unlimited', 'type' => 'usage'],
+                    ['name' => 'Storage Capacity', 'value' => '1 TB', 'type' => 'usage'],
+                    ['name' => 'API Requests', 'value' => '1,000,000', 'type' => 'usage'],
+                    ['name' => 'Monthly Bandwidth', 'value' => '10 TB', 'type' => 'usage'],
+                    ['name' => 'AI-Powered Invoicing', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Ticketing Support', 'value' => 'Dedicated Manager', 'type' => 'feature'],
+                    ['name' => 'Custom Templates', 'value' => 'Unlimited', 'type' => 'feature'],
+                    ['name' => 'White Labeling', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Advanced Designer Tool', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Activity & Audit Logs', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Buyers Directory (CRM)', 'value' => 'Yes', 'type' => 'feature'],
+                    ['name' => 'Cloud Workspace Management', 'value' => 'Enterprise', 'type' => 'feature'],
+                    ['name' => 'Role-Based Permissions (RBAC)', 'value' => 'Yes', 'type' => 'feature'],
                 ]),
-                'limits' => json_encode(['invoices' => -1, 'users' => -1, 'storage_gb' => 1000, 'bandwidth_gb' => 10000, 'api_calls' => 1000000]),
+                'limits' => json_encode(['invoices' => -1, 'users' => -1, 'storage' => 1000000000000, 'bandwidth' => 10000000000000, 'api_calls' => 1000000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ]
         ];
@@ -129,6 +169,11 @@ class MainSeeder extends Seeder
             ['module' => 'audit_logs', 'action' => 'read', 'code' => 'audit_logs.read', 'description' => 'View audit logs'],
             ['module' => 'users', 'action' => 'manage', 'code' => 'users.manage', 'description' => 'Manage users'],
             ['module' => 'roles', 'action' => 'manage', 'code' => 'roles.manage', 'description' => 'Manage roles and permissions'],
+            ['module' => 'workspace', 'action' => 'read', 'code' => 'workspace.read', 'description' => 'View files and folders, download items'],
+            ['module' => 'workspace', 'action' => 'create', 'code' => 'workspace.create', 'description' => 'Upload files, create folders, extract zip archives'],
+            ['module' => 'workspace', 'action' => 'update', 'code' => 'workspace.update', 'description' => 'Rename files and folders'],
+            ['module' => 'workspace', 'action' => 'delete', 'code' => 'workspace.delete', 'description' => 'Delete files and folders'],
+            ['module' => 'workspace', 'action' => 'ai', 'code' => 'workspace.ai', 'description' => 'Perform AI-powered searches'],
         ];
         $db->table('rights')->insertBatch($rights);
         $allRights = $db->table('rights')->get()->getResult();

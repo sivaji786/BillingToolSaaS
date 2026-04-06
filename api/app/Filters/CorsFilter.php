@@ -71,6 +71,7 @@ class CorsFilter implements FilterInterface
         }
         
         // Check if origin matches *.localhost:3000 pattern (local development)
+        // Explicitly support underscores in subdomains for dev flexibility
         if (preg_match('/^https?:\/\/([a-zA-Z0-9_-]+\.)?localhost:3000$/', $origin)) {
             return $origin;
         }

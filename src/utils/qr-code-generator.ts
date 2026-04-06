@@ -207,6 +207,7 @@ export function validateIBAN(iban: string): boolean {
 
   // Basic format check: 2 letters + 2 digits + up to 30 alphanumeric
   const ibanRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/;
+  // const ibanRegex = /^[0-9]{2}[A-Z0-9]{1,30}$/;
 
   return ibanRegex.test(cleanIban.toUpperCase());
 }
