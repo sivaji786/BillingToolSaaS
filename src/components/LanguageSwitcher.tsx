@@ -19,6 +19,7 @@ export function LanguageSwitcher({ variant = 'default' }: LanguageSwitcherProps)
     { code: 'en' as const, label: 'English', flag: '🇬🇧' },
     { code: 'de' as const, label: 'Deutsch', flag: '🇩🇪' },
     { code: 'ar' as const, label: 'العربية', flag: '🇸🇦' },
+    { code: 'pl' as const, label: 'Polski', flag: '🇵🇱' },
   ];
 
   const currentLanguage = languages.find((lang) => lang.code === language);

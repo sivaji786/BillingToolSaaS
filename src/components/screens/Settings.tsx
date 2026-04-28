@@ -55,7 +55,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
   };
 
 
-  const handleChange = (field: keyof CompanyProfile | string, value: string) => {
+  const handleChange = (field: keyof CompanyProfile | string, value: string | number) => {
     if (field.startsWith('address.')) {
       const addressField = field.split('.')[1] as keyof CompanyProfile['address'];
       setEditedProfile({
@@ -77,7 +77,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
     } else if (field === 'companyTypeId') {
       setEditedProfile({
         ...editedProfile,
-        companyTypeId: parseInt(value),
+        companyTypeId: typeof value === 'number' ? value : parseInt(value),
       });
     } else {
       setEditedProfile({
@@ -383,23 +383,63 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
 
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <Label>Default Currency</Label>
-                <Input value="EUR" disabled className="mt-1" />
+                <Label htmlFor="default-currency">{t('settings.defaultCurrency') || 'Default Currency'}</Label>
+                <Input
+                  id="default-currency"
+                  value={editedProfile.defaultCurrency || 'EUR'}
+                  onChange={(e) => handleChange('defaultCurrency', e.target.value)}
+                  className="mt-1"
+                />
               </div>
 
               <div>
-                <Label>Default Tax Rate</Label>
-                <Input value="19%" disabled className="mt-1" />
+                <Label htmlFor="default-tax-rate">{t('settings.defaultTaxRate') || 'Default Tax Rate (%)'}</Label>
+                <Input
+                  id="default-tax-rate"
+                  type="number"
+                  value={editedProfile.defaultTaxRate ?? 19}
+                  onChange={(e) => handleChange('defaultTaxRate', parseFloat(e.target.value) || 0)}
+                  className="mt-1"
+                />
               </div>
 
               <div>
-                <Label>Invoice Number Format</Label>
-                <Input value="INV-{YYYY}-{NNN}" disabled className="mt-1" />
+                <Label htmlFor="invoice-format">{t('settings.invoiceNumberFormat') || 'Invoice Number Format'}</Label>
+                <Input
+                  id="invoice-format"
+                  value={editedProfile.invoiceNumberFormat || 'INV-{YYYY}-{NNNNN}'}
+                  onChange={(e) => handleChange('invoiceNumberFormat', e.target.value)}
+                  placeholder="INV-{YYYY}-{NNNNN}"
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Variables: {'{YYYY}'}, {'{YY}'}, {'{NNN...}'}
+                </p>
               </div>
 
               <div>
-                <Label>Payment Terms (days)</Label>
-                <Input value="30" disabled className="mt-1" />
+                <Label htmlFor="letter-format">{t('settings.letterNumberFormat') || 'Letter Number Format'}</Label>
+                <Input
+                  id="letter-format"
+                  value={editedProfile.letterNumberFormat || 'LTR-{YYYY}-{NNNNN}'}
+                  onChange={(e) => handleChange('letterNumberFormat', e.target.value)}
+                  placeholder="LTR-{YYYY}-{NNNNN}"
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Variables: {'{YYYY}'}, {'{YY}'}, {'{NNN...}'}
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="payment-terms">{t('settings.paymentTerms') || 'Payment Terms (days)'}</Label>
+                <Input
+                  id="payment-terms"
+                  type="number"
+                  value={editedProfile.paymentTermsDays ?? 30}
+                  onChange={(e) => handleChange('paymentTermsDays', parseInt(e.target.value) || 0)}
+                  className="mt-1"
+                />
               </div>
             </div>
 

@@ -183,6 +183,8 @@ class UnifiedAuthFilter implements FilterInterface
         $publicPatterns = [
             '/auth/login',
             '/auth/signup',
+            '/auth/forgot-password',
+            '/auth/reset-password',
             '/auth/check-email',    // Quick Access email check – public, no token
             '/auth/quick-access',   // Quick Access OTP – no auth needed
             '/api/countries',
@@ -192,7 +194,8 @@ class UnifiedAuthFilter implements FilterInterface
             '/debug/',
             '/billing/plans',
             '/billing/package-services',
-            '/tickets'
+            '/tickets',
+            '/api/public/cms/'
         ];
         foreach ($publicPatterns as $pattern) {
             if (strpos($uri, $pattern) !== false) return true;

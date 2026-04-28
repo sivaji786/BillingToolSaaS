@@ -9,13 +9,17 @@ import { toast } from 'sonner';
 
 interface GlobalAIAssistantProps {
     onGenerateInvoiceNumber?: () => string;
+    onGenerateLetterNumber?: () => string;
     currentInvoice?: Invoice | null;
     currentScreen?: string;
+    templateType?: 'invoice' | 'business_letter';
     onUpdateInvoice?: (invoice: Invoice) => void;
+    onCreateLetter?: (letter: Invoice) => void;
 }
 
-export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, currentScreen, onUpdateInvoice }: GlobalAIAssistantProps) {
+export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNumber, currentInvoice, currentScreen, templateType, onUpdateInvoice, onCreateLetter }: GlobalAIAssistantProps) {
     const { t, language } = useLanguage();
+    const isLetter = templateType === 'business_letter';
     // ... existing state and voice logic ...
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -131,7 +135,9 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
                 const welcomeMessage: ChatMessage = {
                     id: 'welcome',
                     role: 'assistant',
-                    content: t('ai.welcomeCreate') || 'Hello! I can help you create invoices from natural language. Try saying something like:\n\n"Create invoice for ABC Pvt Ltd, Guntur, India, 522002. I sold 10 bags cement each bag 700 EUR @ 18% tax"',
+                    content: isLetter
+                        ? (t('ai.welcomeCreateLetter') || 'Hello! I can help you compose business letters. Try saying something like:\n\n"Write a payment reminder letter to John Müller GmbH for invoice INV-2026-001 due last week"\n\nor\n\n"Draft a formal introduction letter to Acme Corp introducing our new services"')
+                        : (t('ai.welcomeCreate') || 'Hello! I can help you create invoices from natural language. Try saying something like:\n\n"Create invoice for ABC Pvt Ltd, Guntur, India, 522002. I sold 10 bags cement each bag 700 EUR @ 18% tax"'),
                     timestamp: new Date().toISOString(),
                 };
                 setMessages([welcomeMessage]);
@@ -160,21 +166,24 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
             let targetInvoice = currentInvoice;
 
             // Simple keyword detection for "update" or "change"
-            const updateMatch = text.match(/(?:update|change|modify|edit)\s+(?:invoice\s+)?(INV-[\w-]+)/i);
+            const refPattern = isLetter
+                ? /(?:update|change|modify|edit)\s+(?:letter\s+)?(LTR-[\w-]+)/i
+                : /(?:update|change|modify|edit)\s+(?:invoice\s+)?(INV-[\w-]+)/i;
+            const updateMatch = text.match(refPattern);
             const genericUpdate = /\b(update|change|modify|edit)\b/i.test(text);
 
             if (updateMatch) {
-                const invoiceNumber = updateMatch[1];
+                const refNumber = updateMatch[1];
                 setIsLoading(true);
                 try {
-                    const invoices = await invoiceService.getAll({ search: invoiceNumber });
-                    const found = invoices.find(inv => inv.invoiceNumber === invoiceNumber);
+                    const items = await invoiceService.getAll({ search: refNumber, templateType: isLetter ? 'business_letter' : 'invoice' });
+                    const found = items.find(inv => inv.invoiceNumber === refNumber);
                     if (found) {
                         targetInvoice = await invoiceService.getById(found.id!);
                         context = 'edit';
                     }
                 } catch (e) {
-                    console.error('Failed to fetch invoice for update:', e);
+                    console.error('Failed to fetch item for update:', e);
                 }
             } else if (genericUpdate || currentScreen === 'editor' || currentScreen === 'preview') {
                 if (currentInvoice) {
@@ -183,10 +192,11 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
                 }
             }
 
-            // Call backend directly with raw prompt and context
+            // Call backend with raw prompt, context, and templateType
             const request: AIPromptRequest = {
                 prompt: userMessage.content,
                 context: context,
+                templateType: isLetter ? 'business_letter' : 'invoice',
                 existingInvoice: targetInvoice || undefined,
                 language: language
             };
@@ -230,18 +240,30 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
                     description: t('ai.lowConfidenceDesc') || 'Please review the invoice carefully before using it.',
                 });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('AI parsing error:', error);
+            // Extract the actual server error message when available
+            const serverMsg = error?.response?.data?.messages?.error
+                || error?.response?.data?.message
+                || null;
+            const isKeyError = serverMsg && (serverMsg.includes('API key') || serverMsg.includes('GEMINI'));
+            const chatContent = isKeyError
+                ? '⚠️ AI service is not configured. The Gemini API key in the server .env file is missing or expired. Please ask your administrator to update GEMINI_API_KEY.'
+                : (serverMsg
+                    ? `Sorry, the AI service returned an error:\n\n${serverMsg}`
+                    : (t('ai.error') || 'Sorry, I encountered an error processing your request. Please try again.'));
             const errorMessage: ChatMessage = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: t('ai.error') || 'Sorry, I encountered an error processing your request. Please try again.',
+                content: chatContent,
                 timestamp: new Date().toISOString(),
             };
             setMessages((prev) => [...prev, errorMessage]);
-            toast.error(t('common.error'), {
-                description: t('ai.errorDesc') || 'Failed to parse invoice prompt',
-            });
+            if (!isKeyError) {
+                toast.error(t('common.error'), {
+                    description: t('ai.errorDesc') || 'Failed to process request',
+                });
+            }
         } finally {
             setIsLoading(false);
         }
@@ -256,38 +278,51 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
         // If we are in edit mode or have an update function, use it
         if (onUpdateInvoice && (currentScreen === 'editor' || currentScreen === 'preview')) {
             const updatedData = { ...invoiceData };
-            // Preserve ID if it exists in currentInvoice but is missing in the AI response
             if (!updatedData.id && currentInvoice?.id) {
                 updatedData.id = currentInvoice.id;
             }
             onUpdateInvoice(updatedData);
             setIsOpen(false);
             setIsDictating(false);
-            toast.success(t('ai.invoiceUpdated') || 'Invoice updated!');
+            toast.success(isLetter ? 'Letter updated!' : (t('ai.invoiceUpdated') || 'Invoice updated!'));
             return;
         }
 
-        // Otherwise, prepare new invoice with clean ID and number (CREATE mode)
-        const newInvoice = { ...invoiceData };
+        const newItem = {
+            ...invoiceData,
+            templateType: isLetter ? 'business_letter' as const : 'invoice' as const,
+        };
 
-        // If it's a completely new one, ensure it has a proper temporary ID
-        if (!newInvoice.id || !newInvoice.id.includes('_')) {
-            newInvoice.id = `new_${Date.now()}`;
-            newInvoice.status = 'draft';
-            newInvoice.issueDate = new Date().toISOString().split('T')[0];
+        if (!newItem.id || !String(newItem.id).includes('_')) {
+            newItem.id = `new_${Date.now()}`;
+            newItem.status = 'draft';
+            newItem.issueDate = new Date().toISOString().split('T')[0];
 
-            // Generate new invoice number if function provided
-            if (onGenerateInvoiceNumber) {
-                newInvoice.invoiceNumber = onGenerateInvoiceNumber();
+            if (isLetter) {
+                if (onGenerateLetterNumber) {
+                    newItem.invoiceNumber = onGenerateLetterNumber();
+                }
+                // Route to letter editor via callback
+                if (onCreateLetter) {
+                    onCreateLetter(newItem);
+                    setIsOpen(false);
+                    setIsDictating(false);
+                    toast.success(t('ai.letterApplied') || 'Letter created! Opening editor...');
+                    return;
+                }
+            } else {
+                if (onGenerateInvoiceNumber) {
+                    newItem.invoiceNumber = onGenerateInvoiceNumber();
+                }
             }
         }
 
-        // Navigate to invoice preview with the generated invoice
-        const invoiceDataStr = encodeURIComponent(JSON.stringify(newInvoice));
-        window.location.hash = `#preview?data=${invoiceDataStr}`;
+        // Fallback: navigate to preview (invoices) or editor (letters)
+        const dataStr = encodeURIComponent(JSON.stringify(newItem));
+        window.location.hash = isLetter ? `#editor?data=${dataStr}` : `#preview?data=${dataStr}`;
         setIsOpen(false);
         setIsDictating(false);
-        toast.success(t('ai.invoiceApplied') || 'Invoice data applied!');
+        toast.success(isLetter ? (t('ai.letterApplied') || 'Letter created! Opening editor...') : (t('ai.invoiceApplied') || 'Invoice data applied!'));
     };
 
     if (!isOpen) {
@@ -319,8 +354,8 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
                     e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
                     e.currentTarget.style.background = 'linear-gradient(to bottom right, #9333ea, #7e22ce)';
                 }}
-                title={t('ai.assistant') || 'AI Invoice Assistant'}
-                aria-label={t('ai.assistant') || 'AI Invoice Assistant'}
+                title={isLetter ? (t('ai.assistantLetter') || 'AI Letter Assistant') : (t('ai.assistant') || 'AI Invoice Assistant')}
+                aria-label={isLetter ? (t('ai.assistantLetter') || 'AI Letter Assistant') : (t('ai.assistant') || 'AI Invoice Assistant')}
             >
                 <Sparkles
                     style={{
@@ -373,7 +408,7 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Sparkles style={{ width: '20px', height: '20px' }} />
                     <h3 style={{ fontWeight: 600, margin: 0, fontSize: '16px' }}>
-                        {t('ai.assistant') || 'AI Invoice Assistant'}
+                        {isLetter ? (t('ai.assistantLetter') || 'AI Letter Assistant') : (t('ai.assistant') || 'AI Invoice Assistant')}
                     </h3>
                 </div>
                 <button
@@ -422,7 +457,9 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
                         <MessageSquare style={{ width: '48px', height: '48px', marginBottom: '16px', opacity: 0.5 }} />
                         <p style={{ fontSize: '14px', margin: 0 }}>{t('ai.noMessages') || 'No messages yet'}</p>
                         <p style={{ fontSize: '12px', marginTop: '8px' }}>
-                            {t('ai.startConversation') || 'Start a conversation to create or edit invoices'}
+                            {isLetter
+                                ? (t('ai.startLetterConversation') || 'Start a conversation to compose or edit business letters')
+                                : (t('ai.startConversation') || 'Start a conversation to create or edit invoices')}
                         </p>
                     </div>
                 ) : (
@@ -482,7 +519,7 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
                                 handleSubmit(e);
                             }
                         }}
-                        placeholder={t('ai.typeMessage') || 'Type your invoice request...'}
+                        placeholder={isLetter ? (t('ai.typeLetterMessage') || 'Describe your letter...') : (t('ai.typeMessage') || 'Type your invoice request...')}
                         disabled={isLoading}
                         rows={1}
                         style={{
@@ -543,7 +580,7 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, currentInvoice, cur
                     </button>
                 </div>
                 <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px', marginBottom: 0 }}>
-                    {t('ai.hint') || 'Describe your invoice in natural language'}
+                    {isLetter ? (t('ai.letterHint') || 'Describe your business letter in natural language') : (t('ai.hint') || 'Describe your invoice in natural language')}
                 </p>
             </form>
 

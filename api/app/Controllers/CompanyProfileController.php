@@ -56,6 +56,10 @@ class CompanyProfileController extends BaseController
                 'header_text' => $data['headerText'] ?? null,
                 'footer_text' => $data['footerText'] ?? null,
                 'company_type_id' => $data['companyTypeId'] ?? null,
+                'invoice_number_format' => $data['invoiceNumberFormat'] ?? null,
+                'default_currency' => $data['defaultCurrency'] ?? null,
+                'default_tax_rate' => $data['defaultTaxRate'] ?? null,
+                'payment_terms_days' => $data['paymentTermsDays'] ?? null,
             ];
 
             if ($model->update($id, $dbData)) {
@@ -97,6 +101,10 @@ class CompanyProfileController extends BaseController
             'headerText' => $profile['header_text'] ?? null,
             'footerText' => $profile['footer_text'] ?? null,
             'companyTypeId' => $profile['company_type_id'] ?? null,
+            'invoiceNumberFormat' => $profile['invoice_number_format'] ?? 'INV-{YYYY}-{NNNNN}',
+            'defaultCurrency' => $profile['default_currency'] ?? 'EUR',
+            'defaultTaxRate' => isset($profile['default_tax_rate']) ? (float)$profile['default_tax_rate'] : 19.0,
+            'paymentTermsDays' => isset($profile['payment_terms_days']) ? (int)$profile['payment_terms_days'] : 30,
         ];
     }
 }

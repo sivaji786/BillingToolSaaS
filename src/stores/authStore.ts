@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { redirectToMainDomain } from '../utils/config';
 
 interface User {
     id: string;
@@ -29,6 +30,7 @@ interface AuthState {
     token: string | null;
     login: (token: string, user: User, tenant: Tenant) => void;
     logout: () => void;
+    clearAuth: () => void;
     updateUser: (user: User) => void;
 }
 
@@ -56,8 +58,17 @@ export const useAuthStore = create<AuthState>()(
                     user: null,
                     tenant: null,
                 });
-                // We don't call localStorage.clear() here to avoid logging out the admin portal
-                // auth-storage will be updated by persist middleware
+                // Pass logout parameter to clear main domain state
+                redirectToMainDomain('?logout=true');
+            },
+
+            clearAuth: () => {
+                set({
+                    isAuthenticated: false,
+                    token: null,
+                    user: null,
+                    tenant: null,
+                });
             },
 
             updateUser: (user) => {

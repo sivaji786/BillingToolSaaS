@@ -15,6 +15,7 @@ class InvoiceTemplateModel extends BaseModel
     protected $allowedFields    = [
         'tenant_id',
         'name',
+        'template_type',
         'description',
         'seller_json',
         'default_currency',

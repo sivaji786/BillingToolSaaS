@@ -20,6 +20,7 @@ $routes->group('billing', ['filter' => 'auth'], function($routes) {
 
 // SaaS Onboarding
 $routes->get('api/countries', '\App\Controllers\CountryController::index');
+$routes->get('api/public/cms/(:segment)', '\App\Controllers\CmsController::getPage/$1');
 $routes->group('onboarding', function($routes) {
     $routes->get('check-subdomain', '\App\Controllers\Onboarding::checkSubdomain');
     $routes->post('signup', '\App\Controllers\Onboarding::signup');
@@ -40,6 +41,21 @@ $routes->group('invoices', ['filter' => ['auth', 'rbac:invoices.delete']], funct
     $routes->delete('(:segment)', '\App\Controllers\InvoiceController::delete/$1');
 });
 
+
+// Business Letters
+$routes->group('letters', ['filter' => ['auth', 'rbac:invoices.read']], function($routes) {
+    $routes->get('', '\App\Controllers\BusinessLetterController::index');
+    $routes->get('(:segment)', '\App\Controllers\BusinessLetterController::show/$1');
+});
+$routes->group('letters', ['filter' => ['auth', 'rbac:invoices.create']], function($routes) {
+    $routes->post('', '\App\Controllers\BusinessLetterController::create');
+});
+$routes->group('letters', ['filter' => ['auth', 'rbac:invoices.update']], function($routes) {
+    $routes->put('(:segment)', '\App\Controllers\BusinessLetterController::update/$1');
+});
+$routes->group('letters', ['filter' => ['auth', 'rbac:invoices.delete']], function($routes) {
+    $routes->delete('(:segment)', '\App\Controllers\BusinessLetterController::delete/$1');
+});
 
 // Invoice Templates (supports both JWT and session auth)
 $routes->group('invoice-templates', ['filter' => ['auth', 'rbac:company_profiles.read']], function($routes) {
@@ -68,6 +84,7 @@ $routes->get('audit-logs', '\App\Controllers\AuditLogController::index', ['filte
 
 // AI Invoice Assistant
 $routes->post('ai/parse-invoice', '\App\Controllers\AIInvoiceController::parseInvoice', ['filter' => 'rbac:invoices.create']);
+$routes->post('ai/improve-letter-body', '\App\Controllers\AIInvoiceController::improveLetterBody', ['filter' => 'rbac:invoices.create']);
 
 // Buyers Directory
 $routes->group('buyers', ['filter' => ['auth', 'rbac:buyers.read']], function($routes) {
@@ -100,6 +117,8 @@ $routes->group('auth', function($routes) {
     $routes->post('logout', '\App\Controllers\Auth::logout');
     $routes->post('refresh', '\App\Controllers\Auth::refresh');
     $routes->get('me', '\App\Controllers\Auth::me');
+    $routes->post('forgot-password', '\App\Controllers\Auth::forgotPassword');
+    $routes->post('reset-password', '\App\Controllers\Auth::resetPassword');
 
     // Quick Access – OTP-based frictionless onboarding
     $routes->post('check-email', '\App\Controllers\QuickAccessAuth::checkEmail');
@@ -251,6 +270,10 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     // Admin Wiki
     $routes->get('wiki', '\App\Controllers\AdminWiki::index');
     $routes->get('wiki/read', '\App\Controllers\AdminWiki::read');
+
+    // Admin CMS
+    $routes->get('cms', '\App\Controllers\CmsController::listPages');
+    $routes->put('cms/(:segment)', '\App\Controllers\CmsController::updatePage/$1');
 });
 
 

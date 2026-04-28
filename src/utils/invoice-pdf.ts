@@ -38,6 +38,7 @@ export async function generateInvoicePDF(
   };
 
   const layout = template?.layout && template.layout.length > 0 ? template.layout : undefined;
+  const isBusinessLetter = invoice.templateType === 'business_letter';
 
   // --- 1. Create Effective Data (Same as InvoicePreview.tsx) ---
   const effectivePaymentMeans = invoice.paymentMeans?.iban ? invoice.paymentMeans : (profile?.bankAccount ? {
@@ -72,14 +73,14 @@ export async function generateInvoicePDF(
     if (layout) {
       const el = layout.find(e => e.type === type);
       if (el) {
-        if (el.visible) {
+        if (el.visible != false) {
           let adjustedY = el.y;
           if (el.y > itemsPos.y) {
             adjustedY += tableShift;
           }
-          return { x: el.x, y: adjustedY, w: el.w, h: el.h, visible: true, fromLayout: true };
+          return { x: el.x, y: adjustedY, w: defaultW, h: defaultH, visible: true, fromLayout: true };
         } else {
-          return { x: 0, y: 0, w: 0, h: 0, visible: false, fromLayout: true };
+          return { x: 0, y: 0, w: defaultW, h: defaultH, visible: false, fromLayout: true };
         }
       }
     }
@@ -88,7 +89,7 @@ export async function generateInvoicePDF(
 
   let tableShift = 0;
   const rawItemsPos = layout?.find(e => e.type === 'items');
-  const itemsPos = rawItemsPos ? { x: rawItemsPos.x, y: rawItemsPos.y, w: rawItemsPos.w, h: rawItemsPos.h, visible: rawItemsPos.visible, fromLayout: true } 
+  const itemsPos = rawItemsPos ? { x: rawItemsPos.x, y: rawItemsPos.y, w: pageWidth - (margin * 2), h: 200, visible: rawItemsPos.visible, fromLayout: true } 
                              : { x: margin, y: 320, w: pageWidth - (margin * 2), h: 200, visible: true, fromLayout: false };
   // --- 4. Pagination Helper ---
   const checkPageOverflow = (requiredHeight: number) => {
@@ -138,12 +139,12 @@ export async function generateInvoicePDF(
     doc.setFontSize(26);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...colors.primary);
-    doc.text(effectiveSeller.name || 'INVOICE', titlePos.x, titlePos.y + 25);
+    doc.text(isBusinessLetter ? (invoice.title || 'Business Letter') : (effectiveSeller.name || 'INVOICE'), titlePos.x, titlePos.y + 25);
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...colors.textMuted);
-    doc.text(String(invoice.invoiceNumber || 'N/A'), titlePos.x, titlePos.y + 45);
+    doc.text(isBusinessLetter ? `Ref: ${invoice.invoiceNumber || 'N/A'}` : String(invoice.invoiceNumber || 'N/A'), titlePos.x, titlePos.y + 45);
   }
 
   // Dates
@@ -217,14 +218,16 @@ export async function generateInvoicePDF(
     }
   };
 
-  if (buyerPos.visible) renderParty('Bill To', invoice.buyer, buyerPos.x, buyerPos.y);
+  if (buyerPos.visible) renderParty(isBusinessLetter ? 'To' : 'Bill To', invoice.buyer, buyerPos.x, buyerPos.y);
   if (sellerPos.visible) renderParty('From', effectiveSeller, sellerPos.x, sellerPos.y);
 
-  // Initialize currentY for sections after the parties
-  let currentY = Math.max(buyerPos.y + 80, sellerPos.y + 80, itemsPos.y);
+  // Initialize currentY — letters don't have an items section so ignore itemsPos.y
+  let currentY = isBusinessLetter
+    ? Math.max(buyerPos.y + 130, sellerPos.y + 130)
+    : Math.max(buyerPos.y + 80, sellerPos.y + 80, itemsPos.y);
 
-  // Items Table
-  if (itemsPos.visible) {
+  // Items Table — invoices only
+  if (itemsPos.visible && !isBusinessLetter) {
     const tableData = invoice.lines.map((line, index) => [
       (index + 1).toString(),
       line.description,
@@ -250,10 +253,89 @@ export async function generateInvoicePDF(
     currentY = tableBottom + 30;
   }
 
+  // Business letter body — rendered directly (no template layout required)
+  if (isBusinessLetter) {
+    const contentWidth = pageWidth - margin * 2;
+
+    // Subject
+    if (invoice.note) {
+      checkPageOverflow(22);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colors.text);
+      const subjectLines = doc.splitTextToSize(`Re: ${invoice.note}`, contentWidth);
+      doc.text(subjectLines, margin, currentY);
+      currentY += subjectLines.length * 14 + 8;
+    }
+
+    // Divider
+    doc.setDrawColor(...colors.border);
+    doc.setLineWidth(0.5);
+    doc.line(margin, currentY, pageWidth - margin, currentY);
+    currentY += 20;
+
+    // Salutation
+    if (invoice.salutation) {
+      checkPageOverflow(20);
+      const salLines = doc.splitTextToSize(String(invoice.salutation), contentWidth);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.text);
+      doc.text(salLines, margin, currentY);
+      currentY += salLines.length * 14 + 12;
+    }
+
+    // Body — strip HTML tags for plain-text PDF rendering
+    const rawBody = ((invoice as any).body || '')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    if (rawBody) {
+      const paragraphs = rawBody.split('\n\n');
+      for (const para of paragraphs) {
+        const paraLines = doc.splitTextToSize(para.replace(/\n/g, ' ').trim(), contentWidth);
+        checkPageOverflow(paraLines.length * 14 + 10);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colors.text);
+        doc.text(paraLines, margin, currentY);
+        currentY += paraLines.length * 14 + 10;
+      }
+      currentY += 8;
+    }
+
+    // Closing + signature line
+    if (invoice.closing) {
+      checkPageOverflow(80);
+      const closeLines = doc.splitTextToSize(String(invoice.closing), 200);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.text);
+      doc.text(closeLines, margin, currentY);
+      currentY += closeLines.length * 14 + 44;
+
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.5);
+      doc.line(margin, currentY, margin + 160, currentY);
+      currentY += 14;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.textMuted);
+      doc.text(String(effectiveSeller.name || ''), margin, currentY);
+    }
+  }
+
   // --- 5. Render Post-Table Dynamic Flow ---
   // Elements that should follow the flow after the items table
-  const flowTypes = ['totals', 'tax_summary', 'notes', 'signature', 'qr'];
-  const flowElements = template?.layout?.filter(el => el.visible && flowTypes.includes(el.type)) || [];
+  const flowTypes = ['totals', 'tax_summary', 'notes', 'signature', 'qr', 'to', 'description'];
+  const flowElements = template?.layout?.filter(el => el.visible != false && flowTypes.includes(el.type)) || [];
   
   // Sort by original layout order (as seen in UI)
   for (const el of flowElements) {
@@ -348,7 +430,7 @@ export async function generateInvoicePDF(
     if (el.type === 'qr' && effectivePaymentMeans?.iban) {
       checkPageOverflow(160);
       const qrSectionY = currentY;
-      const qrSize = 80;
+      const qrSize = 100;
       const qrX = pageWidth - margin - qrSize;
       
       // 1. Render Textual Payment Details on the Left
@@ -394,6 +476,54 @@ export async function generateInvoicePDF(
         console.warn('QR error:', e);
       }
       currentY = Math.max(payY, qrSectionY + 110) + 20;
+    }
+
+    if (el.type === 'to') {
+      const partyPos = getPos('to', el.x, el.y, el.w, el.h);
+      renderParty('Recipient', invoice.buyer, partyPos.x, partyPos.y);
+      currentY = Math.max(currentY, partyPos.y + 80);
+    }
+
+    if (el.type === 'description') {
+      const descPos = getPos('description', el.x, el.y, el.w, el.h);
+      const blockWidth = el.w || (pageWidth - margin * 2);
+      let blockY = descPos.y + 10;
+
+      // Salutation
+      if (invoice.salutation) {
+        const salLines = doc.splitTextToSize(invoice.salutation, blockWidth);
+        checkPageOverflow(salLines.length * 14 + 8);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colors.text);
+        doc.text(salLines, descPos.x, blockY);
+        blockY += salLines.length * 14 + 10;
+      }
+
+      // Body — strip HTML tags for PDF plain-text rendering
+      const rawBody = (invoice.body || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
+      if (rawBody) {
+        const bodyLines = doc.splitTextToSize(rawBody, blockWidth);
+        checkPageOverflow(bodyLines.length * 14 + 8);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colors.text);
+        doc.text(bodyLines, descPos.x, blockY);
+        blockY += bodyLines.length * 14 + 16;
+      }
+
+      // Closing
+      if (invoice.closing) {
+        const closeLines = doc.splitTextToSize(invoice.closing, blockWidth);
+        checkPageOverflow(closeLines.length * 14 + 8);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colors.text);
+        doc.text(closeLines, descPos.x, blockY);
+        blockY += closeLines.length * 14 + 8;
+      }
+
+      currentY = blockY + 20;
     }
   }
 

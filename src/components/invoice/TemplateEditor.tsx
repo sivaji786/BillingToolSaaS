@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState, useRef } from 'react';
-import { InvoiceTemplate } from '../../types/invoice';
+import { InvoiceTemplate, CompanyProfile, TemplateType } from '../../types/invoice';
+import { DEFAULT_LAYOUT, DEFAULT_LETTER_LAYOUT } from '../../utils/invoice-templates-defaults';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
@@ -20,11 +21,13 @@ import { toast } from 'sonner';
 
 interface TemplateEditorProps {
   template?: InvoiceTemplate;
+  profile?: CompanyProfile | null;
   onSave: (template: InvoiceTemplate) => void;
   onCancel: () => void;
+  initialTemplateType?: TemplateType;
 }
 
-export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorProps) {
+export function TemplateEditor({ template, profile, onSave, onCancel, initialTemplateType = 'invoice' }: TemplateEditorProps) {
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -32,30 +35,33 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
     template || {
       id: '',
       name: '',
+      templateType: initialTemplateType,
       description: '',
       seller: {
-        name: '',
-        vatId: '',
-        address: {
+        name: profile?.name || '',
+        vatId: profile?.vatId || '',
+        address: profile?.address || {
           street: '',
           city: '',
           postalCode: '',
           country: '',
         },
-        contactEmail: '',
-        contactPhone: '',
+        contactEmail: profile?.email || '',
+        contactPhone: profile?.phone || '',
       },
-      defaultCurrency: 'EUR',
-      defaultTaxCategory: 'S',
-      defaultTaxPercent: 19,
+      defaultCurrency: profile?.defaultCurrency || 'EUR',
+      defaultTaxCategory: profile?.defaultTaxRate === 0 ? 'Z' : 'S',
+      defaultTaxPercent: profile?.defaultTaxRate ?? 19,
       defaultPaymentTerms: {
-        note: 'Payment due within 30 days',
+        note: profile?.paymentTermsDays ? `Payment due within ${profile.paymentTermsDays} days` : 'Payment due within 30 days',
       },
-      logoUrl: '',
-      headerText: '',
-      footerText: '',
+      logoUrl: profile?.logoUrl || '',
+      headerText: profile?.headerText || '',
+      footerText: profile?.footerText || '',
     }
   );
+
+  const isLetter = formData.templateType === 'business_letter';
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({
@@ -104,7 +110,7 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
     // Check file type
     if (!file.type.startsWith('image/')) {
       toast.error(t('common.error'), {
-        description: 'Please upload an image file',
+        description: t('templates.uploadImageError') || 'Please upload an image file',
       });
       return;
     }
@@ -112,7 +118,7 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
     // Check file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast.error(t('common.error'), {
-        description: 'Image size should be less than 2MB',
+        description: t('templates.imageSizeError') || 'Image size should be less than 2MB',
       });
       return;
     }
@@ -123,12 +129,12 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
       const base64String = reader.result as string;
       handleInputChange('logoUrl', base64String);
       toast.success(t('common.success'), {
-        description: 'Logo uploaded successfully',
+        description: t('templates.logoUploadSuccess') || 'Logo uploaded successfully',
       });
     };
     reader.onerror = () => {
       toast.error(t('common.error'), {
-        description: 'Failed to upload logo',
+        description: t('templates.logoUploadError') || 'Failed to upload logo',
       });
     };
     reader.readAsDataURL(file);
@@ -145,22 +151,24 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
     // Validation
     if (!formData.name.trim()) {
       toast.error(t('common.error'), {
-        description: 'Template name is required',
+        description: t('templates.nameRequired') || 'Template name is required',
       });
       return;
     }
 
     if (!formData.seller.name?.trim()) {
       toast.error(t('common.error'), {
-        description: 'Seller name is required',
+        description: t('templates.sellerNameRequired') || 'Seller name is required',
       });
       return;
     }
 
-    // Generate ID if new template
+    const defaultLayout = formData.templateType === 'business_letter' ? DEFAULT_LETTER_LAYOUT : DEFAULT_LAYOUT;
     const templateToSave = {
       ...formData,
       id: formData.id || `new_${Date.now()}`,
+      templateType: formData.templateType || 'invoice',
+      layout: formData.layout && formData.layout.length > 0 ? formData.layout : defaultLayout,
     };
 
     onSave(templateToSave);
@@ -192,28 +200,57 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
                 id="template-name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="e.g., Standard Service Invoice"
+                placeholder={t('templates.namePlaceholder') || "e.g., Standard Service Invoice"}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="default-currency">{t('editor.currency')} *</Label>
+              <Label htmlFor="template-type">{t('templates.templateType') || 'Template Type'} *</Label>
               <Select
-                value={formData.defaultCurrency}
-                onValueChange={(value: string) => handleInputChange('defaultCurrency', value)}
+                value={formData.templateType || 'invoice'}
+                onValueChange={(value: TemplateType) => {
+                  handleInputChange('templateType', value);
+                  if (value === 'business_letter') {
+                    handleInputChange('defaultTaxPercent', 0);
+                    handleInputChange('defaultTaxCategory', 'Z');
+                  }
+                }}
               >
-                <SelectTrigger id="default-currency">
+                <SelectTrigger id="template-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  <SelectItem value="USD">USD - US Dollar</SelectItem>
-                  <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                  <SelectItem value="CHF">CHF - Swiss Franc</SelectItem>
-                  <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+                  <SelectItem value="invoice">{t('nav.invoices') || 'Invoice'}</SelectItem>
+                  <SelectItem value="business_letter">{t('nav.letters') || 'Business Letter'}</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-500">
+                {isLetter
+                  ? (t('templates.typeLetterDesc') || 'For formal business correspondence')
+                  : (t('templates.typeInvoiceDesc') || 'For billing customers with EN 16931 compliance')}
+              </p>
             </div>
+
+            {!isLetter && (
+              <div className="space-y-2">
+                <Label htmlFor="default-currency">{t('editor.currency')} *</Label>
+                <Select
+                  value={formData.defaultCurrency}
+                  onValueChange={(value: string) => handleInputChange('defaultCurrency', value)}
+                >
+                  <SelectTrigger id="default-currency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EUR">EUR - Euro</SelectItem>
+                    <SelectItem value="USD">USD - US Dollar</SelectItem>
+                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                    <SelectItem value="CHF">CHF - Swiss Franc</SelectItem>
+                    <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -222,7 +259,7 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Describe when to use this template..."
+              placeholder={t('templates.descPlaceholder') || "Describe when to use this template..."}
               rows={2}
             />
           </div>
@@ -429,67 +466,70 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
 
         <Separator />
 
-        {/* Default Tax Settings */}
-        <div className="space-y-4">
-          <h3 className="text-purple-900 dark:text-purple-100">
-            {t('templates.defaultTaxSettings') || 'Default Tax Settings'}
-          </h3>
+        {/* Default Tax Settings + Payment Terms — invoice only */}
+        {!isLetter && (
+          <>
+            <div className="space-y-4">
+              <h3 className="text-purple-900 dark:text-purple-100">
+                {t('templates.defaultTaxSettings') || 'Default Tax Settings'}
+              </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="tax-category">{t('editor.taxCategory')}</Label>
-              <Select
-                value={formData.defaultTaxCategory}
-                onValueChange={(value: string) => handleInputChange('defaultTaxCategory', value)}
-              >
-                <SelectTrigger id="tax-category">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="S">S - Standard rate</SelectItem>
-                  <SelectItem value="Z">Z - Zero rated</SelectItem>
-                  <SelectItem value="E">E - Exempt</SelectItem>
-                  <SelectItem value="AE">AE - Reverse charge</SelectItem>
-                  <SelectItem value="K">K - Intra-community</SelectItem>
-                  <SelectItem value="G">G - Free export</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tax-category">{t('editor.lineItem.taxCategory') || 'Tax Category'}</Label>
+                  <Select
+                    value={formData.defaultTaxCategory}
+                    onValueChange={(value: string) => handleInputChange('defaultTaxCategory', value)}
+                  >
+                    <SelectTrigger id="tax-category">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="S">S - Standard rate</SelectItem>
+                      <SelectItem value="Z">Z - Zero rated</SelectItem>
+                      <SelectItem value="E">E - Exempt</SelectItem>
+                      <SelectItem value="AE">AE - Reverse charge</SelectItem>
+                      <SelectItem value="K">K - Intra-community</SelectItem>
+                      <SelectItem value="G">G - Free export</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tax-percent">{t('editor.taxRate')} (%)</Label>
+                  <Input
+                    id="tax-percent"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={formData.defaultTaxPercent}
+                    onChange={(e) => handleInputChange('defaultTaxPercent', parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="tax-percent">{t('editor.taxRate')} (%)</Label>
-              <Input
-                id="tax-percent"
-                type="number"
-                min="0"
-                max="100"
-                step="0.1"
-                value={formData.defaultTaxPercent}
-                onChange={(e) => handleInputChange('defaultTaxPercent', parseFloat(e.target.value) || 0)}
-              />
+            <Separator />
+
+            <div className="space-y-4">
+              <h3 className="text-purple-900 dark:text-purple-100">
+                {t('templates.defaultPaymentTerms') || 'Default Payment Terms'}
+              </h3>
+
+              <div className="space-y-2">
+                <Label htmlFor="payment-terms">{t('editor.paymentTerms')}</Label>
+                <Textarea
+                  id="payment-terms"
+                  value={formData.defaultPaymentTerms?.note || ''}
+                  onChange={(e) => handlePaymentTermsChange(e.target.value)}
+                  placeholder="e.g., Payment due within 30 days"
+                  rows={2}
+                />
+              </div>
             </div>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Payment Terms */}
-        <div className="space-y-4">
-          <h3 className="text-purple-900 dark:text-purple-100">
-            {t('templates.defaultPaymentTerms') || 'Default Payment Terms'}
-          </h3>
-
-          <div className="space-y-2">
-            <Label htmlFor="payment-terms">{t('editor.paymentTerms')}</Label>
-            <Textarea
-              id="payment-terms"
-              value={formData.defaultPaymentTerms?.note || ''}
-              onChange={(e) => handlePaymentTermsChange(e.target.value)}
-              placeholder="e.g., Payment due within 30 days"
-              rows={2}
-            />
-          </div>
-        </div>
+          </>
+        )}
       </Card>
 
       {/* Actions */}
@@ -502,7 +542,7 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
           className="gap-2"
         >
           <LayoutIcon className="h-4 w-4" />
-          Design Layout
+          {t('templates.designLayout') || 'Design Layout'}
         </Button>
         <div className="flex-1" />
         <div className="flex gap-3">

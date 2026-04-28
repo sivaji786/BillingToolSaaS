@@ -150,3 +150,22 @@ export function getUnitCodeLabel(code: string): string {
   };
   return labels[code] || code;
 }
+
+/**
+ * Generate invoice number based on format and current count
+ */
+export function generateInvoiceNumber(format: string, currentCount: number): string {
+  const date = new Date();
+  const year = date.getFullYear().toString();
+  const shortYear = year.slice(-2);
+
+  let result = format.replace(/{YYYY}/g, year).replace(/{YY}/g, shortYear);
+
+  // find {NNN...} and replace with padded count
+  result = result.replace(/{(N+)}/g, (_, p1) => {
+    const padLength = p1.length;
+    return String(currentCount + 1).padStart(padLength, '0');
+  });
+
+  return result;
+}

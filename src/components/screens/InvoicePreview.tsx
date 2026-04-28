@@ -45,14 +45,14 @@ interface InvoicePreviewProps {
   profile?: CompanyProfile | null;
 }
 
-export function InvoicePreview({ 
-  invoice, 
-  onBack, 
-  onSave, 
-  template: initialTemplate, 
+export function InvoicePreview({
+  invoice,
+  onBack,
+  onSave,
+  template: initialTemplate,
   allTemplates = [],
   onTemplateChange,
-  profile 
+  profile
 }: InvoicePreviewProps) {
   const { t, isRtl } = useLanguage();
   const [activeTab, setActiveTab] = useState<'pdf' | 'ubl'>('pdf');
@@ -66,6 +66,7 @@ export function InvoicePreview({
     return inv;
   });
   const [template, setTemplate] = useState<InvoiceTemplate | undefined>(initialTemplate);
+  const isBusinessLetter = editedInvoice.templateType === 'business_letter';
 
   useEffect(() => {
     if (initialTemplate) {
@@ -78,27 +79,27 @@ export function InvoicePreview({
     if (allTemplates.length > 0) {
       // 1. Try to find specifically saved template on invoice
       let bestMatch = allTemplates.find(t => t.id === editedInvoice.templateId);
-      
+
       // 2. Fall back to profile defaultTemplateId
       if (!bestMatch && profile?.defaultTemplateId) {
         bestMatch = allTemplates.find(t => t.id === profile.defaultTemplateId);
       }
-      
+
       // 3. Last resort: first available template
       const fallbackTemplate = bestMatch || allTemplates[0];
-      
+
       // Only update if we've found a better match OR if nothing is selected yet
       if (fallbackTemplate && (!template || template.id !== fallbackTemplate.id)) {
         setTemplate(fallbackTemplate);
         // Only notify parent if we actually found something better than what we had
         if (!template || fallbackTemplate.id !== template.id) {
-            onTemplateChange?.(fallbackTemplate.id);
+          onTemplateChange?.(fallbackTemplate.id);
         }
       }
     }
   }, [allTemplates, template, editedInvoice.templateId, profile?.defaultTemplateId, onTemplateChange]);
   const [editingField, setEditingField] = useState<string | null>(null);
-  const [hasChanges, setHasChanges] = useState(() => (invoice.id?.startsWith('new_') || false));
+  const [hasChanges, setHasChanges] = useState(() => String(invoice.id ?? '').startsWith('new_'));
   const [isSaving, setIsSaving] = useState(false);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
 
@@ -124,7 +125,7 @@ export function InvoicePreview({
     if (isDifferentInvoice) {
       setEditedInvoice(inv);
       // New invoices should be considered to have changes so they can be saved
-      setHasChanges(inv.id?.startsWith('new_') || false);
+      setHasChanges(String(inv.id ?? '').startsWith('new_'));
     } else {
       // Same invoice ID - check if the incoming prop is different from our local state
       // (This happens when the AI assistant updates the invoice)
@@ -221,7 +222,7 @@ export function InvoicePreview({
       const calculated = calculateInvoiceTotals(editedInvoice);
 
       // Determine if this is a new invoice or existing one
-      const isNewInvoice = !editedInvoice.id || editedInvoice.id.startsWith('new_');
+      const isNewInvoice = !editedInvoice.id || String(editedInvoice.id).startsWith('new_');
 
       // Check if buyer exists in directory, if not create it
       if (editedInvoice.buyer.name && editedInvoice.buyer.name.trim().length >= 3) {
@@ -262,7 +263,7 @@ export function InvoicePreview({
         });
       } else {
         // Update existing invoice in database (ID is guaranteed to exist here)
-        await invoiceService.update(editedInvoice.id!, calculated);
+        await invoiceService.update(String(editedInvoice.id), calculated);
         toast.success(t('common.saved'), {
           description: t('previewModal.invoiceUpdated') || 'Invoice updated successfully',
         });
@@ -399,39 +400,45 @@ export function InvoicePreview({
     if (!template?.layout) return null;
 
     // Create effective data with hierarchical fallbacks: Invoice > Template > Profile
-    
+
     // 1. Logo, Header, Footer
     const effectiveLogo = template?.logoUrl || profile?.logoUrl;
     const effectiveHeaderHtml = template?.headerText || profile?.headerText;
     const effectiveFooterHtml = template?.footerText || profile?.footerText;
 
-    // 2. Seller Data (Address, Name, VAT)
+    // 2. Seller Data — prefer non-empty: invoice > template > profile
     const effectiveSeller = {
-        ...profile,
-        ...(template?.seller || {}),
-        ...editedInvoice.seller,
-        address: {
-            ...(profile?.address || {}),
-            ...(template?.seller?.address || {}),
-            ...(editedInvoice.seller?.address || {})
-        }
+      ...profile,
+      ...(template?.seller || {}),
+      ...editedInvoice.seller,
+      name: editedInvoice.seller?.name || template?.seller?.name || profile?.name || '',
+      vatId: editedInvoice.seller?.vatId || template?.seller?.vatId || profile?.vatId || '',
+      legalOrganizationId: editedInvoice.seller?.legalOrganizationId || template?.seller?.legalOrganizationId || profile?.legalOrganizationId || '',
+      contactEmail: editedInvoice.seller?.contactEmail || profile?.email || '',
+      contactPhone: editedInvoice.seller?.contactPhone || profile?.phone || '',
+      address: {
+        street: editedInvoice.seller?.address?.street || template?.seller?.address?.street || profile?.address?.street || '',
+        city: editedInvoice.seller?.address?.city || template?.seller?.address?.city || profile?.address?.city || '',
+        postalCode: editedInvoice.seller?.address?.postalCode || template?.seller?.address?.postalCode || profile?.address?.postalCode || '',
+        country: editedInvoice.seller?.address?.country || template?.seller?.address?.country || profile?.address?.country || '',
+      }
     };
 
     // 3. Payment Means (Bank Info)
     // Note: Templates currently don't store separate IBANs, so we fall back directly to Profile
-    const effectivePaymentMeans = editedInvoice.paymentMeans?.iban ? editedInvoice.paymentMeans : 
-                                 (profile?.bankAccount ? {
-                                    type: 'BankTransfer' as const,
-                                    iban: profile.bankAccount.iban,
-                                    bic: profile.bankAccount.bic,
-                                    accountName: profile.bankAccount.accountName,
-                                  } : undefined);
+    const effectivePaymentMeans = editedInvoice.paymentMeans?.iban ? editedInvoice.paymentMeans :
+      (profile?.bankAccount ? {
+        type: 'BankTransfer' as const,
+        iban: profile.bankAccount.iban,
+        bic: profile.bankAccount.bic,
+        accountName: profile.bankAccount.accountName,
+      } : undefined);
 
     // 4. Notes & Payment Terms
     const effectiveNote = editedInvoice.note || template?.defaultPaymentTerms?.note || '';
 
     const calculated = calculateInvoiceTotals(editedInvoice);
-    const visibleElements = template.layout.filter(el => el.visible);
+    const visibleElements = template.layout.filter(el => el.visible != false);
     const isTaxSummaryVisible = template.layout.find(el => el.type === 'tax_summary')?.visible !== false;
 
     // Helper: render a single element as a section
@@ -448,6 +455,27 @@ export function InvoicePreview({
       }
 
       if (el.type === 'items') {
+        if (isBusinessLetter) {
+          return (
+            <div key={key} className="w-full space-y-5 pt-2">
+              {/* Salutation */}
+              <div className="text-sm text-gray-800">
+                {renderEditableField('salutation', editedInvoice.salutation || '', (val) => handleFieldChange('salutation', val), '', false, 'Dear Sir/Madam,', !isInteractive)}
+              </div>
+              {/* Body */}
+              <div className="text-sm text-gray-700 leading-relaxed min-h-[240px]">
+                {isInteractive
+                  ? renderEditableField('body', editedInvoice.body || '', (val) => handleFieldChange('body', val), 'w-full min-h-[240px] text-sm leading-relaxed', true, 'Letter content...', false)
+                  : <div dangerouslySetInnerHTML={{ __html: editedInvoice.body || '<p style="color:#9ca3af;font-style:italic">No content</p>' }} />
+                }
+              </div>
+              {/* Closing */}
+              <div className="text-sm text-gray-800 pt-6">
+                {renderEditableField('closing', editedInvoice.closing || '', (val) => handleFieldChange('closing', val), '', false, 'Yours sincerely,', !isInteractive)}
+              </div>
+            </div>
+          );
+        }
         return (
           <div key={key} className="w-full">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">{t('previewModal.items')}</h3>
@@ -514,6 +542,7 @@ export function InvoicePreview({
       }
 
       if (el.type === 'totals') {
+        if (isBusinessLetter) return null;
         const showTaxSummary = template.layout?.find((e: any) => e.type === 'tax_summary')?.visible === true;
         return (
           <div key={key} className="flex justify-end pt-4 w-full">
@@ -538,7 +567,7 @@ export function InvoicePreview({
       }
 
       if (el.type === 'tax_summary') {
-        if (!isTaxSummaryVisible || calculated.taxTotals.length === 0) return null;
+        if (isBusinessLetter || !isTaxSummaryVisible || calculated.taxTotals.length === 0) return null;
         return (
           <div key={key} className="w-full">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">{t('previewModal.taxSummary')}</h3>
@@ -590,19 +619,19 @@ export function InvoicePreview({
       }
 
       if (el.type === 'qr') {
-        if (!effectivePaymentMeans?.iban) return null;
-        
+        if (isBusinessLetter || !effectivePaymentMeans?.iban) return null;
+
         // Create a temporary invoice object for the QR code component that includes the fallback payment means
-        const qrInvoice = { 
-          ...editedInvoice, 
-          paymentMeans: effectivePaymentMeans 
+        const qrInvoice = {
+          ...editedInvoice,
+          paymentMeans: effectivePaymentMeans
         };
 
         return (
           <div key={key} className="w-full mt-8 rounded-[2rem] p-8 bg-purple-50/40 border border-purple-100/50 relative overflow-hidden group">
             {/* Subtle background decoration */}
             <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-purple-200/20 rounded-full blur-3xl group-hover:bg-purple-300/30 transition-all duration-700"></div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center relative z-10">
               {/* Column 1: Textual Payment Details */}
               <div className="space-y-4">
@@ -614,7 +643,7 @@ export function InvoicePreview({
                     {t('previewModal.paymentDetails')}
                   </h4>
                 </div>
-                
+
                 <div className="grid gap-3">
                   {effectivePaymentMeans.accountName && (
                     <div className="flex flex-col">
@@ -672,6 +701,41 @@ export function InvoicePreview({
         );
       }
 
+      if (el.type === 'to') {
+        const buyer = editedInvoice.buyer;
+        return (
+          <div key={key} className="w-full mb-8">
+            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-3 border-b border-gray-100 pb-2">{t('editor.buyer')}</p>
+            <div className="text-sm space-y-1">
+              <div className="text-lg font-bold text-gray-900">
+                {renderEditableField('buyer.name', buyer.name || '', (val) => handleFieldChange('buyer.name', val), 'font-bold', false, t('previewModal.placeholderBuyerName'), !isInteractive)}
+              </div>
+              <div className="text-gray-600">
+                {renderEditableField('buyer.address.street', buyer.address?.street || '', (val) => handleFieldChange('buyer.address.street', val), '', false, t('previewModal.placeholderStreet'), !isInteractive)}
+              </div>
+              <div className="text-gray-600">
+                {renderEditableField('buyer.address.postalCode', buyer.address?.postalCode || '', (val) => handleFieldChange('buyer.address.postalCode', val), 'inline', false, 'Postal Code', !isInteractive)}
+                {' '}
+                {renderEditableField('buyer.address.city', buyer.address?.city || '', (val) => handleFieldChange('buyer.address.city', val), 'inline', false, 'City', !isInteractive)}
+              </div>
+              <div className="text-gray-600">
+                {renderEditableField('buyer.address.country', buyer.address?.country || '', (val) => handleFieldChange('buyer.address.country', val), '', false, 'Country', !isInteractive)}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (el.type === 'description') {
+        return (
+          <div key={key} className="w-full mb-8 min-h-[300px]">
+            <div className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">
+              {renderEditableField('body', editedInvoice.body || '', (val) => handleFieldChange('body', val), 'w-full min-h-[300px] text-base leading-relaxed', true, t('templates.letterBodyPlaceholder'), !isInteractive)}
+            </div>
+          </div>
+        );
+      }
+
       return null;
     };
 
@@ -685,122 +749,125 @@ export function InvoicePreview({
     const processedIds = new Set<string>();
 
     for (let i = 0; i < visibleElements.length; i++) {
-        const el = visibleElements[i];
-        if (processedIds.has(el.id)) continue;
+      const el = visibleElements[i];
+      if (processedIds.has(el.id)) continue;
 
-        // Group Title & Dates if they are closely related in the loop
-        if ((el.type === 'title' || el.type === 'dates') && !processedIds.has('_header')) {
-            processedIds.add('_header');
-            if (hasTitleEl) processedIds.add(hasTitleEl.id);
-            if (hasDatesEl) processedIds.add(hasDatesEl.id);
+      // Group Title & Dates if they are closely related in the loop
+      if ((el.type === 'title' || el.type === 'dates') && !processedIds.has('_header')) {
+        processedIds.add('_header');
+        if (hasTitleEl) processedIds.add(hasTitleEl.id);
+        if (hasDatesEl) processedIds.add(hasDatesEl.id);
 
-            sections.push(
-                <div key="_header" className="flex justify-between items-start pb-8 border-b-2 border-purple-200 w-full mb-4">
-                    <div className="flex-1">
-                        {hasTitleEl && (
-                            <>
-                                <div className="text-4xl font-light text-purple-700 tracking-tight">
-                                    {renderEditableField('seller.name', effectiveSeller.name || '', (val) => handleFieldChange('seller.name', val), '', false, t('previewModal.placeholderSellerName'), !isInteractive)}
-                                </div>
-                                <div className="mt-2 text-base text-gray-500 font-mono tracking-wider">
-                                    {renderEditableField('invoiceNumber', editedInvoice.invoiceNumber || '', (val) => handleFieldChange('invoiceNumber', val), '', false, t('previewModal.placeholderInvoiceNumber'), !isInteractive)}
-                                </div>
-                            </>
-                        )}
+        sections.push(
+          <div key="_header" className="flex justify-between items-start pb-8 border-b-2 border-purple-200 w-full mb-4">
+            <div className="flex-1">
+              {hasTitleEl && (
+                <>
+                  <div className="text-4xl font-light text-purple-700 tracking-tight">
+                    {isBusinessLetter 
+                      ? renderEditableField('title', editedInvoice.title || 'Business Letter', (val) => handleFieldChange('title', val), '', false, 'Letter Title', !isInteractive)
+                      : renderEditableField('seller.name', effectiveSeller.name || '', (val) => handleFieldChange('seller.name', val), '', false, t('previewModal.placeholderSellerName'), !isInteractive)
+                    }
+                  </div>
+                  <div className="mt-2 text-base text-gray-500 font-mono tracking-wider">
+                    {renderEditableField('invoiceNumber', editedInvoice.invoiceNumber || '', (val) => handleFieldChange('invoiceNumber', val), '', false, isBusinessLetter ? 'Reference' : t('previewModal.placeholderInvoiceNumber'), !isInteractive)}
+                  </div>
+                </>
+              )}
+            </div>
+            {hasDatesEl && (
+              <div className="text-right space-y-1 shrink-0 ml-6">
+                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{t('previewModal.issueDate')}</p>
+                <div className="text-base text-gray-900">
+                  {renderEditableField('issueDate', editedInvoice.issueDate || '', (val) => handleFieldChange('issueDate', val), '', false, t('previewModal.placeholderIssueDate'), !isInteractive)}
+                </div>
+                {editedInvoice.dueDate && (
+                  <>
+                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-3">{t('previewModal.dueDate')}</p>
+                    <div className="text-base text-gray-900">
+                      {renderEditableField('dueDate', editedInvoice.dueDate || '', (val) => handleFieldChange('dueDate', val), '', false, t('previewModal.placeholderDueDate'), !isInteractive)}
                     </div>
-                    {hasDatesEl && (
-                        <div className="text-right space-y-1 shrink-0 ml-6">
-                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{t('previewModal.issueDate')}</p>
-                            <div className="text-base text-gray-900">
-                                {renderEditableField('issueDate', editedInvoice.issueDate || '', (val) => handleFieldChange('issueDate', val), '', false, t('previewModal.placeholderIssueDate'), !isInteractive)}
-                            </div>
-                            {editedInvoice.dueDate && (
-                                <>
-                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-3">{t('previewModal.dueDate')}</p>
-                                    <div className="text-base text-gray-900">
-                                        {renderEditableField('dueDate', editedInvoice.dueDate || '', (val) => handleFieldChange('dueDate', val), '', false, t('previewModal.placeholderDueDate'), !isInteractive)}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        );
+        continue;
+      }
+
+      // Group Seller & Buyer for side-by-side display
+      if ((el.type === 'seller' || el.type === 'buyer') && !processedIds.has('_parties')) {
+        processedIds.add('_parties');
+        if (hasSellerEl) processedIds.add(hasSellerEl.id);
+        if (hasBuyerEl) processedIds.add(hasBuyerEl.id);
+
+        sections.push(
+          <div key="_parties" className="grid grid-cols-2 gap-12 py-4 w-full">
+            {hasBuyerEl && (
+              <div>
+                <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+                  <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{isBusinessLetter ? (t('editor.recipient') || 'TO') : t('previewModal.billTo')}</p>
+                  {isInteractive && buyers.length > 0 && (
+                    <Select onValueChange={handleBuyerSelect}>
+                      <SelectTrigger className="h-7 w-auto border-none bg-purple-50 text-purple-700 text-[10px] font-bold uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-purple-100 transition-colors">
+                        <Users className="h-3 w-3" />
+                        <SelectValue placeholder={t('previewModal.selectFromDirectory') || 'Select Buyer'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {buyers.map((b) => (
+                          <SelectItem key={b.id} value={b.id} className="text-xs">
+                            {b.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
-            );
-            continue;
-        }
-
-        // Group Seller & Buyer for side-by-side display
-        if ((el.type === 'seller' || el.type === 'buyer') && !processedIds.has('_parties')) {
-            processedIds.add('_parties');
-            if (hasSellerEl) processedIds.add(hasSellerEl.id);
-            if (hasBuyerEl) processedIds.add(hasBuyerEl.id);
-
-            sections.push(
-                <div key="_parties" className="grid grid-cols-2 gap-12 py-4 w-full">
-                    {hasBuyerEl && (
-                        <div>
-                            <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-                                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{t('previewModal.billTo')}</p>
-                                {isInteractive && buyers.length > 0 && (
-                                    <Select onValueChange={handleBuyerSelect}>
-                                        <SelectTrigger className="h-7 w-auto border-none bg-purple-50 text-purple-700 text-[10px] font-bold uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-purple-100 transition-colors">
-                                            <Users className="h-3 w-3" />
-                                            <SelectValue placeholder={t('previewModal.selectFromDirectory') || 'Select Buyer'} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {buyers.map((b) => (
-                                                <SelectItem key={b.id} value={b.id} className="text-xs">
-                                                    {b.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            </div>
-                            <div className="space-y-1 text-sm">
-                                <div className="font-bold text-base text-gray-900">
-                                    {renderEditableField('buyer.name', editedInvoice.buyer.name || '', (val) => handleFieldChange('buyer.name', val), '', false, t('previewModal.placeholderBuyerName'), !isInteractive)}
-                                </div>
-                                <div className="text-gray-500 leading-relaxed">
-                                    {renderEditableField('buyer.vatId', editedInvoice.buyer.vatId || '', (val) => handleFieldChange('buyer.vatId', val), 'block italic text-xs', false, t('previewModal.vatPlaceholder'), !isInteractive)}
-                                    {renderEditableField('buyer.address.street', editedInvoice.buyer.address.street || '', (val) => handleFieldChange('buyer.address.street', val), 'block', false, t('previewModal.placeholderStreet'), !isInteractive)}
-                                    <div className="flex gap-1">
-                                        {renderEditableField('buyer.address.postalCode', editedInvoice.buyer.address.postalCode || '', (val) => handleFieldChange('buyer.address.postalCode', val), 'inline-block', false, t('previewModal.placeholderZip'), !isInteractive)}
-                                        {renderEditableField('buyer.address.city', editedInvoice.buyer.address.city || '', (val) => handleFieldChange('buyer.address.city', val), 'inline-block', false, t('previewModal.placeholderCity'), !isInteractive)}
-                                    </div>
-                                    {renderEditableField('buyer.address.country', editedInvoice.buyer.address.country || '', (val) => handleFieldChange('buyer.address.country', val), 'block', false, t('previewModal.placeholderCountry'), !isInteractive)}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    {hasSellerEl && (
-                        <div>
-                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-3">{t('previewModal.from')}</p>
-                            <div className="space-y-1 text-sm">
-                                <div className="font-bold text-base text-gray-900">
-                                    {renderEditableField('seller.name2', effectiveSeller.name || '', (val) => handleFieldChange('seller.name', val), '', false, t('previewModal.placeholderSellerName'), !isInteractive)}
-                                </div>
-                                <div className="text-gray-500 leading-relaxed">
-                                    {renderEditableField('seller.vatId', effectiveSeller.vatId || '', (val) => handleFieldChange('seller.vatId', val), 'block italic text-xs', false, t('previewModal.vatPlaceholder'), !isInteractive)}
-                                    {renderEditableField('seller.address.street', effectiveSeller.address?.street || '', (val) => handleFieldChange('seller.address.street', val), 'block', false, t('previewModal.placeholderStreet'), !isInteractive)}
-                                    <div className="flex gap-1">
-                                        {renderEditableField('seller.address.postalCode', effectiveSeller.address?.postalCode || '', (val) => handleFieldChange('seller.address.postalCode', val), 'inline-block', false, t('previewModal.placeholderZip'), !isInteractive)}
-                                        {renderEditableField('seller.address.city', effectiveSeller.address?.city || '', (val) => handleFieldChange('seller.address.city', val), 'inline-block', false, t('previewModal.placeholderCity'), !isInteractive)}
-                                    </div>
-                                    {renderEditableField('seller.address.country', effectiveSeller.address?.country || '', (val) => handleFieldChange('seller.address.country', val), 'block', false, t('previewModal.placeholderCountry'), !isInteractive)}
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                <div className="space-y-1 text-sm">
+                  <div className="font-bold text-base text-gray-900">
+                    {renderEditableField('buyer.name', editedInvoice.buyer.name || '', (val) => handleFieldChange('buyer.name', val), '', false, t('previewModal.placeholderBuyerName'), !isInteractive)}
+                  </div>
+                  <div className="text-gray-500 leading-relaxed">
+                    {renderEditableField('buyer.vatId', editedInvoice.buyer.vatId || '', (val) => handleFieldChange('buyer.vatId', val), 'block italic text-xs', false, t('previewModal.vatPlaceholder'), !isInteractive)}
+                    {renderEditableField('buyer.address.street', editedInvoice.buyer.address.street || '', (val) => handleFieldChange('buyer.address.street', val), 'block', false, t('previewModal.placeholderStreet'), !isInteractive)}
+                    <div className="flex gap-1">
+                      {renderEditableField('buyer.address.postalCode', editedInvoice.buyer.address.postalCode || '', (val) => handleFieldChange('buyer.address.postalCode', val), 'inline-block', false, t('previewModal.placeholderZip'), !isInteractive)}
+                      {renderEditableField('buyer.address.city', editedInvoice.buyer.address.city || '', (val) => handleFieldChange('buyer.address.city', val), 'inline-block', false, t('previewModal.placeholderCity'), !isInteractive)}
+                    </div>
+                    {renderEditableField('buyer.address.country', editedInvoice.buyer.address.country || '', (val) => handleFieldChange('buyer.address.country', val), 'block', false, t('previewModal.placeholderCountry'), !isInteractive)}
+                  </div>
                 </div>
-            );
-            continue;
-        }
+              </div>
+            )}
+            {hasSellerEl && (
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-3">{t('previewModal.from')}</p>
+                <div className="space-y-1 text-sm">
+                  <div className="font-bold text-base text-gray-900">
+                    {renderEditableField('seller.name2', effectiveSeller.name || '', (val) => handleFieldChange('seller.name', val), '', false, t('previewModal.placeholderSellerName'), !isInteractive)}
+                  </div>
+                  <div className="text-gray-500 leading-relaxed">
+                    {renderEditableField('seller.vatId', effectiveSeller.vatId || '', (val) => handleFieldChange('seller.vatId', val), 'block italic text-xs', false, t('previewModal.vatPlaceholder'), !isInteractive)}
+                    {renderEditableField('seller.address.street', effectiveSeller.address?.street || '', (val) => handleFieldChange('seller.address.street', val), 'block', false, t('previewModal.placeholderStreet'), !isInteractive)}
+                    <div className="flex gap-1">
+                      {renderEditableField('seller.address.postalCode', effectiveSeller.address?.postalCode || '', (val) => handleFieldChange('seller.address.postalCode', val), 'inline-block', false, t('previewModal.placeholderZip'), !isInteractive)}
+                      {renderEditableField('seller.address.city', effectiveSeller.address?.city || '', (val) => handleFieldChange('seller.address.city', val), 'inline-block', false, t('previewModal.placeholderCity'), !isInteractive)}
+                    </div>
+                    {renderEditableField('seller.address.country', effectiveSeller.address?.country || '', (val) => handleFieldChange('seller.address.country', val), 'block', false, t('previewModal.placeholderCountry'), !isInteractive)}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+        continue;
+      }
 
-        // Render other elements individually in their template order
-        processedIds.add(el.id);
-        const node = renderElement(el);
-        if (node) sections.push(node);
+      // Render other elements individually in their template order
+      processedIds.add(el.id);
+      const node = renderElement(el);
+      if (node) sections.push(node);
     }
 
     return (
@@ -842,7 +909,7 @@ export function InvoicePreview({
                   <SelectValue placeholder={t('previewModal.switchLayout') || 'Switch Layout'} />
                 </SelectTrigger>
                 <SelectContent>
-                  {allTemplates.map((t) => (
+                  {allTemplates.filter(t => t.templateType !== 'business_letter').map((t) => (
                     <SelectItem key={t.id} value={t.id}>
                       {t.name}
                     </SelectItem>
@@ -856,13 +923,13 @@ export function InvoicePreview({
         <div className="flex gap-2">
           <Button
             onClick={handleSave}
-            disabled={isSaving || (!hasChanges && !editedInvoice.id?.includes('_'))}
+            disabled={isSaving || (!hasChanges && !String(editedInvoice.id ?? '').includes('_'))}
             className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-md"
           >
             <Save className="h-4 w-4 mr-2" />
             {isSaving ? t('common.saving') || 'Saving...' : t('common.save')}
           </Button>
-          {!hasChanges && !editedInvoice.id?.includes('_') && (
+          {!hasChanges && !String(editedInvoice.id ?? '').includes('_') && (
             <span className="text-xs text-muted-foreground self-center italic px-2">
               {t('previewModal.allChangesSaved') || 'All changes saved'}
             </span>
@@ -880,29 +947,31 @@ export function InvoicePreview({
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-purple-600 data-[state=active]:to-fuchsia-600 data-[state=active]:text-white"
               >
                 <FileText className="h-4 w-4 mr-2" />
-                {t('previewModal.pdfPreview')}
+                {isBusinessLetter ? (t('ai.letterPreview') || 'Letter Preview') : t('previewModal.pdfPreview')}
               </TabsTrigger>
-              <TabsTrigger
-                value="ubl"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-purple-600 data-[state=active]:to-fuchsia-600 data-[state=active]:text-white"
-              >
-                <Code className="h-4 w-4 mr-2" />
-                {t('previewModal.ublXml')}
-              </TabsTrigger>
+              {!isBusinessLetter && (
+                <TabsTrigger
+                  value="ubl"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-purple-600 data-[state=active]:to-fuchsia-600 data-[state=active]:text-white"
+                >
+                  <Code className="h-4 w-4 mr-2" />
+                  {t('previewModal.ublXml')}
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <div className="flex gap-2">
               {activeTab === 'pdf' ? (
                 <>
                   <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 h-10">
-                    <button 
+                    <button
                       onClick={() => setPreviewMode('web')}
                       className={`px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${previewMode === 'web' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                     >
                       <Layout className="h-3 w-3 inline mr-2" />
                       {t('previewModal.webView') || 'Web View'}
                     </button>
-                    <button 
+                    <button
                       onClick={() => setPreviewMode('print')}
                       className={`px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${previewMode === 'print' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                     >

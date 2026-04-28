@@ -320,4 +320,15 @@ export const adminWikiService = {
     }
 };
 
+// CMS Services
+export const adminCmsService = {
+    getPages: async (lang = 'en'): Promise<any[]> => {
+        const response = await adminApi.get<ApiResponse<any[]>>('/cms', { params: { lang } });
+        return response.data.data;
+    },
+    updatePage: async (slug: string, lang: string, data: { title?: string; content?: any; meta_description?: string }): Promise<void> => {
+        await adminApi.put(`/cms/${slug}`, { ...data, lang });
+    },
+};
+
 export default adminApi;

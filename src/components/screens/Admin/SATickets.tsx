@@ -179,23 +179,8 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                                     {ticket.priority ? t(`tickets.priority.${ticket.priority}`) : t('tickets.priority.medium')}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="max-w-[200px]" title={ticket.description}>
-                                                {ticket.description && ticket.description.length > 50 ? (
-                                                    <span>
-                                                        {ticket.description.substring(0, 50)}
-                                                        <span
-                                                            className="text-blue-500 hover:underline cursor-pointer ml-1 whitespace-nowrap"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleRowClick(ticket);
-                                                            }}
-                                                        >
-                                                            ...more
-                                                        </span>
-                                                    </span>
-                                                ) : (
-                                                    <span className="truncate block w-full">{ticket.description}</span>
-                                                )}
+                                            <TableCell className="max-w-[300px] whitespace-normal break-words text-muted-foreground" title={ticket.description}>
+                                                {ticket.description}
                                             </TableCell>
                                             <TableCell>{ticket.client_ip || 'N/A'}</TableCell>
                                             <TableCell className="whitespace-nowrap">

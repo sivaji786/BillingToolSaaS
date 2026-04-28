@@ -88,6 +88,12 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
             permission: 'invoices.read'
         },
         {
+            title: t('nav.letters') || "Business Letters",
+            url: "letters",
+            icon: FileText,
+            isActive: currentScreen === "letters",
+        },
+        {
             title: t('nav.templates') || "Templates",
             url: "templates",
             icon: LayoutTemplate,
@@ -191,7 +197,7 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                                     </Avatar>
                                     <div className="grid flex-1 text-left text-sm leading-tight">
                                         <span className="truncate font-semibold">{user?.name || 'User'}</span>
-                                        <span className="truncate text-xs">{user?.email || 'user@example.com'}</span>
+                                        <span className="truncate text-xs">{user?.email || 'example@humpl.org'}</span>
                                     </div>
                                     <ChevronsUpDown className="ml-auto size-4" />
                                 </SidebarMenuButton>

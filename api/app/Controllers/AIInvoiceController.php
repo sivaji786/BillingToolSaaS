@@ -23,24 +23,38 @@ class AIInvoiceController extends BaseController
         $data = $this->request->getJSON(true);
         $prompt = $data['prompt'] ?? null;
         $context = $data['context'] ?? 'create';
+        $templateType = $data['templateType'] ?? 'invoice';
         $language = $data['language'] ?? 'en';
         $existingInvoice = $data['existingInvoice'] ?? null;
-        
-        // If pre-parsed data is provided (legacy support), use it. 
+        $isLetter = ($templateType === 'business_letter');
+
+        // If pre-parsed data is provided (legacy support), use it.
         // Otherwise, call Gemini API from backend.
-        if (isset($data['parsedInvoice']) && is_array($data['parsedInvoice'])) {
-             $parsedData = $data['parsedInvoice'];
+        if (isset($data['parsedInvoice']) && \is_array($data['parsedInvoice'])) {
+            $parsedData = $data['parsedInvoice'];
         } elseif ($prompt) {
-             try {
-                 $parsedData = $this->callGeminiAPI($prompt, $context, $existingInvoice, $language);
-             } catch (\Exception $e) {
-                 return $this->fail('AI Processing Error: ' . $e->getMessage(), 500);
-             }
+            try {
+                if ($isLetter) {
+                    $parsedData = $this->callGeminiAPIForLetter($prompt, $context, $existingInvoice, $language);
+                } else {
+                    $parsedData = $this->callGeminiAPI($prompt, $context, $existingInvoice, $language);
+                }
+                if (!\is_array($parsedData)) {
+                    return $this->fail('AI Processing Error: Gemini returned an unexpected response format.', 500);
+                }
+            } catch (\Exception $e) {
+                $msg = $e->getMessage();
+                // Provide a clearer message for common key errors
+                if (strpos($msg, 'API_KEY_INVALID') !== false || strpos($msg, 'API key not valid') !== false) {
+                    $msg = 'GEMINI API key is invalid or expired. Please update GEMINI_API_KEY in the server .env file.';
+                }
+                return $this->fail('AI Processing Error: ' . $msg, 500);
+            }
         } else {
-             return $this->fail('Please provide either a "prompt" or "parsedInvoice" data.', 400);
+            return $this->fail('Please provide either a "prompt" or "parsedInvoice" data.', 400);
         }
 
-        // Fetch Default Seller from Company Profile
+        // Fetch Default Sender from Company Profile
         $profileModel = new CompanyProfileModel();
         $companyProfile = $profileModel->first();
         $defaultSeller = null;
@@ -52,28 +66,39 @@ class AIInvoiceController extends BaseController
                     'street' => $companyProfile['street'] ?? '',
                     'city' => $companyProfile['city'] ?? '',
                     'postalCode' => $companyProfile['postal_code'] ?? '',
-                    'country' => $companyProfile['country'] ?? 'IN'
+                    'country' => $companyProfile['country'] ?? 'DE'
                 ],
                 'contactEmail' => $companyProfile['email'] ?? '',
                 'contactPhone' => $companyProfile['phone'] ?? ''
             ];
         }
 
-        // Apply default seller if missing
+        // Apply default sender if missing
         if ((empty($parsedData['seller']['name']) || $parsedData['seller']['name'] === 'string') && $defaultSeller) {
-             $parsedData['seller'] = $defaultSeller;
+            $parsedData['seller'] = $defaultSeller;
         }
 
-        // Ensure totals are calculated correctly using our logic
-        $parsedData = $this->calculateInvoiceTotals($parsedData);
-        
-        // Basic validation of AI output
-        $validation = $this->validateParsedInvoice($parsedData);
-        
+        // Always stamp templateType so the frontend knows what it received
+        $parsedData['templateType'] = $templateType;
+
+        if ($isLetter) {
+            // Letters don't have line items — skip invoice totals calculation
+            $parsedData['lines'] = [];
+            $parsedData['taxTotals'] = [];
+            $parsedData['lineExtensionAmount'] = 0;
+            $parsedData['taxExclusiveAmount'] = 0;
+            $parsedData['taxInclusiveAmount'] = 0;
+            $parsedData['payableAmount'] = 0;
+            $validation = $this->validateParsedLetter($parsedData);
+        } else {
+            $parsedData = $this->calculateInvoiceTotals($parsedData);
+            $validation = $this->validateParsedInvoice($parsedData);
+        }
+
         return $this->response->setJSON([
             'success' => true,
             'invoice' => $parsedData,
-            'confidence' => 95, 
+            'confidence' => 95,
             'suggestions' => $validation['suggestions'],
             'errors' => $validation['errors']
         ])->setStatusCode(200);
@@ -207,6 +232,131 @@ class AIInvoiceController extends BaseController
     }
 
     /**
+     * Call Gemini API to parse a business letter prompt
+     */
+    private function callGeminiAPIForLetter($prompt, $context, $existingLetter, $language)
+    {
+        $apiKey = env('GEMINI_API_KEY');
+
+        if (empty($apiKey) || $apiKey === 'YOUR_GEMINI_API_KEY') {
+            throw new \Exception("Backend Gemini API Key not configured in .env file.");
+        }
+
+        $currentDate = date('Y-m-d');
+
+        if ($context === 'edit' && $existingLetter) {
+            $contextPrompt = "
+            You are in EDIT mode for an existing business letter.
+            Existing Letter Data: " . json_encode($existingLetter) . "
+            Update only the fields the user mentions. Preserve all other fields unchanged.
+            ";
+        } else {
+            $contextPrompt = "
+            You are in CREATE mode for a new business letter.
+            Extract letter data from the user's natural language prompt.
+            ";
+        }
+
+        $systemPrompt = "
+            You are an AI assistant for a business letter application. Extract or update letter data into a structured JSON format.
+
+            Current Date: $currentDate
+            Context: $context
+            LANGUAGE: $language
+            $contextPrompt
+
+            Output MUST be a valid JSON object matching this structure:
+            {
+                \"invoiceNumber\": \"string (letter reference, e.g. LTR-2026-001 or leave empty)\",
+                \"issueDate\": \"YYYY-MM-DD\",
+                \"currency\": \"EUR\",
+                \"status\": \"draft\",
+                \"seller\": {
+                    \"name\": \"string (sender name)\",
+                    \"address\": { \"street\": \"string\", \"city\": \"string\", \"postalCode\": \"string\", \"country\": \"ISO-2 code\" },
+                    \"contactEmail\": \"string\", \"contactPhone\": \"string\"
+                },
+                \"buyer\": {
+                    \"name\": \"string (recipient name or company)\",
+                    \"address\": { \"street\": \"string\", \"city\": \"string\", \"postalCode\": \"string\", \"country\": \"ISO-2 code\" },
+                    \"contactEmail\": \"string\"
+                },
+                \"salutation\": \"string (e.g. Dear Mr. Smith, or Dear Sir/Madam,)\",
+                \"body\": \"string (full letter body as plain text, use \\n for line breaks)\",
+                \"closing\": \"string (e.g. Yours sincerely, or Best regards,)\",
+                \"note\": \"string (any additional notes, optional)\"
+            }
+
+            IMPORTANT RULES:
+            1. Always return VALID JSON.
+            2. The 'body' field should contain the main letter content in the user's language ($language).
+            3. Generate a natural, professional salutation and closing if not specified.
+            4. Do NOT include 'lines', 'taxTotals', or any invoice-specific fields.
+            5. If in EDIT mode, merge changes into the provided JSON structure.
+        ";
+
+        $client = \Config\Services::curlrequest();
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $apiKey;
+
+        $response = $client->post($url, [
+            'headers' => ['Content-Type' => 'application/json'],
+            'json' => [
+                'contents' => [[
+                    'parts' => [['text' => $systemPrompt . "\n\nUser Input: " . $prompt]]
+                ]],
+                'generationConfig' => ['response_mime_type' => 'application/json'],
+            ],
+            'http_errors' => false
+        ]);
+
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode === 429) {
+            throw new \Exception("Rate limit exceeded (429). Please wait a moment before trying again.");
+        }
+        if ($statusCode !== 200) {
+            $errorBody = json_decode($response->getBody(), true);
+            throw new \Exception("Gemini API Error ($statusCode): " . ($errorBody['error']['message'] ?? 'Unknown error'));
+        }
+
+        $body = json_decode($response->getBody(), true);
+        if (isset($body['candidates'][0]['content']['parts'][0]['text'])) {
+            return json_decode($body['candidates'][0]['content']['parts'][0]['text'], true);
+        }
+
+        throw new \Exception("Failed to get valid response from Gemini API.");
+    }
+
+    /**
+     * Validate parsed business letter data
+     */
+    private function validateParsedLetter($letter)
+    {
+        $errors = [];
+        $suggestions = [];
+
+        if (empty($letter['buyer']['name'])) {
+            $errors[] = 'Recipient name not found in prompt';
+            $suggestions[] = 'Please specify who the letter is addressed to';
+        }
+
+        if (empty($letter['body'])) {
+            $errors[] = 'Letter body is empty';
+            $suggestions[] = 'Please describe the content of your letter';
+        }
+
+        if (empty($letter['salutation'])) {
+            $suggestions[] = 'Consider adding a salutation (e.g. Dear Sir/Madam,)';
+        }
+
+        if (empty($letter['closing'])) {
+            $suggestions[] = 'Consider adding a closing (e.g. Yours sincerely,)';
+        }
+
+        return ['errors' => $errors, 'suggestions' => $suggestions];
+    }
+
+    /**
      * Calculate invoice totals
      */
     private function calculateInvoiceTotals($invoice)
@@ -303,5 +453,93 @@ class AIInvoiceController extends BaseController
             'errors' => $errors,
             'suggestions' => $suggestions
         ];
+    }
+
+    /**
+     * Improve a business letter body using AI
+     * POST /ai/improve-letter-body
+     */
+    public function improveLetterBody()
+    {
+        $data     = $this->request->getJSON(true);
+        $body     = $data['body']     ?? '';
+        $language = $data['language'] ?? 'en';
+        $context  = $data['context']  ?? [];
+
+        if (empty(trim(strip_tags($body)))) {
+            return $this->fail('No content to improve', 400);
+        }
+
+        try {
+            $improved = $this->callGeminiForBodyImprovement($body, $language, $context);
+            return $this->respond(['body' => $improved]);
+        } catch (\Exception $e) {
+            $msg = $e->getMessage();
+            if (strpos($msg, 'API_KEY_INVALID') !== false || strpos($msg, 'API key not valid') !== false) {
+                $msg = 'GEMINI API key is invalid or expired. Please update GEMINI_API_KEY in the server .env file.';
+            }
+            return $this->fail('AI Error: ' . $msg, 500);
+        }
+    }
+
+    private function callGeminiForBodyImprovement(string $body, string $language, array $context): string
+    {
+        $apiKey = env('GEMINI_API_KEY');
+        if (empty($apiKey) || $apiKey === 'YOUR_GEMINI_API_KEY') {
+            throw new \Exception('Backend Gemini API Key not configured in .env file.');
+        }
+
+        $contextInfo = '';
+        if (!empty($context['subject']))   $contextInfo .= "Subject: {$context['subject']}\n";
+        if (!empty($context['recipient'])) $contextInfo .= "Recipient: {$context['recipient']}\n";
+        if (!empty($context['sender']))    $contextInfo .= "Sender: {$context['sender']}\n";
+
+        $prompt = "You are a professional business writing assistant.
+
+Your task: improve the body text of a business letter.
+
+Language: $language
+" . ($contextInfo ? "Letter context:\n$contextInfo\n" : '') . "Rules:
+1. Fix grammar, enhance clarity, and use professional vocabulary.
+2. Keep the original meaning, topic, and intent — do not add new facts.
+3. Preserve the approximate length and paragraph structure.
+4. The input is HTML from a rich-text editor — keep all HTML tags intact and well-formed.
+5. Return ONLY the improved HTML body content. Do NOT wrap in <html>, <body>, or markdown code fences.
+6. Write entirely in the specified language: $language.
+
+HTML body to improve:
+$body";
+
+        $client = \Config\Services::curlrequest();
+        $url    = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
+
+        $response = $client->post($url, [
+            'headers'     => ['Content-Type' => 'application/json'],
+            'json'        => [
+                'contents'         => [['parts' => [['text' => $prompt]]]],
+                'generationConfig' => ['temperature' => 0.6],
+            ],
+            'http_errors' => false,
+        ]);
+
+        $statusCode = $response->getStatusCode();
+        if ($statusCode === 429) {
+            throw new \Exception('Rate limit exceeded. Please wait a moment and try again.');
+        }
+        if ($statusCode !== 200) {
+            $err = json_decode($response->getBody(), true);
+            throw new \Exception("Gemini API Error ($statusCode): " . ($err['error']['message'] ?? 'Unknown error'));
+        }
+
+        $result = json_decode($response->getBody(), true);
+        if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
+            // Strip markdown code fences if Gemini wraps the response
+            $text = trim($result['candidates'][0]['content']['parts'][0]['text']);
+            $text = preg_replace('/^```(?:html)?\s*/i', '', $text);
+            $text = preg_replace('/\s*```$/', '', $text);
+            return trim($text);
+        }
+
+        throw new \Exception('Failed to get a valid response from Gemini API.');
     }
 }

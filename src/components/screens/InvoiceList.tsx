@@ -81,13 +81,15 @@ interface InvoiceListProps {
   onSelectInvoice?: (invoice: Invoice) => void;
   onEditInvoice?: (invoice: Invoice) => void;
   onNewInvoice?: () => void;
+  templateType?: 'invoice' | 'business_letter';
 }
 
 type SortOption = 'dateDesc' | 'dateAsc' | 'amountDesc' | 'amountAsc' | 'numberDesc' | 'numberAsc';
 type DateFilter = 'anyDate' | 'last7Days' | 'last30Days' | 'last90Days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'customRange';
 
-export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: InvoiceListProps) {
+export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, templateType }: InvoiceListProps) {
   const { t } = useLanguage();
+  const isLetter = templateType === 'business_letter';
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,6 +119,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: In
         status: statusFilter,
         dateFilter: dateFilter,
         sort: sortBy,
+        templateType: templateType,
       });
       setInvoices(data);
     } catch (error) {
@@ -130,7 +133,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: In
 
   useEffect(() => {
     fetchInvoices();
-  }, [searchQuery, statusFilter, dateFilter, sortBy]);
+  }, [searchQuery, statusFilter, dateFilter, sortBy, templateType]);
 
   // Filter and sort invoices
   // Note: Filtering and sorting are now handled by the backend, but we keep this for client-side pagination if needed
@@ -389,8 +392,12 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: In
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-purple-900 dark:text-purple-100 mb-1">{t('invoiceList.title')}</h1>
-          <p className="text-gray-600 dark:text-gray-400">{t('invoiceList.subtitle')}</p>
+          <h1 className="text-purple-900 dark:text-purple-100 mb-1">
+            {t(isLetter ? 'invoiceList.lettersTitle' : 'invoiceList.title')}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t(isLetter ? 'invoiceList.lettersSubtitle' : 'invoiceList.subtitle')}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -398,15 +405,17 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: In
             className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-md shadow-purple-500/20"
           >
             <Plus className="h-4 w-4 mr-2" />
-            {t('dashboard.newInvoice')}
+            {t(isLetter ? 'editor.newLetter' : 'dashboard.newInvoice')}
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowImportDialog(true)}
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            {t('invoiceList.importFile')}
-          </Button>
+          {!isLetter && (
+            <Button
+              variant="outline"
+              onClick={() => setShowImportDialog(true)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {t('invoiceList.importFile')}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -418,7 +427,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: In
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder={t('invoiceList.searchPlaceholder')}
+                placeholder={t(isLetter ? 'invoiceList.searchLetterPlaceholder' : 'invoiceList.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -596,8 +605,8 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: In
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
-              <TableHead>{t('editor.invoiceNumber')}</TableHead>
-              <TableHead>{t('editor.buyer')}</TableHead>
+              <TableHead>{isLetter ? t('editor.letterNumber') : t('editor.invoiceNumber')}</TableHead>
+              <TableHead>{isLetter ? t('editor.recipient') : t('editor.buyer')}</TableHead>
               <TableHead>{t('editor.issueDate')}</TableHead>
               <TableHead>{t('dashboard.due')}</TableHead>
               <TableHead>{t('editor.amount')}</TableHead>
@@ -620,8 +629,12 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: In
                 <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
                     <Filter className="h-12 w-12 text-gray-300" />
-                    <h3 className="text-gray-900 dark:text-gray-100">{t('invoiceList.noInvoicesFound')}</h3>
-                    <p className="text-sm text-gray-500">{t('invoiceList.noInvoicesFoundDesc')}</p>
+                    <h3 className="text-gray-900 dark:text-gray-100">
+                      {t(isLetter ? 'invoiceList.noLettersFound' : 'invoiceList.noInvoicesFound')}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {t(isLetter ? 'invoiceList.noLettersFoundDesc' : 'invoiceList.noInvoicesFoundDesc')}
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -873,7 +886,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: In
             </Button>
             <Button onClick={handleBulkExport}>
               <Download className="h-4 w-4 mr-2" />
-              Export {selectedInvoices.size} Invoices
+              Export {selectedInvoices.size} {isLetter ? 'Letters' : 'Invoices'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -904,9 +917,11 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice }: In
       <Dialog open={showStatusChangeDialog} onOpenChange={setShowStatusChangeDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('invoiceList.changeStatus') || 'Change Invoice Status'}</DialogTitle>
+            <DialogTitle>
+              {isLetter ? 'Change Letter Status' : (t('invoiceList.changeStatus') || 'Change Invoice Status')}
+            </DialogTitle>
             <DialogDescription>
-              {t('invoiceList.changeStatusDesc') || `Change the status of ${selectedInvoices.size} selected invoice(s)`}
+              {`Change the status of ${selectedInvoices.size} selected ${isLetter ? 'letter(s)' : 'invoice(s)'}`}
             </DialogDescription>
           </DialogHeader>
 
@@ -989,10 +1004,10 @@ const InvoiceRow = memo(({
       </TableCell>
       <TableCell>
         <button
-          onClick={onView}
-          className="font-medium text-purple-600 hover:text-purple-700 hover:underline"
+          onClick={invoice.templateType === 'business_letter' ? onEdit : onView}
+          className="font-medium text-purple-600 hover:text-purple-700 hover:underline text-left"
         >
-          {invoice.invoiceNumber}
+          {invoice.invoiceNumber || <span className="text-muted-foreground italic font-normal">No number</span>}
         </button>
       </TableCell>
       <TableCell>{invoice.buyer.name}</TableCell>

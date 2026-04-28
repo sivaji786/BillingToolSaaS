@@ -62,6 +62,12 @@ class InvoiceController extends BaseController
                 }
             }
 
+            // Always return only invoices — business letters use /letters endpoint
+            $model->groupStart()
+                ->where('template_type', 'invoice')
+                ->orWhere('template_type IS NULL', null, false)
+            ->groupEnd();
+
             // Sorting
             $sort = $this->request->getGet('sort') ?? 'dateDesc';
             switch ($sort) {
@@ -118,7 +124,7 @@ class InvoiceController extends BaseController
         return $this->respond($transformed);
     }
 
-    private function transformLine($line)
+    protected function transformLine($line)
     {
         return [
             'id' => $line['id'],
@@ -133,20 +139,26 @@ class InvoiceController extends BaseController
         ];
     }
 
-    private function transformInvoice($invoice)
+    protected function transformInvoice($invoice)
     {
         // Robust decoding: if decode returns null (invalid/empty), default to empty array
         $sellerContact = json_decode($invoice['seller_contact_json'] ?? '{}', true) ?: [];
         $buyerContact = json_decode($invoice['buyer_contact_json'] ?? '{}', true) ?: [];
 
         return [
-            'id' => $invoice['id'],
+            'id' => (string)$invoice['id'],
+            'templateType' => $invoice['template_type'] ?? 'invoice',
+            'templateId' => $invoice['template_id'] ?? null,
             'invoiceNumber' => $invoice['invoice_number'],
             'issueDate' => $invoice['issue_date'],
             'dueDate' => $invoice['due_date'],
             'currency' => $invoice['currency'],
             'status' => $invoice['status'],
             'payableAmount' => (float)$invoice['payable_amount'],
+            'note' => $invoice['note'] ?? null,
+            'body' => $invoice['body'] ?? null,
+            'salutation' => $invoice['salutation'] ?? null,
+            'closing' => $invoice['closing'] ?? null,
             'seller' => [
                 'name' => $invoice['seller_name'] ?? '',
                 'vatId' => $invoice['seller_vat_id'] ?? null,
@@ -161,11 +173,11 @@ class InvoiceController extends BaseController
                 'contactEmail' => $buyerContact['email'] ?? null,
                 'contactPhone' => $buyerContact['phone'] ?? null,
             ],
-            'lines' => [], // Default empty lines for list view
-            'taxTotals' => [], // Placeholder
-            'lineExtensionAmount' => 0, // Placeholder
-            'taxExclusiveAmount' => 0, // Placeholder
-            'taxInclusiveAmount' => 0, // Placeholder
+            'lines' => [],
+            'taxTotals' => [],
+            'lineExtensionAmount' => 0,
+            'taxExclusiveAmount' => 0,
+            'taxInclusiveAmount' => 0,
         ];
     }
 
@@ -210,7 +222,7 @@ class InvoiceController extends BaseController
             $this->syncBuyer($data['buyer'] ?? []);
             
             $this->logAction('created', $dbData['invoice_number'], "Invoice created for {$dbData['buyer_name']}");
-            return $this->respondCreated(['id' => $invoiceId, 'message' => 'Invoice created']);
+            return $this->respondCreated(['id' => (string)$invoiceId, 'message' => 'Invoice created']);
         }
         
         return $this->fail($model->errors());
@@ -277,7 +289,7 @@ class InvoiceController extends BaseController
         return $this->fail($model->errors());
     }
 
-    private function mapInvoiceData($data)
+    protected function mapInvoiceData($data)
     {
         return [
             'invoice_number' => $data['invoiceNumber'],
@@ -303,15 +315,20 @@ class InvoiceController extends BaseController
             'tax_exclusive_amount' => $data['taxExclusiveAmount'],
             'tax_inclusive_amount' => $data['taxInclusiveAmount'],
             'payable_amount' => $data['payableAmount'],
+            'template_type' => $data['templateType'] ?? 'invoice',
+            'template_id' => $data['templateId'] ?? null,
             'payment_terms_json' => isset($data['paymentTerms']) ? json_encode($data['paymentTerms']) : null,
             'payment_means_json' => isset($data['paymentMeans']) ? json_encode($data['paymentMeans']) : null,
             'note' => $data['note'] ?? null,
+            'body' => $data['body'] ?? null,
+            'salutation' => $data['salutation'] ?? null,
+            'closing' => $data['closing'] ?? null,
             'signed' => $data['signed'] ?? 0,
             'signature_date' => $data['signatureDate'] ?? null,
         ];
     }
 
-    private function mapLineData($line, $invoiceId)
+    protected function mapLineData($line, $invoiceId)
     {
         return [
             'invoice_id' => $invoiceId,
@@ -325,7 +342,7 @@ class InvoiceController extends BaseController
         ];
     }
 
-    private function syncBuyer($buyerData)
+    protected function syncBuyer($buyerData)
     {
         if (empty($buyerData['name']) || strlen($buyerData['name']) < 3) {
             return;

@@ -33,7 +33,11 @@ class CompanyProfileModel extends BaseModel
         'header_text',
         'footer_text',
         'company_type_id',
-        'default_template_id'
+        'default_template_id',
+        'invoice_number_format',
+        'default_currency',
+        'default_tax_rate',
+        'payment_terms_days'
     ];
 
     protected bool $allowEmptyInserts = false;

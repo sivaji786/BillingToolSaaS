@@ -90,5 +90,8 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    watch: {
+      ignored: ['**/api/**', '**/node_modules/**', '**/docs/**', '**/build/**'],
+    },
   },
 });

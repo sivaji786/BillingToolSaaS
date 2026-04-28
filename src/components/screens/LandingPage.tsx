@@ -3,9 +3,9 @@ import { motion, Variants } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { Check, FileText, Globe, Shield, LayoutTemplate, Sparkles, ArrowRight } from 'lucide-react';
+import { Check, FileText, Globe, Shield, LayoutTemplate, Sparkles, ArrowRight, Star, Plus, Minus, MessageSquare } from 'lucide-react';
 import { LanguageSwitcher } from '../LanguageSwitcher';
-import { billingService } from '../../services/api';
+import { billingService, publicCmsService } from '../../services/api';
 import { TicketingWidget } from '../TicketingWidget';
 import { getTicketingApiKey } from '../../utils/config';
 
@@ -47,9 +47,10 @@ const itemVariants: Variants = {
 
 
 export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: LandingPageProps) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
+    const [cmsContent, setCmsContent] = useState<any>(null);
 
     useEffect(() => {
         const fetchPlans = async () => {
@@ -144,8 +145,20 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
             }
         };
 
+        const fetchCms = async () => {
+            try {
+                const response = await publicCmsService.getPage('home', language);
+                if (response.success && response.data.content_structured) {
+                    setCmsContent(response.data.content_structured);
+                }
+            } catch (error) {
+                console.error('Failed to fetch CMS content:', error);
+            }
+        };
+
         fetchPlans();
-    }, []);
+        fetchCms();
+    }, [language]);
 
     const features = [
         {
@@ -236,14 +249,20 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                         >
                             <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-4 py-1.5 text-xs font-semibold border-purple-100 bg-purple-50/50 text-purple-700 backdrop-blur-sm shadow-sm transition-all hover:bg-purple-100/50">
                                 <Sparkles className="mr-2 h-3.5 w-3.5 text-purple-600" />
-                                {t('landing.hero.badge')}
+                                {cmsContent?.hero_badge || t('landing.hero.badge')}
                             </motion.div>
                             <motion.h1 variants={itemVariants} className="text-5xl font-extrabold tracking-tight lg:text-6xl xl:text-7xl max-w-4xl text-slate-900 dark:text-white pb-2 leading-[1.1]">
-                                {t('landing.hero.title')} <br className="hidden sm:inline" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-fuchsia-600">{t('landing.hero.titleAccent')}</span> {t('landing.hero.titleSuffix')}
+                                {cmsContent?.hero_title ? (
+                                    cmsContent.hero_title
+                                ) : (
+                                    <>
+                                        {t('landing.hero.title')} <br className="hidden sm:inline" />
+                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-fuchsia-600">{t('landing.hero.titleAccent')}</span> {t('landing.hero.titleSuffix')}
+                                    </>
+                                )}
                             </motion.h1>
                             <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                                {t('landing.hero.subtitle')}
+                                {cmsContent?.hero_subtitle || t('landing.hero.subtitle')}
                             </motion.p>
                             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 min-w-[300px] justify-center pt-4">
                                 <Button size="lg" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 h-12 px-8 text-lg shadow-xl shadow-purple-200 dark:shadow-none" onClick={() => onSignup()}>
@@ -264,6 +283,23 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 )}
                             </motion.div>
                         </motion.div>
+                    </div>
+                </section>
+
+                {/* Trusted By Marquee */}
+                <section className="py-10 border-y bg-slate-50/50 dark:bg-slate-900/30 overflow-hidden">
+                    <div className="container px-4 md:px-6">
+                        <p className="text-center text-sm font-medium text-muted-foreground mb-6">{t('landing.trustedBy')}</p>
+                        <div className="flex justify-center flex-wrap gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+                            {['[mn]medianet', 'Voicepoint', 'Highgo', 'digitalks.in', 'we4service'].map((partner, i) => (
+                                <div key={i} className="flex items-center gap-2 text-xl font-bold text-slate-800 dark:text-slate-200">
+                                    <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+                                        <div className="w-full h-full bg-gradient-to-br from-slate-400 to-slate-200 dark:from-slate-600 dark:to-slate-800" />
+                                    </div> 
+                                    {partner}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </section>
 
@@ -308,6 +344,32 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                     </div>
                 </section>
 
+                {/* How it Works */}
+                <section className="py-12 md:py-24 lg:py-32">
+                    <div className="container px-4 md:px-6">
+                        <div className="text-center mb-16">
+                            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t('landing.howItWorks.tag')}</h2>
+                            <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400 mt-4">
+                                {t('landing.howItWorks.subtitle')}
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+                            {/* Connecting Line */}
+                            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-purple-200 via-fuchsia-200 to-purple-200 dark:from-purple-900 dark:via-fuchsia-900 dark:to-purple-900 z-0" />
+                            
+                            {[1, 2, 3].map((step) => (
+                                <div key={step} className="relative z-10 flex flex-col items-center text-center">
+                                    <div className="w-24 h-24 rounded-full bg-background border-4 border-purple-100 dark:border-purple-900/50 flex items-center justify-center text-3xl font-bold text-purple-600 shadow-xl mb-6">
+                                        {step}
+                                    </div>
+                                    <h3 className="text-xl font-bold mb-2">{t(`landing.howItWorks.step${step}.title`)}</h3>
+                                    <p className="text-muted-foreground">{t(`landing.howItWorks.step${step}.desc`)}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
                 {/* About Us Section */}
                 <section id="about" className="py-12 md:py-24 lg:py-32">
                     <div className="container px-4 md:px-6">
@@ -319,15 +381,17 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 variants={containerVariants}
                             >
                                 <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-6">
-                                    {t('landing.aboutUs')}
+                                    {cmsContent?.about_title || t('landing.aboutUs')}
                                 </motion.h2>
                                 <motion.div variants={itemVariants} className="space-y-4 text-gray-500 md:text-lg dark:text-gray-400">
                                     <p>
-                                        {t('landing.about.desc1')}
+                                        {cmsContent?.about_text || t('landing.about.desc1')}
                                     </p>
-                                    <p>
-                                        {t('landing.about.desc2')}
-                                    </p>
+                                    {!cmsContent?.about_text && (
+                                        <p>
+                                            {t('landing.about.desc2')}
+                                        </p>
+                                    )}
                                     <div className="flex gap-4 pt-4">
                                         <div className="flex flex-col">
                                             <span className="text-2xl font-bold text-purple-600">10k+</span>
@@ -347,12 +411,53 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 transition={{ duration: 0.8 }}
                                 className="relative rounded-2xl overflow-hidden shadow-2xl"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-fuchsia-600/20 z-10" />
-                                <img
-                                    src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800"
-                                    alt="About Our Team"
-                                    className="w-full h-auto object-cover"
-                                />
+                                {cmsContent?.about_image ? (
+                                    <img 
+                                        src={cmsContent.about_image} 
+                                        alt={cmsContent?.about_title || "About Us"} 
+                                        className="w-full h-auto object-cover rounded-2xl shadow-2xl"
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-fuchsia-600/20 z-10" />
+                                        <div className="relative w-full aspect-[4/3] bg-slate-900 flex flex-col">
+                                            {/* Mockup Header */}
+                                            <div className="h-10 bg-slate-800 border-b border-slate-700 flex items-center px-4 gap-2">
+                                                <div className="w-3 h-3 rounded-full bg-red-400" />
+                                                <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                                                <div className="w-3 h-3 rounded-full bg-green-400" />
+                                            </div>
+                                            {/* Mockup Body */}
+                                            <div className="flex-1 p-6 relative overflow-hidden flex flex-col gap-4">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <div className="h-8 w-32 bg-slate-700/50 rounded-md" />
+                                                    <div className="h-8 w-24 bg-purple-600/80 rounded-md" />
+                                                </div>
+                                                {/* Chart Mock */}
+                                                <div className="h-24 w-full bg-slate-800/80 rounded-lg flex items-end px-4 gap-2 pb-2">
+                                                    {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
+                                                        <div key={i} className="flex-1 bg-gradient-to-t from-purple-600 to-fuchsia-400 rounded-t-sm opacity-80" style={{ height: `${h}%` }} />
+                                                    ))}
+                                                </div>
+                                                {/* Lists Mock */}
+                                                <div className="flex-1 flex gap-4 mt-2">
+                                                    <div className="flex-1 bg-slate-800/80 rounded-lg p-3 flex flex-col gap-2">
+                                                        <div className="h-4 w-20 bg-slate-700/80 rounded mb-2" />
+                                                        <div className="h-6 w-full bg-slate-700/30 rounded" />
+                                                        <div className="h-6 w-[80%] bg-slate-700/30 rounded" />
+                                                    </div>
+                                                    <div className="flex-1 bg-slate-800/80 rounded-lg p-3 flex flex-col gap-2">
+                                                        <div className="h-4 w-20 bg-slate-700/80 rounded mb-2" />
+                                                        <div className="h-6 w-full bg-slate-700/30 rounded" />
+                                                        <div className="h-6 w-[60%] bg-slate-700/30 rounded" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* Glass reflection */}
+                                            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
+                                        </div>
+                                    </>
+                                )}
                             </motion.div>
                         </div>
                     </div>
@@ -420,6 +525,119 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                     </Card>
                                 </motion.div>
                             ))}
+                        </motion.div>
+                    </div>
+                </section>
+
+                {/* Testimonials */}
+                <section className="py-12 md:py-24 lg:py-32 bg-slate-50 dark:bg-slate-900/50">
+                    <div className="container px-4 md:px-6">
+                        <div className="text-center mb-16">
+                            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                                {cmsContent?.testimonials_tag || t('landing.testimonials.tag')}
+                            </h2>
+                            <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400 mt-4">
+                                {cmsContent?.testimonials_subtitle || t('landing.testimonials.subtitle')}
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {(cmsContent?.testimonials || [1, 2, 3]).map((testi: any, idx: number) => {
+                                const isCms = cmsContent?.testimonials;
+                                const name = isCms ? testi.name : t(`landing.testimonials.t${testi}.name`);
+                                const role = isCms ? testi.role : t(`landing.testimonials.t${testi}.role`);
+                                const text = isCms ? testi.text : t(`landing.testimonials.t${testi}.text`);
+
+                                return (
+                                    <Card key={idx} className="bg-background border border-slate-200 dark:border-slate-800 shadow-xl relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+                                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                                            <MessageSquare className="w-24 h-24 text-purple-600" />
+                                        </div>
+                                        <CardContent className="pt-8 relative z-10">
+                                            <div className="flex gap-1 mb-6 text-amber-400">
+                                                <Star fill="currentColor" className="w-5 h-5" />
+                                                <Star fill="currentColor" className="w-5 h-5" />
+                                                <Star fill="currentColor" className="w-5 h-5" />
+                                                <Star fill="currentColor" className="w-5 h-5" />
+                                                <Star fill="currentColor" className="w-5 h-5" />
+                                            </div>
+                                            <p className="text-lg italic text-slate-700 dark:text-slate-300 mb-8 min-h-[100px]">
+                                                "{text}"
+                                            </p>
+                                            <div className="flex items-center gap-4 border-t pt-4 border-slate-100 dark:border-slate-800">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white font-bold text-lg shadow-inner">
+                                                    {name?.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold">{name}</h4>
+                                                    <p className="text-sm text-muted-foreground">{role}</p>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </section>
+
+                {/* FAQ */}
+                <section className="py-12 md:py-24 lg:py-32">
+                    <div className="container px-4 md:px-6 max-w-3xl mx-auto">
+                        <div className="text-center mb-16">
+                            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                                {cmsContent?.faq_tag || t('landing.faq.tag')}
+                            </h2>
+                            <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400 mt-4">
+                                {cmsContent?.faq_subtitle || t('landing.faq.subtitle')}
+                            </p>
+                        </div>
+                        <div className="space-y-4">
+                            {(cmsContent?.faqs || [1, 2, 3, 4]).map((faqItem: any, idx: number) => {
+                                const isCms = cmsContent?.faqs;
+                                const question = isCms ? faqItem.q : t(`landing.faq.q${faqItem}.q`);
+                                const answer = isCms ? faqItem.a : t(`landing.faq.q${faqItem}.a`);
+
+                                return (
+                                    <details key={idx} className="group bg-slate-50 dark:bg-slate-900/50 rounded-xl open:bg-white dark:open:bg-slate-900 border border-transparent open:border-purple-100 dark:open:border-purple-900/50 transition-all duration-300 open:shadow-md">
+                                        <summary className="flex items-center justify-between font-semibold cursor-pointer p-6 list-none [&::-webkit-details-marker]:hidden">
+                                            <span className="text-lg pr-4">{question}</span>
+                                            <span className="transition-transform duration-300 group-open:rotate-180 flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 p-2 rounded-full text-purple-600">
+                                                <Plus className="w-4 h-4 block group-open:hidden" />
+                                                <Minus className="w-4 h-4 hidden group-open:block" />
+                                            </span>
+                                        </summary>
+                                        <div className="px-6 pb-6 text-muted-foreground leading-relaxed">
+                                            {answer}
+                                        </div>
+                                    </details>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Bottom CTA */}
+                <section className="py-24 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-fuchsia-600 z-0" />
+                    <div className="absolute inset-0 bg-black/10 mix-blend-overlay z-0" />
+                    <div className="container px-4 md:px-6 relative z-10 text-center text-white flex flex-col items-center">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            whileInView={{ scale: 1, opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <h2 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl mb-6">{t('landing.bottomCta.title')}</h2>
+                            <p className="text-purple-100 text-lg md:text-xl mb-10 max-w-[600px] mx-auto">
+                                {t('landing.bottomCta.subtitle')}
+                            </p>
+                            <Button size="lg" className="bg-white text-purple-600 hover:bg-slate-50 h-14 px-10 text-lg shadow-2xl rounded-full transition-transform hover:scale-105" onClick={() => onSignup()}>
+                                {t('landing.hero.getStarted')}
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </Button>
+                            <p className="mt-6 text-purple-200 text-sm font-medium">
+                                {t('landing.bottomCta.ctaContext')}
+                            </p>
                         </motion.div>
                     </div>
                 </section>

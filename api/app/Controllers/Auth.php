@@ -287,6 +287,147 @@ class Auth extends ResourceController
     }
 
     /**
+     * Forgot Password
+     * POST /api/auth/forgot-password
+     */
+    public function forgotPassword()
+    {
+        $data = $this->request->getJSON(true);
+        if (!isset($data['email'])) {
+            return $this->fail('Email is required');
+        }
+
+        $email = $data['email'];
+        $user = $this->userModel->withoutTenant()->findByEmail($email);
+        
+        if (!$user) {
+            // Return success even if user not found to prevent email enumeration
+            return $this->response->setJSON(['success' => true, 'message' => 'If an account with that email exists, we have sent a reset link.'])->setStatusCode(200);
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $db = \Config\Database::connect();
+        $db->table('password_resets')->insert([
+            'email' => $email,
+            'token' => $token,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        $tenant = $this->tenantModel->find($user['tenant_id']);
+        $frontendDomain = getenv('FRONTEND_DOMAIN') ?: ($_ENV['FRONTEND_DOMAIN'] ?? 'localhost');
+        $frontendPort = getenv('FRONTEND_PORT') ?: ($_ENV['FRONTEND_PORT'] ?? '');
+        $protocol = getenv('FRONTEND_PROTOCOL') ?: ($_ENV['FRONTEND_PROTOCOL'] ?? 'http');
+        
+        $subdomain = $tenant['subdomain'] ?? '';
+        $portSuffix = $frontendPort ? ":{$frontendPort}" : '';
+        
+        // E.g., http://tenant.localhost:5173/#reset-password/TOKEN
+        $resetUrl = "{$protocol}://{$subdomain}.{$frontendDomain}{$portSuffix}/#reset-password/{$token}";
+
+        // Attempt to send physical email
+        $this->sendPasswordResetEmail($email, $resetUrl);
+        log_message('info', 'PASSWORD RESET LINK FOR ' . $email . ': ' . $resetUrl);
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'If an account with that email exists, we have sent a reset link. Please check your inbox.',
+            'test_url' => $resetUrl // Kept for local development testing
+        ])->setStatusCode(200);
+    }
+
+    /**
+     * Send the password reset email using CI4 Email library
+     */
+    private function sendPasswordResetEmail(string $toEmail, string $resetUrl)
+    {
+        $email = \Config\Services::email();
+        $email->initialize($this->smtpConfig());
+
+        $fromEmail = getenv('MAIL_FROM_EMAIL') ?: (getenv('email.fromEmail') ?: 'noreply@billingtool.com');
+        $fromName  = getenv('MAIL_FROM_NAME') ?: (getenv('email.fromName') ?: 'BillingTool');
+        
+        $email->setFrom($fromEmail, $fromName);
+        $email->setTo($toEmail);
+        $email->setSubject('Password Reset Request');
+        $email->setMailType('html');
+        
+        $message = "
+        <h2>Reset Your Password</h2>
+        <p>You recently requested to reset the password for your account.</p>
+        <p>Click the link below to securely choose a new password:</p>
+        <p><a href='{$resetUrl}'>{$resetUrl}</a></p>
+        <p><br>If you did not request a password reset, please ignore this email or contact support if you have concerns.</p>
+        <p>This link will expire in 1 hour.</p>
+        ";
+
+        $email->setMessage($message);
+
+        if (!$email->send()) {
+            log_message('error', 'Failed to send password reset email to: ' . $toEmail);
+            log_message('error', $email->printDebugger(['headers']));
+        }
+    }
+
+    private function smtpConfig(): array
+    {
+        return [
+            'protocol'   => getenv('MAIL_PROTOCOL')   ?: 'smtp',
+            'SMTPHost'   => getenv('MAIL_HOST')        ?: 'localhost',
+            'SMTPPort'   => (int)(getenv('MAIL_PORT')  ?: 587),
+            'SMTPUser'   => getenv('MAIL_USERNAME')    ?: '',
+            'SMTPPass'   => getenv('MAIL_PASSWORD')    ?: '',
+            'SMTPCrypto' => getenv('MAIL_ENCRYPTION')  ?: 'tls',
+            'mailType'   => 'html',
+            'charset'    => 'utf-8',
+            'newline'    => "\r\n",
+        ];
+    }
+
+    /**
+     * Reset Password
+     * POST /api/auth/reset-password
+     */
+    public function resetPassword()
+    {
+        $data = $this->request->getJSON(true);
+        if (!isset($data['token']) || !isset($data['password'])) {
+            return $this->fail('Token and new password are required');
+        }
+
+        $token = $data['token'];
+        $newPassword = $data['password'];
+
+        $db = \Config\Database::connect();
+        $resetRecord = $db->table('password_resets')->where('token', $token)->get()->getRowArray();
+
+        if (!$resetRecord) {
+            return $this->fail('Invalid or expired reset token');
+        }
+
+        // Check if expired (e.g., older than 1 hour)
+        $createdAt = strtotime($resetRecord['created_at']);
+        if (time() - $createdAt > 3600) {
+            $db->table('password_resets')->where('token', $token)->delete();
+            return $this->fail('Reset token has expired');
+        }
+
+        $user = $this->userModel->withoutTenant()->findByEmail($resetRecord['email']);
+        if ($user) {
+            $this->userModel->withoutTenant()->update($user['id'], [
+                'password' => $newPassword // The UserModel's beforeUpdate callback handles hashing
+            ]);
+        }
+
+        // Invalidate token
+        $db->table('password_resets')->where('token', $token)->delete();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Password reset successfully'
+        ])->setStatusCode(200);
+    }
+
+    /**
      * Helper: Get bearer token from header
      */
     private function getBearerToken()

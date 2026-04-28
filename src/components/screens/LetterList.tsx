@@ -1,0 +1,377 @@
+import { useState, useEffect, memo } from 'react';
+import { Invoice } from '../../types/invoice';
+import { letterService } from '../../services/api';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { hasPermissionSync } from '../../hooks/usePermission';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Badge } from '../ui/badge';
+import { Card } from '../ui/card';
+import { Checkbox } from '../ui/checkbox';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '../ui/table';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '../ui/select';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '../ui/alert-dialog';
+import {
+  Search, Plus, MoreVertical, Eye, Edit, Trash2,
+  ChevronLeft, ChevronRight, Mail,
+} from 'lucide-react';
+import { toast } from 'sonner';
+
+interface LetterListProps {
+  onSelectLetter?: (letter: Invoice) => void;
+  onEditLetter?: (letter: Invoice) => void;
+  onNewLetter?: () => void;
+}
+
+type SortOption = 'dateDesc' | 'dateAsc' | 'numberDesc' | 'numberAsc';
+
+export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: LetterListProps) {
+  const { t } = useLanguage();
+  const [letters, setLetters] = useState<Invoice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('anyDate');
+  const [sortOption, setSortOption] = useState<SortOption>('dateDesc');
+  const [selectedLetters, setSelectedLetters] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [deleteTarget, setDeleteTarget] = useState<Invoice | null>(null);
+
+  const fetchLetters = async () => {
+    setIsLoading(true);
+    try {
+      const data = await letterService.getAll({
+        search: searchQuery || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        dateFilter: dateFilter !== 'anyDate' ? dateFilter : undefined,
+        sort: sortOption,
+      });
+      setLetters(data);
+      setCurrentPage(1);
+    } catch (err) {
+      console.error('Failed to fetch letters:', err);
+      toast.error(t('common.error'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchLetters(); }, [searchQuery, statusFilter, dateFilter, sortOption]);
+
+  const handleDelete = async () => {
+    if (!deleteTarget?.id) return;
+    try {
+      await letterService.delete(deleteTarget.id);
+      toast.success(t('common.deleted') || 'Letter deleted');
+      setDeleteTarget(null);
+      fetchLetters();
+    } catch {
+      toast.error(t('common.error'));
+    }
+  };
+
+  const handleSelectLetter = (id: string | undefined) => {
+    if (!id) return;
+    setSelectedLetters(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedLetters.size === paginatedLetters.length) {
+      setSelectedLetters(new Set());
+    } else {
+      setSelectedLetters(new Set(paginatedLetters.map(l => l.id!).filter(Boolean)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!hasPermissionSync('invoices.delete')) {
+      toast.error(t('common.noPermission') || 'No permission');
+      return;
+    }
+    try {
+      await Promise.all([...selectedLetters].map(id => letterService.delete(id)));
+      toast.success(`${selectedLetters.size} letter(s) deleted`);
+      setSelectedLetters(new Set());
+      fetchLetters();
+    } catch {
+      toast.error(t('common.error'));
+    }
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'validated': return 'default';
+      case 'sent':      return 'secondary';
+      case 'paid':      return 'outline';
+      case 'cancelled': return 'destructive';
+      default:          return 'secondary';
+    }
+  };
+
+  const totalPages = Math.max(1, Math.ceil(letters.length / itemsPerPage));
+  const paginatedLetters = letters.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">{t('invoiceList.lettersTitle') || 'Business Letters'}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t('invoiceList.lettersSubtitle') || 'View and manage all your business letters'}
+          </p>
+        </div>
+        <Button onClick={onNewLetter} className="bg-gradient-to-r from-violet-600 to-purple-600 text-white gap-2">
+          <Plus className="h-4 w-4" />
+          {t('editor.newLetter') || 'New Letter'}
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <Card className="p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('invoiceList.searchLetterPlaceholder') || 'Search letters by number, recipient...'}
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder={t('invoiceList.allStatuses') || 'All Statuses'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('invoiceList.allStatuses') || 'All Statuses'}</SelectItem>
+              <SelectItem value="draft">{t('status.draft')}</SelectItem>
+              <SelectItem value="sent">{t('status.sent')}</SelectItem>
+              <SelectItem value="cancelled">{t('status.cancelled')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={dateFilter} onValueChange={setDateFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder={t('invoiceList.anyDate') || 'Any Date'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="anyDate">{t('invoiceList.anyDate') || 'Any Date'}</SelectItem>
+              <SelectItem value="last7Days">{t('invoiceList.last7Days') || 'Last 7 days'}</SelectItem>
+              <SelectItem value="last30Days">{t('invoiceList.last30Days') || 'Last 30 days'}</SelectItem>
+              <SelectItem value="thisMonth">{t('invoiceList.thisMonth') || 'This month'}</SelectItem>
+              <SelectItem value="thisYear">{t('invoiceList.thisYear') || 'This year'}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortOption} onValueChange={v => setSortOption(v as SortOption)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="dateDesc">{t('invoiceList.sortDateDesc') || 'Date (Newest)'}</SelectItem>
+              <SelectItem value="dateAsc">{t('invoiceList.sortDateAsc') || 'Date (Oldest)'}</SelectItem>
+              <SelectItem value="numberDesc">{t('invoiceList.sortNumberDesc') || 'Number (Z-A)'}</SelectItem>
+              <SelectItem value="numberAsc">{t('invoiceList.sortNumberAsc') || 'Number (A-Z)'}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {selectedLetters.size > 0 && (
+          <div className="flex items-center gap-3 mt-3 pt-3 border-t">
+            <span className="text-sm text-muted-foreground">{selectedLetters.size} selected</span>
+            {hasPermissionSync('invoices.delete') && (
+              <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+                <Trash2 className="h-4 w-4 mr-2" /> Delete Selected
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => setSelectedLetters(new Set())}>
+              Clear
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      {/* Table */}
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={paginatedLetters.length > 0 && selectedLetters.size === paginatedLetters.length}
+                  onCheckedChange={handleSelectAll}
+                />
+              </TableHead>
+              <TableHead>{t('editor.letterNumber') || 'Letter Number'}</TableHead>
+              <TableHead>{t('editor.recipient') || 'Recipient (To)'}</TableHead>
+              <TableHead>{t('editor.letterDate') || 'Issue Date'}</TableHead>
+              <TableHead>{t('invoiceList.status') || 'Status'}</TableHead>
+              <TableHead className="text-right">{t('invoiceList.actions') || 'Actions'}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                  {t('common.loading') || 'Loading...'}
+                </TableCell>
+              </TableRow>
+            ) : paginatedLetters.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-12">
+                  <Mail className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-40" />
+                  <p className="font-medium">{t('invoiceList.noLettersFound') || 'No letters found'}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t('invoiceList.noLettersFoundDesc') || 'Create your first business letter to get started'}
+                  </p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedLetters.map(letter => (
+                <LetterRow
+                  key={letter.id}
+                  letter={letter}
+                  t={t}
+                  isSelected={letter.id ? selectedLetters.has(letter.id) : false}
+                  onSelect={handleSelectLetter}
+                  onView={() => onSelectLetter?.(letter)}
+                  onEdit={() => onEditLetter?.(letter)}
+                  onDelete={() => setDeleteTarget(letter)}
+                  hasDeletePermission={hasPermissionSync('invoices.delete')}
+                  getStatusBadgeVariant={getStatusBadgeVariant}
+                />
+              ))
+            )}
+          </TableBody>
+        </Table>
+
+        {letters.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{t('invoiceList.showing') || 'Showing'}</span>
+              <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>
+              <span>{t('invoiceList.paginationTo') || 'to'}</span>
+              <span className="font-medium">{Math.min(currentPage * itemsPerPage, letters.length)}</span>
+              <span>{t('invoiceList.of') || 'of'}</span>
+              <span className="font-medium">{letters.length}</span>
+              <span>{t('invoiceList.results') || 'results'}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{t('invoiceList.rowsPerPage') || 'Rows per page'}:</span>
+                <Select value={itemsPerPage.toString()} onValueChange={v => { setItemsPerPage(Number(v)); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[70px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10, 25, 50].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {t('invoiceList.page') || 'Page'} {currentPage} {t('invoiceList.of') || 'of'} {totalPages}
+              </span>
+              <div className="flex gap-1">
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('common.confirmDelete') || 'Delete Letter'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('invoiceList.deleteConfirm') || 'This action cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+const LetterRow = memo(function LetterRow({ letter, t, isSelected, onSelect, onView, onEdit, onDelete, hasDeletePermission, getStatusBadgeVariant }: {
+  letter: Invoice;
+  t: (key: string) => string;
+  isSelected: boolean;
+  onSelect: (id: string | undefined) => void;
+  onView: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  hasDeletePermission: boolean;
+  getStatusBadgeVariant: (status: string) => any;
+}) {
+  return (
+    <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+      <TableCell>
+        <Checkbox checked={isSelected} onCheckedChange={() => onSelect(letter.id)} />
+      </TableCell>
+      <TableCell>
+        <button onClick={onView} className="font-medium text-purple-600 hover:text-purple-700 hover:underline text-left">
+          {letter.invoiceNumber || <span className="text-muted-foreground italic font-normal">No number</span>}
+        </button>
+      </TableCell>
+      <TableCell>{letter.buyer?.name || '—'}</TableCell>
+      <TableCell>{letter.issueDate ? new Date(letter.issueDate).toLocaleDateString() : '—'}</TableCell>
+      <TableCell>
+        <Badge variant={getStatusBadgeVariant(letter.status || 'draft')}>
+          {t(`status.${letter.status || 'draft'}`)}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm"><MoreVertical className="h-4 w-4" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onView}>
+              <Eye className="h-4 w-4 mr-2" />{t('invoiceList.view')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>
+              <Edit className="h-4 w-4 mr-2" />{t('common.edit')}
+            </DropdownMenuItem>
+            {hasDeletePermission && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onDelete} className="text-red-600">
+                  <Trash2 className="h-4 w-4 mr-2" />{t('common.delete')}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
+});

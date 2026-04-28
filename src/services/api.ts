@@ -39,11 +39,18 @@ api.interceptors.response.use(
         }
 
         if (error.response?.status === 401) {
-            console.warn('Unauthorized or token expired, logging out...');
-            useAuthStore.getState().logout();
-            // Optional: for fully certain redirect if store update doesn't trigger parent re-render
-            if (!window.location.hash.includes('login') && !window.location.hash.includes('landing')) {
-                window.location.hash = '#login';
+            // Don't auto-logout/redirect if we're on the login page or reset password page
+            const isLoginRequest = error.config?.url?.includes('/auth/login');
+            const hash = window.location.hash.replace('#', '').replace(/^\//, '');
+            const publicScreens = ['landing', 'login', 'signup', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison', 'reset-password'];
+            const isPublicPage = !hash || publicScreens.some(s => hash.startsWith(s));
+
+            if (isLoginRequest || isPublicPage) {
+                console.warn('Unauthorized on public or sensitive page, clearing auth but skipping redirect.');
+                useAuthStore.getState().clearAuth();
+            } else {
+                console.warn('Unauthorized or token expired, logging out from protected page...');
+                useAuthStore.getState().logout();
             }
         }
 
@@ -96,6 +103,14 @@ export const authService = {
 
         // Fallback
         return responseData;
+    },
+    forgotPassword: async (email: string) => {
+        const response = await api.post('/auth/forgot-password', { email });
+        return response.data;
+    },
+    resetPassword: async (token: string, password: string) => {
+        const response = await api.post('/auth/reset-password', { token, password });
+        return response.data;
     },
 };
 
@@ -157,6 +172,7 @@ export const invoiceService = {
         status?: string;
         dateFilter?: string;
         sort?: string;
+        templateType?: string;
     }) => {
         const response = await api.get<Invoice[]>('/invoices', { params });
         return response.data;
@@ -175,6 +191,34 @@ export const invoiceService = {
     },
     delete: async (id: string) => {
         const response = await api.delete(`/invoices/${id}`);
+        return response.data;
+    },
+};
+
+export const letterService = {
+    getAll: async (params?: {
+        search?: string;
+        status?: string;
+        dateFilter?: string;
+        sort?: string;
+    }) => {
+        const response = await api.get<Invoice[]>('/letters', { params });
+        return response.data;
+    },
+    getById: async (id: string) => {
+        const response = await api.get<Invoice>(`/letters/${id}`);
+        return response.data;
+    },
+    create: async (letter: Invoice) => {
+        const response = await api.post('/letters', letter);
+        return response.data;
+    },
+    update: async (id: string, letter: Invoice) => {
+        const response = await api.put(`/letters/${id}`, letter);
+        return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/letters/${id}`);
         return response.data;
     },
 };
@@ -246,6 +290,17 @@ export const invoiceTemplateService = {
 export const aiInvoiceService = {
     parseInvoicePrompt: async (request: AIPromptRequest) => {
         const response = await api.post<AIPromptResponse>('/ai/parse-invoice', request);
+        return response.data;
+    },
+};
+
+export const aiLetterService = {
+    improveBody: async (body: string, language?: string, context?: {
+        subject?: string;
+        recipient?: string;
+        sender?: string;
+    }) => {
+        const response = await api.post<{ body: string }>('/ai/improve-letter-body', { body, language, context });
         return response.data;
     },
 };
@@ -402,3 +457,9 @@ export const workspaceService = {
     }
 };
 
+export const publicCmsService = {
+    getPage: async (slug: string, lang = 'en') => {
+        const response = await api.get(`/api/public/cms/${slug}`, { params: { lang } });
+        return response.data;
+    }
+};

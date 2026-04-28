@@ -4,11 +4,12 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { FileText, Mail, Lock, ArrowLeft, Info } from 'lucide-react';
+import { FileText, Mail, Lock, ArrowLeft, Info, Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { TicketingWidget } from '../TicketingWidget';
 import { getTicketingApiKey } from '../../utils/config';
+import { authService } from '../../services/api';
 
 interface LoginProps {
   onLogin: (email: string, password: string) => void;
@@ -22,6 +23,8 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasPendingAction, setHasPendingAction] = useState(false);
+  const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     // Pre-fill email if redirected from Quick Access
@@ -49,7 +52,26 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
     }
   };
 
-
+  const handleForgotPassword = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error('Please enter your email first.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await authService.forgotPassword(email);
+      if (response.test_url) {
+        console.log('Test URL:', response.test_url); // Only for local testing
+      }
+      toast.success(response.message || 'Reset link sent if the account exists.');
+      setIsForgotPasswordMode(false);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to send reset link.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -102,55 +124,131 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
                 <span>{t('login.pendingActionBanner') || 'Account found! Log in below to continue with your invoice.'}</span>
               </div>
             )}
-            <CardHeader className="space-y-1">
-              <CardTitle>{t('login.title')}</CardTitle>
-              <CardDescription>
-                {t('login.description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t('login.email')}</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="admin@medianet-home.de"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 bg-white"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
+            {isForgotPasswordMode ? (
+              <>
+                <CardHeader className="space-y-1">
+                  <CardTitle>Reset Password</CardTitle>
+                  <CardDescription>
+                    Enter your email to receive a password reset link.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleForgotPassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">{t('login.email')}</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="email"
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-10 bg-white"
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">{t('login.password')}</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 bg-white"
+                    <Button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white shadow-lg shadow-purple-500/30"
                       disabled={isLoading}
-                    />
-                  </div>
-                </div>
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Send Reset Link'
+                      )}
+                    </Button>
+                    <div className="text-center mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setIsForgotPasswordMode(false)}
+                        className="text-sm font-medium text-violet-600 hover:text-violet-500"
+                      >
+                        Back to login
+                      </button>
+                    </div>
+                  </form>
+                </CardContent>
+              </>
+            ) : (
+              <>
+                <CardHeader className="space-y-1">
+                  <CardTitle>{t('login.title')}</CardTitle>
+                  <CardDescription>
+                    {t('login.description')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">{t('login.email')}</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="admin@medianet-home.de"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-10 bg-white"
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white shadow-lg shadow-purple-500/30"
-                  disabled={isLoading}
-                >
-                  {isLoading ? t('login.loggingIn') : t('login.signIn')}
-                </Button>
-              </form>
-            </CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password">{t('login.password')}</Label>
+                        <button
+                          type="button"
+                          onClick={() => setIsForgotPasswordMode(true)}
+                          className="text-xs font-medium text-violet-600 hover:text-violet-500"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="pl-10 pr-10 bg-white"
+                          disabled={isLoading}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white shadow-lg shadow-purple-500/30"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? t('login.loggingIn') : t('login.signIn')}
+                    </Button>
+                  </form>
+                </CardContent>
+              </>
+            )}
           </Card>
 
           {/* Footer */}

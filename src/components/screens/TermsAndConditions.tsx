@@ -4,6 +4,8 @@ import { Button } from '../ui/button';
 import { TicketingWidget } from '../TicketingWidget';
 import { getTicketingApiKey } from '../../utils/config';
 import { LanguageSwitcher } from '../LanguageSwitcher';
+import { useState, useEffect } from 'react';
+import { publicCmsService } from '../../services/api';
 
 interface TermsAndConditionsProps {
     onBack: () => void;
@@ -11,7 +13,26 @@ interface TermsAndConditionsProps {
 }
 
 export function TermsAndConditions({ onBack, onNavigate }: TermsAndConditionsProps) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+
+    const [cmsContent, setCmsContent] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCms = async () => {
+            try {
+                const response = await publicCmsService.getPage('terms-conditions', language);
+                if (response.success && response.data.content) {
+                    setCmsContent(response.data.content);
+                }
+            } catch (error) {
+                console.error('Failed to fetch CMS content:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchCms();
+    }, [language]);
 
     const sections = [
         { key: 'scope', num: '3.1' },
@@ -57,17 +78,26 @@ export function TermsAndConditions({ onBack, onNavigate }: TermsAndConditionsPro
                 </div>
 
                 <div className="space-y-6">
-                    {sections.map(({ key, num }) => (
-                        <div key={key} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-                            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50 mb-3 border-b border-gray-100 dark:border-gray-800 pb-2">
-                                <span className="text-purple-500 mr-2">{num}</span>
-                                {t(`termsAndConditions.sections.${key}.title`)}
-                            </h2>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
-                                {t(`termsAndConditions.sections.${key}.content`)}
-                            </p>
+                    {isLoading ? (
+                        <div className="flex justify-center p-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                         </div>
-                    ))}
+                    ) : cmsContent ? (
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 shadow-sm prose dark:prose-invert max-w-none"
+                             dangerouslySetInnerHTML={{ __html: cmsContent }} />
+                    ) : (
+                        sections.map(({ key, num }) => (
+                            <div key={key} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+                                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50 mb-3 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                    <span className="text-purple-500 mr-2">{num}</span>
+                                    {t(`termsAndConditions.sections.${key}.title`)}
+                                </h2>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
+                                    {t(`termsAndConditions.sections.${key}.content`)}
+                                </p>
+                            </div>
+                        ))
+                    )}
                 </div>
             </main>
 

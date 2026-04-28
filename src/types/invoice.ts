@@ -63,6 +63,7 @@ export interface PaymentTerms {
 export interface Invoice {
   id?: string;
   templateId?: string; // Links to the InvoiceTemplate used for this invoice
+  templateType?: TemplateType;
   invoiceNumber: string;
   issueDate: string; // ISO 8601 date (YYYY-MM-DD)
   dueDate?: string;
@@ -84,6 +85,9 @@ export interface Invoice {
   paymentMeans?: PaymentMeans;
   paymentTerms?: PaymentTerms;
   note?: string;
+  body?: string;
+  salutation?: string;
+  closing?: string;
   billingPeriodStart?: string;
   billingPeriodEnd?: string;
   attachments?: string[];
@@ -97,15 +101,19 @@ export interface Invoice {
 
 export interface TemplateLayoutElement {
   id: string;
-  type: 'logo' | 'seller' | 'buyer' | 'dates' | 'items' | 'totals' | 'footer' | 'qr' | 'notes' | 'title' | 'header' | 'signature' | 'tax_summary';
+  type: 'logo' | 'seller' | 'buyer' | 'dates' | 'items' | 'totals' | 'footer' | 'qr' | 'notes' | 'title' | 'header' | 'signature' | 'tax_summary' | 'to' | 'description' | 'sender';
   x: number;
   y: number;
   w: number;
   h: number;
   visible: boolean;
   zIndex?: number;
+  fontSize?: number;
   style?: Record<string, any>;
+  content?: string;
 }
+
+export type TemplateType = 'invoice' | 'business_letter';
 
 export interface ValidationError {
   field: string; // UI field identifier
@@ -118,6 +126,7 @@ export interface ValidationError {
 export interface InvoiceTemplate {
   id: string;
   name: string;
+  templateType?: TemplateType;
   description: string;
   seller: Partial<Party>;
   defaultCurrency: string;
@@ -154,6 +163,11 @@ export interface CompanyProfile {
   footerText?: string;
   companyTypeId?: number;
   defaultTemplateId?: string;
+  invoiceNumberFormat?: string;
+  letterNumberFormat?: string;
+  defaultCurrency?: string;
+  defaultTaxRate?: number;
+  paymentTermsDays?: number;
 }
 
 export interface ExportOptions {
@@ -199,6 +213,7 @@ export const taxCategories = [
 export interface AIPromptRequest {
   prompt: string;
   context?: 'create' | 'edit';
+  templateType?: 'invoice' | 'business_letter';
   existingInvoice?: Partial<Invoice>;
   language?: string;
   parsedInvoice?: any;

@@ -10,6 +10,7 @@ import {
     X,
     Ticket,
     BookOpen,
+    Globe,
 } from 'lucide-react';
 import { useAdminStore } from '../../stores/adminStore';
 import { cn } from '../../lib/utils';
@@ -37,6 +38,7 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
         { id: 'SAusage', label: t('nav.reports'), icon: BarChart3 },
         { id: 'SATickets', label: 'Tickets', icon: Ticket },
         { id: 'SAWiki', label: 'Wiki', icon: BookOpen },
+        { id: 'SAPages', label: 'Page Content', icon: Globe },
         { id: 'SAsettings', label: t('nav.settings'), icon: Settings },
     ];
 

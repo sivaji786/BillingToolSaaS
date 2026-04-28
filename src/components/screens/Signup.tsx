@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { FileText, Mail, Lock, Building2, Globe } from 'lucide-react';
+import { FileText, Mail, Lock, Building2, Globe, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { onboardingService, billingService } from '../../services/api';
@@ -34,6 +34,8 @@ export function Signup({ initialPlan }: SignupProps) {
         country: '',
         postal_code: ''
     });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [subdomainStatus, setSubdomainStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
     const [isSubdomainManual, setIsSubdomainManual] = useState(false);
 
@@ -54,7 +56,8 @@ export function Signup({ initialPlan }: SignupProps) {
                 setFormData(prev => ({ ...prev, plan_id: String(plansData[0].id) }));
             }
             if (countriesData.length > 0 && !formData.country) {
-                setFormData(prev => ({ ...prev, country: countriesData[0].code }));
+                const defaultCountry = countriesData.find((c: any) => c.code === 'DE') || countriesData[0];
+                setFormData(prev => ({ ...prev, country: defaultCountry.code }));
             }
         } catch (error) {
             console.error('Failed to load signup data', error);
@@ -333,13 +336,20 @@ export function Signup({ initialPlan }: SignupProps) {
                                         <div className="relative">
                                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <Input
-                                                type="password"
-                                                className="pl-10"
+                                                type={showPassword ? 'text' : 'password'}
+                                                className="pl-10 pr-10"
                                                 minLength={8}
                                                 value={formData.password}
                                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                                 required
                                             />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                            >
+                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -347,12 +357,19 @@ export function Signup({ initialPlan }: SignupProps) {
                                         <div className="relative">
                                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <Input
-                                                type="password"
-                                                className="pl-10"
+                                                type={showConfirmPassword ? 'text' : 'password'}
+                                                className="pl-10 pr-10"
                                                 value={formData.confirmPassword}
                                                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                                                 required
                                             />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                            >
+                                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

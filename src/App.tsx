@@ -1,6 +1,6 @@
 import { useState, Suspense, lazy, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Invoice, InvoiceTemplate } from './types/invoice';
+import { Invoice, InvoiceTemplate, TemplateType } from './types/invoice';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { Loader2 } from 'lucide-react';
@@ -21,6 +21,7 @@ const Signup = lazy(() => import('./components/screens/Signup').then(module => (
 const Billing = lazy(() => import('./components/screens/Billing').then(module => ({ default: module.Billing })));
 const LandingPage = lazy(() => import('./components/screens/LandingPage').then(module => ({ default: module.LandingPage })));
 const QuickAccessInvoice = lazy(() => import('./components/screens/QuickAccessInvoice').then(module => ({ default: module.QuickAccessInvoice })));
+const ResetPassword = lazy(() => import('./components/screens/ResetPassword'));
 const Impressum = lazy(() => import('./components/screens/Impressum').then(module => ({ default: module.Impressum })));
 const PrivacyPolicy = lazy(() => import('./components/screens/PrivacyPolicy').then(module => ({ default: module.PrivacyPolicy })));
 const TermsAndConditions = lazy(() => import('./components/screens/TermsAndConditions').then(module => ({ default: module.TermsAndConditions })));
@@ -29,6 +30,9 @@ const Buyers = lazy(() => import('./components/screens/Buyers').then(module => (
 const Workspace = lazy(() => import('./components/screens/Workspace').then(module => ({ default: module.Workspace })));
 const AIHistory = lazy(() => import('./components/screens/AIHistory').then(module => ({ default: module.AIHistory })));
 const PackageComparison = lazy(() => import('./components/screens/PackageComparison').then(module => ({ default: module.PackageComparison })));
+const LetterList = lazy(() => import('./components/screens/LetterList').then(module => ({ default: module.LetterList })));
+const LetterEditor = lazy(() => import('./components/screens/LetterEditor').then(module => ({ default: module.LetterEditor })));
+const LetterPreview = lazy(() => import('./components/screens/LetterPreview').then(module => ({ default: module.LetterPreview })));
 
 // Admin Portal Components
 const SALogin = lazy(() => import('./components/screens/Admin/SALogin').then(module => ({ default: module.SALogin })));
@@ -45,6 +49,7 @@ const SAInvoiceForm = lazy(() => import('./components/screens/Admin/SAInvoiceFor
 const SATickets = lazy(() => import('./components/screens/Admin/SATickets').then(module => ({ default: module.SATickets })));
 const SATicketDetails = lazy(() => import('./components/screens/Admin/SATicketDetails').then(module => ({ default: module.SATicketDetails })));
 const SAWiki = lazy(() => import('./components/screens/Admin/SAWiki').then(module => ({ default: module.SAWiki })));
+const SAPages = lazy(() => import('./components/screens/Admin/SAPages').then(module => ({ default: module.SAPages })));
 
 
 import { TicketingWidget } from './components/TicketingWidget';
@@ -74,13 +79,13 @@ import {
   auditLogService,
 } from './services/api';
 import { getApiBaseUrl, getTicketingApiKey } from './utils/config';
-import { calculateInvoiceTotals } from './utils/invoice-calculations';
+import { calculateInvoiceTotals, generateInvoiceNumber } from './utils/invoice-calculations';
 import { toast } from 'sonner';
-import { authService, invoiceService } from './services/api';
+import { authService, invoiceService, letterService } from './services/api';
 import { PLATFORM_TEMPLATES } from './utils/invoice-templates-defaults';
 // hasPermissionSync removed
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -89,13 +94,16 @@ function AppContent() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
-      const hash = window.location.hash.replace('#', '');
-      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'].includes(hash)) {
+      const hash = window.location.hash.replace(/^#\/?/, '');
+      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'].includes(hash)) {
         return hash as Screen;
       }
-      // Handle parameterized routes like designLayout/123
+      // Handle parameterized routes like designLayout/123 or reset-password/123
       if (hash.startsWith('designLayout/')) {
         return 'designLayout';
+      }
+      if (hash.startsWith('reset-password/')) {
+        return 'resetPassword';
       }
     }
     return 'landing';
@@ -104,6 +112,7 @@ function AppContent() {
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('invoice');
   const [editingTemplate, setEditingTemplate] = useState<InvoiceTemplate | undefined>(undefined);
+  const [newTemplateType, setNewTemplateType] = useState<TemplateType>('invoice');
   const [selectedPlan, setSelectedPlan] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -127,6 +136,18 @@ function AppContent() {
       // 4. Handle token from URL (redirection)
       const urlParams = new URLSearchParams(window.location.search);
       const tokenFromUrl = urlParams.get('token');
+      const isLogout = urlParams.get('logout') === 'true';
+
+      if (isLogout) {
+        console.log('Logout parameter detected, clearing main domain session');
+        useAuthStore.getState().clearAuth();
+        // Clean up URL without page reload
+        const newUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, '', newUrl);
+        setIsCheckingAuth(false);
+        return;
+      }
+
       if (tokenFromUrl) {
         console.log('Token found in URL, updating store');
         token = tokenFromUrl;
@@ -150,7 +171,13 @@ function AppContent() {
           }
         } catch (e) {
           console.error('Auth check failed:', e);
-          logout();
+          // Don't logout/redirect if we're on the reset password page
+          if (!window.location.hash.includes('reset-password')) {
+            logout();
+          } else {
+            // Just clear the invalid token from state but stay on page
+            useAuthStore.setState({ token: null, isAuthenticated: false });
+          }
         }
       }
       setIsCheckingAuth(false);
@@ -158,13 +185,16 @@ function AppContent() {
     checkAuth();
 
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
+      const hash = window.location.hash.replace(/^#\/?/, '');
       console.log('Hash changed:', hash);
       if (hash && [
-        'landing', 'login', 'dashboard', 'invoices', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'
+        'landing', 'login', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison', 'SAPages'
       ].includes(hash)) {
         console.log('Setting screen from hash change:', hash);
         setCurrentScreen(hash as Screen);
+      } else if (hash.startsWith('reset-password/')) {
+        console.log('Setting screen to resetPassword from parameterized route');
+        setCurrentScreen('resetPassword');
       } else if (hash.startsWith('designLayout/')) {
         console.log('Setting screen to designLayout from parameterized route');
         setCurrentScreen('designLayout');
@@ -211,7 +241,7 @@ function AppContent() {
   // Update hash when screen changes
   useEffect(() => {
     if ([
-      'dashboard', 'invoices', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory', 'packageComparison'
+      'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory', 'packageComparison'
     ].includes(currentScreen)) {
       if (window.location.hash.replace('#', '') !== currentScreen) {
         window.location.hash = currentScreen;
@@ -280,9 +310,14 @@ function AppContent() {
       }
 
       setCurrentScreen('dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(t('login.failed') || 'Login failed');
+      // Requirement: form should inform "email/ password wrong" on incorrect credentials
+      const errorMessage = error.response?.status === 401 
+        ? "email/ password wrong" 
+        : (t('login.failed') || 'Login failed');
+      
+      toast.error(errorMessage);
     }
   };
 
@@ -299,9 +334,10 @@ function AppContent() {
   const handleNewInvoice = () => {
     const newInvoice: Invoice = {
       id: `new_${Date.now()}`,
-      invoiceNumber: `INV-2025-${String(invoices.length + 1).padStart(5, '0')}`,
+      invoiceNumber: generateInvoiceNumber(profile?.invoiceNumberFormat || 'INV-{YYYY}-{NNNNN}', invoices.length),
       issueDate: new Date().toISOString().split('T')[0],
-      currency: 'EUR',
+      dueDate: new Date(Date.now() + (profile?.paymentTermsDays ?? 30) * 86400000).toISOString().split('T')[0],
+      currency: profile?.defaultCurrency || 'EUR',
       seller: {
         name: profile?.name || '',
         vatId: profile?.vatId || '',
@@ -320,7 +356,17 @@ function AppContent() {
           country: '',
         },
       },
-      lines: [],
+      lines: [
+        {
+          id: '1',
+          description: '',
+          quantity: 1,
+          unitCode: 'EA',
+          unitPrice: 0,
+          taxCategory: profile?.defaultTaxRate === 0 ? 'Z' : 'S',
+          taxPercent: profile?.defaultTaxRate ?? 19,
+        },
+      ],
       taxTotals: [],
       lineExtensionAmount: 0,
       taxExclusiveAmount: 0,
@@ -341,6 +387,44 @@ function AppContent() {
     setEditorMode('invoice');
     setPreviousScreen(currentScreen);
     setCurrentScreen('editor');
+  };
+
+  const handleNewBusinessLetter = () => {
+    const letterTemplate = templates.find(t => t.templateType === 'business_letter') || PLATFORM_TEMPLATES.find(t => t.templateType === 'business_letter');
+    
+    const newLetter: Invoice = {
+      id: `new_${Date.now()}`,
+      templateType: 'business_letter',
+      templateId: letterTemplate?.id,
+      invoiceNumber: generateInvoiceNumber(profile?.letterNumberFormat || 'LTR-{YYYY}-{NNNNN}', invoices.filter(inv => inv.templateType === 'business_letter').length),
+      issueDate: new Date().toISOString().split('T')[0],
+      currency: profile?.defaultCurrency || 'EUR',
+      seller: {
+        name: profile?.name || '',
+        address: profile?.address || { street: '', city: '', postalCode: '', country: '' },
+        contactEmail: profile?.email,
+        contactPhone: profile?.phone,
+      },
+      buyer: {
+        name: '',
+        address: { street: '', city: '', postalCode: '', country: '' },
+      },
+      lines: [],
+      taxTotals: [],
+      lineExtensionAmount: 0,
+      taxExclusiveAmount: 0,
+      taxInclusiveAmount: 0,
+      payableAmount: 0,
+      salutation: 'Dear Sir/Madam,',
+      body: '',
+      closing: 'Yours sincerely,',
+      status: 'draft',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setCurrentInvoice(newLetter);
+    setPreviousScreen(currentScreen);
+    setCurrentScreen('preview');
   };
 
   const handleOpenInvoice = async (invoice: Invoice) => {
@@ -397,15 +481,15 @@ function AppContent() {
 
       try {
         let savedInvoice: Invoice = calculated;
-        if (calculated.id && !calculated.id.startsWith('new_')) {
+        if (calculated.id && !String(calculated.id).startsWith('new_')) {
           // Update existing
-          await invoiceService.update(calculated.id, calculated);
+          await invoiceService.update(String(calculated.id), calculated);
         } else {
           // Create new
           // Remove temporary ID
           const { id, ...invoiceData } = calculated;
           const response = await invoiceService.create(invoiceData as Invoice);
-          savedInvoice = { ...calculated, id: response.id };
+          savedInvoice = { ...calculated, id: String(response.id) };
         }
 
         refetchInvoices();
@@ -423,8 +507,9 @@ function AppContent() {
     const newInvoice: Invoice = {
       id: String(Date.now()),
       templateId: template.id || profile?.defaultTemplateId || PLATFORM_TEMPLATES[0].id,
-      invoiceNumber: `INV-2026-${String(invoices.length + 1).padStart(5, '0')}`,
+      invoiceNumber: generateInvoiceNumber(profile?.invoiceNumberFormat || 'INV-{YYYY}-{NNNNN}', invoices.length),
       issueDate: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + (profile?.paymentTermsDays ?? 30) * 86400000).toISOString().split('T')[0],
       currency: template.defaultCurrency || 'EUR',
       seller: {
         name: template.seller.name || profile?.name || '',
@@ -504,7 +589,59 @@ function AppContent() {
     refetchProfile(); // Refresh profile to get updated defaultTemplateId
   };
 
-  const handleNewTemplate = () => {
+  const handleOpenLetter = async (letter: Invoice) => {
+    if (!letter.id) return;
+    try {
+      const fullLetter = await letterService.getById(String(letter.id));
+      setCurrentInvoice(fullLetter);
+      setPreviousScreen(currentScreen);
+      setCurrentScreen('editor');
+    } catch (error) {
+      console.error('Failed to load letter:', error);
+      toast.error(t('common.error') || 'Failed to load letter');
+    }
+  };
+
+  const handleSelectLetter = async (letter: Invoice) => {
+    if (!letter.id) return;
+    try {
+      const fullLetter = await letterService.getById(String(letter.id));
+      setCurrentInvoice(fullLetter);
+      setPreviousScreen(currentScreen);
+      setCurrentScreen('preview');
+    } catch (error) {
+      console.error('Failed to load letter:', error);
+      toast.error(t('common.error') || 'Failed to load letter');
+    }
+  };
+
+  const handlePreviewLetter = (letter: Invoice) => {
+    setCurrentInvoice(letter);
+    setPreviousScreen(currentScreen);
+    setCurrentScreen('preview');
+  };
+
+  const handleSaveLetter = async (letter: Invoice) => {
+    try {
+      let savedLetter = letter;
+      if (letter.id && !String(letter.id).startsWith('new_')) {
+        await letterService.update(String(letter.id), letter);
+      } else {
+        const { id, ...letterData } = letter;
+        const response = await letterService.create(letterData as Invoice);
+        savedLetter = { ...letter, id: String(response.id) };
+      }
+      setCurrentInvoice(savedLetter);
+      return savedLetter;
+    } catch (error) {
+      console.error('Failed to save letter:', error);
+      toast.error(t('previewModal.letterSaveFailed') || 'Failed to save letter');
+      throw error;
+    }
+  };
+
+  const handleNewTemplate = (type: TemplateType = 'invoice') => {
+    setNewTemplateType(type);
     setEditingTemplate(undefined);
     setCurrentScreen('templateEditor');
   };
@@ -520,7 +657,7 @@ function AppContent() {
 
   const handleSaveTemplate = async (template: InvoiceTemplate) => {
     try {
-      if (template.id && !template.id.includes('.') && !template.id.startsWith('new_')) { // Checking if it's likely a database ID
+      if (template.id && !String(template.id).includes('.') && !String(template.id).startsWith('new_')) { // Checking if it's likely a database ID
         await invoiceTemplateService.update(template.id, template);
         toast.success(t('templates.templateUpdated') || 'Template updated', {
           description: template.name,
@@ -612,6 +749,17 @@ function AppContent() {
 
   // Show login/signup/landing if not authenticated
   if (!isAuthenticated) {
+    if (currentScreen === 'resetPassword') {
+      const parts = window.location.hash.split('/');
+      const token = parts[parts.length - 1] || '';
+      return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+          <ResetPassword token={token} onComplete={() => setCurrentScreen('login')} />
+          <Toaster />
+        </Suspense>
+      );
+    }
+    
     if (currentScreen === 'quickAccess') {
       return (
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
@@ -720,62 +868,88 @@ function AppContent() {
             </div>
           }>
             {currentScreen === 'editor' && currentInvoice ? (
-              <InvoiceEditor
-                invoice={currentInvoice}
-                profile={profile}
-                onSave={handleSaveInvoice}
-                onBack={handleBackToDashboard}
-                onPreview={handlePreviewInvoice}
-                mode={editorMode}
-                templates={templates}
-                onLoadTemplate={(template) => {
-                  const updatedInvoice = {
-                    ...currentInvoice,
-                    templateId: template.id,
-                    currency: template.defaultCurrency,
-                    seller: {
-                      name: template.seller.name || currentInvoice.seller.name,
-                      vatId: template.seller.vatId || currentInvoice.seller.vatId,
-                      address: template.seller.address || currentInvoice.seller.address,
-                      contactEmail: currentInvoice.seller.contactEmail,
-                      contactPhone: currentInvoice.seller.contactPhone,
-                    },
-                    paymentTerms: template.defaultPaymentTerms,
-                    lines: currentInvoice.lines.length > 0 ? currentInvoice.lines : [{
-                      id: '1',
-                      description: '',
-                      quantity: 1,
-                      unitCode: 'EA',
-                      unitPrice: 0,
-                      taxCategory: template.defaultTaxCategory as any,
-                      taxPercent: template.defaultTaxPercent,
-                    }],
-                  };
-                  setCurrentInvoice(updatedInvoice);
-                  toast.success(t('templates.templateLoaded') || 'Template loaded', {
-                    description: template.name,
-                  });
-                }}
-              />
+              currentInvoice.templateType === 'business_letter' ? (
+                <LetterEditor
+                  letter={currentInvoice}
+                  onSave={handleSaveLetter}
+                  onBack={handleBackToDashboard}
+                  onPreview={handlePreviewLetter}
+                  profile={profile}
+                />
+              ) : (
+                <InvoiceEditor
+                  invoice={currentInvoice}
+                  profile={profile}
+                  onSave={handleSaveInvoice}
+                  onBack={handleBackToDashboard}
+                  onPreview={handlePreviewInvoice}
+                  mode={editorMode}
+                  templates={templates}
+                  onLoadTemplate={(template) => {
+                    const updatedInvoice = {
+                      ...currentInvoice,
+                      templateId: template.id,
+                      currency: template.defaultCurrency,
+                      seller: {
+                        name: template.seller.name || currentInvoice.seller.name,
+                        vatId: template.seller.vatId || currentInvoice.seller.vatId,
+                        address: template.seller.address || currentInvoice.seller.address,
+                        contactEmail: currentInvoice.seller.contactEmail,
+                        contactPhone: currentInvoice.seller.contactPhone,
+                      },
+                      paymentTerms: template.defaultPaymentTerms,
+                      lines: currentInvoice.lines.length > 0 ? currentInvoice.lines : [{
+                        id: '1',
+                        description: '',
+                        quantity: 1,
+                        unitCode: 'EA',
+                        unitPrice: 0,
+                        taxCategory: template.defaultTaxCategory as any,
+                        taxPercent: template.defaultTaxPercent,
+                      }],
+                    };
+                    setCurrentInvoice(updatedInvoice);
+                    toast.success(t('templates.templateLoaded') || 'Template loaded', {
+                      description: template.name,
+                    });
+                  }}
+                />
+              )
             ) : currentScreen === 'preview' && currentInvoice ? (
-              <InvoicePreview
-                invoice={currentInvoice}
-                onBack={handleBackToEditor}
-                onSave={handleSaveFromPreview}
-                template={templates.find(t => t.id === currentInvoice.templateId) || 
-                          templates.find(t => t.id === profile?.defaultTemplateId) ||
-                          templates[0]}
-                allTemplates={templates}
-                onTemplateChange={(templateId) => {
-                  setCurrentInvoice(prev => prev ? ({ ...prev, templateId }) : null);
-                }}
-                profile={profile}
-              />
+              currentInvoice.templateType === 'business_letter' ? (
+                <LetterPreview
+                  letter={currentInvoice}
+                  onBack={handleBackToDashboard}
+                  onSave={(letter) => setCurrentInvoice(letter)}
+                  template={templates.find(t => t.id === currentInvoice.templateId)}
+                  allTemplates={templates}
+                  onTemplateChange={(templateId) => {
+                    setCurrentInvoice(prev => prev ? ({ ...prev, templateId }) : null);
+                  }}
+                  profile={profile}
+                />
+              ) : (
+                <InvoicePreview
+                  invoice={currentInvoice}
+                  onBack={handleBackToEditor}
+                  onSave={handleSaveFromPreview}
+                  template={templates.find(t => t.id === currentInvoice.templateId) ||
+                            templates.find(t => t.id === profile?.defaultTemplateId) ||
+                            templates[0]}
+                  allTemplates={templates}
+                  onTemplateChange={(templateId) => {
+                    setCurrentInvoice(prev => prev ? ({ ...prev, templateId }) : null);
+                  }}
+                  profile={profile}
+                />
+              )
             ) : currentScreen === 'templateEditor' ? (
               <TemplateEditor
                 template={editingTemplate}
+                profile={profile}
                 onSave={handleSaveTemplate}
                 onCancel={handleCancelTemplateEdit}
+                initialTemplateType={newTemplateType}
               />
             ) : currentScreen === 'designLayout' ? (
               <DesignLayoutPage />
@@ -794,6 +968,15 @@ function AppContent() {
                     onSelectInvoice={handlePreviewInvoice}
                     onEditInvoice={handleOpenInvoice}
                     onNewInvoice={handleNewInvoice}
+                    templateType="invoice"
+                  />
+                )}
+
+                {currentScreen === 'letters' && (
+                  <LetterList
+                    onSelectLetter={handleSelectLetter}
+                    onEditLetter={handleOpenLetter}
+                    onNewLetter={handleNewBusinessLetter}
                   />
                 )}
 
@@ -844,16 +1027,22 @@ function AppContent() {
         </div>
 
         <GlobalAIAssistant
-          onGenerateInvoiceNumber={() => `INV-2025-${String(invoices.length + 1).padStart(5, '0')}`}
+          onGenerateInvoiceNumber={() => generateInvoiceNumber(profile?.invoiceNumberFormat || 'INV-{YYYY}-{NNNNN}', invoices.length)}
+          onGenerateLetterNumber={() => generateInvoiceNumber(profile?.letterNumberFormat || 'LTR-{YYYY}-{NNNNN}', invoices.filter(inv => inv.templateType === 'business_letter').length)}
           currentInvoice={currentInvoice}
           currentScreen={currentScreen}
+          templateType={currentScreen === 'letters' || currentInvoice?.templateType === 'business_letter' ? 'business_letter' : 'invoice'}
           onUpdateInvoice={(updatedInvoice) => {
             setCurrentInvoice(updatedInvoice);
-            // If in preview mode, ensure we update the hash data to reflect changes
             if (currentScreen === 'preview') {
               const invoiceDataStr = encodeURIComponent(JSON.stringify(updatedInvoice));
               window.location.hash = `#preview?data=${invoiceDataStr}`;
             }
+          }}
+          onCreateLetter={(letter) => {
+            setCurrentInvoice(letter);
+            setPreviousScreen(currentScreen);
+            setCurrentScreen('preview');
           }}
         />
         <TicketingWidget
@@ -883,7 +1072,7 @@ function AdminPortalRouter() {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
       // Check if it's an admin route
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages'].includes(hash)) {
         return hash as Screen;
       }
     }
@@ -899,7 +1088,7 @@ function AdminPortalRouter() {
     if (!_hasHydrated) return;
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages'].includes(hash)) {
         setCurrentScreen(hash as Screen);
       }
     };
@@ -915,7 +1104,7 @@ function AdminPortalRouter() {
   };
 
   // Admin Portal Routes
-  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki'].includes(currentScreen);
+  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages'].includes(currentScreen);
 
   if (isAdminRoute) {
     // Wait for hydration before checking auth
@@ -977,6 +1166,7 @@ function AdminPortalRouter() {
           {currentScreen === 'SAusage' && <SAusage onNavigate={handleNavigate} />}
           {currentScreen === 'SAsettings' && <SAsettings />}
           {currentScreen === 'SAWiki' && <SAWiki />}
+          {currentScreen === 'SAPages' && <SAPages />}
         </AdminLayoutWrapper>
         <Toaster />
       </Suspense>

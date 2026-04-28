@@ -40,13 +40,17 @@ export const getApiBaseUrl = (): string => {
  */
 export const getBaseDomain = (): string => {
     const hostname = window.location.hostname;
+    const parts = hostname.split('.');
 
     // Handle localhost and IP addresses
     if (hostname === 'localhost' || /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) {
         return hostname;
     }
 
-    const parts = hostname.split('.');
+    // Handle *.localhost cases
+    if (parts.length >= 2 && parts[parts.length - 1] === 'localhost') {
+        return 'localhost';
+    }
 
     // If it's a simple domain like "example.com", return it.
     // If it's a subdomain like "tenant.example.com", we want "example.com".
@@ -62,10 +66,21 @@ export const getBaseDomain = (): string => {
 };
 
 /**
+ * Redirect immediately to the root level of the base domain.
+ * Optionally appends a hash route (e.g., '#login').
+ */
+export const redirectToMainDomain = (hash: string = '') => {
+    const baseDomain = getBaseDomain();
+    const port = window.location.port ? `:${window.location.port}` : '';
+    const protocol = window.location.protocol;
+    window.location.href = `${protocol}//${baseDomain}${port}/${hash}`;
+};
+
+/**
  * Get Ticketing Widget API key from environment
  */
 export const getTicketingApiKey = (): string => {
     return import.meta.env.VITE_TICKETING_API_KEY || 'public';
 };
 
-export default { getApiBaseUrl, getBaseDomain, getTicketingApiKey };
+export default { getApiBaseUrl, getBaseDomain, getTicketingApiKey, redirectToMainDomain };

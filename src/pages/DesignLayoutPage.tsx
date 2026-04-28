@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { InvoiceTemplate } from '../types/invoice';
+import { useQueryClient } from '@tanstack/react-query';
+import { InvoiceTemplate, CompanyProfile } from '../types/invoice';
 import { TemplateDesignLayout } from '../components/invoice/TemplateDesignLayout';
 import { toast } from 'sonner';
-import { invoiceTemplateService } from '../services/api';
+import { invoiceTemplateService, companyProfileService } from '../services/api';
 
 export function DesignLayoutPage() {
     const [template, setTemplate] = useState<InvoiceTemplate | null>(null);
+    const [profile, setProfile] = useState<CompanyProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         // Get template ID from hash (e.g., #designLayout/123 or #designLayout/new)
@@ -14,38 +17,54 @@ export function DesignLayoutPage() {
         const match = hash.match(/#designLayout\/(.+)/);
         const templateId = match ? match[1] : null;
 
-        const loadTemplate = async () => {
+        const loadData = async () => {
             if (!templateId) {
                 toast.error('No template ID provided');
                 window.location.hash = 'templates';
                 return;
             }
 
-            // Handle new template case
-            if (templateId === 'new') {
-                // Create a minimal template object for new templates
-                setTemplate({
-                    id: '',
-                    name: 'New Template',
-                    description: '',
-                    seller: {
-                        name: '',
-                        address: { street: '', city: '', postalCode: '', country: '' }
-                    },
-                    defaultCurrency: 'EUR',
-                    defaultTaxCategory: 'Standard',
-                    defaultTaxPercent: 0,
-                    defaultPaymentTerms: {},
-                    logoUrl: '',
-                    headerText: '',
-                    footerText: '',
-                    layout: []
-                });
-                setLoading(false);
-                return;
-            }
-
             try {
+                let fetchedProfile = null;
+                try {
+                    const profiles = await companyProfileService.getAll();
+                    if (profiles && profiles.length > 0) {
+                        fetchedProfile = profiles[0];
+                        setProfile(fetchedProfile);
+                    }
+                } catch (e) {
+                    console.error('Failed to load profile', e);
+                }
+
+                // Handle new template case
+                if (templateId === 'new') {
+                    // Create a minimal template object for new templates using profile defaults
+                    setTemplate({
+                        id: '',
+                        name: 'New Template',
+                        description: '',
+                        seller: {
+                            name: fetchedProfile?.name || '',
+                            vatId: fetchedProfile?.vatId || '',
+                            address: fetchedProfile?.address || { street: '', city: '', postalCode: '', country: '' },
+                            contactEmail: fetchedProfile?.email || '',
+                            contactPhone: fetchedProfile?.phone || ''
+                        },
+                        defaultCurrency: fetchedProfile?.defaultCurrency || 'EUR',
+                        defaultTaxCategory: fetchedProfile?.defaultTaxRate === 0 ? 'Z' : 'S',
+                        defaultTaxPercent: fetchedProfile?.defaultTaxRate ?? 19,
+                        defaultPaymentTerms: {
+                            note: fetchedProfile?.paymentTermsDays ? `Payment due within ${fetchedProfile.paymentTermsDays} days` : 'Payment due within 30 days'
+                        },
+                        logoUrl: fetchedProfile?.logoUrl || '',
+                        headerText: fetchedProfile?.headerText || '',
+                        footerText: fetchedProfile?.footerText || '',
+                        layout: []
+                    });
+                    setLoading(false);
+                    return;
+                }
+
                 const templates = await invoiceTemplateService.getAll();
                 const found = templates.find((t: InvoiceTemplate) => t.id === templateId);
 
@@ -64,7 +83,7 @@ export function DesignLayoutPage() {
             }
         };
 
-        loadTemplate();
+        loadData();
     }, []);
 
     const handleLayoutChange = async (newLayout: any) => {
@@ -91,6 +110,7 @@ export function DesignLayoutPage() {
         try {
             if (template.id) {
                 await invoiceTemplateService.update(template.id, template);
+                queryClient.invalidateQueries({ queryKey: ['templates'] });
                 toast.success('Layout saved successfully');
                 window.location.hash = 'templates';
             }
@@ -119,6 +139,7 @@ export function DesignLayoutPage() {
         <div className="w-full h-full overflow-hidden">
             <TemplateDesignLayout
                 template={template}
+                profile={profile}
                 onLayoutChange={handleLayoutChange}
                 onSave={handleSave}
                 onCancel={() => window.location.hash = 'templates'}

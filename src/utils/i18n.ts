@@ -1,13 +1,15 @@
 import { en } from '../translations/en';
 import { de } from '../translations/de';
 import { ar } from '../translations/ar';
+import { pl } from '../translations/pl';
 
-export type Language = 'en' | 'de' | 'ar';
+export type Language = 'en' | 'de' | 'ar' | 'pl';
 
 export const translations = {
   en,
   de,
   ar,
+  pl,
 };
 
 export const getTranslation = (lang: Language, key: string): string => {

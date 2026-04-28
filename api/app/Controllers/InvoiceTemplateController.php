@@ -87,6 +87,7 @@ class InvoiceTemplateController extends BaseController
     {
         return [
             'name' => $data['name'],
+            'template_type' => $data['templateType'] ?? 'invoice',
             'description' => $data['description'] ?? null,
             'seller_json' => json_encode($data['seller']),
             'default_currency' => $data['defaultCurrency'],
@@ -105,6 +106,7 @@ class InvoiceTemplateController extends BaseController
         return [
             'id' => $template['id'],
             'name' => $template['name'],
+            'templateType' => $template['template_type'] ?? 'invoice',
             'description' => $template['description'],
             'seller' => json_decode($template['seller_json'] ?? '{}', true) ?: [],
             'defaultCurrency' => $template['default_currency'],
