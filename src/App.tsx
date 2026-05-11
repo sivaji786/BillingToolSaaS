@@ -33,6 +33,7 @@ const PackageComparison = lazy(() => import('./components/screens/PackageCompari
 const LetterList = lazy(() => import('./components/screens/LetterList').then(module => ({ default: module.LetterList })));
 const LetterEditor = lazy(() => import('./components/screens/LetterEditor').then(module => ({ default: module.LetterEditor })));
 const LetterPreview = lazy(() => import('./components/screens/LetterPreview').then(module => ({ default: module.LetterPreview })));
+const CmsPageView = lazy(() => import('./components/screens/CmsPageView').then(module => ({ default: module.CmsPageView })));
 
 // Admin Portal Components
 const SALogin = lazy(() => import('./components/screens/Admin/SALogin').then(module => ({ default: module.SALogin })));
@@ -60,6 +61,8 @@ import { Separator } from './components/ui/separator';
 import { QueryProvider } from './providers/QueryProvider';
 import { useAdminStore } from './stores/adminStore';
 import { useAuthStore } from './stores/authStore';
+import { InlineCmsProvider } from './contexts/InlineCmsContext';
+import { EditModeBar } from './components/cms/EditModeBar';
 import { AdminLayout as AdminLayoutWrapper } from './components/admin/AdminLayout';
 import {
   Breadcrumb,
@@ -85,7 +88,7 @@ import { authService, invoiceService, letterService } from './services/api';
 import { PLATFORM_TEMPLATES } from './utils/invoice-templates-defaults';
 // hasPermissionSync removed
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -98,12 +101,15 @@ function AppContent() {
       if (hash && ['landing', 'login', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'].includes(hash)) {
         return hash as Screen;
       }
-      // Handle parameterized routes like designLayout/123 or reset-password/123
+      // Handle parameterized routes like designLayout/123 or reset-password/123 or cms/slug
       if (hash.startsWith('designLayout/')) {
         return 'designLayout';
       }
       if (hash.startsWith('reset-password/')) {
         return 'resetPassword';
+      }
+      if (hash.startsWith('cms/')) {
+        return 'cmsPage';
       }
     }
     return 'landing';
@@ -114,6 +120,13 @@ function AppContent() {
   const [editingTemplate, setEditingTemplate] = useState<InvoiceTemplate | undefined>(undefined);
   const [newTemplateType, setNewTemplateType] = useState<TemplateType>('invoice');
   const [selectedPlan, setSelectedPlan] = useState<string | undefined>(undefined);
+  const [currentCmsSlug, setCurrentCmsSlug] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace(/^#\/?/, '');
+      if (hash.startsWith('cms/')) return hash.slice('cms/'.length);
+    }
+    return '';
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -192,6 +205,12 @@ function AppContent() {
       ].includes(hash)) {
         console.log('Setting screen from hash change:', hash);
         setCurrentScreen(hash as Screen);
+      } else if (hash.startsWith('cms/')) {
+        const slug = hash.slice('cms/'.length);
+        if (slug) {
+          setCurrentCmsSlug(slug);
+          setCurrentScreen('cmsPage');
+        }
       } else if (hash.startsWith('reset-password/')) {
         console.log('Setting screen to resetPassword from parameterized route');
         setCurrentScreen('resetPassword');
@@ -299,7 +318,7 @@ function AppContent() {
       }
 
       // Check if the user was redirected here from Quick Access with a pending action
-      const pendingAction = localStorage.getItem('qa_pending_action');
+      const pendingAction = sessionStorage.getItem('qa_pending_action');
       if (pendingAction) {
         // Send them back to quickAccess which will auto-execute the pending action
         toast.success(t('login.success') || 'Login successful!', {
@@ -715,13 +734,32 @@ function AppContent() {
     );
   }
 
-  // Public legal pages — no auth required
-  const navigate = (screen: string) => setCurrentScreen(screen as Screen);
+  // Public legal pages and CMS pages — no auth required
+  const navigate = (screen: string) => {
+    if (screen.startsWith('cms/')) {
+      const slug = screen.slice('cms/'.length);
+      setCurrentCmsSlug(slug);
+      setCurrentScreen('cmsPage');
+      window.location.hash = `#/${screen}`;
+    } else {
+      setCurrentScreen(screen as Screen);
+    }
+  };
+
+  if (currentScreen === 'cmsPage' && currentCmsSlug) {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <CmsPageView slug={currentCmsSlug} onBack={() => setCurrentScreen('landing')} onNavigate={navigate} />
+        <Toaster />
+      </Suspense>
+    );
+  }
 
   if (currentScreen === 'impressum') {
     return (
       <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
         <Impressum onBack={() => setCurrentScreen('landing')} onNavigate={navigate} />
+        <EditModeBar />
       </Suspense>
     );
   }
@@ -729,6 +767,7 @@ function AppContent() {
     return (
       <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
         <PrivacyPolicy onBack={() => setCurrentScreen('landing')} onNavigate={navigate} />
+        <EditModeBar />
       </Suspense>
     );
   }
@@ -736,6 +775,7 @@ function AppContent() {
     return (
       <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
         <TermsAndConditions onBack={() => setCurrentScreen('landing')} onNavigate={navigate} />
+        <EditModeBar />
       </Suspense>
     );
   }
@@ -743,6 +783,7 @@ function AppContent() {
     return (
       <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
         <CookiePolicy onBack={() => setCurrentScreen('landing')} onNavigate={navigate} />
+        <EditModeBar />
       </Suspense>
     );
   }
@@ -816,6 +857,7 @@ function AppContent() {
             onNavigate={navigate}
           />
         )}
+        <EditModeBar />
         <Toaster />
       </Suspense>
     );
@@ -1060,7 +1102,9 @@ export default function App() {
   return (
     <QueryProvider>
       <LanguageProvider>
-        <AdminPortalRouter />
+        <InlineCmsProvider>
+          <AdminPortalRouter />
+        </InlineCmsProvider>
       </LanguageProvider>
     </QueryProvider>
   );

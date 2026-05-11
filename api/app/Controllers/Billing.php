@@ -121,20 +121,25 @@ class Billing extends BaseController
         try {
             // 1. Ensure Tenant has Stripe Customer ID
             if (empty($tenant->stripe_customer_id)) {
-                $customer = $this->getStripe()->createCustomer($tenant->company_name . ' (' . $tenant->subdomain . ')', 'billing-' . $tenant->id . '@example.com'); // Ideally use actual email
+                $db          = \Config\Database::connect();
+                $tenantOwner = $db->table('users')->where('tenant_id', $tenant->id)->orderBy('id', 'ASC')->get()->getRowArray();
+                $ownerEmail  = $tenantOwner['email'] ?? ('tenant-' . $tenant->id . '@billingtool.app');
+                $customer = $this->getStripe()->createCustomer($tenant->company_name . ' (' . $tenant->subdomain . ')', $ownerEmail);
                 $tenant->stripe_customer_id = $customer->id;
-                
-                // Save to DB
-                $db = \Config\Database::connect();
                 $db->table('tenants')->where('id', $tenant->id)->update(['stripe_customer_id' => $customer->id]);
             }
 
-            // 2. Get Price ID (Mock mapping for now)
-            // Ideally we fetch 'stripe_price_id' from Plans table.
-            $priceId = ($newPlanId == 2) ? 'price_pro_monthly' : 'price_starter_monthly'; 
-            // NOTE: You must replace these with REAL Stripe Price IDs from your Dashboard!
-            // Fallback for demo:
-            $priceId = getenv('STRIPE_PRICE_ID_' . $newPlanId) ?: 'price_1Qj...';
+            // 2. Resolve Stripe Price ID from the plans table
+            $planModel = new \App\Models\PlanModel();
+            $plan = $planModel->find($newPlanId);
+            if (!$plan) {
+                return $this->fail('Plan not found', 404);
+            }
+
+            $priceId = $plan['stripe_price_id'] ?? null;
+            if (empty($priceId)) {
+                return $this->fail('This plan does not have a Stripe price configured. Contact support.', 422);
+            }
 
             // 3. Create Checkout Session
             // Dynamic success/cancel URLs based on current origin

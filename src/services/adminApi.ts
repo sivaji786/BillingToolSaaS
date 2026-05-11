@@ -19,6 +19,7 @@ import {
     Ticket,
     TicketTracking,
     TenantUsage,
+    AdminStaff,
 } from '../types/admin';
 import { getApiBaseUrl } from '../utils/config';
 import { useAdminStore } from '../stores/adminStore';
@@ -286,6 +287,18 @@ export const adminSettingsService = {
         });
         return response.data;
     },
+    testEmail: async (email: string): Promise<{ success: boolean; message: string }> => {
+        const response = await adminApi.post<{ success: boolean; message: string }>('/settings/test-email', { email });
+        return response.data;
+    },
+    getHealth: async (): Promise<{ overall: string; checks: Record<string, { status: string; message: string }> }> => {
+        const response = await adminApi.get<{ overall: string; checks: Record<string, { status: string; message: string }> }>('/settings/health');
+        return response.data;
+    },
+    testTelegram: async (): Promise<{ success: boolean; message: string }> => {
+        const response = await adminApi.post<{ success: boolean; message: string }>('/settings/test-telegram');
+        return response.data;
+    },
 };
 
 // Ticket Services
@@ -301,7 +314,15 @@ export const adminTicketService = {
     getTicketTracking: async (id: string): Promise<TicketTracking[]> => {
         const response = await adminApi.get<TicketTracking[]>(`/tickets/${id}/tracking`);
         return response.data;
-    }
+    },
+    bulkUpdateTickets: async (ids: string[], status: string): Promise<{ status: string; message: string }> => {
+        const response = await adminApi.post<{ status: string; message: string }>('/tickets/bulk-update', { ids, status });
+        return response.data;
+    },
+    getAdminStaff: async (): Promise<AdminStaff[]> => {
+        const response = await adminApi.get<AdminStaff[]>('/admins');
+        return response.data;
+    },
 };
 
 // Wiki Services
@@ -317,7 +338,10 @@ export const adminWikiService = {
             params: { path, lang }
         });
         return response.data;
-    }
+    },
+    saveContent: async (path: string, content: string, lang = 'en'): Promise<void> => {
+        await adminApi.put('/wiki/write', { path, content, lang });
+    },
 };
 
 // CMS Services
@@ -326,8 +350,21 @@ export const adminCmsService = {
         const response = await adminApi.get<ApiResponse<any[]>>('/cms', { params: { lang } });
         return response.data.data;
     },
-    updatePage: async (slug: string, lang: string, data: { title?: string; content?: any; meta_description?: string }): Promise<void> => {
+    createPage: async (slug: string, lang: string, title: string, showInNav = false, navLabel = ''): Promise<void> => {
+        await adminApi.put(`/cms/${slug}`, { lang, title, content: '', show_in_nav: showInNav ? 1 : 0, nav_label: navLabel });
+    },
+    updatePage: async (slug: string, lang: string, data: { title?: string; content?: any; meta_description?: string; show_in_nav?: boolean; nav_label?: string; nav_order?: number; is_published?: boolean }): Promise<void> => {
         await adminApi.put(`/cms/${slug}`, { ...data, lang });
+    },
+    patchCmsField: async (slug: string, lang: string, field: string, value: string): Promise<void> => {
+        await adminApi.patch(`/cms/${slug}`, { lang, field, value });
+    },
+    uploadCmsImage: async (base64: string): Promise<string> => {
+        const response = await adminApi.post<{ url: string }>('/cms/upload-image', { image: base64 });
+        return response.data.url;
+    },
+    deleteCmsPage: async (slug: string): Promise<void> => {
+        await adminApi.delete(`/cms/${slug}`);
     },
 };
 

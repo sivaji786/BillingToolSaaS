@@ -14,7 +14,7 @@ class UserModel extends BaseModel
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['tenant_id', 'email', 'password', 'password_hash', 'name', 'role'];
+    protected $allowedFields    = ['tenant_id', 'email', 'password', 'password_hash', 'name', 'role', 'last_login'];
 
     protected bool $allowEmptyInserts = false;
 
@@ -105,14 +105,6 @@ class UserModel extends BaseModel
     public function hasRight($userId, $rightCode)
     {
         $db = \Config\Database::connect();
-
-        // 0. Fast-path: check users.role column directly.
-        //    Users with role='owner' or 'admin' are treated as super-admins,
-        //    regardless of whether a user_roles row exists.
-        $userRow = $db->table('users')->select('role')->where('id', $userId)->get()->getRow();
-        if ($userRow && ($userRow->role ?? '') === 'admin') {
-            return true; // admin has all rights
-        }
 
         // 1. Check Super Admin Role via user_roles → roles (is_super_admin = 1)
         $builder = $db->table('user_roles');

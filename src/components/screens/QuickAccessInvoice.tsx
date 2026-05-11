@@ -152,7 +152,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
 
     // On mount: read any pending action from localStorage (set by email-check redirect)
     useEffect(() => {
-        const raw = localStorage.getItem(PENDING_ACTION_KEY);
+        const raw = sessionStorage.getItem(PENDING_ACTION_KEY);
         if (raw) {
             try {
                 const { action, draft } = JSON.parse(raw);
@@ -162,7 +162,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                 }
                 setPendingPostLoginAction(action);
             } catch { /* ignore */ }
-            localStorage.removeItem(PENDING_ACTION_KEY);
+            sessionStorage.removeItem(PENDING_ACTION_KEY);
         }
     }, []);
 

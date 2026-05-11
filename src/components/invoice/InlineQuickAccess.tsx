@@ -89,7 +89,7 @@ export function InlineQuickAccess({
                 // Existing user → store pending action, redirect to login
                 localStorage.setItem('qa_login_email', email);
                 if (triggerReason) {
-                    localStorage.setItem('qa_pending_action', JSON.stringify({
+                    sessionStorage.setItem('qa_pending_action', JSON.stringify({
                         action: triggerReason,
                         draft: invoiceDraft ?? null,
                     }));

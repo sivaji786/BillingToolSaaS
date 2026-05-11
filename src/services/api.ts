@@ -193,6 +193,14 @@ export const invoiceService = {
         const response = await api.delete(`/invoices/${id}`);
         return response.data;
     },
+    generateShareLink: async (id: string): Promise<{ shareUrl: string; token: string }> => {
+        const response = await api.post<{ shareUrl: string; token: string }>(`/invoices/${id}/share`);
+        return response.data;
+    },
+    getByShareToken: async (token: string): Promise<Invoice> => {
+        const response = await api.get<Invoice>(`/public/invoices/${token}`);
+        return response.data;
+    },
 };
 
 export const letterService = {
@@ -249,6 +257,10 @@ export const buyerService = {
     },
     delete: async (id: string) => {
         const response = await api.delete(`/buyers/${id}`);
+        return response.data;
+    },
+    import: async (buyers: any[]): Promise<{ created: number; skipped: number; errors: number }> => {
+        const response = await api.post('/buyers/import', { buyers });
         return response.data;
     },
 };
@@ -461,5 +473,9 @@ export const publicCmsService = {
     getPage: async (slug: string, lang = 'en') => {
         const response = await api.get(`/api/public/cms/${slug}`, { params: { lang } });
         return response.data;
-    }
+    },
+    getNavPages: async (lang = 'en') => {
+        const response = await api.get('/api/public/cms/nav', { params: { lang } });
+        return response.data;
+    },
 };

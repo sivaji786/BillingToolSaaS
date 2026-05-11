@@ -62,11 +62,13 @@ export function SApackages({ onNavigate }: SApackagesProps) {
     const { data: packagesResponse, isLoading: isLoadingPackages } = useQuery({
         queryKey: ['packages'],
         queryFn: () => adminPackageService.getAll(1, 100),
+        staleTime: 30 * 60 * 1000,
     });
 
     const { data: services, isLoading: isLoadingServices } = useQuery({
         queryKey: ['package-services'],
         queryFn: () => adminPackageServicesService.getAll(),
+        staleTime: 30 * 60 * 1000,
     });
 
     const packages = useMemo<Package[]>(() => packagesResponse?.data || [], [packagesResponse]);

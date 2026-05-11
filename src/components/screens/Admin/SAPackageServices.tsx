@@ -31,6 +31,7 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
     const { data: services, isLoading } = useQuery({
         queryKey: ['package-services'],
         queryFn: () => adminPackageServicesService.getAll(),
+        staleTime: 30 * 60 * 1000,
     });
 
     const createMutation = useMutation({

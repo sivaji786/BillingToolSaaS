@@ -35,6 +35,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
     const { data: availableServices, isLoading: isServicesLoading } = useQuery({
         queryKey: ['package-services-active'],
         queryFn: () => adminPackageServicesService.getAll(true),
+        staleTime: 30 * 60 * 1000,
     });
 
     // Load features when package data and available services are ready

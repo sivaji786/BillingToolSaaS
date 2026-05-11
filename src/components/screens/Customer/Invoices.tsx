@@ -26,14 +26,14 @@ export function CustomerInvoices({ onNavigate }: CustomerInvoicesProps) {
 
     const { data, isLoading } = useQuery({
         queryKey: ['customer-invoices', filters],
-        queryFn: () => customerService.getInvoices(token!, filters),
+        queryFn: () => customerService.getInvoices(filters),
         enabled: !!token,
     });
 
     const handleDownload = async (invoiceId: string) => {
         try {
             toast.loading(t('common.generatingPdf') || 'Generating PDF...');
-            const fullInvoice = await customerService.getInvoice(token!, invoiceId);
+            const fullInvoice = await customerService.getInvoice(invoiceId);
 
             // Generate PDF with the improved styling
             await generateInvoicePDF(fullInvoice, undefined, undefined);

@@ -128,7 +128,49 @@ class PackageServiceSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
-            ]
+            ],
+
+            // 3. Recently added features
+            [
+                'name' => 'Monthly Business Letters',
+                'type' => 'usage',
+                'description' => 'Limit on generated business letters per billing period',
+                'is_active' => true,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Multi-Language Support',
+                'type' => 'feature',
+                'description' => 'Interface and documents available in EN, DE, AR, PL (incl. RTL)',
+                'is_active' => true,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'UBL / XML Export',
+                'type' => 'feature',
+                'description' => 'Export invoices in Universal Business Language (UBL) XML format',
+                'is_active' => true,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'AI Voice Input',
+                'type' => 'feature',
+                'description' => 'Voice-to-text dictation for invoices and business letters',
+                'is_active' => true,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Analytics & Reports',
+                'type' => 'feature',
+                'description' => 'Revenue charts, invoice analytics, and usage reports',
+                'is_active' => true,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ],
         ];
 
         foreach ($services as $service) {

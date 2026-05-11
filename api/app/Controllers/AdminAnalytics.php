@@ -61,11 +61,15 @@ class AdminAnalytics extends ResourceController
             ->where('created_at >=', $firstDayOfMonth)
             ->countAllResults();
 
-        // Calculate churn rate
-        $suspendedUsers = $this->tenantModel
+        // Monthly churn rate: tenants suspended THIS month / tenants that existed at month start
+        $churnedThisMonth = $db->table('tenants')
             ->where('status', 'suspended')
+            ->where('updated_at >=', $firstDayOfMonth)
             ->countAllResults();
-        $churnRate = $totalUsers > 0 ? ($suspendedUsers / $totalUsers) * 100 : 0;
+        $tenantsAtMonthStart = $this->tenantModel
+            ->where('created_at <', $firstDayOfMonth)
+            ->countAllResults();
+        $churnRate = $tenantsAtMonthStart > 0 ? ($churnedThisMonth / $tenantsAtMonthStart) * 100 : 0;
 
         // Calculate ARPU (Average Revenue Per User)
         $averageRevenuePerUser = $totalUsers > 0 ? $monthlyRevenue / $totalUsers : 0;
@@ -363,22 +367,43 @@ class AdminAnalytics extends ResourceController
             }
             $stepStorage = $stepStorageQuery->get()->getRow()->size ?? 0;
             
-            // Bandwidth in this step
-            $stepBandwidthQuery = $db->table('workspace_files')
-                ->selectSum('size')
+            // Bandwidth: actual bytes downloaded from download_logs in this step
+            $stepBandwidthQuery = $db->table('download_logs')
+                ->selectSum('file_size')
                 ->where('created_at >=', $start)
                 ->where('created_at <=', $end);
             if ($tenantId) {
                 $stepBandwidthQuery->where('tenant_id', $tenantId);
             }
-            $stepFileUploads = $stepBandwidthQuery->get()->getRow()->size ?? 0;
+            $stepBandwidthBytes = $stepBandwidthQuery->get()->getRow()->file_size ?? 0;
+
+            // Active users: distinct tenants with AI queries or invoice activity in this step
+            $aiActiveQuery = $db->table('aiquery_history')
+                ->select('COUNT(DISTINCT tenant_id) as cnt')
+                ->where('created_at >=', $start)
+                ->where('created_at <=', $end);
+            if ($tenantId) {
+                $aiActiveQuery->where('tenant_id', $tenantId);
+            }
+            $aiActiveCount = (int)($aiActiveQuery->get()->getRow()->cnt ?? 0);
+
+            $invoiceActiveQuery = $db->table('invoices')
+                ->select('COUNT(DISTINCT tenant_id) as cnt')
+                ->where('created_at >=', $start)
+                ->where('created_at <=', $end);
+            if ($tenantId) {
+                $invoiceActiveQuery->where('tenant_id', $tenantId);
+            }
+            $invoiceActiveCount = (int)($invoiceActiveQuery->get()->getRow()->cnt ?? 0);
+
+            $stepActiveSessions = max($aiActiveCount, $invoiceActiveCount);
 
             $historicalData[] = [
-                'date' => $label,
-                'storage' => round($stepStorage / (1024 * 1024 * 1024), 4),
-                'apiCalls' => $stepApiCalls,
-                'bandwidth' => round(($stepFileUploads / (1024 * 1024 * 1024)) + ($stepApiCalls * 0.000001), 6),
-                'sessions' => rand(2, 10), // We don't have session history, only current active
+                'date'      => $label,
+                'storage'   => round($stepStorage / (1024 ** 3), 4),
+                'apiCalls'  => $stepApiCalls,
+                'bandwidth' => round($stepBandwidthBytes / (1024 ** 3), 6),
+                'sessions'  => $stepActiveSessions,
             ];
         }
 
@@ -460,21 +485,60 @@ class AdminAnalytics extends ResourceController
     }
 
     /**
-     * Export usage data as CSV
+     * Export usage data as CSV (real data, last 12 months)
      * GET /api/admin/usage/export
      */
     public function exportUsage()
     {
-        // Mock CSV data
-        $csv = "Date,Storage (GB),API Calls,Bandwidth (GB),Active Sessions\n";
-        $csv .= "2024-01,45.2,125000,1250,320\n";
-        $csv .= "2024-02,52.8,145000,1580,385\n";
-        $csv .= "2024-03,61.5,168000,1820,445\n";
-        $csv .= "2024-04,68.3,192000,2150,512\n";
-        $csv .= "2024-05,72.1,215000,2380,578\n";
-        $csv .= "2024-06,78.9,238000,2650,642\n";
+        $db = \Config\Database::connect();
 
-        $this->logAction('exported', 'ADMIN-USAGE', "Usage data exported by admin");
+        $csv = "Month,Storage (GB),API Calls,Bandwidth (GB),Active Users\n";
+
+        for ($i = 11; $i >= 0; $i--) {
+            $monthStart = date('Y-m-01 00:00:00', strtotime("-{$i} months"));
+            $monthEnd   = date('Y-m-t 23:59:59',  strtotime("-{$i} months"));
+            $monthLabel = date('Y-m',              strtotime("-{$i} months"));
+
+            // Cumulative storage up to end of this month
+            $storageRow = $db->table('workspace_files')
+                ->selectSum('size')
+                ->where('created_at <=', $monthEnd)
+                ->get()->getRow();
+            $storageGB = round(($storageRow->size ?? 0) / (1024 ** 3), 4);
+
+            // AI API calls in this month
+            $apiCalls = $db->table('aiquery_history')
+                ->where('created_at >=', $monthStart)
+                ->where('created_at <=', $monthEnd)
+                ->countAllResults();
+
+            // Actual download bandwidth in this month
+            $bwRow = $db->table('download_logs')
+                ->selectSum('file_size')
+                ->where('created_at >=', $monthStart)
+                ->where('created_at <=', $monthEnd)
+                ->get()->getRow();
+            $bandwidthGB = round(($bwRow->file_size ?? 0) / (1024 ** 3), 4);
+
+            // Distinct active tenants (had AI queries or created invoices)
+            $aiUsers = (int)($db->table('aiquery_history')
+                ->select('COUNT(DISTINCT tenant_id) as cnt')
+                ->where('created_at >=', $monthStart)
+                ->where('created_at <=', $monthEnd)
+                ->get()->getRow()->cnt ?? 0);
+
+            $invUsers = (int)($db->table('invoices')
+                ->select('COUNT(DISTINCT tenant_id) as cnt')
+                ->where('created_at >=', $monthStart)
+                ->where('created_at <=', $monthEnd)
+                ->get()->getRow()->cnt ?? 0);
+
+            $activeUsers = max($aiUsers, $invUsers);
+
+            $csv .= "{$monthLabel},{$storageGB},{$apiCalls},{$bandwidthGB},{$activeUsers}\n";
+        }
+
+        $this->logAction('exported', 'ADMIN-USAGE', 'Usage data exported by admin');
         return $this->response
             ->setHeader('Content-Type', 'text/csv')
             ->setHeader('Content-Disposition', 'attachment; filename="usage-export.csv"')

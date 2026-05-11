@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useDebounce } from '../../../hooks/useDebounce';
 import { adminBillingService, adminSettingsService } from '../../../services/adminApi';
 import { InvoiceFilters } from '../../../types/admin';
 import { Button } from '../../ui/button';
@@ -18,10 +19,18 @@ import { Invoice as FullInvoice } from '../../../types/invoice';
 
 export function SAbilling() {
     const [filters, setFilters] = useState<InvoiceFilters>({ page: 1, limit: 10 });
+    const [searchInput, setSearchInput] = useState('');
+    const debouncedSearch = useDebounce(searchInput, 400);
+
+    useEffect(() => {
+        setFilters(prev => ({ ...prev, page: 1 }));
+    }, [debouncedSearch]);
+
+    const activeFilters = { ...filters, search: debouncedSearch || undefined };
 
     const { data: invoicesData, isLoading } = useQuery({
-        queryKey: ['invoices', filters],
-        queryFn: () => adminBillingService.getInvoices(filters),
+        queryKey: ['invoices', activeFilters],
+        queryFn: () => adminBillingService.getInvoices(activeFilters),
     });
 
     const { data: revenueData } = useQuery({
@@ -183,8 +192,8 @@ export function SAbilling() {
                             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Search invoices..."
-                                value={filters.search || ''}
-                                onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
                                 className="pl-10"
                             />
                         </div>

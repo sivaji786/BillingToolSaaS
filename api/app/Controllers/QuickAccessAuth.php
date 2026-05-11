@@ -61,6 +61,29 @@ class QuickAccessAuth extends ResourceController
             ? json_encode($data['invoice_draft'])
             : null;
 
+        // Rate limit: max 3 OTP requests per email per 15 minutes
+        $db = \Config\Database::connect();
+        $window = date('Y-m-d H:i:s', time() - 900);
+        $recentCount = $db->table('quick_access_sessions')
+            ->where('email', $email)
+            ->where('created_at >', $window)
+            ->countAllResults();
+
+        if ($recentCount >= 3) {
+            return $this->fail('Too many verification requests. Please wait 15 minutes before requesting another code.', 429);
+        }
+
+        // Rate limit by IP: max 10 OTP requests per IP per 15 minutes
+        $clientIp = $this->request->getIPAddress();
+        $ipCount = $db->table('quick_access_sessions')
+            ->where('client_ip', $clientIp)
+            ->where('created_at >', $window)
+            ->countAllResults();
+
+        if ($ipCount >= 10) {
+            return $this->fail('Too many requests from this IP address. Please try again later.', 429);
+        }
+
         // Generate 6-digit OTP
         $otp     = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $otpHash = password_hash($otp, PASSWORD_BCRYPT);
@@ -73,15 +96,15 @@ class QuickAccessAuth extends ResourceController
         $sessionModel = new QuickAccessSessionModel();
         $sessionModel->pruneExpired();
 
-        // Delete any existing session for this email (fresh start)
-        $sessionModel->where('email', $email)->delete();
+        // Delete any existing unverified session for this email (fresh start)
+        $sessionModel->where('email', $email)->where('verified', 0)->delete();
 
         $sessionModel->insert([
             'token_hash'     => $tokenHash,
             'email'          => $email,
-            'otp'            => $otp,
             'otp_hash'       => $otpHash,
             'invoice_draft'  => $invoiceDraft,
+            'client_ip'      => $clientIp,
             'verified'       => 0,
             'expires_at'     => date('Y-m-d H:i:s', time() + self::OTP_TTL),
             'created_at'     => date('Y-m-d H:i:s'),

@@ -4,7 +4,7 @@ import { adminWikiService } from '../../../services/adminApi';
 import { Card, CardContent } from '../../ui/card';
 import { ScrollArea } from '../../ui/scroll-area';
 import { Input } from '../../ui/input';
-import { Search, ChevronRight, ChevronDown, FileText, Folder, BookOpen, Clock, Download } from 'lucide-react';
+import { Search, ChevronRight, ChevronDown, FileText, Folder, BookOpen, Clock, Download, Pencil, X, Save } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '../../../lib/utils';
@@ -122,6 +122,9 @@ export function SAWiki() {
     const [contentLoading, setContentLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['developer', 'product_manager_reports', 'sales']));
+    const [editMode, setEditMode] = useState(false);
+    const [editContent, setEditContent] = useState('');
+    const [saving, setSaving] = useState(false);
     const prevLanguage = useRef(language);
 
     const getPageTitle = () => {
@@ -260,6 +263,8 @@ export function SAWiki() {
     };
 
     const loadContent = async (path: string) => {
+        setEditMode(false);
+        setEditContent('');
         setContentLoading(true);
         try {
             const data = await adminWikiService.getContent(path, language);
@@ -269,6 +274,31 @@ export function SAWiki() {
             toast.error('Failed to load document content');
         } finally {
             setContentLoading(false);
+        }
+    };
+
+    const handleEditToggle = () => {
+        setEditContent(content);
+        setEditMode(true);
+    };
+
+    const handleCancelEdit = () => {
+        setEditMode(false);
+        setEditContent('');
+    };
+
+    const handleSave = async () => {
+        if (!selectedPath) return;
+        setSaving(true);
+        try {
+            await adminWikiService.saveContent(selectedPath, editContent, language);
+            setContent(editContent);
+            setEditMode(false);
+            toast.success('Document saved');
+        } catch {
+            toast.error('Failed to save document');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -499,18 +529,58 @@ export function SAWiki() {
                         {getPageTitle()}
                     </h2>
                     {selectedPath && !contentLoading && (
-                        <button
-                            onClick={handleExportPDF}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm shrink-0"
-                            title="Export this page as PDF"
-                        >
-                            <Download className="h-3.5 w-3.5" />
-                            Export PDF
-                        </button>
+                        <div className="flex items-center gap-2 shrink-0">
+                            {editMode ? (
+                                <>
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={saving}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
+                                    >
+                                        <Save className="h-3.5 w-3.5" />
+                                        {saving ? 'Saving…' : 'Save'}
+                                    </button>
+                                    <button
+                                        onClick={handleCancelEdit}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors shadow-sm"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                        Cancel
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={handleEditToggle}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shadow-sm"
+                                        title="Edit this document"
+                                    >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={handleExportPDF}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm"
+                                        title="Export this page as PDF"
+                                    >
+                                        <Download className="h-3.5 w-3.5" />
+                                        Export PDF
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     )}
                 </div>
                 <Card className="flex-1 flex flex-col bg-slate-50 shadow-sm border-slate-200 overflow-hidden">
                     <CardContent className="p-0 h-full">
+                        {editMode ? (
+                            <textarea
+                                className="w-full h-full p-6 font-mono text-sm bg-white resize-none focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
+                                value={editContent}
+                                onChange={(e) => setEditContent(e.target.value)}
+                                spellCheck={false}
+                            />
+                        ) : (
                         <ScrollArea className="h-full">
                             <div id="wiki-print-content" className="prose prose-slate max-w-4xl mx-auto p-8 lg:p-12 prose-headings:text-purple-900 prose-a:text-purple-600 prose-pre:bg-transparent prose-pre:p-0 prose-table:w-full">
                                 {contentLoading ? (
@@ -550,6 +620,7 @@ export function SAWiki() {
                                 )}
                             </div>
                         </ScrollArea>
+                        )}
                     </CardContent>
                 </Card>
             </div>

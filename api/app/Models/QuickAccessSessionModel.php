@@ -12,7 +12,7 @@ class QuickAccessSessionModel extends Model
     protected $allowedFields = [
         'token_hash',
         'email',
-        'otp',
+        'client_ip',
         'otp_hash',
         'invoice_draft',
         'verified',

@@ -37,7 +37,7 @@ class AdminPackages extends ResourceController
                 'name' => $plan['name'],
                 'description' => $plan['slug'], // Using slug as description for now
                 'price' => (float)$plan['price'],
-                'currency' => 'EUR',
+                'currency' => $plan['currency'] ?? 'EUR',
                 'duration' => $plan['billing_period'],
                 'features' => json_decode($plan['features'], true) ?? [],
                 'status' => $plan['is_active'] ? 'active' : 'inactive',
@@ -77,7 +77,7 @@ class AdminPackages extends ResourceController
             'name' => $plan['name'],
             'description' => $plan['slug'],
             'price' => (float)$plan['price'],
-            'currency' => 'EUR',
+            'currency' => $plan['currency'] ?? 'EUR',
             'duration' => $plan['billing_period'],
             'features' => json_decode($plan['features'], true) ?? [],
             'status' => $plan['is_active'] ? 'active' : 'inactive',

@@ -33,7 +33,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
       setEmail(prefillEmail);
       localStorage.removeItem('qa_login_email');
     }
-    const pending = localStorage.getItem('qa_pending_action');
+    const pending = sessionStorage.getItem('qa_pending_action');
     setHasPendingAction(!!pending);
   }, []);
 

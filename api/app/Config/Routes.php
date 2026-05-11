@@ -20,7 +20,9 @@ $routes->group('billing', ['filter' => 'auth'], function($routes) {
 
 // SaaS Onboarding
 $routes->get('api/countries', '\App\Controllers\CountryController::index');
+$routes->get('api/public/cms/nav', '\App\Controllers\CmsController::nav');
 $routes->get('api/public/cms/(:segment)', '\App\Controllers\CmsController::getPage/$1');
+$routes->get('api/public/invoices/(:segment)', '\App\Controllers\InvoiceController::showByToken/$1');
 $routes->group('onboarding', function($routes) {
     $routes->get('check-subdomain', '\App\Controllers\Onboarding::checkSubdomain');
     $routes->post('signup', '\App\Controllers\Onboarding::signup');
@@ -39,6 +41,9 @@ $routes->group('invoices', ['filter' => ['auth', 'rbac:invoices.update']], funct
 });
 $routes->group('invoices', ['filter' => ['auth', 'rbac:invoices.delete']], function($routes) {
     $routes->delete('(:segment)', '\App\Controllers\InvoiceController::delete/$1');
+});
+$routes->group('invoices', ['filter' => ['auth', 'rbac:invoices.read']], function($routes) {
+    $routes->post('(:segment)/share', '\App\Controllers\InvoiceController::generateShareToken/$1');
 });
 
 
@@ -89,10 +94,12 @@ $routes->post('ai/improve-letter-body', '\App\Controllers\AIInvoiceController::i
 // Buyers Directory
 $routes->group('buyers', ['filter' => ['auth', 'rbac:buyers.read']], function($routes) {
     $routes->get('', '\App\Controllers\BuyerController::index');
+    $routes->get('export', '\App\Controllers\BuyerController::export');
     $routes->get('(:segment)', '\App\Controllers\BuyerController::show/$1');
 });
 $routes->group('buyers', ['filter' => ['auth', 'rbac:buyers.create']], function($routes) {
     $routes->post('', '\App\Controllers\BuyerController::create');
+    $routes->post('import', '\App\Controllers\BuyerController::import');
 });
 $routes->group('buyers', ['filter' => ['auth', 'rbac:buyers.update']], function($routes) {
     $routes->put('(:segment)', '\App\Controllers\BuyerController::update/$1');
@@ -261,19 +268,28 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     $routes->post('settings/api-keys', '\App\Controllers\AdminSettings::generateApiKey');
     $routes->delete('settings/api-keys/(:segment)', '\App\Controllers\AdminSettings::revokeApiKey/$1');
     $routes->put('settings/system', '\App\Controllers\AdminSettings::updateSystemSettings');
+    $routes->post('settings/test-email', '\App\Controllers\AdminSettings::testEmail');
+    $routes->post('settings/test-telegram', '\App\Controllers\AdminSettings::testTelegram');
+    $routes->get('settings/health', '\App\Controllers\AdminSettings::health');
 
     // Admin Tickets
     $routes->get('tickets', '\App\Controllers\TicketController::index');
     $routes->put('tickets/(:segment)', '\App\Controllers\TicketController::update/$1');
     $routes->get('tickets/(:segment)/tracking', '\App\Controllers\TicketController::tracking/$1');
+    $routes->post('tickets/bulk-update', '\App\Controllers\TicketController::bulkUpdate');
+    $routes->get('admins', '\App\Controllers\TicketController::listAdmins');
 
     // Admin Wiki
     $routes->get('wiki', '\App\Controllers\AdminWiki::index');
     $routes->get('wiki/read', '\App\Controllers\AdminWiki::read');
+    $routes->put('wiki/write', '\App\Controllers\AdminWiki::write');
 
     // Admin CMS
     $routes->get('cms', '\App\Controllers\CmsController::listPages');
     $routes->put('cms/(:segment)', '\App\Controllers\CmsController::updatePage/$1');
+    $routes->patch('cms/(:segment)', '\App\Controllers\CmsController::patchField/$1');
+    $routes->post('cms/upload-image', '\App\Controllers\CmsController::uploadImage');
+    $routes->delete('cms/(:segment)', '\App\Controllers\CmsController::deletePage/$1');
 });
 
 

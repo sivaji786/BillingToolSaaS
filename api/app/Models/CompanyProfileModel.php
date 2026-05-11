@@ -30,6 +30,7 @@ class CompanyProfileModel extends BaseModel
         'bank_bic',
         'bank_account_name',
         'logo_url',
+        'signature_url',
         'header_text',
         'footer_text',
         'company_type_id',

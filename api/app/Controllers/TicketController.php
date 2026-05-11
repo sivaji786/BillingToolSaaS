@@ -5,108 +5,218 @@ namespace App\Controllers;
 use CodeIgniter\RESTful\ResourceController;
 use CodeIgniter\API\ResponseTrait;
 use App\Models\TicketModel;
-use App\Models\ProjectModel;
 use App\Models\TicketTrackingModel;
 
 class TicketController extends ResourceController
 {
     use ResponseTrait;
 
+    // ── Email helpers ─────────────────────────────────────────────────────────
+
+    private function smtpConfig(): array
+    {
+        return [
+            'protocol'   => getenv('MAIL_PROTOCOL')   ?: 'smtp',
+            'SMTPHost'   => getenv('MAIL_HOST')        ?: 'localhost',
+            'SMTPPort'   => (int)(getenv('MAIL_PORT')  ?: 587),
+            'SMTPUser'   => getenv('MAIL_USERNAME')    ?: '',
+            'SMTPPass'   => getenv('MAIL_PASSWORD')    ?: '',
+            'SMTPCrypto' => getenv('MAIL_ENCRYPTION')  ?: 'tls',
+            'mailType'   => 'html',
+            'charset'    => 'utf-8',
+            'newline'    => "\r\n",
+        ];
+    }
+
+    private function sendTicketEmail(string $to, string $subject, string $body): void
+    {
+        try {
+            $email = \Config\Services::email();
+            $email->initialize($this->smtpConfig());
+            $fromEmail = getenv('MAIL_FROM_EMAIL') ?: 'noreply@billingtool.com';
+            $fromName  = getenv('MAIL_FROM_NAME')  ?: 'BillingTool Support';
+            $email->setFrom($fromEmail, $fromName);
+            $email->setTo($to);
+            $email->setSubject($subject);
+            $email->setMailType('html');
+            $email->setMessage($body);
+            if (!$email->send()) {
+                log_message('error', '[TicketEmail] Failed to ' . $to . ': ' . $email->printDebugger(['headers']));
+            }
+        } catch (\Throwable $e) {
+            log_message('error', '[TicketEmail] ' . $e->getMessage());
+        }
+    }
+
+    private function notifySuperAdmins(array $ticket, int $ticketId): void
+    {
+        $adminModel = new \App\Models\AdminUserModel();
+        $admins     = $adminModel->findAll();
+        if (empty($admins)) {
+            return;
+        }
+        $subject  = '[New Ticket #' . $ticketId . '] ' . $ticket['subject'];
+        $priority = strtoupper($ticket['priority'] ?? 'medium');
+        $body = "
+            <h2>New Support Ticket Submitted</h2>
+            <p><strong>Ticket #:</strong> {$ticketId}</p>
+            <p><strong>Subject:</strong> " . htmlspecialchars($ticket['subject']) . "</p>
+            <p><strong>Priority:</strong> {$priority}</p>
+            <p><strong>Description:</strong></p>
+            <blockquote style='border-left:3px solid #ccc;padding-left:12px;color:#555'>"
+                . nl2br(htmlspecialchars($ticket['description']))
+            . "</blockquote>
+            <p><strong>IP:</strong> " . ($ticket['client_ip'] ?? 'N/A') . "</p>
+            <p>Log in to the admin panel to respond.</p>
+        ";
+        foreach ($admins as $admin) {
+            if (!empty($admin['email'])) {
+                $this->sendTicketEmail($admin['email'], $subject, $body);
+            }
+        }
+    }
+
+    private function notifySubmitter(array $ticket, string $comment, string $newStatus = ''): void
+    {
+        if (empty($ticket['user_id'])) {
+            return;
+        }
+        $userModel = new \App\Models\UserModel();
+        $user      = $userModel->withoutTenant()->find((int)$ticket['user_id']);
+        if (empty($user['email'])) {
+            return;
+        }
+        $subject      = '[Ticket #' . $ticket['id'] . ' Updated] ' . $ticket['subject'];
+        $statusLine   = $newStatus ? "<p><strong>Status:</strong> " . htmlspecialchars($newStatus) . "</p>" : '';
+        $commentBlock = $comment
+            ? "<p><strong>Admin reply:</strong></p><blockquote style='border-left:3px solid #6366f1;padding-left:12px;color:#555'>"
+                . nl2br(htmlspecialchars($comment))
+                . "</blockquote>"
+            : '';
+        $body = "
+            <h2>Your Support Ticket Has Been Updated</h2>
+            <p><strong>Ticket #:</strong> {$ticket['id']}</p>
+            <p><strong>Subject:</strong> " . htmlspecialchars($ticket['subject']) . "</p>
+            {$statusLine}
+            {$commentBlock}
+            <p>Log in to view the full ticket details.</p>
+        ";
+        $this->sendTicketEmail($user['email'], $subject, $body);
+    }
+
+    private function notifyAssignee(int $adminId, array $ticket): void
+    {
+        $adminModel = new \App\Models\AdminUserModel();
+        $assignee   = $adminModel->find($adminId);
+        if (empty($assignee['email'])) {
+            return;
+        }
+        $subject = '[Ticket #' . $ticket['id'] . ' Assigned to You] ' . $ticket['subject'];
+        $body = "
+            <h2>A Ticket Has Been Assigned to You</h2>
+            <p><strong>Ticket #:</strong> {$ticket['id']}</p>
+            <p><strong>Subject:</strong> " . htmlspecialchars($ticket['subject']) . "</p>
+            <p><strong>Priority:</strong> " . strtoupper($ticket['priority'] ?? 'medium') . "</p>
+            <p>Log in to the admin panel to review and respond.</p>
+        ";
+        $this->sendTicketEmail($assignee['email'], $subject, $body);
+    }
+
+    private function telegram(): \App\Services\TelegramService
+    {
+        static $svc = null;
+        return $svc ??= new \App\Services\TelegramService();
+    }
+
+    private function getAdminName(?int $adminId): ?string
+    {
+        if (!$adminId) {
+            return null;
+        }
+        $adminModel = new \App\Models\AdminUserModel();
+        $admin      = $adminModel->find($adminId);
+        return $admin ? $admin['name'] : null;
+    }
+
+    // ── Public endpoint: create ticket ────────────────────────────────────────
+
     public function create()
     {
         $model = new TicketModel();
+        $data  = $this->request->getJSON(true) ?: $this->request->getPost();
 
-
-        $data = $this->request->getJSON(true); // Get JSON data
-
-        if (!$data) {
-             // Fallback to post data if JSON is null (e.g. form-data)
-            $data = $this->request->getPost();
-        }
-
-        // Add user_id if authenticated (optional, depends on your auth setup)
-        // For now we'll leave it nullable as per requirements or assume it comes from frontend
-        
-        // Simple validation
         if (empty($data['subject']) || empty($data['description'])) {
             return $this->fail('Subject and description are required', 400);
         }
 
-
-        // Capture metadata
         $data['client_ip'] = $this->request->getIPAddress();
-        
-        // Handle screenshot saving
+
+        // Screenshot upload
         if (!empty($data['screenshot'])) {
             try {
                 $screenshotData = $data['screenshot'];
-                // Remove header from base64 string
                 if (preg_match('/^data:image\/(\w+);base64,/', $screenshotData, $type)) {
                     $screenshotData = substr($screenshotData, strpos($screenshotData, ',') + 1);
-                    $type = strtolower($type[1]); // png, jpg, etc.
-
-                    $decodedData = base64_decode($screenshotData);
-                    if ($decodedData === false) {
-                        log_message('error', '[TicketController] base64_decode failed');
-                    } else {
-                        // Create directory if not exists (Year/Month-wise)
-                        $year = date('Y');
-                        $month = strtoupper(date('M')); // JAN, FEB, etc.
+                    $decoded        = base64_decode($screenshotData);
+                    if ($decoded !== false) {
+                        $year       = date('Y');
+                        $month      = strtoupper(date('M'));
                         $uploadPath = FCPATH . 'uploads/tickets/' . $year . '/' . $month . '/';
                         if (!is_dir($uploadPath)) {
                             mkdir($uploadPath, 0777, true);
                         }
-
                         $fileName = 'ticket_' . time() . '_' . uniqid() . '.jpg';
-                        $fullPath = $uploadPath . $fileName;
-
-                        // Save as JPG using GD library
-                        $img = imagecreatefromstring($decodedData);
+                        $img = imagecreatefromstring($decoded);
                         if ($img !== false) {
-                            imagejpeg($img, $fullPath, 85); // 85% quality
+                            imagejpeg($img, $uploadPath . $fileName, 85);
                             imagedestroy($img);
                             $data['screenshot_path'] = 'uploads/tickets/' . $year . '/' . $month . '/' . $fileName;
                         }
                     }
                 }
             } catch (\Throwable $e) {
-                log_message('error', '[TicketController] Screenshot processing failed: ' . $e->getMessage());
+                log_message('error', '[TicketController] Screenshot: ' . $e->getMessage());
             }
         }
 
         try {
             if ($model->save($data)) {
-                $ticketId = $model->getInsertID();
-                
-                // Initial tracking entry
+                $ticketId      = $model->getInsertID();
                 $trackingModel = new TicketTrackingModel();
                 $trackingModel->save((object)[
                     'ticket_id' => $ticketId,
-                    'action' => 'created',
+                    'action'    => 'created',
                     'new_value' => 'Ticket created',
-                    'comment' => 'Initial creation'
+                    'comment'   => 'Initial creation',
                 ]);
 
+                // S4-07: notify all super admins
+                $this->notifySuperAdmins($data, $ticketId);
+                $this->telegram()->ticketCreated($data, $ticketId);
+
                 return $this->respondCreated([
-                    'status' => 'success', 
-                    'message' => 'Ticket created successfully', 
-                    'id' => $ticketId,
-                    'path' => $data['screenshot_path'] ?? null
+                    'status'  => 'success',
+                    'message' => 'Ticket created successfully',
+                    'id'      => $ticketId,
+                    'path'    => $data['screenshot_path'] ?? null,
                 ]);
-            } else {
-                return $this->fail($model->errors());
             }
+            return $this->fail($model->errors());
         } catch (\Throwable $e) {
-            log_message('error', '[TicketCreate] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            log_message('error', '[TicketCreate] ' . $e->getMessage());
             return $this->failServerError('Server Error: ' . $e->getMessage());
         }
     }
-    
-    public function index() {
-        // Optional: for verification later if needed
+
+    // ── Admin: list tickets ───────────────────────────────────────────────────
+
+    public function index()
+    {
         $model = new TicketModel();
         return $this->response->setJSON($model->findAll())->setStatusCode(200);
     }
+
+    // ── Admin: update ticket (S4-07 notify + S4-08 assign + S4-09 SLA) ───────
 
     public function update($id = null)
     {
@@ -114,41 +224,68 @@ class TicketController extends ResourceController
             return $this->fail('Ticket ID is required', 400);
         }
 
-        $model = new TicketModel();
+        $model  = new TicketModel();
         $ticket = $model->find($id);
-
         if (!$ticket) {
             return $this->failNotFound('Ticket not found');
         }
 
-        $data = $this->request->getJSON(true);
-        if (!$data) {
-            $data = $this->request->getRawInput();
-        }
-
-        $updateData = [];
-        $trackingLogs = [];
+        $data    = $this->request->getJSON(true) ?: $this->request->getRawInput();
         $comment = $data['comment'] ?? null;
+        $now     = date('Y-m-d H:i:s');
 
+        $updateData   = [];
+        $trackingLogs = [];
+
+        // Status change
         if (isset($data['status']) && $data['status'] !== $ticket['status']) {
             $updateData['status'] = $data['status'];
             $trackingLogs[] = [
-                'action' => 'status_change',
+                'action'    => 'status_change',
                 'old_value' => $ticket['status'],
-                'new_value' => $data['status']
+                'new_value' => $data['status'],
             ];
+            // S4-09: auto-stamp resolved_at
+            if (in_array($data['status'], ['resolved', 'closed']) && empty($ticket['resolved_at'])) {
+                $updateData['resolved_at'] = $now;
+            }
         }
+
+        // Priority change
         if (isset($data['priority']) && $data['priority'] !== $ticket['priority']) {
             $updateData['priority'] = $data['priority'];
             $trackingLogs[] = [
-                'action' => 'priority_change',
+                'action'    => 'priority_change',
                 'old_value' => $ticket['priority'],
-                'new_value' => $data['priority']
+                'new_value' => $data['priority'],
             ];
         }
 
+        // S4-08: assignment change
+        $incomingAssigned = isset($data['assigned_to']) ? ((int)$data['assigned_to'] ?: null) : false;
+        if ($incomingAssigned !== false) {
+            $currentAssigned = isset($ticket['assigned_to']) ? (int)$ticket['assigned_to'] : null;
+            if ($incomingAssigned !== $currentAssigned) {
+                $updateData['assigned_to'] = $incomingAssigned;
+                $trackingLogs[] = [
+                    'action'    => 'assignment_change',
+                    'old_value' => $this->getAdminName($currentAssigned) ?? 'Unassigned',
+                    'new_value' => $this->getAdminName($incomingAssigned) ?? 'Unassigned',
+                ];
+                // S4-07: notify newly assigned admin
+                if ($incomingAssigned) {
+                    $this->notifyAssignee($incomingAssigned, $ticket);
+                }
+            }
+        }
+
+        // S4-09: auto first_response_at on first admin comment
+        if (!empty($comment) && empty($ticket['first_response_at'])) {
+            $updateData['first_response_at'] = $now;
+        }
+
         if (empty($updateData) && empty($comment)) {
-             return $this->fail('No valid fields to update', 400);
+            return $this->fail('No valid fields to update', 400);
         }
 
         try {
@@ -160,50 +297,114 @@ class TicketController extends ResourceController
             }
 
             $trackingModel = new TicketTrackingModel();
-            
-            // If only comment is provided
             if (empty($trackingLogs) && !empty($comment)) {
                 $trackingModel->save((object)[
                     'ticket_id' => $id,
-                    'action' => 'comment',
-                    'comment' => $comment
+                    'action'    => 'comment',
+                    'comment'   => $comment,
                 ]);
             } else {
-                // Log all changes with the comment
                 foreach ($trackingLogs as $log) {
                     $log['ticket_id'] = $id;
-                    $log['comment'] = $comment; // Attach same comment to all changes in this update
+                    $log['comment']   = $comment;
                     $trackingModel->save((object)$log);
                 }
             }
 
             $db->transComplete();
-
             if ($db->transStatus() === false) {
                 return $this->fail('Transaction failed');
             }
 
-            return $this->respond([
-                'status' => 'success',
-                'message' => 'Ticket updated successfully',
-            ]);
+            // S4-07: notify submitter if there is a comment
+            if (!empty($comment)) {
+                $this->notifySubmitter($ticket, $comment, $updateData['status'] ?? '');
+            }
+
+            $this->telegram()->ticketUpdated(
+                (int)$id,
+                $ticket['subject'],
+                $trackingLogs,
+                $comment
+            );
+
+            return $this->respond(['status' => 'success', 'message' => 'Ticket updated successfully']);
         } catch (\Throwable $e) {
             log_message('error', '[TicketUpdate] ' . $e->getMessage());
             return $this->failServerError('Server Error: ' . $e->getMessage());
         }
     }
 
+    // ── Admin: bulk update (S4-10) ────────────────────────────────────────────
+
+    public function bulkUpdate()
+    {
+        $data   = $this->request->getJSON(true) ?: [];
+        $ids    = $data['ids']    ?? [];
+        $status = $data['status'] ?? null;
+
+        if (empty($ids) || !is_array($ids) || !$status) {
+            return $this->fail('ids (array) and status are required', 400);
+        }
+        if (!in_array($status, ['open', 'in_progress', 'resolved', 'closed'])) {
+            return $this->fail('Invalid status value', 400);
+        }
+
+        $model         = new TicketModel();
+        $trackingModel = new TicketTrackingModel();
+        $now           = date('Y-m-d H:i:s');
+        $db            = \Config\Database::connect();
+        $db->transStart();
+
+        foreach ($ids as $rawId) {
+            $ticketId = (int)$rawId;
+            $ticket   = $model->find($ticketId);
+            if (!$ticket || $ticket['status'] === $status) {
+                continue;
+            }
+            $fields = ['status' => $status];
+            if (in_array($status, ['resolved', 'closed']) && empty($ticket['resolved_at'])) {
+                $fields['resolved_at'] = $now;
+            }
+            $model->update($ticketId, $fields);
+            $trackingModel->save((object)[
+                'ticket_id' => $ticketId,
+                'action'    => 'status_change',
+                'old_value' => $ticket['status'],
+                'new_value' => $status,
+                'comment'   => 'Bulk update',
+            ]);
+        }
+
+        $db->transComplete();
+        if ($db->transStatus() === false) {
+            return $this->fail('Bulk update failed');
+        }
+
+        $this->telegram()->ticketsBulkUpdated($ids, $status);
+
+        return $this->respond(['status' => 'success', 'message' => 'Tickets updated']);
+    }
+
+    // ── Admin: ticket tracking history ───────────────────────────────────────
+
     public function tracking($id = null)
     {
         if (!$id) {
             return $this->fail('Ticket ID is required', 400);
         }
-
         $trackingModel = new TicketTrackingModel();
-        $tracking = $trackingModel->where('ticket_id', $id)
-                                 ->orderBy('created_at', 'DESC')
-                                 ->findAll();
+        return $this->respond(
+            $trackingModel->where('ticket_id', $id)->orderBy('created_at', 'DESC')->findAll()
+        );
+    }
 
-        return $this->respond($tracking);
+    // ── Admin: list admin users for assignee dropdown (S4-08) ────────────────
+
+    public function listAdmins()
+    {
+        $adminModel = new \App\Models\AdminUserModel();
+        $admins     = $adminModel->select('id, name, email, role')->findAll();
+        return $this->respond($admins);
     }
 }

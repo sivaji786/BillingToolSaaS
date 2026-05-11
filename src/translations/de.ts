@@ -728,6 +728,7 @@ export const de = {
         downloaded: 'Heruntergeladen',
         discard: 'Verwerfen',
         doubleClickToAdd: 'Doppelklicken zum Hinzufügen',
+        content: 'Inhalt',
         theme: {
             light: 'Hell',
             dark: 'Dunkel',
@@ -1024,7 +1025,25 @@ export const de = {
             created: 'Ticket erstellt',
             status_change: 'Status aktualisiert',
             priority_change: 'Priorität aktualisiert',
+            assignment_change: 'Zugewiesen',
             comment: 'Kommentar hinzugefügt',
+        },
+        assignee: 'Bearbeiter',
+        unassigned: 'Nicht zugewiesen',
+        assignTo: 'Zuweisen an...',
+        sla: {
+            title: 'SLA & Reaktionszeiten',
+            firstResponse: 'Erste Antwort',
+            resolution: 'Lösungszeit',
+            pending: 'Ausstehend',
+            notResolved: 'Noch nicht gelöst',
+        },
+        bulk: {
+            selected: '{count} ausgewählt',
+            markResolved: 'Als gelöst markieren',
+            markClosed: 'Als geschlossen markieren',
+            clearSelection: 'Auswahl aufheben',
+            updating: 'Aktualisierung...',
         },
         pagination: {
             showing: 'Anzeige',
@@ -1179,7 +1198,7 @@ export const de = {
         back: 'Zurück',
         phone: 'Telefon',
         fax: 'Fax',
-        sourceNote: 'Quelle: Impressum-Generator von e-recht24.de',
+        sourceNote: '',
         sections: {
             legalNotice: {
                 title: 'Angaben gemäß § 5 TMG',

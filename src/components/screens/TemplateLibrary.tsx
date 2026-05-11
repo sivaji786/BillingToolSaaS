@@ -16,9 +16,33 @@ interface TemplateLibraryProps {
   initialFilterType?: TemplateType;
 }
 
+// ── Element type → fill colour mapping ────────────────────────────────────────
+const ELEMENT_COLORS: Record<string, { fill: string; accent: string }> = {
+  logo:        { fill: '#f3e8ff', accent: '#7c3aed' },
+  title:       { fill: '#ede9fe', accent: '#7c3aed' },
+  header:      { fill: '#ede9fe', accent: '#8b5cf6' },
+  seller:      { fill: '#dbeafe', accent: '#2563eb' },
+  buyer:       { fill: '#dcfce7', accent: '#16a34a' },
+  sender:      { fill: '#dbeafe', accent: '#2563eb' },
+  to:          { fill: '#dcfce7', accent: '#16a34a' },
+  dates:       { fill: '#fef3c7', accent: '#d97706' },
+  items:       { fill: '#f0fdf4', accent: '#16a34a' },
+  totals:      { fill: '#ede9fe', accent: '#7c3aed' },
+  tax_summary: { fill: '#fef9c3', accent: '#ca8a04' },
+  notes:       { fill: '#fff7ed', accent: '#ea580c' },
+  footer:      { fill: '#f1f5f9', accent: '#64748b' },
+  qr:          { fill: '#f0fdfa', accent: '#0d9488' },
+  signature:   { fill: '#f8fafc', accent: '#94a3b8' },
+  description: { fill: '#fdf4ff', accent: '#a21caf' },
+};
+
 // ── Mini document preview rendered as SVG ─────────────────────────────────────
 function TemplateMiniPreview({ template }: { template: InvoiceTemplate }) {
-  const isLetter = template.templateType === 'business_letter';
+  const layout = template.layout?.filter(el => el.visible) ?? [];
+  const hasLayout = layout.length > 0;
+
+  // Sort by zIndex so higher elements paint on top
+  const sorted = [...layout].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
 
   return (
     <div className="relative w-full h-44 bg-gray-50 overflow-hidden rounded-t-xl border-b border-gray-100">
@@ -27,130 +51,70 @@ function TemplateMiniPreview({ template }: { template: InvoiceTemplate }) {
         preserveAspectRatio="xMidYMin meet"
         className="w-full h-full"
         xmlns="http://www.w3.org/2000/svg"
-        xmlnsXlink="http://www.w3.org/1999/xlink"
       >
         {/* Paper */}
         <rect x="0" y="0" width="595" height="450" fill="white" />
 
-        {/* Purple top accent */}
-        <rect x="0" y="0" width="595" height="6" fill="#7c3aed" />
-
-        {/* Logo */}
-        {template.logoUrl ? (
-          <image href={template.logoUrl} x="38" y="18" height="40" width="100"
-            preserveAspectRatio="xMinYMid meet" />
-        ) : (
-          <rect x="38" y="18" width="70" height="32" rx="4" fill="#f3e8ff" />
-        )}
-
-        {isLetter ? (
+        {hasLayout ? (
           <>
-            {/* Sender top-right */}
-            <rect x="400" y="20" width="130" height="7" rx="2" fill="#ddd6fe" />
-            <rect x="400" y="31" width="110" height="5" rx="2" fill="#ede9fe" />
-            <rect x="400" y="40" width="95" height="5" rx="2" fill="#ede9fe" />
-
-            {/* Date */}
-            <rect x="450" y="72" width="100" height="6" rx="2" fill="#c4b5fd" />
-
-            {/* TO label */}
-            <rect x="38" y="98" width="30" height="5" rx="2" fill="#a78bfa" />
-            {/* Recipient name */}
-            <rect x="38" y="110" width="150" height="9" rx="2" fill="#1e1b4b" opacity="0.65" />
-            <rect x="38" y="124" width="120" height="5" rx="2" fill="#e2e8f0" />
-            <rect x="38" y="133" width="100" height="5" rx="2" fill="#e2e8f0" />
-
-            {/* Title */}
-            <rect x="38" y="165" width="200" height="16" rx="3" fill="#7c3aed" opacity="0.25" />
-            <rect x="38" y="167" width="170" height="12" rx="2" fill="#7c3aed" opacity="0.45" />
-
-            {/* Divider */}
-            <line x1="38" y1="193" x2="557" y2="193" stroke="#ddd6fe" strokeWidth="1.2" />
-
-            {/* Body paragraphs */}
-            {[210, 220, 230, 240, 250].map(y => (
-              <rect key={y} x="38" y={y} width={y === 250 ? 380 : 515} height="6" rx="2" fill="#e2e8f0" />
-            ))}
-            {[272, 282, 292, 302].map(y => (
-              <rect key={y} x="38" y={y} width={y === 302 ? 320 : 500} height="6" rx="2" fill="#e2e8f0" />
-            ))}
-
-            {/* Closing */}
-            <rect x="38" y="335" width="120" height="6" rx="2" fill="#e2e8f0" />
-            {/* Signature line */}
-            <line x1="38" y1="370" x2="210" y2="370" stroke="#ddd6fe" strokeWidth="1" />
-            <rect x="38" y="378" width="90" height="5" rx="2" fill="#c4b5fd" />
+            {sorted.map(el => {
+              const color = ELEMENT_COLORS[el.type] ?? { fill: '#f1f5f9', accent: '#94a3b8' };
+              const clampedH = Math.min(el.h, 450 - el.y); // clip to viewBox
+              if (clampedH <= 0) return null;
+              const innerPad = 4;
+              const lineH = 5;
+              const lineGap = 4;
+              const linesCount = Math.max(0, Math.floor((clampedH - innerPad * 2) / (lineH + lineGap)));
+              return (
+                <g key={el.id}>
+                  <rect
+                    x={el.x} y={el.y} width={el.w} height={clampedH}
+                    rx="3" fill={color.fill}
+                    stroke={color.accent} strokeWidth="1" strokeOpacity="0.4"
+                  />
+                  {/* First line as accent (label) */}
+                  {clampedH >= 12 && (
+                    <rect
+                      x={el.x + innerPad} y={el.y + innerPad}
+                      width={Math.min(el.w * 0.55, el.w - innerPad * 2)}
+                      height={lineH} rx="2" fill={color.accent} fillOpacity="0.55"
+                    />
+                  )}
+                  {/* Additional content lines */}
+                  {Array.from({ length: Math.min(linesCount - 1, 4) }, (_, i) => (
+                    <rect
+                      key={i}
+                      x={el.x + innerPad}
+                      y={el.y + innerPad + (lineH + lineGap) * (i + 1)}
+                      width={Math.min(el.w * (0.8 - i * 0.08), el.w - innerPad * 2)}
+                      height={lineH} rx="2"
+                      fill={color.accent} fillOpacity="0.2"
+                    />
+                  ))}
+                </g>
+              );
+            })}
           </>
         ) : (
           <>
-            {/* Invoice title block */}
-            <rect x="38" y="72" width="185" height="20" rx="3" fill="#7c3aed" opacity="0.18" />
-            <rect x="38" y="74" width="145" height="16" rx="2" fill="#7c3aed" opacity="0.52" />
-            {/* Invoice number */}
+            {/* Fallback: generic static preview */}
+            <rect x="0" y="0" width="595" height="6" fill="#7c3aed" />
+            {template.logoUrl ? (
+              <image href={template.logoUrl} x="38" y="18" height="40" width="100" preserveAspectRatio="xMinYMid meet" />
+            ) : (
+              <rect x="38" y="18" width="70" height="32" rx="4" fill="#f3e8ff" />
+            )}
+            <rect x="38" y="72" width="145" height="16" rx="2" fill="#7c3aed" fillOpacity="0.5" />
             <rect x="38" y="98" width="110" height="6" rx="2" fill="#e2e8f0" />
-
-            {/* Dates (right) */}
-            <rect x="455" y="72" width="45" height="5" rx="2" fill="#a78bfa" />
-            <rect x="435" y="81" width="120" height="8" rx="2" fill="#ede9fe" />
-            <rect x="455" y="94" width="45" height="5" rx="2" fill="#a78bfa" />
-            <rect x="435" y="103" width="120" height="8" rx="2" fill="#ede9fe" />
-
-            {/* Seller block */}
-            <rect x="38" y="138" width="55" height="5" rx="2" fill="#a78bfa" />
-            <rect x="38" y="148" width="160" height="9" rx="2" fill="#1e1b4b" opacity="0.65" />
-            <rect x="38" y="162" width="140" height="5" rx="2" fill="#e2e8f0" />
-            <rect x="38" y="171" width="120" height="5" rx="2" fill="#e2e8f0" />
-            <rect x="38" y="180" width="95" height="5" rx="2" fill="#e2e8f0" />
-
-            {/* Buyer block */}
-            <rect x="310" y="138" width="70" height="5" rx="2" fill="#a78bfa" />
-            <rect x="310" y="148" width="160" height="9" rx="2" fill="#1e1b4b" opacity="0.65" />
-            <rect x="310" y="162" width="140" height="5" rx="2" fill="#e2e8f0" />
-            <rect x="310" y="171" width="120" height="5" rx="2" fill="#e2e8f0" />
-            <rect x="310" y="180" width="95" height="5" rx="2" fill="#e2e8f0" />
-
-            {/* Items table header */}
+            <rect x="38" y="138" width="160" height="9" rx="2" fill="#1e1b4b" fillOpacity="0.6" />
+            <rect x="310" y="138" width="160" height="9" rx="2" fill="#1e1b4b" fillOpacity="0.6" />
             <rect x="38" y="218" width="519" height="22" rx="3" fill="#7c3aed" />
-            <rect x="48" y="225" width="130" height="8" rx="2" fill="white" opacity="0.6" />
-            <rect x="370" y="225" width="55" height="8" rx="2" fill="white" opacity="0.6" />
-            <rect x="455" y="225" width="90" height="8" rx="2" fill="white" opacity="0.6" />
-
-            {/* Row 1 */}
             <rect x="38" y="242" width="519" height="18" fill="#faf5ff" />
-            <rect x="48" y="248" width="180" height="6" rx="2" fill="#e2e8f0" />
-            <rect x="370" y="248" width="50" height="6" rx="2" fill="#e2e8f0" />
-            <rect x="455" y="248" width="90" height="6" rx="2" fill="#e2e8f0" />
-
-            {/* Row 2 */}
             <rect x="38" y="261" width="519" height="18" fill="white" />
-            <rect x="48" y="267" width="155" height="6" rx="2" fill="#e2e8f0" />
-            <rect x="370" y="267" width="50" height="6" rx="2" fill="#e2e8f0" />
-            <rect x="455" y="267" width="90" height="6" rx="2" fill="#e2e8f0" />
-
-            {/* Row 3 */}
-            <rect x="38" y="280" width="519" height="18" fill="#faf5ff" />
-            <rect x="48" y="286" width="165" height="6" rx="2" fill="#e2e8f0" />
-            <rect x="370" y="286" width="50" height="6" rx="2" fill="#e2e8f0" />
-            <rect x="455" y="286" width="90" height="6" rx="2" fill="#e2e8f0" />
-
-            {/* Subtotal / tax lines */}
-            <line x1="310" y1="312" x2="557" y2="312" stroke="#ddd6fe" strokeWidth="1" />
-            <rect x="360" y="320" width="85" height="6" rx="2" fill="#e2e8f0" />
-            <rect x="462" y="320" width="90" height="6" rx="2" fill="#e2e8f0" />
-            <rect x="360" y="332" width="65" height="6" rx="2" fill="#e2e8f0" />
-            <rect x="462" y="332" width="90" height="6" rx="2" fill="#e2e8f0" />
-
-            {/* Total due bar */}
             <rect x="330" y="348" width="227" height="22" rx="3" fill="#7c3aed" />
-            <rect x="340" y="355" width="110" height="8" rx="2" fill="white" opacity="0.55" />
-            <rect x="460" y="355" width="88" height="8" rx="2" fill="white" opacity="0.9" />
+            <rect x="0" y="428" width="595" height="22" fill="#faf5ff" />
           </>
         )}
-
-        {/* Footer bar */}
-        <rect x="0" y="428" width="595" height="22" fill="#faf5ff" />
-        <rect x="38" y="433" width="300" height="5" rx="2" fill="#ddd6fe" />
-        <rect x="38" y="442" width="200" height="4" rx="2" fill="#ede9fe" />
       </svg>
 
       {/* Fade out at bottom */}

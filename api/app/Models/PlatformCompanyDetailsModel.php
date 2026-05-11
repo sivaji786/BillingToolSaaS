@@ -24,6 +24,9 @@ class PlatformCompanyDetailsModel extends Model
         'bank_iban',
         'bank_bic',
         'bank_account_name',
+        'telegram_bot_token',
+        'telegram_chat_id',
+        'telegram_enabled',
         'updated_at'
     ];
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useDebounce } from '../../hooks/useDebounce';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Invoice } from '../../types/invoice';
 import { invoiceService } from '../../services/api';
@@ -62,6 +63,7 @@ import {
   Edit,
   Download,
   Copy,
+  Share2,
   Trash2,
   ChevronLeft,
   ChevronRight,
@@ -93,6 +95,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 400);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<DateFilter>('anyDate');
   const [sortBy, setSortBy] = useState<SortOption>('dateDesc');
@@ -115,7 +118,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
     setIsLoading(true);
     try {
       const data = await invoiceService.getAll({
-        search: searchQuery,
+        search: debouncedSearch,
         status: statusFilter,
         dateFilter: dateFilter,
         sort: sortBy,
@@ -133,7 +136,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
   useEffect(() => {
     fetchInvoices();
-  }, [searchQuery, statusFilter, dateFilter, sortBy, templateType]);
+  }, [debouncedSearch, statusFilter, dateFilter, sortBy, templateType]);
 
   // Filter and sort invoices
   // Note: Filtering and sorting are now handled by the backend, but we keep this for client-side pagination if needed
@@ -228,19 +231,36 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
     setShowStatusChangeDialog(false);
   };
 
-  const handleDuplicate = (invoice: Invoice) => {
-    const newInvoice: Invoice = {
+  const handleShare = async (invoice: Invoice) => {
+    try {
+      const { shareUrl } = await invoiceService.generateShareLink(invoice.id);
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Share link copied to clipboard', { description: shareUrl });
+    } catch {
+      toast.error('Failed to generate share link');
+    }
+  };
+
+  const handleDuplicate = async (invoice: Invoice) => {
+    const copy: Invoice = {
       ...invoice,
-      id: `new_${Math.random().toString(36).substring(7)}`,
-      invoiceNumber: `${invoice.invoiceNumber} -COPY`,
+      id: undefined as any,
+      invoiceNumber: `${invoice.invoiceNumber}-COPY`,
       status: 'draft',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    setInvoices([newInvoice, ...invoices]);
-    toast.success(t('common.success'), {
-      description: `Invoice ${invoice.invoiceNumber} duplicated`,
-    });
+    try {
+      await invoiceService.create(copy);
+      toast.success(t('common.success'), {
+        description: `Invoice ${invoice.invoiceNumber} duplicated`,
+      });
+      await fetchInvoices();
+    } catch {
+      toast.error(t('common.error'), {
+        description: `Failed to duplicate invoice ${invoice.invoiceNumber}`,
+      });
+    }
   };
 
   const handleDelete = async (invoice: Invoice) => {
@@ -649,6 +669,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
                   onView={() => onSelectInvoice?.(invoice)}
                   onEdit={() => onEditInvoice?.(invoice)}
                   onDuplicate={() => handleDuplicate(invoice)}
+                  onShare={() => handleShare(invoice)}
                   onExport={() => handleExportInvoice(invoice)}
                   onDelete={() => handleDelete(invoice)}
                   hasDeletePermission={hasPermissionSync('invoices.delete')}
@@ -975,6 +996,7 @@ const InvoiceRow = memo(({
   onView,
   onEdit,
   onDuplicate,
+  onShare,
   onExport,
   onDelete,
   hasDeletePermission,
@@ -988,6 +1010,7 @@ const InvoiceRow = memo(({
   onView: () => void;
   onEdit: () => void;
   onDuplicate: () => void;
+  onShare: () => void;
   onExport: () => void;
   onDelete: () => void;
   hasDeletePermission: boolean;
@@ -1040,6 +1063,10 @@ const InvoiceRow = memo(({
             <DropdownMenuItem onClick={onDuplicate}>
               <Copy className="h-4 w-4 mr-2" />
               {t('invoiceList.duplicate')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onShare}>
+              <Share2 className="h-4 w-4 mr-2" />
+              Share (copy link)
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onExport}>
               <Download className="h-4 w-4 mr-2" />

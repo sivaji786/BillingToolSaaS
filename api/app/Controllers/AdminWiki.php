@@ -52,6 +52,33 @@ class AdminWiki extends ResourceController
         return $this->respond($tree);
     }
 
+    public function write(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        $body    = $this->request->getJSON(true);
+        $path    = $body['path']    ?? null;
+        $content = $body['content'] ?? null;
+        $lang    = $body['lang']    ?? 'en';
+
+        if (empty($path) || $content === null) {
+            return $this->fail('Path and content are required.');
+        }
+
+        if (!str_ends_with($path, '.md')) {
+            return $this->failForbidden('Only .md files may be written.');
+        }
+
+        $docsPath = $this->resolveDocsPath($lang);
+        $fullPath = realpath($docsPath . $path);
+
+        if (!$fullPath || strpos($fullPath, realpath($docsPath)) !== 0) {
+            return $this->failForbidden('Invalid path.');
+        }
+
+        file_put_contents($fullPath, $content);
+
+        return $this->respond(['success' => true]);
+    }
+
     public function read(): \CodeIgniter\HTTP\ResponseInterface
     {
         $path = $this->request->getGet('path');

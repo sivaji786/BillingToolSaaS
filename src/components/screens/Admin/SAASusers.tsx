@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDebounce } from '../../../hooks/useDebounce';
 import { adminUserService } from '../../../services/adminApi';
 import { UserFilters } from '../../../types/admin';
 import { Button } from '../../ui/button';
@@ -19,11 +20,20 @@ interface SAASusersProps {
 
 export function SAASusers({ onNavigate }: SAASusersProps) {
     const [filters, setFilters] = useState<UserFilters>({ page: 1, limit: 10 });
+    const [searchInput, setSearchInput] = useState('');
+    const debouncedSearch = useDebounce(searchInput, 400);
     const queryClient = useQueryClient();
 
+    // Reset to page 1 when debounced search changes
+    useEffect(() => {
+        setFilters(prev => ({ ...prev, page: 1 }));
+    }, [debouncedSearch]);
+
+    const activeFilters = { ...filters, search: debouncedSearch || undefined };
+
     const { data: usersData, isLoading } = useQuery({
-        queryKey: ['users', filters],
-        queryFn: () => adminUserService.getAll(filters),
+        queryKey: ['users', activeFilters],
+        queryFn: () => adminUserService.getAll(activeFilters),
     });
 
     const suspendMutation = useMutation({
@@ -88,8 +98,8 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Search users..."
-                                value={filters.search || ''}
-                                onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
                                 className="pl-10"
                             />
                         </div>

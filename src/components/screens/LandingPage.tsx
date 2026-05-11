@@ -8,6 +8,10 @@ import { LanguageSwitcher } from '../LanguageSwitcher';
 import { billingService, publicCmsService } from '../../services/api';
 import { TicketingWidget } from '../TicketingWidget';
 import { getTicketingApiKey } from '../../utils/config';
+import { InlineEditableText } from '../cms/InlineEditableText';
+import { InlineEditableRich } from '../cms/InlineEditableRich';
+import { InlineImagePicker } from '../cms/InlineImagePicker';
+import { useAdminStore } from '../../stores/adminStore';
 
 interface LandingPageProps {
     onLogin: () => void;
@@ -48,9 +52,11 @@ const itemVariants: Variants = {
 
 export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: LandingPageProps) {
     const { t, language } = useLanguage();
+    const isAdminAuthenticated = useAdminStore((s) => s.isAuthenticated);
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
     const [cmsContent, setCmsContent] = useState<any>(null);
+    const [navPages, setNavPages] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchPlans = async () => {
@@ -156,32 +162,48 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
             }
         };
 
+        const fetchNavPages = async () => {
+            try {
+                const response = await publicCmsService.getNavPages(language);
+                if (response.success && Array.isArray(response.data)) {
+                    // Filter out built-in slugs that already have dedicated routes
+                    const builtIn = new Set(['home', 'package-comparison', 'legal-notice', 'privacy-policy', 'terms-conditions', 'cookie-settings']);
+                    setNavPages(response.data.filter((p: any) => !builtIn.has(p.slug)));
+                }
+            } catch {
+                // nav pages are optional, silently ignore
+            }
+        };
+
         fetchPlans();
         fetchCms();
+        fetchNavPages();
     }, [language]);
 
-    const features = [
-        {
-            icon: <FileText className="h-6 w-6 text-purple-600" />,
-            title: t('landing.features.smartInvoicing.title'),
-            description: t('landing.features.smartInvoicing.desc')
-        },
-        {
-            icon: <LayoutTemplate className="h-6 w-6 text-pink-600" />,
-            title: t('landing.features.customTemplates.title'),
-            description: t('landing.features.customTemplates.desc')
-        },
-        {
-            icon: <Globe className="h-6 w-6 text-blue-600" />,
-            title: t('landing.features.multiLanguage.title'),
-            description: t('landing.features.multiLanguage.desc')
-        },
-        {
-            icon: <Shield className="h-6 w-6 text-green-600" />,
-            title: t('landing.features.secureCompliant.title'),
-            description: t('landing.features.secureCompliant.desc')
-        }
+    const featureIcons = [
+        <FileText className="h-6 w-6 text-purple-600" />,
+        <LayoutTemplate className="h-6 w-6 text-pink-600" />,
+        <Globe className="h-6 w-6 text-blue-600" />,
+        <Shield className="h-6 w-6 text-green-600" />,
     ];
+
+    const defaultFeatures = [
+        { title: t('landing.features.smartInvoicing.title'), description: t('landing.features.smartInvoicing.desc') },
+        { title: t('landing.features.customTemplates.title'), description: t('landing.features.customTemplates.desc') },
+        { title: t('landing.features.multiLanguage.title'), description: t('landing.features.multiLanguage.desc') },
+        { title: t('landing.features.secureCompliant.title'), description: t('landing.features.secureCompliant.desc') },
+    ];
+
+    const features = (cmsContent?.features?.length ? cmsContent.features : defaultFeatures).map(
+        (f: any, i: number) => ({ icon: featureIcons[i], title: f.title, description: f.desc ?? f.description })
+    );
+
+    const defaultSteps = [
+        { title: t('landing.howItWorks.step1.title'), desc: t('landing.howItWorks.step1.desc') },
+        { title: t('landing.howItWorks.step2.title'), desc: t('landing.howItWorks.step2.desc') },
+        { title: t('landing.howItWorks.step3.title'), desc: t('landing.howItWorks.step3.desc') },
+    ];
+    const howItWorksSteps: { title: string; desc: string }[] = cmsContent?.how_it_works_steps?.length ? cmsContent.how_it_works_steps : defaultSteps;
 
     if (loading) {
         return (
@@ -212,15 +234,29 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             <Button variant="ghost" onClick={() => onNavigate('packageComparison')}>
                                 {t('nav.products')}
                             </Button>
-                            {/* <Button variant="ghost" onClick={() => onNavigate('impressum')} className="text-muted-foreground">
-                                {t('legal.footer.impressum')}
-                            </Button> */}
-                            <Button variant="ghost" onClick={onLogin}>
-                                {t('landing.login')}
-                            </Button>
-                            <Button onClick={() => onSignup()}>
-                                {t('landing.signup')}
-                            </Button>
+                            {navPages.map((p: any) => (
+                                <Button key={p.slug} variant="ghost" onClick={() => onNavigate(`cms/${p.slug}`)}>
+                                    {p.nav_label || p.title}
+                                </Button>
+                            ))}
+                            {isAdminAuthenticated ? (
+                                <Button
+                                    variant="outline"
+                                    className="border-purple-400 text-purple-700 hover:bg-purple-50"
+                                    onClick={() => { window.location.hash = '#/SAdashboard'; }}
+                                >
+                                    ← Back to Admin Portal
+                                </Button>
+                            ) : (
+                                <>
+                                    <Button variant="ghost" onClick={onLogin}>
+                                        {t('landing.login')}
+                                    </Button>
+                                    <Button onClick={() => onSignup()}>
+                                        {t('landing.signup')}
+                                    </Button>
+                                </>
+                            )}
                         </div>
                         <LanguageSwitcher variant="login" />
                     </nav>
@@ -249,20 +285,18 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                         >
                             <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-4 py-1.5 text-xs font-semibold border-purple-100 bg-purple-50/50 text-purple-700 backdrop-blur-sm shadow-sm transition-all hover:bg-purple-100/50">
                                 <Sparkles className="mr-2 h-3.5 w-3.5 text-purple-600" />
-                                {cmsContent?.hero_badge || t('landing.hero.badge')}
+                                <InlineEditableText slug="home" field="hero_badge" lang={language} value={cmsContent?.hero_badge || t('landing.hero.badge')} />
                             </motion.div>
                             <motion.h1 variants={itemVariants} className="text-5xl font-extrabold tracking-tight lg:text-6xl xl:text-7xl max-w-4xl text-slate-900 dark:text-white pb-2 leading-[1.1]">
-                                {cmsContent?.hero_title ? (
-                                    cmsContent.hero_title
-                                ) : (
-                                    <>
-                                        {t('landing.hero.title')} <br className="hidden sm:inline" />
-                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-fuchsia-600">{t('landing.hero.titleAccent')}</span> {t('landing.hero.titleSuffix')}
-                                    </>
-                                )}
+                                <InlineEditableText slug="home" field="hero_title" lang={language} value={cmsContent?.hero_title || t('landing.hero.title')} />{' '}
+                                <br className="hidden sm:inline" />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-fuchsia-600">
+                                    <InlineEditableText slug="home" field="hero_title_accent" lang={language} value={cmsContent?.hero_title_accent || t('landing.hero.titleAccent')} />
+                                </span>{' '}
+                                <InlineEditableText slug="home" field="hero_title_suffix" lang={language} value={cmsContent?.hero_title_suffix || t('landing.hero.titleSuffix')} />
                             </motion.h1>
                             <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                                {cmsContent?.hero_subtitle || t('landing.hero.subtitle')}
+                                <InlineEditableText slug="home" field="hero_subtitle" lang={language} value={cmsContent?.hero_subtitle || t('landing.hero.subtitle')} multiline />
                             </motion.p>
                             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 min-w-[300px] justify-center pt-4">
                                 <Button size="lg" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 h-12 px-8 text-lg shadow-xl shadow-purple-200 dark:shadow-none" onClick={() => onSignup()}>
@@ -289,7 +323,9 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 {/* Trusted By Marquee */}
                 <section className="py-10 border-y bg-slate-50/50 dark:bg-slate-900/30 overflow-hidden">
                     <div className="container px-4 md:px-6">
-                        <p className="text-center text-sm font-medium text-muted-foreground mb-6">{t('landing.trustedBy')}</p>
+                        <p className="text-center text-sm font-medium text-muted-foreground mb-6">
+                            <InlineEditableText slug="home" field="trusted_by" lang={language} value={cmsContent?.trusted_by || t('landing.trustedBy')} />
+                        </p>
                         <div className="flex justify-center flex-wrap gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
                             {['[mn]medianet', 'Voicepoint', 'Highgo', 'digitalks.in', 'we4service'].map((partner, i) => (
                                 <div key={i} className="flex items-center gap-2 text-xl font-bold text-slate-800 dark:text-slate-200">
@@ -313,9 +349,11 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             variants={containerVariants}
                             className="text-center mb-16"
                         >
-                            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t('landing.features.tag')}</motion.h2>
+                            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                                <InlineEditableText slug="home" field="features_tag" lang={language} value={cmsContent?.features_tag || t('landing.features.tag')} />
+                            </motion.h2>
                             <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400 mt-4">
-                                {t('landing.features.subtitle')}
+                                <InlineEditableText slug="home" field="features_subtitle" lang={language} value={cmsContent?.features_subtitle || t('landing.features.subtitle')} multiline />
                             </motion.p>
                         </motion.div>
                         <motion.div
@@ -348,22 +386,24 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 <section className="py-12 md:py-24 lg:py-32">
                     <div className="container px-4 md:px-6">
                         <div className="text-center mb-16">
-                            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t('landing.howItWorks.tag')}</h2>
+                            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                                <InlineEditableText slug="home" field="how_it_works_tag" lang={language} value={cmsContent?.how_it_works_tag || t('landing.howItWorks.tag')} />
+                            </h2>
                             <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400 mt-4">
-                                {t('landing.howItWorks.subtitle')}
+                                <InlineEditableText slug="home" field="how_it_works_subtitle" lang={language} value={cmsContent?.how_it_works_subtitle || t('landing.howItWorks.subtitle')} multiline />
                             </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
                             {/* Connecting Line */}
                             <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-purple-200 via-fuchsia-200 to-purple-200 dark:from-purple-900 dark:via-fuchsia-900 dark:to-purple-900 z-0" />
-                            
-                            {[1, 2, 3].map((step) => (
-                                <div key={step} className="relative z-10 flex flex-col items-center text-center">
+
+                            {howItWorksSteps.map((step, idx) => (
+                                <div key={idx} className="relative z-10 flex flex-col items-center text-center">
                                     <div className="w-24 h-24 rounded-full bg-background border-4 border-purple-100 dark:border-purple-900/50 flex items-center justify-center text-3xl font-bold text-purple-600 shadow-xl mb-6">
-                                        {step}
+                                        {idx + 1}
                                     </div>
-                                    <h3 className="text-xl font-bold mb-2">{t(`landing.howItWorks.step${step}.title`)}</h3>
-                                    <p className="text-muted-foreground">{t(`landing.howItWorks.step${step}.desc`)}</p>
+                                    <h3 className="text-xl font-bold mb-2">{step.title}</h3>
+                                    <p className="text-muted-foreground">{step.desc}</p>
                                 </div>
                             ))}
                         </div>
@@ -381,25 +421,23 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 variants={containerVariants}
                             >
                                 <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-6">
-                                    {cmsContent?.about_title || t('landing.aboutUs')}
+                                    <InlineEditableText slug="home" field="about_title" lang={language} value={cmsContent?.about_title || t('landing.aboutUs')} />
                                 </motion.h2>
                                 <motion.div variants={itemVariants} className="space-y-4 text-gray-500 md:text-lg dark:text-gray-400">
-                                    <p>
-                                        {cmsContent?.about_text || t('landing.about.desc1')}
-                                    </p>
-                                    {!cmsContent?.about_text && (
-                                        <p>
-                                            {t('landing.about.desc2')}
-                                        </p>
-                                    )}
+                                    <InlineEditableRich slug="home" field="about_text" lang={language} value={cmsContent?.about_text || t('landing.about.desc1')} />
+                                    <InlineEditableRich slug="home" field="about_text2" lang={language} value={cmsContent?.about_text2 || t('landing.about.desc2')} />
                                     <div className="flex gap-4 pt-4">
                                         <div className="flex flex-col">
                                             <span className="text-2xl font-bold text-purple-600">10k+</span>
-                                            <span className="text-sm">{t('landing.about.activeUsers')}</span>
+                                            <span className="text-sm">
+                                                <InlineEditableText slug="home" field="about_stat1_label" lang={language} value={cmsContent?.about_stat1_label || t('landing.about.activeUsers')} />
+                                            </span>
                                         </div>
                                         <div className="border-l pl-4 flex flex-col">
                                             <span className="text-2xl font-bold text-purple-600">500k+</span>
-                                            <span className="text-sm">{t('landing.about.invoicesSent')}</span>
+                                            <span className="text-sm">
+                                                <InlineEditableText slug="home" field="about_stat2_label" lang={language} value={cmsContent?.about_stat2_label || t('landing.about.invoicesSent')} />
+                                            </span>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -412,10 +450,13 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 className="relative rounded-2xl overflow-hidden shadow-2xl"
                             >
                                 {cmsContent?.about_image ? (
-                                    <img 
-                                        src={cmsContent.about_image} 
-                                        alt={cmsContent?.about_title || "About Us"} 
-                                        className="w-full h-auto object-cover rounded-2xl shadow-2xl"
+                                    <InlineImagePicker
+                                        slug="home"
+                                        field="about_image"
+                                        lang={language}
+                                        src={cmsContent.about_image}
+                                        alt={cmsContent?.about_title || 'About Us'}
+                                        imgClassName="w-full h-auto object-cover rounded-2xl shadow-2xl"
                                     />
                                 ) : (
                                     <>
@@ -473,9 +514,11 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             variants={containerVariants}
                             className="text-center mb-16"
                         >
-                            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t('landing.pricing.tag')}</motion.h2>
+                            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                                <InlineEditableText slug="home" field="pricing_tag" lang={language} value={cmsContent?.pricing_tag || t('landing.pricing.tag')} />
+                            </motion.h2>
                             <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400 mt-4">
-                                {t('landing.pricing.subtitle')}
+                                <InlineEditableText slug="home" field="pricing_subtitle" lang={language} value={cmsContent?.pricing_subtitle || t('landing.pricing.subtitle')} multiline />
                             </motion.p>
                         </motion.div>
                         <motion.div
@@ -534,10 +577,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                     <div className="container px-4 md:px-6">
                         <div className="text-center mb-16">
                             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                                {cmsContent?.testimonials_tag || t('landing.testimonials.tag')}
+                                <InlineEditableText slug="home" field="testimonials_tag" lang={language} value={cmsContent?.testimonials_tag || t('landing.testimonials.tag')} />
                             </h2>
                             <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400 mt-4">
-                                {cmsContent?.testimonials_subtitle || t('landing.testimonials.subtitle')}
+                                <InlineEditableText slug="home" field="testimonials_subtitle" lang={language} value={cmsContent?.testimonials_subtitle || t('landing.testimonials.subtitle')} multiline />
                             </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -585,10 +628,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                     <div className="container px-4 md:px-6 max-w-3xl mx-auto">
                         <div className="text-center mb-16">
                             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                                {cmsContent?.faq_tag || t('landing.faq.tag')}
+                                <InlineEditableText slug="home" field="faq_tag" lang={language} value={cmsContent?.faq_tag || t('landing.faq.tag')} />
                             </h2>
                             <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400 mt-4">
-                                {cmsContent?.faq_subtitle || t('landing.faq.subtitle')}
+                                <InlineEditableText slug="home" field="faq_subtitle" lang={language} value={cmsContent?.faq_subtitle || t('landing.faq.subtitle')} multiline />
                             </p>
                         </div>
                         <div className="space-y-4">
@@ -627,16 +670,18 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
                         >
-                            <h2 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl mb-6">{t('landing.bottomCta.title')}</h2>
+                            <h2 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl mb-6">
+                                <InlineEditableText slug="home" field="cta_title" lang={language} value={cmsContent?.cta_title || t('landing.bottomCta.title')} />
+                            </h2>
                             <p className="text-purple-100 text-lg md:text-xl mb-10 max-w-[600px] mx-auto">
-                                {t('landing.bottomCta.subtitle')}
+                                <InlineEditableText slug="home" field="cta_subtitle" lang={language} value={cmsContent?.cta_subtitle || t('landing.bottomCta.subtitle')} multiline />
                             </p>
                             <Button size="lg" className="bg-white text-purple-600 hover:bg-slate-50 h-14 px-10 text-lg shadow-2xl rounded-full transition-transform hover:scale-105" onClick={() => onSignup()}>
                                 {t('landing.hero.getStarted')}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>
                             <p className="mt-6 text-purple-200 text-sm font-medium">
-                                {t('landing.bottomCta.ctaContext')}
+                                <InlineEditableText slug="home" field="cta_context" lang={language} value={cmsContent?.cta_context || t('landing.bottomCta.ctaContext')} />
                             </p>
                         </motion.div>
                     </div>
@@ -658,6 +703,11 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                         <button onClick={() => onNavigate('privacyPolicy')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.privacy')}</button>
                         <button onClick={() => onNavigate('termsAndConditions')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.terms')}</button>
                         <button onClick={() => onNavigate('cookiePolicy')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.cookies')}</button>
+                        {navPages.map((p: any) => (
+                            <button key={p.slug} onClick={() => onNavigate(`cms/${p.slug}`)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                                {p.nav_label || p.title}
+                            </button>
+                        ))}
                     </div>
                 </div>
             </footer>

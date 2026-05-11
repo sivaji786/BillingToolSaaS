@@ -20,6 +20,11 @@ class AIInvoiceController extends BaseController
      */
     public function parseInvoice()
     {
+        // Rate limit: 20 AI parse requests per user per hour
+        if (!$this->checkAiRateLimit('parse')) {
+            return $this->fail('AI rate limit exceeded. Maximum 20 requests per hour per user.', 429);
+        }
+
         $data = $this->request->getJSON(true);
         $prompt = $data['prompt'] ?? null;
         $context = $data['context'] ?? 'create';
@@ -461,6 +466,11 @@ class AIInvoiceController extends BaseController
      */
     public function improveLetterBody()
     {
+        // Rate limit: 20 AI improve requests per user per hour
+        if (!$this->checkAiRateLimit('improve')) {
+            return $this->fail('AI rate limit exceeded. Maximum 20 requests per hour per user.', 429);
+        }
+
         $data     = $this->request->getJSON(true);
         $body     = $data['body']     ?? '';
         $language = $data['language'] ?? 'en';
@@ -541,5 +551,21 @@ $body";
         }
 
         throw new \Exception('Failed to get a valid response from Gemini API.');
+    }
+
+    /**
+     * Enforce per-user AI rate limit: 20 calls per action key per hour.
+     * Uses CodeIgniter's Throttler (file/Redis cache under the hood).
+     */
+    private function checkAiRateLimit(string $action): bool
+    {
+        $throttler = \Config\Services::throttler();
+        // Build a key from action + authenticated user identifier (IP as fallback)
+        $userId = $this->request->getHeaderLine('Authorization');
+        $userId = $userId ?: $this->request->getIPAddress();
+        $key    = 'ai_' . $action . '_' . sha1($userId);
+
+        // 20 tokens per hour (3600 seconds); each call consumes 1 token
+        return $throttler->check($key, 20, HOUR);
     }
 }

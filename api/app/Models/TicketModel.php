@@ -12,7 +12,7 @@ class TicketModel extends BaseModel
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['user_id', 'subject', 'description', 'priority', 'status', 'domain', 'page', 'client_ip', 'screenshot_path', 'created_at', 'updated_at'];
+    protected $allowedFields    = ['user_id', 'subject', 'description', 'priority', 'status', 'assigned_to', 'first_response_at', 'resolved_at', 'domain', 'page', 'client_ip', 'screenshot_path', 'created_at', 'updated_at'];
 
     // Disable TenantScope inherited from BaseModel
     protected $beforeFind   = [];

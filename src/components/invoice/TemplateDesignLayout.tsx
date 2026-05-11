@@ -36,6 +36,8 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
     const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
     const [elementStartPos, setElementStartPos] = useState({ x: 0, y: 0 });
     const GRID_SIZE = 10;
+    const CANVAS_W = 595;
+    const CANVAS_H = 842;
 
     // Professional Light Theme
     const DESIGN_THEME = {
@@ -101,9 +103,12 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
             newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
         }
 
-        // Boundary enforcement (Left edge 0, right edge 555)
-        newX = Math.max(0, Math.min(newX, 555));
-        newY = Math.max(0, newY);
+        // Boundary enforcement using element dimensions so the element stays fully inside the canvas
+        const draggingEl = layout.find(el => el.id === draggingId);
+        const elW = draggingEl?.w ?? 100;
+        const elH = draggingEl?.h ?? 40;
+        newX = Math.max(0, Math.min(newX, CANVAS_W - elW));
+        newY = Math.max(0, Math.min(newY, CANVAS_H - elH));
 
         handleLayoutChange(draggingId, { x: Math.round(newX), y: Math.round(newY) });
     };
@@ -588,8 +593,8 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                     </div>
                                     <div className="grid grid-cols-2 gap-x-8 gap-y-8 pt-2">
                                         {[
-                                            { label: t('designLayout.xPosition'), key: 'x', val: selectedElement.x, icon: 'X' },
-                                            { label: t('designLayout.yPosition'), key: 'y', val: selectedElement.y, icon: 'Y' }
+                                            { label: t('designLayout.xPosition'), key: 'x', val: selectedElement.x, icon: 'X', max: CANVAS_W - (selectedElement.w ?? 100) },
+                                            { label: t('designLayout.yPosition'), key: 'y', val: selectedElement.y, icon: 'Y', max: CANVAS_H - (selectedElement.h ?? 40) }
                                         ].map(field => (
                                             <div key={field.label} className="space-y-3.5 group/field">
                                                 <div className="flex items-center justify-between px-1">
@@ -601,7 +606,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                         type="number"
                                                         value={Math.round(field.val)}
                                                         onChange={(e) => {
-                                                            const val = parseInt(e.target.value) || 0;
+                                                            const val = Math.max(0, Math.min(parseInt(e.target.value) || 0, field.max));
                                                             handleLayoutChange(selectedElement.id, { [field.key]: val });
                                                         }}
                                                         className="h-12 bg-white border-slate-200 text-slate-900 text-sm font-bold transition-all focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 rounded-2xl pl-5 shadow-sm"

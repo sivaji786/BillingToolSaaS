@@ -62,6 +62,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
   const { t } = useLanguage();
   const [invoice, setInvoice] = useState<Invoice>(initialInvoice);
   const isBusinessLetter = invoice.templateType === 'business_letter';
+  const isLocked = ['sent', 'paid', 'cancelled'].includes(invoice.status ?? '');
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -258,6 +259,13 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
 
   return (
     <div className="space-y-6">
+      {/* Locked banner */}
+      {isLocked && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+          <span className="font-semibold">Read-only:</span>
+          <span>This invoice has status <span className="font-medium capitalize">{invoice.status}</span> and cannot be edited. Change the status first to unlock editing.</span>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -422,6 +430,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
         </div>
       </Card>
 
+      <fieldset disabled={isLocked} className="contents">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Editor */}
         <div className="lg:col-span-2 space-y-6">
@@ -724,7 +733,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
         </Button>
         <Button
           onClick={handleSave}
-          disabled={!hasUnsavedChanges || isSaving}
+          disabled={!hasUnsavedChanges || isSaving || isLocked}
           className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white min-w-[150px]"
         >
           {isSaving ? (
@@ -741,6 +750,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
         </Button>
       </div>
 
+      </fieldset>
       {/* Modals */}
       <ExportModal
         invoiceNumber={invoice.invoiceNumber}

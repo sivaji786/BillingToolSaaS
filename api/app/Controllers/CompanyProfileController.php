@@ -50,6 +50,7 @@ class CompanyProfileController extends BaseController
                 'phone' => $data['phone'] ?? null,
                 'website' => $data['website'] ?? null,
                 'logo_url' => $data['logoUrl'] ?? null,
+                'signature_url' => $data['signatureUrl'] ?? null,
                 'bank_iban' => $bankAccount['iban'] ?? null,
                 'bank_bic' => $bankAccount['bic'] ?? null,
                 'bank_account_name' => $bankAccount['accountName'] ?? null,
@@ -93,6 +94,7 @@ class CompanyProfileController extends BaseController
             'phone' => $profile['phone'] ?? '',
             'website' => $profile['website'] ?? null,
             'logoUrl' => $profile['logo_url'] ?? null,
+            'signatureUrl' => $profile['signature_url'] ?? null,
             'bankAccount' => [
                 'iban' => $profile['bank_iban'] ?? null,
                 'bic' => $profile['bank_bic'] ?? null,

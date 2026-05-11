@@ -6,6 +6,7 @@ import { getTicketingApiKey } from '../../utils/config';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { useState, useEffect } from 'react';
 import { publicCmsService } from '../../services/api';
+import { InlineEditableRich } from '../cms/InlineEditableRich';
 
 interface TermsAndConditionsProps {
     onBack: () => void;
@@ -83,8 +84,9 @@ export function TermsAndConditions({ onBack, onNavigate }: TermsAndConditionsPro
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                         </div>
                     ) : cmsContent ? (
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 shadow-sm prose dark:prose-invert max-w-none"
-                             dangerouslySetInnerHTML={{ __html: cmsContent }} />
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 shadow-sm prose dark:prose-invert max-w-none">
+                            <InlineEditableRich slug="terms" field="content" lang={language} value={cmsContent} />
+                        </div>
                     ) : (
                         sections.map(({ key, num }) => (
                             <div key={key} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">

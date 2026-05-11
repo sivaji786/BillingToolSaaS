@@ -12,7 +12,7 @@ use App\Traits\AuditTrait;
 
 class InvoiceController extends BaseController
 {
-    use ResponseTrait, AuditTrait;
+    use ResponseTrait, AuditTrait, \App\Traits\PlanLimitTrait;
 
     public function index()
     {
@@ -183,11 +183,17 @@ class InvoiceController extends BaseController
 
     public function create()
     {
+        // Enforce monthly invoice limit from plan
+        $data = $this->request->getJSON(true);
+        $isLetter = ($data['templateType'] ?? '') === 'business_letter';
+        $limitKey = $isLetter ? 'letters' : 'invoices';
+        if (!$this->withinPlanLimit($limitKey)) {
+            return $this->fail('Monthly ' . $limitKey . ' limit reached. Please upgrade your plan.', 429);
+        }
+
         $model = new InvoiceModel();
         $lineModel = new InvoiceLineModel();
-        
-        $data = $this->request->getJSON(true);
-        
+
         // Map frontend data to database columns
         $dbData = $this->mapInvoiceData($data);
         
@@ -234,12 +240,28 @@ class InvoiceController extends BaseController
         $lineModel = new InvoiceLineModel();
         
         $data = $this->request->getJSON(true);
-        
+
         // Check if invoice exists
-        if (!$model->find($id)) {
+        $existing = $model->find($id);
+        if (!$existing) {
             return $this->failNotFound('Invoice not found');
         }
-        
+
+        // Enforce status transition rules
+        $allowedTransitions = [
+            'draft'     => ['draft', 'validated', 'cancelled'],
+            'validated' => ['validated', 'draft', 'sent', 'cancelled'],
+            'sent'      => ['sent', 'paid', 'cancelled'],
+            'paid'      => ['paid'],
+            'cancelled' => ['cancelled'],
+        ];
+        $currentStatus = $existing['status'] ?? 'draft';
+        $newStatus     = $data['status'] ?? $currentStatus;
+        $permitted     = $allowedTransitions[$currentStatus] ?? [$currentStatus];
+        if (!in_array($newStatus, $permitted, true)) {
+            return $this->fail("Invalid status transition: {$currentStatus} → {$newStatus}", 422);
+        }
+
         // Map frontend data to database columns
         $dbData = $this->mapInvoiceData($data);
         
@@ -340,6 +362,40 @@ class InvoiceController extends BaseController
             'tax_percent' => $line['taxPercent'],
             'line_extension_amount' => $line['quantity'] * $line['unitPrice'],
         ];
+    }
+
+    public function generateShareToken($id = null)
+    {
+        $model   = new InvoiceModel();
+        $invoice = $model->find($id);
+
+        if (!$invoice) {
+            return $this->failNotFound('Invoice not found');
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $model->update($id, ['share_token' => $token]);
+
+        $baseUrl  = rtrim(getenv('FRONTEND_URL') ?: ($_ENV['FRONTEND_URL'] ?? 'http://localhost:5173'), '/');
+        $shareUrl = $baseUrl . '/#/shared/' . $token;
+
+        return $this->respond(['shareUrl' => $shareUrl, 'token' => $token]);
+    }
+
+    public function showByToken($token = null)
+    {
+        $model   = new InvoiceModel();
+        $invoice = $model->where('share_token', $token)->first();
+
+        if (!$invoice) {
+            return $this->failNotFound('Invoice not found or link has expired');
+        }
+
+        $transformed          = $this->transformInvoice($invoice);
+        $lineModel            = new \App\Models\InvoiceLineModel();
+        $transformed['lines'] = array_map([$this, 'transformLine'], $lineModel->where('invoice_id', $invoice['id'])->findAll());
+
+        return $this->respond($transformed);
     }
 
     protected function syncBuyer($buyerData)

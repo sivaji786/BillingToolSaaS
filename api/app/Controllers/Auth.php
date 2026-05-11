@@ -98,6 +98,15 @@ class Auth extends ResourceController
                 throw new \Exception('Failed to create user');
             }
 
+            // Assign super-admin role so RBAC checks pass for the tenant owner
+            $superAdminRole = $db->table('roles')->where('is_super_admin', 1)->get()->getRowArray();
+            if ($superAdminRole) {
+                $db->table('user_roles')->insert([
+                    'user_id' => $userId,
+                    'role_id' => $superAdminRole['id'],
+                ]);
+            }
+
             // Create subscription
             $subscriptionModel = new \App\Models\SubscriptionModel();
             $subscriptionData = [
@@ -173,6 +182,9 @@ class Auth extends ResourceController
         if ($status !== 'active') {
             return $this->failForbidden('Account is ' . $status);
         }
+
+        // Record last login timestamp
+        $this->userModel->withoutTenant()->update($user['id'], ['last_login' => date('Y-m-d H:i:s')]);
 
         // Generate CUSTOMER JWT token (type='customer')
         $token = JWTHelper::generateToken($user['id'], $user['tenant_id'], $user['email'], $user['name'], 'customer');

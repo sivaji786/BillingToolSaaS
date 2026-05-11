@@ -21,11 +21,21 @@ trait AuditTrait
             $tenantId = property_exists($this, 'tenantId') ? $this->tenantId : null;
         }
         
-        // Try to get user from session or auth
+        // Resolve actor: session first, then JWT bearer token, then fallback
         $user = 'System';
         if (session()->has('user')) {
             $sessionUser = session()->get('user');
             $user = $sessionUser['name'] ?? $sessionUser['email'] ?? 'User';
+        } else {
+            $request = \Config\Services::request();
+            $header  = $request->getHeaderLine('Authorization') ?: $request->getHeaderLine('X-Authorization');
+            if ($header && preg_match('/Bearer\s(\S+)/', $header, $m)) {
+                try {
+                    $secret  = $_ENV['JWT_SECRET'] ?? getenv('JWT_SECRET') ?? '';
+                    $decoded = \Firebase\JWT\JWT::decode($m[1], new \Firebase\JWT\Key($secret, 'HS256'));
+                    $user    = $decoded->name ?? $decoded->email ?? ('user#' . ($decoded->uid ?? '?'));
+                } catch (\Throwable $e) { /* leave as System */ }
+            }
         }
 
         $auditModel->insert([

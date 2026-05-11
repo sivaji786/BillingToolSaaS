@@ -11,6 +11,7 @@ import {
     Ticket,
     BookOpen,
     Globe,
+    ExternalLink,
 } from 'lucide-react';
 import { useAdminStore } from '../../stores/adminStore';
 import { cn } from '../../lib/utils';
@@ -132,6 +133,18 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                                     </div>
                                 </div>
                                 <Separator />
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        sessionStorage.setItem('cms_edit_mode', '1');
+                                        onNavigate('landing');
+                                    }}
+                                    className="w-full justify-start text-purple-600 border-purple-200 hover:bg-purple-50"
+                                >
+                                    <ExternalLink className="h-4 w-4 mr-2" />
+                                    Edit Live Site
+                                </Button>
                                 <Button
                                     variant="outline"
                                     size="sm"

@@ -18,9 +18,19 @@ export interface Ticket {
     screenshot_path?: string;
     status?: string;
     priority?: string;
+    assigned_to?: number | null;
+    first_response_at?: string | null;
+    resolved_at?: string | null;
     created_at?: string;
     updated_at?: string;
-    comment?: string; // For updates
+    comment?: string;
+}
+
+export interface AdminStaff {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
 }
 
 export interface TicketTracking {
@@ -213,6 +223,10 @@ export interface AdminSettings {
         bank_account_name?: string;
         bank_iban?: string;
         bank_bic?: string;
+        telegram_bot_token?: string;
+        telegram_bot_token_set?: boolean;
+        telegram_chat_id?: string;
+        telegram_enabled?: boolean | number;
         created_at?: string;
         updated_at?: string;
     };

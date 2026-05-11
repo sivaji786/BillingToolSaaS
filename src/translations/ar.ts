@@ -728,6 +728,7 @@ export const ar = {
         downloaded: 'تم التحميل',
         discard: 'تجاهل',
         doubleClickToAdd: 'انقر مرتين للإضافة',
+        content: 'المحتوى',
         theme: {
             light: 'فاتح',
             dark: 'داكن',
@@ -1024,7 +1025,25 @@ export const ar = {
             created: 'تم إنشاء التذكرة',
             status_change: 'تم تحديث الحالة',
             priority_change: 'تم تحديث الأولوية',
+            assignment_change: 'تم التعيين',
             comment: 'تم إضافة تعليق',
+        },
+        assignee: 'المكلف',
+        unassigned: 'غير معين',
+        assignTo: 'تعيين إلى...',
+        sla: {
+            title: 'مستوى الخدمة وأوقات الاستجابة',
+            firstResponse: 'الاستجابة الأولى',
+            resolution: 'وقت الحل',
+            pending: 'معلق',
+            notResolved: 'لم يتم الحل بعد',
+        },
+        bulk: {
+            selected: '{count} محدد',
+            markResolved: 'تعيين كمحلول',
+            markClosed: 'تعيين كمغلق',
+            clearSelection: 'مسح التحديد',
+            updating: 'جارٍ التحديث...',
         },
         pagination: {
             showing: 'عرض',
@@ -1179,7 +1198,7 @@ export const ar = {
         back: 'رجوع',
         phone: 'الهاتف',
         fax: 'الفاكس',
-        sourceNote: 'المصدر: مولد الإشعارات القانونية من e-recht24.de',
+        sourceNote: '',
         sections: {
             legalNotice: {
                 title: 'إشعار قانوني وفقاً للمادة 5 من TMG',

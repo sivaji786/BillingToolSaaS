@@ -18,7 +18,7 @@ export function CustomerDashboard({ onNavigate }: CustomerDashboardProps) {
 
     const { data, isLoading } = useQuery({
         queryKey: ['customer-dashboard'],
-        queryFn: () => customerService.getDashboard(token!),
+        queryFn: () => customerService.getDashboard(),
         enabled: !!token,
     });
 

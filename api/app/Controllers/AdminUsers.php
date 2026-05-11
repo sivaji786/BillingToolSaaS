@@ -47,7 +47,7 @@ class AdminUsers extends ResourceController
 
             // Get all tenants with their plans and primary user email
             $builder = $this->tenantModel->builder();
-            $builder->select('tenants.id as id, tenants.company_name, tenants.subdomain, tenants.status, tenants.created_at, tenants.plan_id, plans.name as plan_name, plans.price as plan_price, MIN(users.email) as admin_email');
+            $builder->select('tenants.id as id, tenants.company_name, tenants.subdomain, tenants.status, tenants.created_at, tenants.plan_id, plans.name as plan_name, plans.price as plan_price, MIN(users.email) as admin_email, MAX(users.last_login) as last_login');
             $builder->join('plans', 'plans.id = tenants.plan_id', 'left');
             $builder->join('users', 'users.tenant_id = tenants.id', 'left');
             $builder->groupBy('tenants.id');
@@ -74,13 +74,13 @@ class AdminUsers extends ResourceController
                 return [
                     'id' => (string)$tenant['id'],
                     'name' => $tenant['company_name'],
-                    'email' => $tenant['admin_email'] ?? ($tenant['subdomain'] . '@tech-portal.io'), // Better fallback
+                    'email' => $tenant['admin_email'] ?? (null), // Better fallback
                     'packageName' => $tenant['plan_name'],
                     'packageId' => (string)$tenant['plan_id'],
                     'status' => $tenant['status'],
                     'subdomain' => $tenant['subdomain'],
                     'joinedDate' => $tenant['created_at'],
-                    'lastLogin' => date('Y-m-d\TH:i:s\Z'), // Mock last login
+                    'lastLogin' => $tenant['last_login'] ?? null,
                     'usageStats' => [
                         'storageUsed' => round(($this->usageModel->getUsage($tenant['id'], 'storage')['used_amount'] ?? 0) / (1024 * 1024 * 1024), 2),
                         'storageLimit' => $limits['storage_gb'] ?? round(($limits['storage'] ?? 0) / (1024 * 1024 * 1024), 2),
@@ -131,13 +131,13 @@ class AdminUsers extends ResourceController
         $user = [
             'id' => (string)$tenant['id'],
             'name' => $tenant['company_name'],
-            'email' => $adminUser['email'] ?? ($tenant['subdomain'] . '@tech-portal.io'),
+            'email' => $adminUser['email'] ?? (null),
             'packageName' => $plan['name'],
             'packageId' => (string)$tenant['plan_id'],
             'status' => $tenant['status'],
             'subdomain' => $tenant['subdomain'],
             'joinedDate' => $tenant['created_at'],
-            'lastLogin' => date('Y-m-d\TH:i:s\Z'),
+            'lastLogin' => $adminUser['last_login'] ?? null,
             'usageStats' => [
                 'storageUsed' => round(($this->usageModel->getUsage($tenant['id'], 'storage')['used_amount'] ?? 0) / (1024 * 1024 * 1024), 2),
                 'storageLimit' => $limits['storage_gb'] ?? round(($limits['storage'] ?? 0) / (1024 * 1024 * 1024), 2),
@@ -247,16 +247,23 @@ class AdminUsers extends ResourceController
             return $this->failNotFound('No admin user found for this tenant');
         }
 
-        // Reset password - hashed by model callback
+        // Generate a random 12-character password (letters + digits, no ambiguous chars)
+        $charset = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+        $tempPassword = '';
+        for ($i = 0; $i < 12; $i++) {
+            $tempPassword .= $charset[random_int(0, strlen($charset) - 1)];
+        }
+
         $userModel->withoutTenant()->update($adminUser['id'], [
-            'password' => 'password123'
+            'password' => $tempPassword
         ]);
 
-        $this->logAction('updated', "USER-{$adminUser['id']}", "Password reset to password123 by SA for tenant: {$tenant['company_name']}");
+        $this->logAction('updated', "USER-{$adminUser['id']}", "Password reset by SA for tenant: {$tenant['company_name']}");
 
         return $this->response->setJSON([
-            'success' => true,
-            'message' => 'Tenant admin password has been reset to "password123"',
+            'success'       => true,
+            'message'       => 'Tenant admin password has been reset. Share the temporary password securely.',
+            'temp_password' => $tempPassword,
         ])->setStatusCode(200);
     }
 
@@ -268,19 +275,28 @@ class AdminUsers extends ResourceController
     {
         $tenants = $this->tenantModel->findAll();
 
-        $csv = "ID,Company Name,Subdomain,Package,Status,Joined Date\n";
-        
+        $csv = "ID,Company Name,Subdomain,Email,Package,Status,Joined Date,Last Login,Storage Used (GB),API Calls,Bandwidth Used (GB)\n";
+
         foreach ($tenants as $tenant) {
-            $plan = $this->planModel->find($tenant['plan_id']);
-            $csv .= sprintf(
-                "%d,%s,%s,%s,%s,%s\n",
+            $plan    = $this->planModel->find($tenant['plan_id']);
+            $user    = (new \App\Models\UserModel())->withoutTenant()->where('tenant_id', $tenant['id'])->first();
+            $storage  = round(($this->usageModel->getUsage($tenant['id'], 'storage')['used_amount'] ?? 0) / 1073741824, 3);
+            $apiCalls = (int)($this->usageModel->getUsage($tenant['id'], 'api_calls')['used_amount'] ?? 0);
+            $bw       = round(($this->usageModel->getUsage($tenant['id'], 'bandwidth')['used_amount'] ?? 0) / 1073741824, 3);
+
+            $csv .= implode(',', [
                 $tenant['id'],
-                $tenant['company_name'],
-                $tenant['subdomain'],
-                $plan['name'] ?? 'Unknown',
+                $this->csvCell($tenant['company_name']),
+                $this->csvCell($tenant['subdomain']),
+                $this->csvCell($user['email'] ?? ''),
+                $this->csvCell($plan['name'] ?? 'Unknown'),
                 $tenant['status'],
-                $tenant['created_at']
-            );
+                $tenant['created_at'],
+                $user['last_login'] ?? '',
+                $storage,
+                $apiCalls,
+                $bw,
+            ]) . "\n";
         }
 
         $this->logAction('exported', "ADMIN-USERS", "Users list exported by admin");
@@ -288,6 +304,14 @@ class AdminUsers extends ResourceController
             ->setHeader('Content-Type', 'text/csv')
             ->setHeader('Content-Disposition', 'attachment; filename="users-export.csv"')
             ->setBody($csv);
+    }
+
+    private function csvCell(string $value): string
+    {
+        if (strpbrk($value, '",\n') !== false) {
+            return '"' . str_replace('"', '""', $value) . '"';
+        }
+        return $value;
     }
 
     /**

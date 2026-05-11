@@ -50,6 +50,24 @@ interface SAusageProps {
 
 export function SAusage({ onNavigate }: SAusageProps) {
     const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
+    const [exporting, setExporting] = useState(false);
+
+    const handleExport = async () => {
+        setExporting(true);
+        try {
+            const blob = await adminAnalyticsService.exportUsageCsv();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `usage-export-${new Date().toISOString().slice(0, 7)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch {
+            // silent — blob errors are non-critical
+        } finally {
+            setExporting(false);
+        }
+    };
 
     const { data: metrics, isLoading } = useQuery({
         queryKey: ['usage-metrics', period],
@@ -96,7 +114,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
                             <SelectItem value="yearly">Last Year</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" size="icon">
+                    <Button variant="outline" size="icon" onClick={handleExport} disabled={exporting} title="Export CSV">
                         <Download className="h-4 w-4" />
                     </Button>
                 </div>

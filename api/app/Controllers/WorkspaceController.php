@@ -302,6 +302,8 @@ class WorkspaceController extends BaseController
         $fullPath = $this->getSafePath($relPath) . DIRECTORY_SEPARATOR . $name;
         if (!file_exists($fullPath) || is_dir($fullPath)) return $this->failNotFound();
 
+        $this->trackBandwidth((int)filesize($fullPath));
+
         return $this->response->download($fullPath, null);
     }
 
@@ -590,9 +592,17 @@ class WorkspaceController extends BaseController
             return $this->fail('No items specified');
         }
 
+        // Purge orphaned temp ZIPs older than 1 hour (guards against process-kill leaks)
+        $tmpDir = sys_get_temp_dir();
+        foreach (glob($tmpDir . DIRECTORY_SEPARATOR . 'workspace_export_*.zip') ?: [] as $stale) {
+            if (filemtime($stale) < time() - 3600) {
+                @unlink($stale);
+            }
+        }
+
         $basePath = rtrim($this->workspaceRoot . DIRECTORY_SEPARATOR . $path, DIRECTORY_SEPARATOR);
         $zipName = 'workspace_export_' . date('Ymd_His') . '.zip';
-        $tempZipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $zipName;
+        $tempZipPath = $tmpDir . DIRECTORY_SEPARATOR . $zipName;
 
         $zip = new \ZipArchive();
         if ($zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
@@ -628,7 +638,29 @@ class WorkspaceController extends BaseController
              return $this->fail('Failed to process zip download');
         }
 
-        return $this->response->download($tempZipPath, null, true)->setFileName($zipName);
+        $this->trackBandwidth((int)filesize($tempZipPath));
+
+        $response = $this->response->download($tempZipPath, null, true)->setFileName($zipName);
+        // Clean up temp file after response is prepared
+        register_shutdown_function(function () use ($tempZipPath) {
+            if (file_exists($tempZipPath)) {
+                @unlink($tempZipPath);
+            }
+        });
+        return $response;
+    }
+
+    private function trackBandwidth(int $bytes): void
+    {
+        if ($bytes <= 0 || !$this->tenantId) return;
+        $db = \Config\Database::connect();
+        $db->table('download_logs')->insert([
+            'tenant_id'  => $this->tenantId,
+            'file_size'  => $bytes,
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        $usageModel = new \App\Models\TenantUsageModel();
+        $usageModel->incrementUsage($this->tenantId, 'bandwidth', $bytes);
     }
 
     private function addDirToZip($dir, $zipArchive, $zipdir = '') {
@@ -668,8 +700,14 @@ class WorkspaceController extends BaseController
 
         $whereClause = null;
         if ($history) {
-            $whereClause = $history['sql_query'];
-        } else {
+            // Re-validate cached clauses — guards against stale poisoned entries
+            $cached = $history['sql_query'];
+            if ($this->validateAiWhereClause($cached)) {
+                $whereClause = $cached;
+            }
+        }
+
+        if (!$whereClause) {
             // 2. Fetch from Gemini
             $apiKey = getenv('GEMINI_API_KEY') ?: $_ENV['GEMINI_API_KEY'] ?? '';
             if (empty($apiKey)) {
@@ -751,8 +789,11 @@ class WorkspaceController extends BaseController
                     ->groupEnd();
             }
 
-            // Add the AI generated where clause safely. 
-            // In a production system, a proper SQL parser/sanitizer should be used.
+            if (!$this->validateAiWhereClause($whereClause)) {
+                log_message('warning', '[AiSearch] Blocked unsafe WHERE clause: ' . $whereClause);
+                return $this->fail('Search query contains disallowed syntax. Please rephrase your search.', 400);
+            }
+
             $builder->where("($whereClause)", null, false);
             
             $results = $builder->get()->getResultArray();
@@ -784,6 +825,61 @@ class WorkspaceController extends BaseController
             log_message('error', 'AI SQL Execution Error: ' . $e->getMessage() . ' Query: ' . $whereClause);
             return $this->fail('Generated search query resulted in an error.');
         }
+    }
+
+    /**
+     * Validate an AI-generated SQL WHERE clause against an allowlist of safe columns
+     * and operators. Rejects anything that could be used for SQL injection.
+     */
+    private function validateAiWhereClause(string $clause): bool
+    {
+        if (empty($clause) || strlen($clause) > 1000) {
+            return false;
+        }
+
+        // Block dangerous statement keywords and comment syntax
+        $dangerous = [
+            '/\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE|EXEC|EXECUTE|CALL|UNION)\b/i',
+            '/\b(LOAD_FILE|INTO\s+OUTFILE|INTO\s+DUMPFILE)\b/i',
+            '/\b(information_schema|sys|mysql|performance_schema)\b/i',
+            '/\b(SLEEP|BENCHMARK|EXTRACTVALUE|UPDATEXML)\b/i',
+            '/\b(GROUP\s+BY|ORDER\s+BY|HAVING|LIMIT|OFFSET)\b/i',
+            '/\b(FROM|JOIN|INNER|OUTER|LEFT|RIGHT|CROSS)\b/i',
+            '/-{2,}/',      // -- comment
+            '/\/\*/',       // /* block comment
+            '/;/',          // statement terminator
+            '/\bXP_/i',     // MSSQL xp_ procedures
+            '/\bSP_/i',     // stored procedures
+        ];
+
+        foreach ($dangerous as $pattern) {
+            if (preg_match($pattern, $clause)) {
+                return false;
+            }
+        }
+
+        // Strip quoted string literals, then check all bare identifiers against allowlist
+        $stripped = preg_replace("/'(?:[^'\\\\]|\\\\.)*'/", "'?'", $clause);
+        $stripped = preg_replace('/"(?:[^"\\\\]|\\\\.)*"/', '"?"', $stripped);
+
+        preg_match_all('/\b([a-zA-Z_][a-zA-Z0-9_]*)\b/', $stripped, $matches);
+
+        $allowed = array_flip([
+            // Column names (workspace_files table)
+            'id', 'name', 'path', 'is_dir', 'mime_type', 'size', 'extension',
+            'created_at', 'updated_at',
+            // Safe SQL keywords
+            'AND', 'OR', 'NOT', 'LIKE', 'IN', 'IS', 'NULL', 'BETWEEN', 'TRUE', 'FALSE',
+        ]);
+        $allowedUpper = array_flip(array_map('strtoupper', array_keys($allowed)));
+
+        foreach ($matches[1] as $word) {
+            if (!isset($allowedUpper[strtoupper($word)])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function getAiHistory()

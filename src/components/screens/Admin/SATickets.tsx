@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminTicketService } from '../../../services/adminApi';
 import { Card, CardContent } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
+import { Checkbox } from '../../ui/checkbox';
 import {
     Table,
     TableBody,
@@ -15,10 +16,11 @@ import {
 } from '../../ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { format } from 'date-fns';
-import { Loader2, Search, ExternalLink, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Search, ExternalLink, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, CheckSquare, X } from 'lucide-react';
 import { getApiBaseUrl } from '../../../utils/config';
 import { Ticket } from '../../../types/admin';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { toast } from 'sonner';
 
 type SortColumn = 'created_at' | 'subject' | 'description' | 'client_ip' | 'status' | 'priority';
 type SortDirection = 'asc' | 'desc';
@@ -28,17 +30,40 @@ interface SATicketsProps {
 }
 
 export function SATickets({ onNavigate }: SATicketsProps) {
+    const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState('');
     const [sortColumn, setSortColumn] = useState<SortColumn>('created_at');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const { t } = useLanguage();
 
     const { data: tickets = [], isLoading } = useQuery({
         queryKey: ['admin-tickets'],
         queryFn: adminTicketService.getTickets,
     });
+
+    const { data: adminStaff = [] } = useQuery({
+        queryKey: ['admin-staff'],
+        queryFn: adminTicketService.getAdminStaff,
+    });
+
+    const bulkMutation = useMutation({
+        mutationFn: ({ ids, status }: { ids: string[]; status: string }) =>
+            adminTicketService.bulkUpdateTickets(ids, status),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
+            setSelectedIds(new Set());
+            toast.success('Tickets updated successfully');
+        },
+        onError: () => toast.error('Failed to update tickets'),
+    });
+
+    const getAssigneeName = (assignedTo?: number | null) => {
+        if (!assignedTo) return null;
+        return adminStaff.find(a => a.id === assignedTo)?.name ?? null;
+    };
 
     // 1. Filter
     const filteredTickets = tickets.filter(ticket =>
@@ -51,9 +76,8 @@ export function SATickets({ onNavigate }: SATicketsProps) {
 
     // 2. Sort
     const sortedTickets = [...filteredTickets].sort((a, b) => {
-        let valA: any = a[sortColumn] || '';
-        let valB: any = b[sortColumn] || '';
-
+        const valA: string = (a[sortColumn] as string) || '';
+        const valB: string = (b[sortColumn] as string) || '';
         if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
         if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
         return 0;
@@ -77,7 +101,9 @@ export function SATickets({ onNavigate }: SATicketsProps) {
 
     const SortIcon = ({ column }: { column: SortColumn }) => {
         if (sortColumn !== column) return null;
-        return sortDirection === 'asc' ? <ArrowUp className="inline ml-1 h-4 w-4" /> : <ArrowDown className="inline ml-1 h-4 w-4" />;
+        return sortDirection === 'asc'
+            ? <ArrowUp className="inline ml-1 h-4 w-4" />
+            : <ArrowDown className="inline ml-1 h-4 w-4" />;
     };
 
     const getImageUrl = (path: string) => {
@@ -89,6 +115,33 @@ export function SATickets({ onNavigate }: SATicketsProps) {
 
     const handleRowClick = (ticket: Ticket) => {
         onNavigate('SATicketDetails', { ticketId: ticket.id });
+    };
+
+    // Selection helpers
+    const isAllSelected = paginatedTickets.length > 0 &&
+        paginatedTickets.every(t => selectedIds.has(t.id));
+    const isIndeterminate = paginatedTickets.some(t => selectedIds.has(t.id)) && !isAllSelected;
+
+    const toggleAll = () => {
+        if (isAllSelected) {
+            const next = new Set(selectedIds);
+            paginatedTickets.forEach(t => next.delete(t.id));
+            setSelectedIds(next);
+        } else {
+            const next = new Set(selectedIds);
+            paginatedTickets.forEach(t => next.add(t.id));
+            setSelectedIds(next);
+        }
+    };
+
+    const toggleOne = (id: string) => {
+        const next = new Set(selectedIds);
+        next.has(id) ? next.delete(id) : next.add(id);
+        setSelectedIds(next);
+    };
+
+    const handleBulk = (status: string) => {
+        bulkMutation.mutate({ ids: Array.from(selectedIds), status });
     };
 
     return (
@@ -106,7 +159,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                             value={searchQuery}
                             onChange={(e) => {
                                 setSearchQuery(e.target.value);
-                                setCurrentPage(1); // Reset to first page on search
+                                setCurrentPage(1);
                             }}
                             className="pl-8"
                         />
@@ -114,13 +167,59 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                 </div>
             </div>
 
+            {/* Bulk action bar */}
+            {selectedIds.size > 0 && (
+                <div className="flex items-center gap-3 px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl">
+                    <CheckSquare className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold text-primary">
+                        {t('tickets.bulk.selected').replace('{count}', String(selectedIds.size))}
+                    </span>
+                    <div className="flex gap-2 ml-auto">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleBulk('resolved')}
+                            disabled={bulkMutation.isPending}
+                        >
+                            {bulkMutation.isPending
+                                ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                                : null}
+                            {t('tickets.bulk.markResolved')}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleBulk('closed')}
+                            disabled={bulkMutation.isPending}
+                        >
+                            {t('tickets.bulk.markClosed')}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setSelectedIds(new Set())}
+                        >
+                            <X className="h-3.5 w-3.5 mr-1" />
+                            {t('tickets.bulk.clearSelection')}
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             <Card>
                 <CardContent className="p-0 flex flex-col min-h-[500px]">
                     <div className="flex-1">
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[80px]">{t('tickets.columns.sno')}</TableHead>
+                                    <TableHead className="w-10">
+                                        <Checkbox
+                                            checked={isIndeterminate ? 'indeterminate' : isAllSelected}
+                                            onCheckedChange={toggleAll}
+                                            aria-label="Select all"
+                                        />
+                                    </TableHead>
+                                    <TableHead className="w-[60px]">{t('tickets.columns.sno')}</TableHead>
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('subject')}>
                                         {t('tickets.columns.subject')} <SortIcon column="subject" />
                                     </TableHead>
@@ -130,6 +229,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('priority')}>
                                         {t('tickets.columns.priority')} <SortIcon column="priority" />
                                     </TableHead>
+                                    <TableHead>{t('tickets.assignee')}</TableHead>
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('description')}>
                                         {t('tickets.columns.description')} <SortIcon column="description" />
                                     </TableHead>
@@ -146,13 +246,13 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-24 text-center">
+                                        <TableCell colSpan={11} className="h-24 text-center">
                                             <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                                         </TableCell>
                                     </TableRow>
                                 ) : paginatedTickets.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={9} className="h-24 text-center">
+                                        <TableCell colSpan={11} className="h-24 text-center">
                                             {t('tickets.ticketNotFound')}
                                         </TableCell>
                                     </TableRow>
@@ -162,11 +262,19 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                             key={ticket.id}
                                             className="cursor-pointer hover:bg-muted/50"
                                             onClick={() => handleRowClick(ticket)}
+                                            data-state={selectedIds.has(ticket.id) ? 'selected' : undefined}
                                         >
+                                            <TableCell onClick={(e) => e.stopPropagation()}>
+                                                <Checkbox
+                                                    checked={selectedIds.has(ticket.id)}
+                                                    onCheckedChange={() => toggleOne(ticket.id)}
+                                                    aria-label={`Select ticket ${ticket.id}`}
+                                                />
+                                            </TableCell>
                                             <TableCell>
                                                 {(currentPage - 1) * itemsPerPage + index + 1}
                                             </TableCell>
-                                            <TableCell className="font-medium max-w-[200px] truncate" title={ticket.subject}>
+                                            <TableCell className="font-medium max-w-[180px] truncate" title={ticket.subject}>
                                                 {ticket.subject}
                                             </TableCell>
                                             <TableCell>
@@ -179,7 +287,14 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                                     {ticket.priority ? t(`tickets.priority.${ticket.priority}`) : t('tickets.priority.medium')}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="max-w-[300px] whitespace-normal break-words text-muted-foreground" title={ticket.description}>
+                                            <TableCell>
+                                                <span className="text-sm text-muted-foreground">
+                                                    {getAssigneeName(ticket.assigned_to) ?? (
+                                                        <span className="italic opacity-50">{t('tickets.unassigned')}</span>
+                                                    )}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="max-w-[260px] whitespace-normal break-words text-muted-foreground" title={ticket.description}>
                                                 {ticket.description}
                                             </TableCell>
                                             <TableCell>{ticket.client_ip || 'N/A'}</TableCell>
@@ -193,7 +308,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="flex items-center text-purple-600 hover:text-purple-800"
-                                                        onClick={(e) => e.stopPropagation()} // Prevent row click
+                                                        onClick={(e) => e.stopPropagation()}
                                                     >
                                                         <ExternalLink className="h-4 w-4 mr-1" />
                                                         View
@@ -220,7 +335,8 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                             </TableBody>
                         </Table>
                     </div>
-                    {/* Pagination Controls */}
+
+                    {/* Pagination */}
                     {!isLoading && sortedTickets.length > 0 && (
                         <div className="flex items-center justify-between px-4 py-4 border-t">
                             <div className="flex items-center space-x-4">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminSettingsService } from '../../../services/adminApi';
 import { useAdminStore } from '../../../stores/adminStore';
@@ -8,7 +8,7 @@ import { Label } from '../../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Switch } from '../../ui/switch';
 import { Separator } from '../../ui/separator';
-import { User, Lock, Key, Settings as SettingsIcon, Copy, Trash2, Database, Building2 } from 'lucide-react';
+import { User, Lock, Key, Settings as SettingsIcon, Copy, Trash2, Database, Building2, Mail, Activity, CheckCircle2, AlertTriangle, XCircle, RefreshCw, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function SAsettings() {
@@ -20,6 +20,16 @@ export function SAsettings() {
     });
 
     const [apiKeys, setApiKeys] = useState<any[]>([]);
+    const [testEmailAddr, setTestEmailAddr] = useState('');
+    const [sendingTest, setSendingTest] = useState(false);
+    const [health, setHealth] = useState<{ overall: string; checks: Record<string, { status: string; message: string }> } | null>(null);
+    const [loadingHealth, setLoadingHealth] = useState(false);
+
+    // Telegram state
+    const [telegramToken, setTelegramToken] = useState('');
+    const [telegramChatId, setTelegramChatId] = useState('');
+    const [telegramEnabled, setTelegramEnabled] = useState(false);
+    const [sendingTgTest, setSendingTgTest] = useState(false);
 
     // Sync apiKeys state when settings are loaded
     useState(() => {
@@ -32,6 +42,15 @@ export function SAsettings() {
     if (settings?.apiKeys && apiKeys.length === 0 && settings.apiKeys.length > 0) {
         setApiKeys(settings.apiKeys);
     }
+
+    // Sync Telegram state from settings
+    useEffect(() => {
+        if (settings?.companyProfile) {
+            setTelegramChatId(settings.companyProfile.telegram_chat_id ?? '');
+            setTelegramEnabled(!!settings.companyProfile.telegram_enabled);
+            // Token is masked on the server — leave input blank so user explicitly re-enters to change
+        }
+    }, [settings]);
 
     const updateProfileMutation = useMutation({
         mutationFn: (data: { name: string; email: string }) => adminSettingsService.updateProfile(data),
@@ -115,6 +134,30 @@ export function SAsettings() {
         });
     };
 
+    const handleTelegramSave = () => {
+        const payload: Record<string, unknown> = {
+            telegram_chat_id: telegramChatId,
+            telegram_enabled: telegramEnabled,
+        };
+        // Only send token if user typed a new non-masked value
+        if (telegramToken && !telegramToken.includes('•')) {
+            payload.telegram_bot_token = telegramToken;
+        }
+        updateSystemSettingsMutation.mutate(payload);
+    };
+
+    const handleTelegramTest = async () => {
+        setSendingTgTest(true);
+        try {
+            const result = await adminSettingsService.testTelegram();
+            toast.success(result.message);
+        } catch {
+            toast.error('Failed — check Bot Token and Chat ID');
+        } finally {
+            setSendingTgTest(false);
+        }
+    };
+
 
     const handleGenerateApiKey = async () => {
         try {
@@ -139,6 +182,37 @@ export function SAsettings() {
         } catch (error) {
             toast.error('Failed to revoke API key');
         }
+    };
+
+    const handleTestEmail = async () => {
+        if (!testEmailAddr) { toast.error('Enter a recipient email'); return; }
+        setSendingTest(true);
+        try {
+            const result = await adminSettingsService.testEmail(testEmailAddr);
+            toast.success(result.message);
+        } catch {
+            toast.error('Test email failed — check SMTP settings');
+        } finally {
+            setSendingTest(false);
+        }
+    };
+
+    const handleLoadHealth = async () => {
+        setLoadingHealth(true);
+        try {
+            const result = await adminSettingsService.getHealth();
+            setHealth(result);
+        } catch {
+            toast.error('Failed to fetch health status');
+        } finally {
+            setLoadingHealth(false);
+        }
+    };
+
+    const healthIcon = (status: string) => {
+        if (status === 'ok')      return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+        if (status === 'warning') return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+        return <XCircle className="h-4 w-4 text-red-500" />;
     };
 
     if (isLoading) {
@@ -444,6 +518,145 @@ export function SAsettings() {
                     </div>
                 </CardContent>
             </Card>
+            {/* Email Test */}
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <Mail className="h-5 w-5" />
+                        <CardTitle>Test Email (SMTP)</CardTitle>
+                    </div>
+                    <CardDescription>Send a test message to verify your SMTP configuration is working</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex gap-3">
+                        <Input
+                            type="email"
+                            placeholder="recipient@example.com"
+                            value={testEmailAddr}
+                            onChange={(e) => setTestEmailAddr(e.target.value)}
+                            className="max-w-sm"
+                        />
+                        <Button onClick={handleTestEmail} disabled={sendingTest} variant="outline">
+                            {sendingTest ? 'Sending…' : 'Send Test Email'}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Telegram Notifications */}
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-2">
+                        <Send className="h-5 w-5" />
+                        <CardTitle>Telegram Notifications</CardTitle>
+                    </div>
+                    <CardDescription>Push ticket events to a Telegram group or channel</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <Label>Enable Telegram Notifications</Label>
+                            <p className="text-sm text-muted-foreground">Send messages when tickets are created or updated</p>
+                        </div>
+                        <Switch
+                            checked={telegramEnabled}
+                            onCheckedChange={setTelegramEnabled}
+                        />
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="telegramToken">Bot Token</Label>
+                        <Input
+                            id="telegramToken"
+                            type="password"
+                            placeholder={settings?.companyProfile?.telegram_bot_token_set ? '••••••••(saved)' : 'Enter bot token from @BotFather'}
+                            value={telegramToken}
+                            onChange={(e) => setTelegramToken(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            {settings?.companyProfile?.telegram_bot_token_set
+                                ? 'A token is saved. Leave blank to keep it, or enter a new one to replace it.'
+                                : 'Get a token from @BotFather on Telegram.'}
+                        </p>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="telegramChatId">Chat ID</Label>
+                        <Input
+                            id="telegramChatId"
+                            placeholder="e.g. -1001234567890"
+                            value={telegramChatId}
+                            onChange={(e) => setTelegramChatId(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Group ID (negative number) or channel username (@name). Add @userinfobot to your group to get the ID.
+                        </p>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                        <Button
+                            type="button"
+                            onClick={handleTelegramSave}
+                            disabled={updateSystemSettingsMutation.isPending}
+                        >
+                            {updateSystemSettingsMutation.isPending ? 'Saving…' : 'Save Telegram Settings'}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleTelegramTest}
+                            disabled={sendingTgTest}
+                        >
+                            {sendingTgTest ? 'Sending…' : 'Send Test Message'}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* System Health */}
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Activity className="h-5 w-5" />
+                            <div>
+                                <CardTitle>System Health</CardTitle>
+                                <CardDescription>Check database, disk, mail, and API key status</CardDescription>
+                            </div>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={handleLoadHealth} disabled={loadingHealth}>
+                            <RefreshCw className={`h-4 w-4 mr-1.5 ${loadingHealth ? 'animate-spin' : ''}`} />
+                            {health ? 'Refresh' : 'Run Check'}
+                        </Button>
+                    </div>
+                </CardHeader>
+                {health && (
+                    <CardContent className="space-y-3">
+                        <div className={`text-sm font-semibold px-3 py-1.5 rounded-md inline-flex items-center gap-2 ${
+                            health.overall === 'ok' ? 'bg-green-50 text-green-700' :
+                            health.overall === 'warning' ? 'bg-yellow-50 text-yellow-700' :
+                            'bg-red-50 text-red-700'
+                        }`}>
+                            {healthIcon(health.overall)}
+                            Overall: {health.overall.toUpperCase()}
+                        </div>
+                        <div className="divide-y rounded-lg border">
+                            {Object.entries(health.checks).map(([key, check]) => (
+                                <div key={key} className="flex items-center justify-between px-4 py-2.5">
+                                    <div className="flex items-center gap-2">
+                                        {healthIcon(check.status)}
+                                        <span className="text-sm font-medium capitalize">{key}</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">{check.message}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                )}
+            </Card>
+
             {/* Database Management */}
             <Card>
                 <CardHeader>

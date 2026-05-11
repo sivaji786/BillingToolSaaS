@@ -56,12 +56,17 @@ class RbacFilter implements FilterInterface
                 return response()->setJSON(['error' => 'Authentication required'])->setStatusCode(401);
             }
 
-            // 2. Skip RBAC entirely for owners / admins.
-            //    Direct raw query — bypasses TenantScope and any model caching.
-            $db   = \Config\Database::connect();
-            $user = $db->table('users')->select('role')->where('id', (int) $userId)->get()->getRow();
-            if ($user && ($user->role ?? '') === 'admin') {
-                return; // Full access — admin has all rights
+            // 2. Skip RBAC for users assigned to a super-admin role (is_super_admin = 1).
+            //    This is the authoritative check — we no longer rely on users.role shortcut.
+            $db          = \Config\Database::connect();
+            $isSuperAdmin = $db->table('user_roles')
+                ->join('roles', 'roles.id = user_roles.role_id')
+                ->where('user_roles.user_id', (int) $userId)
+                ->where('roles.is_super_admin', 1)
+                ->countAllResults() > 0;
+
+            if ($isSuperAdmin) {
+                return; // Super-admin: unrestricted access
             }
 
             // 3. No arguments = just auth check, no specific right needed

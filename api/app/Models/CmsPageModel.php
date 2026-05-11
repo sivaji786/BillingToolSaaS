@@ -18,7 +18,12 @@ class CmsPageModel extends Model
         'title',
         'content',
         'meta_description',
-        'updated_at'
+        'updated_at',
+        'show_in_nav',
+        'nav_label',
+        'nav_order',
+        'page_template',
+        'is_published',
     ];
 
     // Dates

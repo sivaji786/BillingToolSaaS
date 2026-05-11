@@ -154,6 +154,7 @@ export interface CompanyProfile {
   phone: string;
   website?: string;
   logoUrl?: string;
+  signatureUrl?: string;
   bankAccount?: {
     iban: string;
     bic: string;

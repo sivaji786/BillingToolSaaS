@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CompanyProfile, CompanyType } from '../../types/invoice';
 import { companyTypeService } from '../../services/api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -8,14 +8,73 @@ import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Separator } from '../ui/separator';
-import { Building2, CreditCard, FileText } from 'lucide-react';
+import { Building2, CreditCard, FileText, Upload, X } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { RichTextEditor } from '../ui/RichTextEditor';
 
 
+interface ImageUploadFieldProps {
+  label: string;
+  value: string | undefined | null;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  onUpload: (file: File) => void;
+  onRemove: () => void;
+  hint?: string;
+  previewClass?: string;
+}
+
+function ImageUploadField({ label, value, inputRef, onUpload, onRemove, hint, previewClass = 'h-16' }: ImageUploadFieldProps) {
+  return (
+    <div className="space-y-3">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }}
+      />
+      {value ? (
+        <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 flex items-center gap-4">
+          <img src={value} alt={`${label} preview`} className={`${previewClass} object-contain`} />
+          <div className="flex flex-col gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={() => inputRef.current?.click()}>
+              <Upload className="h-3.5 w-3.5 mr-1" /> Change {label}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={onRemove}>
+              <X className="h-3.5 w-3.5 mr-1" /> Remove
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/20 transition-colors cursor-pointer gap-2 text-muted-foreground"
+        >
+          <Upload className="h-5 w-5" />
+          <span className="text-sm font-medium">Upload {label}</span>
+          {hint && <span className="text-xs">{hint}</span>}
+        </button>
+      )}
+    </div>
+  );
+}
+
 interface SettingsProps {
   profile: CompanyProfile;
   onUpdateProfile: (profile: CompanyProfile) => Promise<void>;
+}
+
+function formatNumberPreview(format: string, seq: number): string {
+  const now = new Date();
+  const yyyy = String(now.getFullYear());
+  const yy   = yyyy.slice(-2);
+  const mm   = String(now.getMonth() + 1).padStart(2, '0');
+  return format
+    .replace(/\{YYYY\}/g, yyyy)
+    .replace(/\{YY\}/g,   yy)
+    .replace(/\{MM\}/g,   mm)
+    .replace(/\{(N+)\}/g, (_match, ns) => String(seq).padStart(ns.length, '0'));
 }
 
 export function Settings({ profile, onUpdateProfile }: SettingsProps) {
@@ -24,6 +83,8 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
   const [editedProfile, setEditedProfile] = useState<CompanyProfile>(profile);
   const [isSaving, setIsSaving] = useState(false);
   const [companyTypes, setCompanyTypes] = useState<CompanyType[]>([]);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const signatureInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchTypes = async () => {
@@ -54,6 +115,15 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
     }
   };
 
+
+  const handleImageUpload = (field: 'logoUrl' | 'signatureUrl', file: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 2 * 1024 * 1024) return;
+    const reader = new FileReader();
+    reader.onloadend = () => handleChange(field, reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const handleChange = (field: keyof CompanyProfile | string, value: string | number) => {
     if (field.startsWith('address.')) {
@@ -286,36 +356,30 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
 
             <div>
               <h3 className="mb-4">Company Logo</h3>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="logo-url">Logo URL</Label>
-                  <Input
-                    id="logo-url"
-                    type="url"
-                    value={editedProfile.logoUrl || ''}
-                    onChange={(e) => handleChange('logoUrl', e.target.value)}
-                    placeholder="https://example.com/logo.png"
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Enter the URL of your company logo. Recommended size: 200x80px or similar aspect ratio.
-                  </p>
-                </div>
-                {editedProfile.logoUrl && (
-                  <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
-                    <p className="text-sm font-medium mb-2">Logo Preview:</p>
-                    <img
-                      src={editedProfile.logoUrl}
-                      alt="Company Logo Preview"
-                      className="h-16 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.src = '';
-                        e.currentTarget.alt = 'Failed to load image';
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
+              <ImageUploadField
+                label="Logo"
+                value={editedProfile.logoUrl}
+                inputRef={logoInputRef}
+                onUpload={(f) => handleImageUpload('logoUrl', f)}
+                onRemove={() => { handleChange('logoUrl', ''); if (logoInputRef.current) logoInputRef.current.value = ''; }}
+                hint="Recommended size: 200×80 px. Max 2 MB. Stored as base64."
+                previewClass="h-16"
+              />
+            </div>
+
+            <Separator />
+
+            <div>
+              <h3 className="mb-4">Signature Image</h3>
+              <ImageUploadField
+                label="Signature"
+                value={editedProfile.signatureUrl}
+                inputRef={signatureInputRef}
+                onUpload={(f) => handleImageUpload('signatureUrl', f)}
+                onRemove={() => { handleChange('signatureUrl', ''); if (signatureInputRef.current) signatureInputRef.current.value = ''; }}
+                hint="Upload a PNG/JPG of your handwritten signature. Max 2 MB."
+                previewClass="h-12"
+              />
             </div>
           </Card>
         </TabsContent>
@@ -413,7 +477,10 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                   className="mt-1"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Variables: {'{YYYY}'}, {'{YY}'}, {'{NNN...}'}
+                  Tokens: <code className="bg-muted px-1 rounded">{'{YYYY}'}</code> <code className="bg-muted px-1 rounded">{'{YY}'}</code> <code className="bg-muted px-1 rounded">{'{MM}'}</code> <code className="bg-muted px-1 rounded">{'{NNN…}'}</code>
+                </p>
+                <p className="text-xs mt-1 font-mono text-purple-700 bg-purple-50 border border-purple-100 rounded px-2 py-1">
+                  Preview: {formatNumberPreview(editedProfile.invoiceNumberFormat || 'INV-{YYYY}-{NNNNN}', 42)}
                 </p>
               </div>
 
@@ -427,7 +494,10 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                   className="mt-1"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Variables: {'{YYYY}'}, {'{YY}'}, {'{NNN...}'}
+                  Tokens: <code className="bg-muted px-1 rounded">{'{YYYY}'}</code> <code className="bg-muted px-1 rounded">{'{YY}'}</code> <code className="bg-muted px-1 rounded">{'{MM}'}</code> <code className="bg-muted px-1 rounded">{'{NNN…}'}</code>
+                </p>
+                <p className="text-xs mt-1 font-mono text-purple-700 bg-purple-50 border border-purple-100 rounded px-2 py-1">
+                  Preview: {formatNumberPreview(editedProfile.letterNumberFormat || 'LTR-{YYYY}-{NNNNN}', 7)}
                 </p>
               </div>
 

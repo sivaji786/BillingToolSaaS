@@ -728,6 +728,7 @@ export const en = {
         downloaded: 'Downloaded',
         discard: 'Discard',
         doubleClickToAdd: 'Double-click to add',
+        content: 'Content',
         theme: {
             light: 'Light',
             dark: 'Dark',
@@ -1024,7 +1025,25 @@ export const en = {
             created: 'Ticket Created',
             status_change: 'Status Updated',
             priority_change: 'Priority Updated',
+            assignment_change: 'Assigned',
             comment: 'Comment Added',
+        },
+        assignee: 'Assignee',
+        unassigned: 'Unassigned',
+        assignTo: 'Assign to...',
+        sla: {
+            title: 'SLA & Response Times',
+            firstResponse: 'First Response',
+            resolution: 'Resolution Time',
+            pending: 'Pending',
+            notResolved: 'Not resolved yet',
+        },
+        bulk: {
+            selected: '{count} selected',
+            markResolved: 'Mark Resolved',
+            markClosed: 'Mark Closed',
+            clearSelection: 'Clear',
+            updating: 'Updating...',
         },
         pagination: {
             showing: 'Showing',
@@ -1179,7 +1198,7 @@ export const en = {
         back: 'Back',
         phone: 'Phone',
         fax: 'Fax',
-        sourceNote: 'Source: Impressum Generator by e-recht24.de',
+        sourceNote: '',
         sections: {
             legalNotice: {
                 title: 'Legal Notice according to § 5 TMG',
