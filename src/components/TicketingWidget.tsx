@@ -76,7 +76,7 @@ export function TicketingWidget({ apiKey, apiBaseUrl, userId: propUserId }: Tick
             const dataUrl = await toPng(document.body, { cacheBust: true });
             setScreenshot(dataUrl);
             setIsOpen(true);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to capture screenshot:', error);
             setScreenshotError(error?.message || 'Unknown error');
             // Open anyway even if screenshot fails

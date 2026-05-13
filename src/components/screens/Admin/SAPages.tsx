@@ -11,10 +11,7 @@ import { Switch } from '../../ui/switch';
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '../../ui/dialog';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '../../ui/alert-dialog';
+import { ConfirmDeleteDialog } from '../../ui/ConfirmDeleteDialog';
 import {
     FileText, Home, Shield, Lock, Info, Save, ArrowRight,
     HelpCircle, Plus, Trash2, Quote, AlertCircle, Sparkles,
@@ -830,30 +827,14 @@ export function SAPages() {
         </Dialog>
 
         {/* Delete Confirmation */}
-        <AlertDialog open={!!slugToDelete} onOpenChange={(open) => { if (!open) setSlugToDelete(null); }}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Page</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This will permanently delete the page <strong>{slugToDelete}</strong> and all its language variants. This action cannot be undone.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                        onClick={() => {
-                            if (slugToDelete) {
-                                deleteMutation.mutate(slugToDelete);
-                                setSlugToDelete(null);
-                            }
-                        }}
-                    >
-                        Delete
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDeleteDialog
+            open={!!slugToDelete}
+            onOpenChange={(open) => { if (!open) setSlugToDelete(null); }}
+            onConfirm={() => { if (slugToDelete) { deleteMutation.mutate(slugToDelete); setSlugToDelete(null); } }}
+            title="Delete Page"
+            description={`This will permanently delete the page "${slugToDelete}" and all its language variants. This action cannot be undone.`}
+            confirmLabel="Delete"
+        />
         </>
     );
 }

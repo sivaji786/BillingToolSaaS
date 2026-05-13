@@ -283,7 +283,7 @@ ${invoice.lines
                       <span>{formatCurrency(invoice.lineExtensionAmount, invoice.currency)}</span>
                     </div>
                     {invoice.taxTotals.map((tax, index) => (
-                      <div key={index} className="flex justify-between">
+                      <div key={`${tax.taxType}-${tax.taxPercent}-${index}`} className="flex justify-between">
                         <span className="text-muted-foreground">
                           {tax.taxType} {tax.taxPercent}%
                         </span>

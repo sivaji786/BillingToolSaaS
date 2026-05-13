@@ -183,7 +183,7 @@ export function LetterPreview({
       setRichEditValue(result.body);
       toast.dismiss(toastId);
       toast.success('Letter body improved!');
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.dismiss(toastId);
       const msg = err?.response?.data?.message || err?.message || 'AI improvement failed';
       toast.error(msg);

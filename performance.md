@@ -1,756 +1,1054 @@
-# BillingTool — Performance Optimization
+# Performance Optimization Plan — BillingTool
 
-**Last updated:** 2026-05-07
-
-This document covers every performance optimization in place across the BillingTool stack — database indexes, frontend bundle splitting, React memoization, search debouncing, server-side caching and rate limiting, image optimization, and known gaps with actionable recommendations.
-
-> **Scope note:** Redis is not available in the production environment. All Redis references in this document are marked as not applicable. Frontend optimizations were implemented first (2026-05-07); PHP/backend optimizations are deferred.
+> **Status:** Phase 1 complete. Phase 1.5 next.  
+> Last updated: 2026-05-12
 
 ---
 
 ## Table of Contents
 
-1. [Database Indexes](#1-database-indexes)
-2. [Database Query Patterns](#2-database-query-patterns)
-3. [Database Connection Configuration](#3-database-connection-configuration)
-4. [Server-Side Caching Infrastructure](#4-server-side-caching-infrastructure)
-5. [AI Rate Limiting (Throttler)](#5-ai-rate-limiting-throttler)
-6. [Image Optimization](#6-image-optimization)
-7. [Frontend Bundle Splitting](#7-frontend-bundle-splitting)
-8. [Route-Level Code Splitting](#8-route-level-code-splitting)
-9. [React Memoization](#9-react-memoization)
-10. [React Query — Client-Side Data Caching](#10-react-query--client-side-data-caching)
-11. [API Client Configuration](#11-api-client-configuration)
-12. [Multi-Tenant Query Scoping](#12-multi-tenant-query-scoping)
-13. [Known Gaps & Recommendations](#13-known-gaps--recommendations)
-14. [Performance Baseline — Build Output](#14-performance-baseline--build-output)
+1. [Bundle & Code Splitting](#1-bundle--code-splitting)
+2. [React Rendering](#2-react-rendering)
+3. [State Management](#3-state-management)
+4. [Data Fetching & Caching](#4-data-fetching--caching)
+5. [Unused Files, Exports & Dead Code](#5-unused-files-exports--dead-code)
+6. [Unused npm Packages](#6-unused-npm-packages)
+7. [Unused Named Imports (within files)](#7-unused-named-imports-within-files)
+8. [Unused / Potentially Dead DB Columns](#8-unused--potentially-dead-db-columns)
+9. [TypeScript & Type Safety](#9-typescript--type-safety)
+10. [Assets & CSS](#10-assets--css)
+11. [Backend / API](#11-backend--api)
+12. [Database Performance](#12-database-performance)
+13. [Redundant Code Blocks & Shared Abstractions](#13-redundant-code-blocks--shared-abstractions)
+14. [Execution Order](#14-execution-order)
 
 ---
 
-## 1. Database Indexes
+## Current Bundle Snapshot (post initial optimizations)
 
-### 1.1 Dedicated Performance Migration
-
-**File:** `api/app/Database/Migrations/2026-01-31-062503_AddPerformanceIndexes.php`
-
-Six explicit performance indexes created in a dedicated migration batch:
-
-```sql
--- Audit logs: activity feed sort + invoice trail lookup
-CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp);
-CREATE INDEX idx_audit_logs_invoice   ON audit_logs(invoice_number);
-
--- Invoices: date-range filter + status filter (most-queried columns)
-CREATE INDEX idx_invoices_issue_date ON invoices(issue_date);
-CREATE INDEX idx_invoices_status     ON invoices(status);
-
--- RBAC join acceleration (FK columns get explicit indexes)
-CREATE INDEX idx_user_roles_user ON user_roles(user_id);
-CREATE INDEX idx_user_roles_role ON user_roles(role_id);
-```
-
-**Rollback:** All six are dropped cleanly in `down()`.
-
----
-
-### 1.2 Indexes Across Other Migrations
-
-Additional indexes defined inline with their feature migrations:
-
-| Index Name | Table | Column(s) | Type | Migration File |
-|---|---|---|---|---|
-| `idx_invoices_share_token` | `invoices` | `share_token` | UNIQUE | `2026-05-06-000001_AddShareTokenToInvoices.php` |
-| `idx_invoices_template_type` | `invoices` | `template_type` | Standard | `2026-04-23-000000_AddBusinessLetterFieldsToInvoices.php` |
-| `slug_lang` | `cms_pages` | `(slug, lang)` | UNIQUE composite | `2026-04-28-000001_AddLangToCmsPages.php` |
-| _(email)_ | `quick_access_sessions` | `email` | Standard | `2026-02-27-000000_CreateQuickAccessSessionsTable.php` |
-| _(expires_at)_ | `quick_access_sessions` | `expires_at` | Standard | `2026-02-27-000000_CreateQuickAccessSessionsTable.php` |
-| _(email)_ | `password_resets` | `email` | Standard | `2026-04-06-141344_CreatePasswordResetsTable.php` |
-| _(token)_ | `password_resets` | `token` | Standard | `2026-04-06-141344_CreatePasswordResetsTable.php` |
-| _(tenant_id)_ | `download_logs` | `tenant_id` | Standard | `2026-04-28-000003_CreateDownloadLogsTable.php` |
-| _(created_at)_ | `download_logs` | `created_at` | Standard | `2026-04-28-000003_CreateDownloadLogsTable.php` |
-| _(timestamp)_ | `audit_logs` | `timestamp` | Standard | `2020-01-15-050000_InitialSchema.php` (initial) |
-
----
-
-### 1.3 Index Coverage by Query Pattern
-
-| Query pattern | Covered by index | Notes |
-|---|---|---|
-| Invoice list sorted by date | ✓ `idx_invoices_issue_date` | ASC and DESC both benefit |
-| Invoice list filtered by status | ✓ `idx_invoices_status` | Enum column, high selectivity |
-| Invoice list by template type | ✓ `idx_invoices_template_type` | Splits invoice vs letter views |
-| Share link lookup by token | ✓ `idx_invoices_share_token` (UNIQUE) | O(1) lookup |
-| RBAC right check per user | ✓ `idx_user_roles_user` + `idx_user_roles_role` | 4-table join |
-| Audit feed by time | ✓ `idx_audit_logs_timestamp` | Activity log |
-| Audit trail by invoice | ✓ `idx_audit_logs_invoice` | Invoice detail panel |
-| CMS page by slug + lang | ✓ `slug_lang` composite UNIQUE | Public page lookup |
-| OTP session by email/expiry | ✓ `email`, `expires_at` | Quick access flow |
-| Password reset by email/token | ✓ `email`, `token` | Reset flow |
-| Download audit by tenant | ✓ `tenant_id`, `created_at` | Admin download logs |
-
----
-
-## 2. Database Query Patterns
-
-### 2.1 Invoice List — Filtering & Sorting
-
-`api/app/Controllers/InvoiceController.php` → `index()`
-
-The invoice list applies server-side filtering before `findAll()`:
-
-```php
-// Search: partial match across three columns
-$model->groupStart()
-    ->like('invoice_number', $search)
-    ->orLike('buyer_name', $search)
-    ->orLike('seller_name', $search)
-->groupEnd();
-
-// Status filter (uses idx_invoices_status)
-$model->where('status', $status);
-
-// Date range filter (uses idx_invoices_issue_date)
-$model->where('issue_date >=', date('Y-m-d', strtotime('-30 days')));
-
-// Template type filter (uses idx_invoices_template_type)
-$model->groupStart()
-    ->where('template_type', 'invoice')
-    ->orWhere('template_type IS NULL', null, false)
-->groupEnd();
-
-// Sorting — 6 options all on indexed columns
-$model->orderBy('issue_date', 'DESC'); // default
-```
-
-### 2.2 RBAC Join Query
-
-`api/app/Models/UserModel.php` → `hasRight()`
-
-A 4-table join resolves whether a user has a given right. Both FK columns are indexed:
-
-```sql
-SELECT rights.code
-FROM   user_roles
-JOIN   roles       ON roles.id       = user_roles.role_id
-JOIN   role_rights ON role_rights.role_id = roles.id
-JOIN   rights      ON rights.id      = role_rights.right_id
-WHERE  user_roles.user_id = ?
-  AND  rights.code        = ?
-```
-
-Indexes `idx_user_roles_user` and `idx_user_roles_role` prevent full-table scans on this hot path.
-
-### 2.3 Admin Users — Aggregated Query with Pagination
-
-`api/app/Controllers/AdminUsers.php`
-
-Uses `MIN()/MAX()` aggregates, JOINs with `plans` and `users`, grouped by `tenants.id`. Supports `page` + `limit` parameters:
-
-```php
-$query = $this->db->table('tenants')
-    ->select('tenants.*, MIN(users.email) AS email, MAX(users.last_login) AS last_login, plans.name AS plan_name')
-    ->join('plans', 'plans.id = tenants.plan_id', 'left')
-    ->join('users', 'users.tenant_id = tenants.id', 'left')
-    ->groupBy('tenants.id')
-    ->limit($limit, $offset);
-```
-
-**Known issue:** Per-tenant usage stats (storage, API calls) are fetched in a loop after the main query — see [Known Gaps](#13-known-gaps--recommendations).
-
-### 2.4 Missing Pagination — Invoice & Ticket Lists
-
-`InvoiceController::index()` and `TicketController::index()` both call `findAll()` with no `LIMIT`. This works for small datasets but will degrade as tenant data grows. Flagged as a gap in Section 13.
-
----
-
-## 3. Database Connection Configuration
-
-**File:** `api/app/Config/Database.php`
-
-| Setting | Value | Performance Impact |
-|---|---|---|
-| Driver | `MySQLi` | Native PHP MySQL extension, fastest available |
-| Charset | `utf8mb4` | Full Unicode support, minimal overhead vs `latin1` |
-| `pConnect` | `false` | New connection per request (no persistent pool) |
-| `compress` | `false` | Wire protocol compression disabled |
-| `strictOn` | `false` | Lenient mode — avoids extra validation overhead |
-| `numberNative` | `false` | Returns numeric columns as strings (CI4 default) |
-
-**Connection pooling:** Not configured at the PHP level. CodeIgniter manages a singleton connection per request. For higher concurrency, a proxy like ProxySQL or PgBouncer (MySQL equivalent) can pool connections externally.
-
----
-
-## 4. Server-Side Caching Infrastructure
-
-**File:** `api/app/Config/Cache.php`
-
-The cache layer is fully configured but **not actively used** in controllers — it's available for activation without code changes.
-
-| Setting | Value |
-|---|---|
-| Primary handler | `file` (filesystem) |
-| Backup handler | `dummy` (no-op fallback) |
-| Default TTL | 60 seconds |
-| Cache path | `api/writable/cache/` |
-| Redis support | Configured but **not available in production** |
-| Memcached support | Configured (handler ready, not activated) |
-| Query string caching | Disabled |
-
-### Active cache usage — AI Throttler only
-
-The CodeIgniter Throttler (which uses the file cache backend) is active for AI endpoints. All other endpoints bypass caching entirely.
-
----
-
-## 5. AI Rate Limiting (Throttler)
-
-**File:** `api/app/Controllers/AIInvoiceController.php` — `checkRateLimit()` (line 558)
-
-AI invoice parsing is protected by CodeIgniter's built-in Throttler:
-
-```php
-private function checkRateLimit(): bool
-{
-    // Uses CodeIgniter's Throttler (file/Redis cache under the hood)
-    $throttler = \Config\Services::throttler();
-    $key = 'ai_parse_' . (session()->get('userId') ?? $this->request->getIPAddress());
-
-    // 20 requests per user per hour
-    return $throttler->check($key, 20, HOUR);
-}
-```
-
-| Parameter | Value |
-|---|---|
-| Limit | 20 requests |
-| Window | 1 hour (`HOUR` constant = 3600 s) |
-| Key | Per authenticated user ID (falls back to IP) |
-| Backend | File cache (upgrades to Redis if configured) |
-| Rejection | Returns `false` → controller responds HTTP 429 |
-
-**Scope:** Applied only to AI parse endpoints. No general API rate limiting exists on other routes (flagged as a gap).
-
----
-
-## 6. Image Optimization
-
-Images uploaded through the CMS and ticket system are processed server-side via PHP's GD library.
-
-### 6.1 CMS Images
-
-**File:** `api/app/Controllers/CmsController.php` → `uploadImage()`
-
-```php
-imagejpeg($img, $fullPath, 90); // 90% JPEG quality
-unset($img); // free GD resource (imagedestroy() deprecated in PHP 8.5+)
-```
-
-| Setting | Value | Reason |
-|---|---|---|
-| Output format | JPEG | Smallest format for photographic content |
-| Quality | 90% | High clarity — CMS images are marketing-facing |
-| Input formats | JPEG, PNG, GIF, WebP | Validated by MIME type before processing |
-| Upload modes | JSON base64 + multipart file | Supports both browser and API clients |
-| Storage path | `uploads/cms/{YYYY}/{MM}/` | Year/month partitioning prevents directory bloat |
-| Filename | `cms_{timestamp}_{uniqid}.jpg` | Collision-resistant without UUID overhead |
-
-### 6.2 Ticket Screenshot Images
-
-**File:** `api/app/Controllers/TicketController.php`
-
-```php
-imagejpeg($img, $uploadPath . $fileName, 85); // 85% JPEG quality
-```
-
-| Setting | Value | Reason |
-|---|---|---|
-| Quality | 85% | Slightly higher compression — screenshots tolerate it |
-| Storage path | `uploads/tickets/{YYYY}/{MM}/` | Same partitioned layout as CMS |
-
-### 6.3 What is NOT optimized (gaps)
-
-- No automatic resize/thumbnail generation — images stored at original dimensions
-- No WebP output conversion despite accepting WebP input
-- No CDN or object-storage integration — files served from local filesystem
-
----
-
-## 7. Frontend Bundle Splitting
-
-**File:** `vite.config.ts`
-
-Rollup's `manualChunks` splits heavy dependencies into separate cacheable bundles. Browsers load only what the current route needs and cache chunks independently across deploys.
-
-### 7.1 Chunk Strategy
-
-```typescript
-manualChunks(id) {
-  if (id.includes('node_modules')) {
-    if (id.includes('lucide-react'))      return 'vendor-icons';     // icon library
-    if (id.includes('recharts'))          return 'vendor-charts';    // charting
-    if (id.includes('@tiptap'))           return 'vendor-editor';    // rich text
-    if (id.includes('jspdf') ||
-        id.includes('html2canvas') ||
-        id.includes('html-to-image'))     return 'vendor-pdf-tools'; // PDF export
-    if (id.includes('@google/generative-ai')) return 'vendor-ai';   // Gemini SDK
-    if (id.includes('date-fns'))          return 'vendor-dates';    // date utils
-    return 'vendor';                                                  // everything else
-  }
-  if (id.includes('src/components/ui'))  return 'ui-kit';           // shared UI
-}
-```
-
-### 7.2 Resulting Chunks (last build — 2026-05-07)
-
-| Chunk | Size (raw) | gzip | Loaded by |
+| Chunk | Size (minified) | Gzip | Loaded |
 |---|---|---|---|
-| `vendor-dates` | 23.62 kB | 6.64 kB | Pages using date formatting |
-| `vendor-icons` | 59.60 kB | 11.46 kB | Any page with Lucide icons |
-| `ui-kit` | 50.18 kB | 11.03 kB | All authenticated screens |
-| `vendor-editor` | 143.07 kB | 41.71 kB | Invoice editor, CMS editor |
-| `vendor-charts` | 286.41 kB | 64.79 kB | Dashboard, analytics screens |
-| `index` (app shell) | 337.15 kB | 104.05 kB | All routes (initial load) |
-| `vendor-pdf-tools` | 586.98 kB | 171.84 kB | Print/export only |
-| `vendor` (core deps) | 4,125.52 kB | 1,218.30 kB | All routes |
+| `index.js` (main) | 564 KB | 177 KB | Always |
+| `vendor-pdf-tools` | 636 KB | 190 KB | On PDF export only |
+| `RichTextEditor` | 391 KB | 122 KB | On editor open |
+| `BarChart` | 331 KB | 88 KB | On chart screens |
+| `mermaid.core` | 447 KB | 121 KB | SAWiki only |
+| `treemap` | 453 KB | 107 KB | SAWiki only |
+| `cytoscape.esm` | 442 KB | 141 KB | SAWiki only |
+| **Total build** | **~11 MB** | — | 179 chunks |
 
-**Key benefit:** `vendor-pdf-tools` (587 kB) and `vendor-charts` (286 kB) are only downloaded when those features are visited — users who never export PDFs or view analytics never pay that cost.
-
-### 7.3 Other Build Settings
-
-| Setting | Value | Effect |
-|---|---|---|
-| `build.target` | `esnext` | No legacy polyfills — smaller output for modern browsers |
-| `outDir` | `build/` | Flat output directory |
-| Compiler | `@vitejs/plugin-react-swc` | SWC (Rust-based) instead of Babel — faster builds |
-| Alias resolution | Version-pinned aliases for all Radix + UI libs | Prevents duplicate package versions inflating bundle |
-| Dev watcher | Ignores `api/`, `docs/`, `build/` | HMR only watches `src/` |
+Already done: translation files lazy-loaded (ar/de/pl), GlobalAIAssistant + TicketingWidget lazy-loaded.
 
 ---
 
-## 8. Route-Level Code Splitting
+## 1. Bundle & Code Splitting
 
-**File:** `src/App.tsx`
+### 1.1 — `require()` calls in render handlers (HIGH)
 
-Every screen component is lazy-loaded via `React.lazy()` with a `Suspense` spinner fallback. The initial JS payload contains only the app shell and router — screen modules are fetched on first navigation.
+**File:** `src/components/screens/InvoiceList.tsx:363, 371, 379`
 
-### 8.1 All Lazy-Loaded Routes
+Using CommonJS `require()` inside click handlers bypasses tree-shaking and module caching.
 
-**User-facing screens (29):**
-
-```typescript
-const Login            = lazy(() => import('./components/screens/Login'));
-const Dashboard        = lazy(() => import('./components/screens/Dashboard'));
-const InvoiceEditor    = lazy(() => import('./components/screens/InvoiceEditor'));
-const InvoicePreview   = lazy(() => import('./components/screens/InvoicePreview'));
-const InvoiceList      = lazy(() => import('./components/screens/InvoiceList'));
-const TemplateLibrary  = lazy(() => import('./components/screens/TemplateLibrary'));
-const TemplateEditor   = lazy(() => import('./components/invoice/TemplateEditor'));
-const DesignLayoutPage = lazy(() => import('./pages/DesignLayoutPage'));
-const ActivityLog      = lazy(() => import('./components/screens/ActivityLog'));
-const Settings         = lazy(() => import('./components/screens/Settings'));
-const Billing          = lazy(() => import('./components/screens/Billing'));
-const LandingPage      = lazy(() => import('./components/screens/LandingPage'));
-const QuickAccessInvoice = lazy(() => import('./components/screens/QuickAccessInvoice'));
-const ResetPassword    = lazy(() => import('./components/screens/ResetPassword'));
-const Impressum        = lazy(() => import('./components/screens/Impressum'));
-const PrivacyPolicy    = lazy(() => import('./components/screens/PrivacyPolicy'));
-const TermsAndConditions = lazy(() => import('./components/screens/TermsAndConditions'));
-const CookiePolicy     = lazy(() => import('./components/screens/CookiePolicy'));
-const Buyers           = lazy(() => import('./components/screens/Buyers'));
-const Workspace        = lazy(() => import('./components/screens/Workspace'));
-const AIHistory        = lazy(() => import('./components/screens/AIHistory'));
-const PackageComparison = lazy(() => import('./components/screens/PackageComparison'));
-const LetterList       = lazy(() => import('./components/screens/LetterList'));
-const LetterEditor     = lazy(() => import('./components/screens/LetterEditor'));
-const LetterPreview    = lazy(() => import('./components/screens/LetterPreview'));
-const CmsPageView      = lazy(() => import('./components/screens/CmsPageView'));
-const Signup           = lazy(() => import('./components/screens/Signup'));
-const AdminLayout      = lazy(() => import('./components/screens/Admin/AdminLayout'));
+```ts
+// Line 363
+const { downloadImportTemplate } = require('../../utils/invoice-import');
+// Line 371
+const { downloadJSONTemplate } = require('../../utils/invoice-import');
+// Line 379
+const { downloadUBLXMLTemplate } = require('../../utils/invoice-import');
 ```
 
-**Super-admin screens (10):**
-
-```typescript
-const SALogin          = lazy(() => import('./components/screens/Admin/SALogin'));
-const SAdashboard      = lazy(() => import('./components/screens/Admin/SAdashboard'));
-const SApackages       = lazy(() => import('./components/screens/Admin/SApackages'));
-const SAPackageServices = lazy(() => import('./components/screens/Admin/SAPackageServices'));
-const SAPackageForm    = lazy(() => import('./components/screens/Admin/SAPackageForm'));
-const SAASusers        = lazy(() => import('./components/screens/Admin/SAASusers'));
-const SAUserDetails    = lazy(() => import('./components/screens/Admin/SAUserDetails'));
-const SAbilling        = lazy(() => import('./components/screens/Admin/SAbilling'));
-const SAusage          = lazy(() => import('./components/screens/Admin/SAusage'));
-const SAsettings       = lazy(() => import('./components/screens/Admin/SAsettings'));
-const SAInvoiceForm    = lazy(() => import('./components/screens/Admin/SAInvoiceForm'));
-const SATickets        = lazy(() => import('./components/screens/Admin/SATickets'));
-const SATicketDetails  = lazy(() => import('./components/screens/Admin/SATicketDetails'));
-const SAWiki           = lazy(() => import('./components/screens/Admin/SAWiki'));
-const SAPages          = lazy(() => import('./components/screens/Admin/SAPages'));
+**Fix:** Replace with dynamic `import()` inside each handler:
+```ts
+const handleDownloadTemplate = async () => {
+  const { downloadImportTemplate } = await import('../../utils/invoice-import');
+  downloadImportTemplate();
+};
 ```
 
-### 8.2 Suspense Fallback
+---
 
-Each lazy boundary renders an animated spinner while the chunk loads:
+### 1.2 — QRCode library loaded statically (MEDIUM)
+
+**File:** `src/components/invoice/InvoiceQRCode.tsx:7`
+
+```ts
+import QRCode from 'qrcode'; // static — loads even when QR isn't shown
+```
+
+**Fix:** Dynamic import inside the effect that renders the QR code.
+
+---
+
+### 1.3 — `react-rnd` installed but never used (LOW)
+
+**File:** `package.json`
+
+`react-rnd` appears in dependencies but has zero imports anywhere in the codebase.
+
+**Fix:** `npm uninstall react-rnd`
+
+---
+
+## 2. React Rendering
+
+### 2.1 — Unstable `Math.random()` key in invoice list (CRITICAL)
+
+**File:** `src/components/screens/InvoiceList.tsx:664`
 
 ```tsx
-<Suspense fallback={
-  <div className="min-h-screen flex items-center justify-center">
-    <Loader2 className="animate-spin" />
-  </div>
-}>
-  {/* route component */}
-</Suspense>
+<InvoiceRow key={invoice.id || Math.random()} .../>
 ```
+
+`Math.random()` as fallback key causes full unmount/remount of every row on every parent re-render.
+
+**Fix:** Use a stable fallback: `key={invoice.id ?? invoice.tempId ?? index}`
 
 ---
 
-## 9. React Memoization
+### 2.2 — `index` keys in mapped lists (HIGH)
 
-Heavy computation and stable callback references are memoized to prevent unnecessary re-renders.
+**Files:**
+- `src/components/invoice/PreviewModal.tsx:286`
+- `src/components/invoice/ValidationPanel.tsx:69`
 
-### 9.1 `useMemo` — Derived Data
+Index keys cause silent reordering bugs and unnecessary DOM mutations.
 
-| File | Memoized Value | Dependency |
-|---|---|---|
-| `Dashboard.tsx` | `stats` — total revenue, invoice counts | `invoices` query data |
-| `Dashboard.tsx` | `statusChartData` — pie chart series | `invoices` |
-| `Dashboard.tsx` | `revenueChartData` — bar chart by month | `invoices` |
-| `Dashboard.tsx` | `monthlyTrendData` — trend line | `invoices` |
-| `InvoiceEditor.tsx` | `calculatedInvoice` — totals, tax sums | `invoice` state |
-| `InvoiceEditor.tsx` | `validationErrors` — field error map | `invoice` state |
-| `SAPackageServices.tsx` | `processedServices` — filtered + sorted service list | `services`, `searchTerm`, `sort` |
-| `SAPackageServices.tsx` | `currentPage` — pagination reset on search | `searchTerm` |
-| `SApackages.tsx` | Filtered package list | `packages`, `search` |
-| `PackageComparison.tsx` | Computed plan feature matrix | `plans` query data |
-| `AIHistory.tsx` | Filtered/sorted AI query list | `history`, filters |
-| `QuickAccessInvoice.tsx` | Invoice totals | `invoice` state |
-
-### 9.2 `useCallback` — Stable Event Handlers
-
-| File | Memoized Handler | Prevents |
-|---|---|---|
-| `InvoiceEditor.tsx` | `handleUpdateInvoice` | Re-render of all field inputs on any change |
-| `InvoiceEditor.tsx` | `handleUpdateLine` | Re-render of all line rows on any line change |
-| `InvoiceEditor.tsx` | `handleDeleteLine` | Inline delete from child line component |
-| `InvoiceEditor.tsx` | `handleAddLine` | New line insertion |
-| `InvoiceEditor.tsx` | `handleSave` | Save button handler |
-| `LetterEditor.tsx` | Equivalent set of letter field handlers | Same as invoice editor |
-| `InlineEditableRich.tsx` | `handleDoubleClick`, `handleSave`, `handleCancel` | CMS inline edit flicker |
-| `QuickAccessTour.tsx` | Step navigation handlers | Tour step re-renders |
+**Fix:** Use stable IDs from the data objects.
 
 ---
 
-## 9b. Search Debouncing
+### 2.3 — Inline arrow functions in JSX (HIGH)
 
-**File:** `src/hooks/useDebounce.ts`
+**File:** `src/components/screens/InvoiceEditor.tsx:308, 333–338, 405, 411`
 
-A generic debounce hook prevents search inputs from firing network requests on every keystroke. Without debouncing, typing "Acme Corp" in a search box would fire 9 separate API calls.
-
-```typescript
-export function useDebounce<T>(value: T, delay: number): T {
-    const [debounced, setDebounced] = useState<T>(value);
-    useEffect(() => {
-        const timer = setTimeout(() => setDebounced(value), delay);
-        return () => clearTimeout(timer);
-    }, [value, delay]);
-    return debounced;
-}
+```tsx
+// Line 308
+onClick={() => onLoadTemplate(template)}
+// Line 333
+onValueChange={(value: any) => { handleUpdateInvoice({ status: value }); ... }}
 ```
 
-### Applied in three search inputs (400 ms delay)
+Each render creates new function references, invalidating memoized child props.
 
-**`InvoiceList.tsx`** — was firing `invoiceService.getAll()` on every character:
-```typescript
-const debouncedSearch = useDebounce(searchQuery, 400);
-// useEffect and fetchInvoices() now depend on debouncedSearch, not searchQuery
-```
-
-**`SAASusers.tsx`** — was mutating `filters.search` on every character, changing the React Query key and triggering a new fetch:
-```typescript
-const [searchInput, setSearchInput] = useState('');
-const debouncedSearch = useDebounce(searchInput, 400);
-
-// Reset to page 1 only after debounce settles
-useEffect(() => {
-    setFilters(prev => ({ ...prev, page: 1 }));
-}, [debouncedSearch]);
-
-// Only the debounced value enters the queryKey
-const activeFilters = { ...filters, search: debouncedSearch || undefined };
-useQuery({ queryKey: ['users', activeFilters], queryFn: () => adminUserService.getAll(activeFilters) });
-```
-
-**`SAbilling.tsx`** — identical pattern to SAASusers.
-
-### Effect
-
-| Typed characters | API calls before | API calls after |
-|---|---|---|
-| "Acme Corp" (9 chars) | 9 | 1 (fires 400 ms after last keystroke) |
-| "test" then clear (8 events) | 8 | 1 (or 0 if cleared within 400 ms) |
+**Fix:** Wrap frequently-recreated handlers with `useCallback`, or extract stable named functions.
 
 ---
 
-## 10. React Query — Client-Side Data Caching
+### 2.4 — Three redundant `useEffect` hooks in `LineItemRow` (MEDIUM)
 
-**File:** `src/providers/QueryProvider.tsx`
+**File:** `src/components/invoice/LineItemRow.tsx:38–48`
 
-```typescript
-const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            refetchOnWindowFocus: false,   // no refetch when tab regains focus
-            retry: 1,                      // one retry on failure, then error state
-            staleTime: 5 * 60 * 1000,     // data stays fresh for 5 minutes
-        },
-    },
-});
+```ts
+useEffect(() => { setQtyInput(...); }, [line.quantity]);
+useEffect(() => { setPriceInput(...); }, [line.unitPrice]);
+useEffect(() => { setTaxInput(...); }, [line.taxPercent]);
 ```
 
-### What each setting means in practice
+Three separate effects fire independently and each triggers its own re-render.
 
-| Setting | Value | Effect |
-|---|---|---|
-| `staleTime` | 5 minutes | A page opened multiple times within 5 min uses the cached response — zero API calls |
-| `refetchOnWindowFocus` | `false` | Switching tabs and returning does not trigger a background refetch |
-| `retry` | 1 | One automatic retry on network error; fails fast after that |
-| `gcTime` (default) | 5 minutes | Unused query data is garbage-collected from memory after 5 min |
-
-### Where React Query is used
-
-All admin and tenant screens use `useQuery` for data fetching and `useMutation` for writes:
-
-- Invoice list, detail, create, update, delete
-- Buyer list and management
-- Admin: users, packages, package services, tickets, billing, usage, settings, CMS pages, wiki
-- Customer: dashboard, usage metrics
-
-### Query key strategy
-
-Query keys are namespaced and parameterised, enabling precise invalidation:
-
-```typescript
-// Examples of query keys
-['invoices']                           // all invoices for tenant
-['invoice', id]                        // single invoice
-['admin-cms-pages', selectedLang]      // CMS pages for a language
-['admin-packages']                     // package list
-['admin-users', page, search, status]  // paginated user list
-```
-
-On a successful mutation, only the affected queries are invalidated:
-```typescript
-onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['invoices'] });
-}
-```
+**Fix:** Consolidate into one `useEffect([line.quantity, line.unitPrice, line.taxPercent])`.
 
 ---
 
-## 11. API Client Configuration
+### 2.5 — Context value objects not memoized (HIGH)
 
-**File:** `src/services/api.ts`
+**Files:**
+- `src/contexts/LanguageContext.tsx:37`
+- `src/contexts/InlineCmsContext.tsx:82`
 
-Axios is configured with a request interceptor for token injection and a response interceptor for centralized error handling.
+```tsx
+// LanguageContext — line 37
+value={{ language, setLanguage: handleSetLanguage, t, isRtl }}
 
-### Request interceptor — JWT auto-injection
-
-```typescript
-api.interceptors.request.use((config) => {
-    const token = useAuthStore.getState().token;
-    if (token) {
-        config.headers.Authorization  = `Bearer ${token}`;
-        config.headers['X-Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-});
+// InlineCmsContext — line 82
+value={{ editMode, setEditMode, patchField, isSavingField }}
 ```
 
-Reads the JWT from Zustand store synchronously — no async overhead on every request.
+Every parent re-render creates a new object, causing ALL context consumers to re-render even when values are unchanged.
 
-### Response interceptor — Centralized error handling
-
-```typescript
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        // 401 → auto-logout + redirect (except on login/public pages)
-        // 403 + tenant mismatch → redirect to login
-        // 429 (plan limit) → toast notification to user
-        // Other errors → propagate to calling code
-    }
+**Fix:** Wrap each `value` with `useMemo`:
+```tsx
+const ctxValue = useMemo(
+  () => ({ language, setLanguage: handleSetLanguage, t, isRtl }),
+  [language, handleSetLanguage, t, isRtl]
 );
 ```
 
-This removes repetitive error handling from individual service functions and ensures consistent UX on auth failures and limit errors.
+---
 
-### Admin API — separate client
+### 2.6 — Recharts SVG gradient defs recreated on every render (MEDIUM)
 
-`src/services/adminApi.ts` uses a separate Axios instance pointing at `/api/admin/` with the same interceptor pattern, keeping admin and tenant API clients cleanly separated.
+**File:** `src/components/screens/Dashboard.tsx:301–307`
+
+```tsx
+<defs>
+  <linearGradient id="colorGradient" ...>  {/* recreated every render */}
+```
+
+**Fix:** Extract into a memoized `<GradientDefs />` component or move outside the JSX return.
 
 ---
 
-## 12. Multi-Tenant Query Scoping
+### 2.7 — Dashboard recent invoice rows not memoized (LOW)
 
-**File:** `api/app/Traits/TenantScope.php`
+**File:** `src/components/screens/Dashboard.tsx:429–464`
 
-Every model query is automatically scoped to the current tenant via `beforeFind`, `beforeInsert`, and `beforeUpdate` hooks. This prevents cross-tenant data leakage and avoids repeating `WHERE tenant_id = ?` in every controller.
+`recentInvoices.map()` creates new closures every render. Every stats update re-renders all rows.
 
-```php
-protected function beforeFind(array $data): array
-{
-    $tenantId = $this->resolveTenantId();
+**Fix:** Extract into a `React.memo` row component.
 
-    if (!$tenantId) {
-        // Fail-closed: no tenant context → return nothing
-        $this->where('1', '0');
-        return $data;
-    }
+---
 
-    $this->where($this->table . '.tenant_id', $tenantId);
-    return $data;
+## 3. State Management
+
+### 3.1 — App.tsx is a 1,225-line god component (CRITICAL)
+
+**File:** `src/App.tsx:1–1225`
+
+The root component combines:
+- Hash-based routing (lines 200–253)
+- Auth state + legacy token migration (lines 131–170)
+- 12 `useState` hooks for unrelated concerns (lines 97–129)
+- 4 `useQuery` data-fetching hooks (lines 272–296)
+- 9 business-logic handler functions (lines 300–722)
+- All screen rendering (lines 724–1099)
+
+**Fix plan:**
+1. Extract `useHashRouter()` custom hook — move routing logic from lines 200–253
+2. Extract `useAuthCheck()` custom hook — move auth initialization from lines 131–170
+3. Extract `useInvoiceHandlers()` custom hook — move CRUD handlers from lines 300–722
+4. Split render into `<AuthenticatedApp />`, `<AdminApp />`, `<PublicApp />` sub-components
+
+---
+
+### 3.2 — Zustand consumers not using selectors (HIGH)
+
+**Files:**
+- `src/App.tsx:96` — `const { isAuthenticated, user, login, logout } = useAuthStore()`
+- `src/components/screens/Admin/AdminLayout.tsx:17` — `const { adminUser } = useAdminStore()`
+- `src/components/ProtectedRoute.tsx:11` — `const { isAuthenticated, user } = useAuthStore()`
+
+Subscribing to the whole store re-renders the component on any store field change, even unrelated ones.
+
+**Fix:** Use field selectors:
+```ts
+const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+const user = useAuthStore(s => s.user);
+```
+
+---
+
+### 3.3 — `adminStore` mixes unrelated concerns (MEDIUM)
+
+**File:** `src/stores/adminStore.ts:7–16`
+
+Single store holds: auth state, UI sidebar state, theme, and hydration tracking. A sidebar collapse triggers re-renders in all auth-consuming components.
+
+**Fix:** Split into:
+- `useAdminAuthStore` — auth + token
+- `useAdminUIStore` — theme + sidebarCollapsed
+
+---
+
+### 3.4 — `authStore` persists oversized objects to localStorage (MEDIUM)
+
+**File:** `src/stores/authStore.ts:78–86`
+
+Entire `user` and `tenant` objects (including API keys) are serialized to localStorage on every store update.
+
+**Fix:** Persist only `{ token, isAuthenticated }`. Fetch user/tenant from `/auth/me` on load — the call is already implemented in `authService.me()`.
+
+**Security note:** `tenant.gemini_api_key` and `tenant.openai_api_key` (lines 22–23 of the Tenant type) are being persisted to localStorage. Do not persist these fields.
+
+---
+
+### 3.5 — `sessionStorage` used for CMS edit mode sync (MEDIUM)
+
+**File:** `src/contexts/InlineCmsContext.tsx:41–46`
+
+```ts
+if (sessionStorage.getItem('cms_edit_mode') === '1') {
+  sessionStorage.removeItem('cms_edit_mode');
+  setEditModeState(true);
 }
 ```
 
-**Performance note:** `tenant_id` is a foreign key on every data table. While FK columns often get implicit indexes, explicitly adding `INDEX(tenant_id)` on high-volume tables (`invoices`, `audit_logs`, `workspace_files`) would speed up tenant-scoped queries — flagged in Section 13.
+Using sessionStorage as a cross-page state signal is fragile and hard to debug.
 
-### Bypassing scope for system queries
-
-Admin controllers and seeders opt out cleanly:
-
-```php
-$model->withoutTenant()->findAll(); // system-wide read
-```
+**Fix:** Use a small Zustand store (persisted to sessionStorage via Zustand persist middleware) or a URL param.
 
 ---
 
-## 13. Known Gaps & Recommendations
+## 4. Data Fetching & Caching
 
-### ✅ Implemented (2026-05-07)
+### 4.1 — Manual `useEffect` + axios calls bypassing React Query (CRITICAL)
 
-**✓ Search debouncing** — `useDebounce(value, 400)` hook applied to all three search inputs that previously fired a network request on every keystroke:
-- `InvoiceList.tsx` — 400 ms debounce on search query before triggering `fetchInvoices()`
-- `SAASusers.tsx` — 400 ms debounce; debounced value enters `queryKey` and `queryFn`, with automatic page-reset to 1
-- `SAbilling.tsx` — same pattern as SAASusers
+These components fetch data outside React Query — no caching, no deduplication, re-fetches on every mount:
 
-**✓ Per-query `staleTime` on static catalog data** — plan/service catalog rarely changes; explicit invalidation fires on every mutation anyway:
-- `SApackages.tsx` — packages query: `staleTime: 30 * 60 * 1000` (30 min)
-- `SApackages.tsx` — package-services query: `staleTime: 30 * 60 * 1000`
-- `SAPackageServices.tsx` — package-services query: `staleTime: 30 * 60 * 1000`
-- `SAPackageForm.tsx` — package-services-active query: `staleTime: 30 * 60 * 1000`
-
-**✓ Vite vendor chunk split** — broke up the 4,125 kB monolithic `vendor` bundle into separately-cacheable chunks. React core and Radix UI change very rarely between deploys, so browsers cache them across most updates:
-
-| New chunk | Size (gzip) | Contents |
+| File | Line | Fetches |
 |---|---|---|
-| `react-core` | 47.4 kB | react, react-dom, scheduler |
-| `radix` | 32.7 kB | All @radix-ui primitives |
-| `react-query` | 10.5 kB | @tanstack/react-query |
-| `state` | 1.3 kB | zustand |
-| `vendor` (remaining) | 1,121.7 kB | axios, clsx, vaul, cmdk, react-hook-form, etc. |
+| `src/components/screens/InvoiceList.tsx` | 117–135 | All invoices |
+| `src/components/screens/LetterList.tsx` | 53–70 | All letters |
+| `src/components/screens/Settings.tsx` | 89–98 | Company types |
+| `src/components/screens/InvoicePreview.tsx` | 103+ | All buyers |
+| `src/components/screens/InvoiceEditor.tsx` | 71–81 | All buyers (duplicate of above) |
+| `src/components/screens/PackageComparison.tsx` | ~160+ | Plans + package services + CMS nav |
+| `src/components/screens/TermsAndConditions.tsx` | 22–35 | CMS page content |
+| `src/components/screens/AIHistory.tsx` | 36–51 | AI history |
 
-Previously all of the above was one 1,218 kB gzipped blob. Now the `react-core` + `radix` + `react-query` + `state` chunks (~92 kB gzip total) will be served from browser cache on subsequent visits unless those libraries are upgraded.
+**Fix:** Migrate each to `useQuery` with appropriate `queryKey` and `staleTime`.
 
 ---
 
-### P1 — High impact, deferred (backend)
+### 4.2 — Raw `fetch()` call without auth interceptor (CRITICAL)
 
-**G1: Add pagination to Invoice and Ticket list endpoints**
+**File:** `src/components/screens/QuickAccessInvoice.tsx:132`
 
-`InvoiceController::index()` and `TicketController::index()` call `findAll()` with no `LIMIT`. A tenant with 10,000 invoices returns all of them in a single response.
+Uses the browser's native `fetch()` directly, bypassing the configured axios instance. The auth token is not injected and errors bypass the global interceptor.
 
-```php
-$page     = (int)($this->request->getGet('page')  ?? 1);
-$limit    = (int)($this->request->getGet('limit') ?? 25);
-$invoices = $model->paginate($limit, 'default', $page);
+**Fix:** Replace with the `api` axios instance from `src/services/api.ts`.
+
+---
+
+### 4.3 — 24 `useQuery` calls without explicit `staleTime` (HIGH)
+
+All rely on the global 5-minute default. Some data is practically static; some is real-time.
+
+**Recommended `staleTime` values by query key:**
+
+| Query key | Recommended staleTime | Reason |
+|---|---|---|
+| `['templates']` | 30 min | Rarely changes |
+| `['profile']` | 30 min | Rarely changes |
+| `['admin-settings']` | 60 min | Virtually static |
+| `['admin-staff']` | 60 min | Rarely changes |
+| `['billing/plans']` | 60 min | Rarely changes |
+| `['cms-pages']` | 60 min | Static per session |
+| `['invoices']` | 2 min | Frequently modified |
+| `['audit-logs']` | 5 min | Global default fine |
+| `['admin-tickets']` | 1 min | Near real-time |
+| `['usage-metrics', period]` | 10 min | Expensive aggregation |
+
+Files missing explicit staleTime: `src/App.tsx:272–296`, `src/components/screens/Admin/SAbilling.tsx:31–45`, `src/components/screens/Admin/SAdashboard.tsx:16–20`, `src/components/screens/Buyers.tsx:178–181`, and 20 more across Admin screens.
+
+---
+
+### 4.4 — No optimistic updates on mutations (MEDIUM)
+
+All mutations use `queryClient.invalidateQueries()` — two round trips (mutation + re-fetch) with visible flicker.
+
+**Files:**
+- `src/components/screens/Buyers.tsx:183–211` (create, update, delete)
+- `src/components/screens/Admin/SAPackageServices.tsx:37–75`
+- `src/components/screens/Admin/SAPages.tsx:91–113`
+- `src/components/screens/Admin/SAASusers.tsx:39–62`
+- `src/components/screens/Admin/SAUserDetails.tsx:65–89`
+
+**Fix:** Use `queryClient.setQueryData()` on success to update cache directly; invalidate only on error.
+
+---
+
+### 4.5 — React Query cache not cleared on logout (MEDIUM)
+
+**File:** `src/services/api.ts:30–44`
+
+The 401 interceptor calls `useAuthStore.getState().clearAuth()` but does not clear the React Query cache. User A's invoices, buyers, and templates remain in memory when user B logs in.
+
+**Fix:** Call `queryClient.clear()` inside the logout/clearAuth flow.
+
+---
+
+### 4.6 — Invoice query key not scoped to user (LOW)
+
+**File:** `src/App.tsx:272`
+
+```ts
+queryKey: ['invoices']  // no user scope
 ```
 
-**G2: Fix N+1 query in Admin Users list**
+If two users log in sequentially in the same tab, the second user briefly sees the first user's cached data.
 
-`AdminUsers::index()` fetches usage stats per tenant in a loop. Fix: batch-fetch with a single `whereIn('tenant_id', [...])` query and group in PHP.
+**Fix:** `queryKey: ['invoices', user?.id]`
 
 ---
 
-### P2 — Medium impact, deferred (backend)
+## 5. Unused Files, Exports & Dead Code
 
-**G3: Add composite indexes on `tenant_id` + hot filter columns**
+### 5.1 — Files with zero imports anywhere (delete)
 
-Every query has `WHERE tenant_id = ?` appended automatically. Composite indexes let MySQL satisfy the tenant scope and the secondary filter in a single index scan:
+| File | Lines | Reason |
+|---|---|---|
+| `src/utils/invoice-pdf-html.ts` | 241 | Zero imports; superseded by `invoice-pdf.ts` |
+| `src/services/authApi.ts` | 64 | Zero imports; superseded by `api.ts` + `authStore` |
+| `src/components/layouts/CustomerLayout.tsx` | ~80 | Never imported anywhere |
 
+### 5.2 — Files to verify then delete
+
+| File | Lines | Concern |
+|---|---|---|
+| `src/components/ProtectedRoute.tsx` | 41 | Not imported in `App.tsx`; verify no lazy dynamic import exists |
+| `src/components/screens/Admin/AdminLayout.tsx` | 110 | Superseded by `src/components/admin/AdminLayout.tsx` |
+| `src/widget-loader.tsx` | unknown | Exports `initTicketingWidget` — never imported in src/; may be a standalone embed entry point, clarify intent |
+| `src/components/ThemeBuilder.tsx` | unknown | Exported `ThemeBuilder` component never imported anywhere |
+
+### 5.3 — Exported symbols never imported by any other file
+
+These are exported but have zero import sites across the entire codebase:
+
+| Symbol | File |
+|---|---|
+| `ThemeBuilder` | `src/components/ThemeBuilder.tsx` |
+| `CustomerInvoices` | `src/components/screens/Customer/Invoices.tsx` |
+| `CustomerDashboard` | `src/components/screens/Customer/Dashboard.tsx` |
+| `ImageWithFallback` | `src/components/figma/ImageWithFallback.tsx` |
+| `CustomerLayout` | `src/components/layouts/CustomerLayout.tsx` |
+| `generateEPCQRCodeData` | `src/utils/qr-code-generator.ts` |
+| `generateSwissQRCodeData` | `src/utils/qr-code-generator.ts` |
+| `generateGiroCodeData` | `src/utils/qr-code-generator.ts` |
+| `validateIBAN` | `src/utils/qr-code-generator.ts` |
+| `formatIBAN` | `src/utils/qr-code-generator.ts` |
+| `PLATFORM_DEFAULT_TEMPLATE` | `src/utils/invoice-templates-defaults.ts` |
+| `PLATFORM_LETTER_TEMPLATE` | `src/utils/invoice-templates-defaults.ts` |
+| `calculateLineAmounts` | `src/utils/invoice-calculations.ts` |
+| `getTaxCategoryLabel` | `src/utils/invoice-calculations.ts` |
+| `getUnitCodeLabel` | `src/utils/invoice-calculations.ts` |
+| `ChartConfig` | `src/components/ui/chart.tsx` |
+| `DashboardData` | `src/services/customerApi.ts` |
+| `ImportFormat` | `src/utils/invoice-import.ts` |
+| `ImportResult` | `src/utils/invoice-import.ts` |
+| `generateImportTemplate` | `src/utils/invoice-import.ts` |
+| `generateJSONTemplate` | `src/utils/invoice-import.ts` |
+| `generateUBLXMLTemplate` | `src/utils/invoice-import.ts` |
+| `initTicketingWidget` | `src/widget-loader.tsx` |
+| `PackageSystemService` (type) | `src/types/admin.ts` |
+| `UsageStats` (type) | `src/types/admin.ts` |
+| `ActivityItem` (type) | `src/types/admin.ts` |
+| `MetricDataPoint` (type) | `src/types/admin.ts` |
+| `ChartData` (type) | `src/types/admin.ts` |
+| `ChartDataset` (type) | `src/types/admin.ts` |
+
+> **Action:** Remove or `export type` mark-only where not needed at runtime. Delete whole files where every export is unused (e.g. `qr-code-generator.ts` if none of these functions are actually called).
+
+### 5.4 — Duplicate code to consolidate
+
+| Duplicate pair | Keep | Remove |
+|---|---|---|
+| `src/lib/utils.ts` vs `src/components/ui/utils.ts` | `src/lib/utils.ts` | `src/components/ui/utils.ts` |
+| `src/components/layout/` vs `src/components/layouts/` dirs | `src/components/layout/` | `src/components/layouts/` |
+
+### 5.5 — Console.log statements to remove (16 debug logs)
+
+`console.error` calls are legitimate error handling — leave those. Remove only `console.log`:
+
+| File | Lines |
+|---|---|
+| `src/App.tsx` | 139, 155, 165, 202, 206, 215, 218, 221, 236, 251 |
+| `src/components/GlobalAIAssistant.tsx` | 55, 58, 61, 87 |
+| `src/components/screens/Login.tsx` | 65 |
+| `src/components/screens/InvoicePreview.tsx` | 281 |
+
+### 5.6 — Stale comment blocks (dead documentation)
+
+| File | Lines | Content |
+|---|---|---|
+| `src/App.tsx` | 77–78, 89 | `// Button removed as unused`, `// hasPermissionSync removed` — notes about already-removed code |
+| `src/components/layout/AppSidebar.tsx` | 39 | `// Button import removed` |
+| `src/components/screens/InvoiceList.tsx` | 141–144 | Multi-line comment about client-side filtering that was abandoned |
+| `src/services/api.ts` | 78 | `// Broad clear is removed to avoid cross-portal logout` |
+
+---
+
+## 6. Unused npm Packages
+
+The following packages are in `package.json` but have **zero imports** in `src/`:
+
+### 6.1 — Runtime dependencies to remove
+
+| Package | Version | Finding |
+|---|---|---|
+| `react-rnd` | ^10.5.2 | Not imported anywhere in `src/` |
+| `@google/generative-ai` | ^0.24.1 | Not imported anywhere in `src/` — AI calls go through the backend, not the frontend |
+
+**Fix:** `npm uninstall react-rnd @google/generative-ai`
+
+### 6.2 — Dev dependencies (false positives — keep these)
+
+These were flagged because the search only covered `src/` — they're correctly used in config files:
+
+| Package | Used in |
+|---|---|
+| `@vitejs/plugin-react-swc` | `vite.config.ts` |
+| `tailwindcss` | `tailwind.config.js` |
+| `@tailwindcss/typography` | `tailwind.config.js` |
+| `tailwindcss-animate` | `tailwind.config.js` |
+| `autoprefixer` | `postcss.config.js` |
+| `postcss` | `postcss.config.js` |
+| `@types/node`, `@types/react`, `@types/react-dom` | TypeScript ambient types |
+
+---
+
+## 7. Unused Named Imports (within files)
+
+These are symbols imported at the top of a file but never used in that file's body. Each is a minor bundle waste and a linting error.
+
+| File | Unused imports |
+|---|---|
+| `src/components/layout/AppSidebar.tsx` | `useLanguage` |
+| `src/components/screens/Admin/CompanyTypeList.tsx` | `useLanguage` |
+| `src/components/screens/Admin/RoleForm.tsx` | `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue`, `companyTypeService` |
+| `src/components/screens/Admin/SAsettings.tsx` | `Activity`, `Database`, `Mail`, `RefreshCw` (lucide icons) |
+| `src/components/screens/Buyers.tsx` | `Badge`, `CheckCircle2` |
+| `src/components/screens/Dashboard.tsx` | `CheckCircle`, `Dialog`, `DialogContent`, `DialogDescription`, `DialogFooter`, `DialogHeader`, `DialogTitle`, `Label`, `formatDate`, `importInvoices` |
+| `src/components/screens/InvoiceList.tsx` | `AlertDialog`, `AlertDialogAction`, `AlertDialogCancel`, `AlertDialogContent`, `AlertDialogDescription`, `AlertDialogFooter`, `AlertDialogHeader`, `AlertDialogTitle`, `DialogFooter`, `Search` |
+
+> **Action:** Run `npx eslint --rule '{"no-unused-vars": "error"}' src/` to catch all instances, then remove them. Consider adding the ESLint `no-unused-vars` rule to prevent recurrence.
+
+---
+
+## 8. Unused / Potentially Dead DB Columns
+
+These fields are defined in the TypeScript `Invoice` type (`src/types/invoice.ts`) but have **zero usages** anywhere in the frontend codebase — no component reads or writes them. They likely have matching columns in the database that are never populated.
+
+| Field | Type | Zero usages outside type definition |
+|---|---|---|
+| `signatureDate` | `string?` | Invoice type line ~99 — never read in any component |
+| `billingPeriodStart` | `string?` | Invoice type — never rendered or submitted |
+| `billingPeriodEnd` | `string?` | Invoice type — never rendered or submitted |
+| `documentCurrencyCode` | `string?` | Invoice type — never set or displayed |
+| `taxCurrencyCode` | `string?` | Invoice type — never set or displayed |
+| `gln` | `string?` | Party type (seller/buyer GLN) — defined but never shown in any form or preview |
+
+> **Verify with backend:** Confirm these columns exist in the `invoices` / `parties` tables and are never populated. If confirmed unused, remove from:
+> 1. The TypeScript `Invoice` / `Party` types
+> 2. The backend model and API response
+> 3. The database schema (with a migration)
+
+**Note:** `allowanceTotalAmount`, `chargeTotalAmount`, `prepaidAmount`, and `invoiceTypeCode` have some usages (4–9 each) in calculations — keep those.
+
+---
+
+## 9. TypeScript & Type Safety
+
+### 9.1 — 113 `any` instances across codebase (MEDIUM)
+
+Top offenders:
+
+| File | Count | Where |
+|---|---|---|
+| `src/services/api.ts` | 11 | buyer, letter, template service params |
+| `src/components/screens/Workspace.tsx` | 4 | Sorting logic, error types |
+| `src/services/customerApi.ts` | 4 | Tenant, subscription, plan |
+| `src/services/adminApi.ts` | 3+ | Admin payloads |
+
+**Fix plan:**
+1. Define typed interfaces for all service request/response payloads
+2. Replace `catch (error: any)` with `catch (error: unknown)` + type narrowing
+3. Type event handlers properly (`React.ChangeEvent<HTMLInputElement>` etc.)
+
+---
+
+## 10. Assets & CSS
+
+### 10.1 — Images without `width`/`height` cause CLS (MEDIUM)
+
+**File:** `src/components/figma/ImageWithFallback.tsx:25`
+
+```tsx
+<img src={src} alt={alt} className={className} />  {/* no width/height */}
+```
+
+Causes Cumulative Layout Shift — images push content down as they load.
+
+**Fix:** Always pass `width` and `height` props, or set `aspect-ratio` via CSS.
+
+---
+
+### 10.2 — Dynamic Tailwind class strings defeat purging (LOW)
+
+**Files:**
+- `src/components/screens/Workspace.tsx:489, 498, 510, 524`
+- `src/components/screens/QuickAccessInvoice.tsx:308, 316, 324`
+- `src/components/screens/Billing.tsx:119`
+
+Template literals like `` `text-${x ? 'purple' : 'gray'}-400` `` are invisible to Tailwind's static analyzer. These classes may be purged in production.
+
+**Fix:** Use full class names inside `cn()`/`clsx()` conditionals:
+```ts
+cn(condition ? 'text-purple-400' : 'text-gray-400')
+```
+
+---
+
+## 11. Backend / API
+
+> Based on observed API call patterns from the frontend. Verify against backend source before acting.
+
+### 11.1 — No pagination on list endpoints (HIGH)
+
+`invoiceService.getAll()`, `buyerService.getAll()`, `letterService.getAll()` return unbounded lists. A tenant with thousands of records downloads everything on every load.
+
+**Fix:** Add `limit` + `offset` (or cursor-based pagination) to all list endpoints. The frontend already passes `search`, `status`, `dateFilter`, `sort` — extend with `page` and `pageSize`.
+
+---
+
+### 11.2 — `/auth/me` called on every page load (MEDIUM)
+
+**File:** `src/App.tsx:236–258`
+
+`authService.me()` is called on every authenticated load as a blocking request before any screen renders.
+
+**Fix options:**
+1. Cache the `/auth/me` response in React Query with `staleTime: 10 * 60 * 1000`
+2. Trust the JWT expiry on the client; only call `/auth/me` on 401
+
+---
+
+### 11.3 — No HTTP caching headers on static-ish endpoints (MEDIUM)
+
+Billing plans, company types, CMS pages, and package services are fetched on every navigation. These rarely change.
+
+**Fix:** Add `Cache-Control: max-age=300, stale-while-revalidate=60` to read-only, infrequently-changing endpoints. Add `ETag` support so unchanged responses return 304.
+
+---
+
+### 11.4 — Audit log endpoint returns all records (LOW)
+
+**File:** `src/services/api.ts:229–233`
+
+```ts
+api.get<AuditLogEntry[]>('/audit-logs')  // no limit
+```
+
+Audit logs grow indefinitely. Unbounded fetch slows as volume increases.
+
+**Fix:** Add `limit`, `offset`, and `dateFrom`/`dateTo` params. Frontend `ActivityLog` screen should paginate or virtualise.
+
+---
+
+### 11.5 — No response compression (MEDIUM)
+
+Large JSON payloads (invoice lists with line items, audit logs) appear without compression. Expected 60–80% transfer-size reduction with gzip/brotli enabled at the nginx or application level.
+
+---
+
+## 12. Database Performance
+
+> Inferred from API patterns and CodeIgniter/MySQL deployment. Verify actual schema indexes before applying.
+
+### 12.1 — Missing indexes on filter columns (CRITICAL)
+
+Invoice and buyer lists support `status`, `dateFilter`, `templateType`, and `sort` filters. Without indexes on these columns every filter runs a full table scan.
+
+**Suggested indexes:**
 ```sql
-CREATE INDEX idx_invoices_tenant_date   ON invoices (tenant_id, issue_date);
+-- invoices table
 CREATE INDEX idx_invoices_tenant_status ON invoices (tenant_id, status);
-CREATE INDEX idx_audit_logs_tenant_time ON audit_logs (tenant_id, timestamp);
-CREATE INDEX idx_workspace_tenant       ON workspace_files (tenant_id);
+CREATE INDEX idx_invoices_tenant_date   ON invoices (tenant_id, created_at DESC);
+CREATE INDEX idx_invoices_template_type ON invoices (tenant_id, template_type);
+
+-- buyers table
+CREATE INDEX idx_buyers_tenant ON buyers (tenant_id);
+
+-- audit_logs table
+CREATE INDEX idx_audit_logs_tenant_date ON audit_logs (tenant_id, created_at DESC);
 ```
-
-**G4: Add `Cache-Control` headers to read-only API responses**
-
-List endpoints (`/billing/plans`, `/billing/package-services`, CMS nav) return data that changes infrequently. Adding headers lets browsers and CDNs serve these without hitting the origin:
-
-```php
-return $this->response
-    ->setHeader('Cache-Control', 'public, max-age=300')
-    ->setJSON($data);
-```
-
-**G5: Enable nginx gzip compression**
-
-No HTTP response compression is configured. Configuring nginx to gzip JSON responses reduces payload sizes by 60–80% for list endpoints.
 
 ---
 
-### P3 — Lower priority / future
+### 12.2 — Audit logs have no archiving strategy (HIGH)
 
-**G6: Add general API rate limiting** — only AI endpoints are throttled; other routes are unrestricted.
+Audit log tables grow without bound. Queries slow down proportionally as volume increases.
 
-**G7: WebP output for uploaded images** — currently re-encoded as JPEG; WebP provides ~30% smaller files at equivalent quality.
-
-**G8: Image thumbnail generation on upload** — CMS images are stored at full resolution; generating a thumbnail reduces bytes for preview use.
-
-**G9: ETag / conditional GET** — for large infrequently-changing responses (plan list, CMS nav), ETags enable 304 Not Modified with zero body bytes.
+**Fix:**
+- Archive records older than 12 months to a separate `audit_logs_archive` table
+- Or use MySQL 8 table partitioning by month
 
 ---
 
-## 14. Performance Baseline — Build Output
+### 12.3 — Full-text search on invoice/buyer lists (MEDIUM)
 
-Last measured: 2026-05-07, build time **~43 seconds** (SWC compiler, development mode).
+The `search` param likely maps to `LIKE '%term%'` queries which cannot use B-tree indexes — full table scan on every search keystroke.
 
-### After optimizations (current)
+**Fix:** Add `FULLTEXT` index on searchable columns (invoice number, buyer name, notes), or restrict to prefix match `LIKE 'term%'` which can use a regular index.
 
-| Asset | Raw | Gzip | Category |
+---
+
+### 12.4 — N+1 query risk on invoice list with line items (MEDIUM)
+
+If the invoice list endpoint fetches each invoice's line items in a loop rather than a JOIN, a page of 50 invoices triggers 51 queries.
+
+**Fix:** Use eager loading (JOIN or subquery) for the list endpoint. Return line items only on the single-invoice detail endpoint.
+
+---
+
+### 12.5 — AI history table without TTL or max-rows limit (LOW)
+
+**File:** `src/services/api.ts:460–463`
+
+AI search history accumulates indefinitely per tenant/user.
+
+**Fix:** Retain only the last N records per user (e.g., 100) via a DELETE + LIMIT query on insert, or a nightly cleanup job.
+
+---
+
+## 13. Redundant Code Blocks & Shared Abstractions
+
+The same logic is copy-pasted across many screens. Extracting these into shared hooks and components removes ~1,100 lines and makes every future change a single-place edit.
+
+---
+
+### 13.1 — Repeated `useEffect`+fetch pattern (HIGH)
+
+12 components manually implement async data loading with `useState`+`useEffect` instead of using React Query — repeating the same try/catch/finally/loading-state structure.
+
+| File | Data Fetched | Lines |
+|---|---|---|
+| `src/components/screens/AIHistory.tsx` | AI query history | 36–52 |
+| `src/components/screens/LetterList.tsx` | Letters | 53–72 |
+| `src/components/screens/InvoiceList.tsx` | Invoices | 117–140 |
+| `src/components/screens/Settings.tsx` | Company types | 89–99 |
+| `src/components/screens/Admin/UserForm.tsx` | Users / roles / types | 24–55 |
+| `src/components/screens/Admin/RoleForm.tsx` | Roles / rights | 22–48 |
+| `src/components/screens/Admin/CompanyTypeList.tsx` | Company types | 24–38 |
+| `src/components/screens/PrivacyPolicy.tsx` | CMS page content | similar |
+| `src/components/screens/TermsAndConditions.tsx` | CMS page content | similar |
+| `src/components/screens/CookiePolicy.tsx` | CMS page content | similar |
+| `src/components/screens/Impressum.tsx` | CMS page content | similar |
+| `src/components/screens/Signup.tsx` | Plans / countries | 158–170 |
+
+**Repeated block per file (~15–20 lines):**
+```typescript
+const [data, setData] = useState([]);
+const [isLoading, setIsLoading] = useState(true);
+useEffect(() => {
+  const load = async () => {
+    setIsLoading(true);
+    try { setData(await service.getAll()); }
+    catch { toast.error(t('common.error')); }
+    finally { setIsLoading(false); }
+  };
+  load();
+}, []);
+```
+
+**Fix:** Migrate the 8 screens from §4.1 to `useQuery`. The 4 identical CMS pages (`PrivacyPolicy`, `TermsAndConditions`, `CookiePolicy`, `Impressum`) share an identical fetch that becomes a single `useCmsPage(slug)` hook.
+
+---
+
+### 13.2 — Repeated pagination logic (HIGH)
+
+8 components independently implement `currentPage` / `itemsPerPage` / `Math.ceil` / `.slice` — ~15 lines each.
+
+| File | Lines |
+|---|---|
+| `src/components/screens/InvoiceList.tsx` | ~103, 143–148 |
+| `src/components/screens/LetterList.tsx` | ~49, 126–130 |
+| `src/components/screens/AIHistory.tsx` | ~33, 77–81 |
+| `src/components/screens/Buyers.tsx` | ~200–250 |
+| `src/components/screens/Admin/SATickets.tsx` | ~37, 87–91 |
+| `src/components/screens/Admin/SAPackageServices.tsx` | ~27–29 |
+
+**Repeated block:**
+```typescript
+const [currentPage, setCurrentPage] = useState(1);
+const [itemsPerPage] = useState(10);
+const totalPages = Math.ceil(data.length / itemsPerPage);
+const paginatedData = data.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
+```
+
+**Fix:** Extract `usePagination<T>(data: T[], defaultPageSize = 10)` returning `{ currentPage, totalPages, paginatedData, setCurrentPage }`. One file, used in 8 places.
+
+---
+
+### 13.3 — Repeated sort state + handler (HIGH)
+
+5 components independently implement column sort state, direction toggle, and array sort — ~30 lines each.
+
+| File | Variables | Lines |
+|---|---|---|
+| `src/components/screens/AIHistory.tsx` | `sortColumn`, `sortDirection` | ~29–95 |
+| `src/components/screens/Admin/SATickets.tsx` | `sortColumn`, `sortDirection` | ~35–100 |
+| `src/components/screens/Admin/SAPackageServices.tsx` | `sortConfig` object | ~27–119 |
+| `src/components/screens/InvoiceList.tsx` | `sortBy` enum | ~101 |
+| `src/components/screens/LetterList.tsx` | `sortOption` enum | ~47 |
+
+**Fix:** Extract `useSorting<T>(data: T[])` returning `{ sorted, sortColumn, sortDirection, handleSort }`.
+
+---
+
+### 13.4 — Repeated row-selection with `Set<string>` (MEDIUM)
+
+5 components independently implement select-all / toggle-one using `Set<string>` — ~20 lines each.
+
+| File | Lines |
+|---|---|
+| `src/components/screens/InvoiceList.tsx` | ~102, 150–167 |
+| `src/components/screens/LetterList.tsx` | ~48, 86–101 |
+| `src/components/screens/Admin/SATickets.tsx` | ~39, 121–141 |
+
+**Repeated block:**
+```typescript
+const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+const toggleAll = () =>
+  setSelectedIds(s => s.size === page.length ? new Set() : new Set(page.map(d => d.id)));
+const toggleOne = (id: string) => {
+  const next = new Set(selectedIds);
+  next.has(id) ? next.delete(id) : next.add(id);
+  setSelectedIds(next);
+};
+```
+
+**Fix:** Extract `useSelection(ids: string[])` returning `{ selectedIds, toggleOne, toggleAll, clearAll, isAllSelected }`.
+
+---
+
+### 13.5 — Repeated form submit pattern (MEDIUM)
+
+8+ form handlers repeat the same try/catch/toast/setIsLoading shell — ~15–20 lines each.
+
+| File | Handler | Lines |
+|---|---|---|
+| `src/components/screens/Admin/UserForm.tsx` | `handleSave` | 57–78 |
+| `src/components/screens/Admin/RoleForm.tsx` | `handleSave` | 50–68 |
+| `src/components/screens/Admin/CompanyTypeList.tsx` | `handleSubmit` | 52–67 |
+| `src/components/screens/Signup.tsx` | `handleSignup` | multiple |
+| `src/components/screens/ResetPassword.tsx` | `handleReset` | try/catch blocks |
+
+**Repeated pattern:**
+```typescript
+const handleSave = async () => {
+  setIsLoading(true);
+  try {
+    editingId ? await service.update(editingId, data) : await service.create(data);
+    toast.success(t('saved'));
+    onBack();
+  } catch (err: any) {
+    toast.error(err?.response?.data?.message || t('common.error'));
+  } finally { setIsLoading(false); }
+};
+```
+
+**Fix:** `useFormSubmit` hook that wraps create/update, manages loading state and toast, exposes `submit(asyncFn)`.
+
+---
+
+### 13.6 — Repeated search input block (MEDIUM)
+
+13 screens render an almost identical debounced search input with a magnifier icon — ~8–12 lines each.
+
+**Affected files:** `InvoiceList`, `LetterList`, `SATickets`, `SAASusers`, `SAbilling`, `AIHistory`, `Buyers`, `TemplateLibrary` and 5 more Admin screens.
+
+**Fix:** Extract `<SearchBar value={q} onChange={setQ} placeholder="..." />` component. The surrounding filter dropdowns vary per screen and stay inline; only the shared search input wrapper is extracted.
+
+---
+
+### 13.7 — Identical table empty-state + loading row (LOW)
+
+Every data table repeats the same conditional for loading spinner and "no results" row — ~10 lines per table.
+
+**Affected files:** All 17 files with a `<Table>` component (InvoiceList, LetterList, Buyers, AIHistory, all Admin list screens).
+
+**Repeated block:**
+```tsx
+{isLoading ? (
+  <TableRow><TableCell colSpan={n} className="text-center py-8">
+    <Loader2 className="animate-spin mx-auto" />
+  </TableCell></TableRow>
+) : data.length === 0 ? (
+  <TableRow><TableCell colSpan={n} className="text-center py-4 text-muted-foreground">
+    {emptyMessage}
+  </TableCell></TableRow>
+) : null}
+```
+
+**Fix:** Extract `<TableEmptyState colSpan={n} isLoading={bool} emptyMessage={string} />`.
+
+---
+
+### 13.8 — Delete confirmation dialog repeated 12× (LOW)
+
+12 screens render the same AlertDialog ("Are you sure? This cannot be undone.") with Cancel + Confirm. Each is ~15 lines of JSX.
+
+**Affected files:** `RoleList`, `CompanyTypeList`, `LetterList`, `InvoiceList`, `Buyers`, `SATickets`, `SAASusers`, `SAPackageServices`, `SAPages`, `SAUserDetails`, `UserList`, `SAPackageForm`.
+
+**Fix:** Extract `<ConfirmDeleteDialog open={bool} onConfirm={fn} onCancel={fn} itemName={string} isLoading={bool} />`.
+
+---
+
+### 13.9 — Axios interceptor duplicated across 3 service files (MEDIUM)
+
+Auth token injection and 401-redirect logic are copy-pasted in three files:
+
+| File | Lines |
+|---|---|
+| `src/services/api.ts` | 30–65 |
+| `src/services/adminApi.ts` | 49–60 |
+| `src/services/customerApi.ts` | similar |
+
+**Fix:** Extract `createApiClient(baseURL, onUnauthorized)` factory in `src/services/apiFactory.ts`. All three service files call the factory instead of reimplementing the interceptor.
+
+---
+
+### Shared Abstraction Summary
+
+| To create | Type | Used by | Est. lines saved |
 |---|---|---|---|
-| `useDebounce` | 0.19 kB | 0.17 kB | Hook |
-| `state` | 2.67 kB | 1.33 kB | Zustand |
-| `vendor-dates` | 23.62 kB | 6.64 kB | date-fns |
-| `InvoiceList` | 23.14 kB | 5.89 kB | Route chunk |
-| `InvoicePreview` | 26.12 kB | 6.96 kB | Route chunk |
-| `LandingPage` | 28.67 kB | 7.50 kB | Route chunk |
-| `SAPages` | 29.53 kB | 7.58 kB | Route chunk |
-| `DesignLayoutPage` | 32.66 kB | 8.14 kB | Route chunk |
-| `InvoiceEditor` | 33.11 kB | 8.48 kB | Route chunk |
-| `react-query` | 35.27 kB | 10.45 kB | @tanstack/react-query ✨ split |
-| `QuickAccessInvoice` | 49.63 kB | 12.30 kB | Route chunk |
-| `ui-kit` | 50.25 kB | 11.06 kB | Shared UI components |
-| `vendor-icons` | 59.60 kB | 11.46 kB | Lucide React icons |
-| `radix` | 116.25 kB | 32.73 kB | @radix-ui primitives ✨ split |
-| `vendor-editor` | 143.11 kB | 41.73 kB | TipTap rich text |
-| `react-core` | 147.28 kB | 47.43 kB | react + react-dom + scheduler ✨ split |
-| `vendor-charts` | 286.41 kB | 64.81 kB | Recharts |
-| `index` (app shell) | 337.83 kB | 104.22 kB | Core app bundle |
-| `vendor-pdf-tools` | 587.05 kB | 171.99 kB | jsPDF + html2canvas |
-| `vendor` (remaining) | 3,814.81 kB | 1,121.71 kB | axios, clsx, vaul, cmdk, etc. |
+| `usePagination<T>` | Hook | 8 files | ~120 |
+| `useSorting<T>` | Hook | 5 files | ~150 |
+| `useSelection` | Hook | 5 files | ~100 |
+| `useFormSubmit` | Hook | 8+ files | ~160 |
+| `useCmsPage(slug)` | Hook | 4 CMS pages | ~80 |
+| `<SearchBar>` | Component | 13 files | ~104 |
+| `<TableEmptyState>` | Component | 17 files | ~170 |
+| `<ConfirmDeleteDialog>` | Component | 12 files | ~180 |
+| `createApiClient` | Utility factory | 3 service files | ~90 |
+| **Total** | | **~75 files** | **~1,154 lines** |
 
-### Before vs After — vendor bundle split
+---
 
-| | Before | After | Saved |
-|---|---|---|---|
-| Monolithic `vendor` (gzip) | 1,218.3 kB | 1,121.7 kB | — |
-| `react-core` separate chunk | — | 47.4 kB | cached independently |
-| `radix` separate chunk | — | 32.7 kB | cached independently |
-| `react-query` separate chunk | — | 10.5 kB | cached independently |
-| `state` separate chunk | — | 1.3 kB | cached independently |
-| **Total transferred on cold load** | **1,218.3 kB** | **1,218.1 kB** | ~same |
-| **Transferred on re-visit (cached chunks)** | **1,218.3 kB** | **~1,124 kB** | **~94 kB saved** |
+## 14. Execution Order
 
-**Cache benefit:** On every deploy where only app code changes (not library versions), browsers skip re-downloading `react-core` (47 kB), `radix` (33 kB), `react-query` (11 kB), and `state` (1 kB) — those chunks' hashes stay the same. Only `vendor`, `index`, and the changed route chunks are re-fetched.
+Work through these phases in sequence — each phase is low-risk and prepares the codebase for the next.
+
+### Phase 1 — Dead Code & Package Cleanup (zero risk, start here)
+
+**Unused files (delete):**
+1. Delete `src/utils/invoice-pdf-html.ts` (241 lines, zero imports)
+2. Delete `src/services/authApi.ts` (64 lines, zero imports)
+3. Delete `src/components/layouts/CustomerLayout.tsx` (never imported)
+4. Verify then delete `src/components/ProtectedRoute.tsx`
+5. Verify then delete `src/components/screens/Admin/AdminLayout.tsx`
+6. Verify intent of `src/widget-loader.tsx` then delete or document
+
+**Unused npm packages:**
+7. `npm uninstall react-rnd @google/generative-ai`
+
+**Unused named imports (within files):**
+8. Remove unused imports from `Dashboard.tsx`, `InvoiceList.tsx`, `Buyers.tsx`, `RoleForm.tsx`, `SAsettings.tsx`, `AppSidebar.tsx`, `CompanyTypeList.tsx` (§7)
+
+**Unused exports:**
+9. Remove or delete `ThemeBuilder`, `CustomerInvoices`, `CustomerDashboard`, `ImageWithFallback` components (§5.3)
+10. Remove unused exports from `qr-code-generator.ts`, `invoice-calculations.ts`, `invoice-import.ts`, `types/admin.ts` (§5.3)
+
+**Duplicate consolidation:**
+11. Consolidate `src/lib/utils.ts` + `src/components/ui/utils.ts` → keep `src/lib/utils.ts`
+12. Remove `src/components/layouts/` directory (consolidate into `src/components/layout/`)
+
+**Console.log cleanup:**
+13. Remove all 16 `console.log` calls (§5.5)
+
+**Stale comments:**
+14. Remove dead comment blocks in `App.tsx`, `AppSidebar.tsx`, `InvoiceList.tsx`, `api.ts` (§5.6)
+
+---
+
+### Phase 1.5 — Shared Abstractions (low risk, high leverage)
+
+Create shared hooks and components before touching the screens — screens become simple to refactor once these exist.
+
+**Hooks (create in `src/hooks/`):**
+15. Create `usePagination<T>(data, pageSize)` — replaces 8 manual implementations (§13.2)
+16. Create `useSorting<T>(data)` — replaces 5 sort blocks (§13.3)
+17. Create `useSelection(ids)` — replaces 5 Set-based selection blocks (§13.4)
+18. Create `useCmsPage(slug)` — unifies 4 identical CMS page fetches (§13.1)
+19. Create `useFormSubmit` — wraps try/catch/toast/loading for 8+ forms (§13.5)
+
+**Components (create in `src/components/ui/`):**
+20. Create `<SearchBar>` — replaces debounced search input in 13 screens (§13.6)
+21. Create `<TableEmptyState>` — replaces loading/empty row in 17 tables (§13.7)
+22. Create `<ConfirmDeleteDialog>` — replaces 12 inline AlertDialog blocks (§13.8)
+
+**Service factory:**
+23. Create `src/services/apiFactory.ts` — eliminates interceptor duplication across 3 service files (§13.9)
+
+**Apply to screens:**
+24. Replace pagination blocks in `InvoiceList`, `LetterList`, `AIHistory`, `Buyers`, `SATickets`, `SAPackageServices`
+25. Replace sort blocks in `AIHistory`, `SATickets`, `SAPackageServices`
+26. Replace selection blocks in `InvoiceList`, `LetterList`, `SATickets`
+27. Apply `<SearchBar>` to all 13 affected screens
+28. Apply `<TableEmptyState>` to all 17 table screens
+29. Apply `<ConfirmDeleteDialog>` to all 12 delete dialogs
+
+---
+
+### Phase 2 — Critical Rendering Bug Fixes
+30. Fix `Math.random()` key → `InvoiceList.tsx:664`
+31. Fix `key={index}` → `PreviewModal.tsx:286` and `ValidationPanel.tsx:69`
+32. Replace raw `fetch()` with axios → `QuickAccessInvoice.tsx:132`
+
+---
+
+### Phase 3 — Data Fetching Migration (biggest UX impact)
+33. Migrate 8 manual `useEffect`+fetch patterns to `useQuery` (§4.1)
+34. Add `queryClient.clear()` on logout (§4.5)
+35. Add per-query `staleTime` overrides to 24 queries (§4.3 table)
+36. Add user ID to invoice query key (§4.6)
+
+---
+
+### Phase 4 — React Rendering Optimizations
+37. Memoize `LanguageContext` value with `useMemo` (§2.5)
+38. Memoize `InlineCmsContext` value with `useMemo` (§2.5)
+39. Consolidate 3 `useEffect` hooks in `LineItemRow.tsx` (§2.4)
+40. Replace `require()` with dynamic `import()` in `InvoiceList.tsx` (§1.1)
+41. Replace static QRCode import with dynamic import (§1.2)
+42. Fix inline arrow functions in `InvoiceEditor.tsx` (§2.3)
+
+---
+
+### Phase 5 — State Management Refactor (architectural)
+43. Add Zustand selectors to `App.tsx`, `AdminLayout` (§3.2)
+44. Split `adminStore` into auth + UI stores (§3.3)
+45. Reduce `authStore` persistence scope to token only (§3.4)
+46. Replace `sessionStorage` CMS pattern with Zustand persist (§3.5)
+47. Extract `useHashRouter()` from `App.tsx` (§3.1)
+48. Extract `useAuthCheck()` from `App.tsx` (§3.1)
+49. Extract `useInvoiceHandlers()` from `App.tsx` (§3.1)
+
+---
+
+### Phase 6 — Type Safety
+50. Define typed interfaces for service payloads in `api.ts` (§9.1)
+51. Fix `any` in `customerApi.ts` and `adminApi.ts` (§9.1)
+52. Type event handlers across components (§9.1)
+
+---
+
+### Phase 7 — Backend & Database
+53. Verify and remove unused DB columns: `signature_date`, `billing_period_start`, `billing_period_end`, `document_currency_code`, `tax_currency_code`, `gln` (§8)
+54. Add pagination to `/invoices`, `/buyers`, `/letters` endpoints (§11.1)
+55. Add indexes on `tenant_id + status`, `tenant_id + created_at` (§12.1)
+56. Enable gzip/brotli on API server (§11.5)
+57. Add `Cache-Control` headers to static-ish endpoints (§11.3)
+58. Cache or trust-JWT-expiry the `/auth/me` call (§11.2)
+59. Add FULLTEXT or prefix-optimized search (§12.3)
+60. Add archiving/TTL to audit logs and AI history (§12.2, §12.5)
+
+---
+
+## Summary Count
+
+| Category | Items Found |
+|---|---|
+| Unused files (delete) | 7 |
+| Unused npm packages | 2 (`react-rnd`, `@google/generative-ai`) |
+| Unused named imports within files | 34+ |
+| Unused exported symbols | 29 |
+| Dead comment blocks | 5 |
+| `console.log` debug calls | 16 |
+| Potentially unused DB columns | 6 |
+| Data fetching bypassing React Query | 9 |
+| React rendering issues | 7 |
+| State management issues | 5 |
+| Backend/DB performance gaps | 10 |
+| Redundant code blocks (copy-pasted patterns) | 9 patterns across ~75 files |
+| Shared abstractions to create | 9 hooks/components (~1,154 lines saved) |
+| **Total items** | **~149** |
+
+---
+
+*Generated: 2026-05-12 | Scope: frontend src/, inferred backend/DB*

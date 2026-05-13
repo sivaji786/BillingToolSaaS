@@ -3,10 +3,9 @@ import { useLanguage } from '../../../contexts/LanguageContext';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
-import { roleService, rightService, companyTypeService } from '../../../services/api';
+import { roleService, rightService } from '../../../services/api';
 import { CheckSquare, Square, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 
 interface RoleFormProps {
     roleId?: string | null;

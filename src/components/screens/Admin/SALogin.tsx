@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '../../ui/alert';
 import { Loader2, Lock, Mail, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { TicketingWidget } from '../../TicketingWidget';
-import { getTicketingApiKey } from '../../../utils/config';
+import { getTicketingApiKey, getErrorMessage } from '../../../utils/config';
 
 interface SALoginProps {
     onLoginSuccess: () => void;
@@ -34,8 +34,8 @@ export function SALogin({ onLoginSuccess }: SALoginProps) {
                 description: `Welcome back, ${user.name}!`,
             });
             onLoginSuccess();
-        } catch (err: any) {
-            const errorMessage = err.response?.data?.message || 'Invalid email or password';
+        } catch (err: unknown) {
+            const errorMessage = getErrorMessage(err, 'Invalid email or password');
             setError(errorMessage);
             toast.error('Login failed', {
                 description: errorMessage,

@@ -4,8 +4,7 @@ import { Button } from '../ui/button';
 import { TicketingWidget } from '../TicketingWidget';
 import { getTicketingApiKey } from '../../utils/config';
 import { LanguageSwitcher } from '../LanguageSwitcher';
-import { useState, useEffect } from 'react';
-import { publicCmsService } from '../../services/api';
+import { useCmsPage } from '../../hooks/useCmsPage';
 import { InlineEditableRich } from '../cms/InlineEditableRich';
 
 interface CookiePolicyProps {
@@ -16,24 +15,7 @@ interface CookiePolicyProps {
 export function CookiePolicy({ onBack, onNavigate }: CookiePolicyProps) {
     const { t, language } = useLanguage();
 
-    const [cmsContent, setCmsContent] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchCms = async () => {
-            try {
-                const response = await publicCmsService.getPage('cookie-settings', language);
-                if (response.success && response.data.content) {
-                    setCmsContent(response.data.content);
-                }
-            } catch (error) {
-                console.error('Failed to fetch CMS content:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchCms();
-    }, [language]);
+    const { content: cmsContent, isLoading } = useCmsPage('cookie-settings', language);
 
     const sections = [
         { key: 'whatAre', num: '4.1' },

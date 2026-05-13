@@ -112,7 +112,7 @@ export function Workspace() {
                     try {
                         const searchData = await workspaceService.aiSearch(data.prompt, data.path);
                         setItems(searchData.items);
-                    } catch (error: any) {
+                    } catch (error: unknown) {
                         const message = error.response?.data?.message || 'AI search failed';
                         toast.error(message);
                     } finally {
@@ -173,7 +173,7 @@ export function Workspace() {
             toast.success('Files uploaded successfully');
             loadItems(currentPath);
             if (e.target) e.target.value = '';
-        } catch (error: any) {
+        } catch (error: unknown) {
             setUploadProgress(null);
             if (e.target) e.target.value = '';
             const message = error.response?.data?.message || 'Failed to upload files';
@@ -215,7 +215,7 @@ export function Workspace() {
             setRenameTarget('');
             setNewNameItem('');
             loadItems(currentPath);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const message = error.response?.data?.message || 'Failed to rename item';
             toast.error(message);
         }
@@ -226,7 +226,7 @@ export function Workspace() {
         try {
             await workspaceService.open(currentPath, name);
             toast.success('Opened successfully', { id: loadingToast });
-        } catch (error: any) {
+        } catch (error: unknown) {
             const message = error.response?.data?.message || 'Failed to open file locally';
             toast.error(message, { id: loadingToast });
         }
@@ -368,7 +368,7 @@ export function Workspace() {
             // For simplicity, we can just replace the current table contents with the search results.
             setItems(data.items);
             // We intentionally don't clear path here as the user might want to stay in context
-        } catch (error: any) {
+        } catch (error: unknown) {
             const message = error.response?.data?.message || 'AI search failed';
             toast.error(message);
         } finally {

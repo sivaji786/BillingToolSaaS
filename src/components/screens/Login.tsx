@@ -62,7 +62,6 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
     try {
       const response = await authService.forgotPassword(email);
       if (response.test_url) {
-        console.log('Test URL:', response.test_url); // Only for local testing
       }
       toast.success(response.message || 'Reset link sent if the account exists.');
       setIsForgotPasswordMode(false);

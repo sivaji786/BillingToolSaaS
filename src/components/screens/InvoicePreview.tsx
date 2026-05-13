@@ -278,7 +278,6 @@ export function InvoicePreview({
             ...profile,
             defaultTemplateId: template.id
           });
-          console.log('Updated default template in profile:', template.id);
         } catch (profileError) {
           console.error('Failed to update default template in profile:', profileError);
           // Don't toast for profile update failure as it's secondary to invoice save

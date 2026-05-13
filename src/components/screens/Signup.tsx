@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { onboardingService, billingService } from '../../services/api';
 import { TicketingWidget } from '../TicketingWidget';
-import { getTicketingApiKey } from '../../utils/config';
+import { getTicketingApiKey, getErrorMessage } from '../../utils/config';
 
 interface SignupProps {
     initialPlan?: string;
@@ -150,10 +150,9 @@ export function Signup({ initialPlan }: SignupProps) {
                     window.location.href = response.redirect_url;
                 }, 1500);
             }
-        } catch (error: any) {
-            console.error(error);
+        } catch (error: unknown) {
             toast.error(t('signup.signupFailed'), {
-                description: error.response?.data?.messages?.error || t('common.error')
+                description: getErrorMessage(error, t('common.error'))
             });
             setIsLoading(false);
         }

@@ -59,40 +59,13 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // mermaid: loaded via dynamic import() in SAWiki — let Rollup auto-chunk it
+          if (id.includes('mermaid') || id.includes('/d3-') || id.includes('/d3/') || id.includes('dagre') || id.includes('cytoscape') || id.includes('khroma') || id.includes('elkjs')) return undefined;
+
           if (id.includes('node_modules')) {
-            // Heavy on-demand chunks — loaded only when the feature is visited
-            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('html-to-image')) {
-              return 'vendor-pdf-tools';
-            }
-            if (id.includes('recharts')) return 'vendor-charts';
-            if (id.includes('@tiptap'))  return 'vendor-editor';
-            if (id.includes('@google/generative-ai')) return 'vendor-ai';
-
-            // React core — changes rarely; long browser cache life
-            if (
-              id.includes('/react-dom/') ||
-              id.includes('/react/') ||
-              id.includes('/scheduler/')
-            ) return 'react-core';
-
-            // State / data-fetching layer
-            if (id.includes('@tanstack')) return 'react-query';
-            if (id.includes('zustand'))   return 'state';
-
-            // Radix UI primitives — large but stable
-            if (id.includes('@radix-ui')) return 'radix';
-
-            // Icon set
-            if (id.includes('lucide-react')) return 'vendor-icons';
-
-            // Date utilities
-            if (id.includes('date-fns')) return 'vendor-dates';
-
-            // Everything else (axios, clsx, vaul, cmdk, etc.)
-            return 'vendor';
+            // PDF tools — heavy, only needed when user exports
+            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('html-to-image')) return 'vendor-pdf-tools';
           }
-          // Shared design-system components
-          if (id.includes('src/components/ui')) return 'ui-kit';
         }
       }
     }
@@ -102,6 +75,21 @@ export default defineConfig({
     open: true,
     watch: {
       ignored: ['**/api/**', '**/node_modules/**', '**/docs/**', '**/build/**'],
+    },
+  },
+  preview: {
+    port: 4173,
+    proxy: {
+      '/api': {
+        target: 'https://humpl.org/',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/billing': {
+        target: 'https://humpl.org/',
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
 });

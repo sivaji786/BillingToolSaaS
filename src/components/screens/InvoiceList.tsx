@@ -3,11 +3,15 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Invoice } from '../../types/invoice';
 import { invoiceService } from '../../services/api';
+import { usePagination } from '../../hooks/usePagination';
+import { useSelection } from '../../hooks/useSelection';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
 import { hasPermissionSync } from '../../hooks/usePermission';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
+import { SearchBar } from '../ui/SearchBar';
+import { TableEmptyState } from '../ui/TableEmptyState';
+import { ConfirmDeleteDialog } from '../ui/ConfirmDeleteDialog';
 import { memo } from 'react';
 import {
   Table,
@@ -32,16 +36,6 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '../ui/alert-dialog';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -56,7 +50,6 @@ import {
 } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import {
-  Search,
   Filter,
   MoreVertical,
   Eye,
@@ -68,7 +61,6 @@ import {
   ChevronLeft,
   ChevronRight,
   FileDown,
-  X,
   Upload,
   Plus,
   FileUp,
@@ -99,9 +91,6 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<DateFilter>('anyDate');
   const [sortBy, setSortBy] = useState<SortOption>('dateDesc');
-  const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportFormat, setExportFormat] = useState<'pdf' | 'ubl-xml' | 'json' | 'csv'>('pdf');
@@ -138,37 +127,10 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
     fetchInvoices();
   }, [debouncedSearch, statusFilter, dateFilter, sortBy, templateType]);
 
-  // Filter and sort invoices
-  // Note: Filtering and sorting are now handled by the backend, but we keep this for client-side pagination if needed
-  // or we can remove it if backend handles pagination too.
-  // For now, we'll use the fetched invoices directly as they are already filtered/sorted by backend
-  const filteredAndSortedInvoices = invoices;
-
-  // Pagination
-  const totalPages = Math.ceil(filteredAndSortedInvoices.length / itemsPerPage);
-  const paginatedInvoices = filteredAndSortedInvoices.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handleSelectAll = () => {
-    if (selectedInvoices.size === paginatedInvoices.length) {
-      setSelectedInvoices(new Set());
-    } else {
-      setSelectedInvoices(new Set(paginatedInvoices.map((inv) => inv.id!).filter(Boolean)));
-    }
-  };
-
-  const handleSelectInvoice = (id: string | undefined) => {
-    if (!id) return;
-    const newSelection = new Set(selectedInvoices);
-    if (newSelection.has(id)) {
-      newSelection.delete(id);
-    } else {
-      newSelection.add(id);
-    }
-    setSelectedInvoices(newSelection);
-  };
+  const { currentPage, setCurrentPage, totalPages, paginatedData: paginatedInvoices, pageSize: itemsPerPage, setPageSize: setItemsPerPage } = usePagination(invoices);
+  const paginatedIds = paginatedInvoices.map(inv => inv.id!).filter(Boolean);
+  const { selectedIds: selectedInvoices, toggleOne, toggleAll: handleSelectAll, clearAll: clearSelection, isAllSelected, isSomeSelected } = useSelection(paginatedIds);
+  const handleSelectInvoice = (id: string | undefined) => { if (id) toggleOne(id); };
 
   const handleBulkExport = async () => {
     const count = selectedInvoices.size;
@@ -181,7 +143,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
       toast.success(t('invoiceList.invoicesExported'), {
         description: t('invoiceList.invoicesExportedDesc', { count: count.toString() }),
       });
-      setSelectedInvoices(new Set());
+      clearSelection();
       setShowExportDialog(false);
     } catch (error) {
       toast.error(t('common.error'), {
@@ -201,7 +163,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
       toast.success(t('invoiceList.invoicesDeleted'), {
         description: t('invoiceList.invoicesDeletedDesc', { count: count.toString() }),
       });
-      setSelectedInvoices(new Set());
+      clearSelection();
       setShowDeleteDialog(false);
       await fetchInvoices();
     } catch (error) {
@@ -227,7 +189,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
         status: t(`status.${newStatus}`)
       }),
     });
-    setSelectedInvoices(new Set());
+    clearSelection();
     setShowStatusChangeDialog(false);
   };
 
@@ -359,28 +321,22 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
     }
   };
 
-  const handleDownloadTemplate = () => {
-    const { downloadImportTemplate } = require('../../utils/invoice-import');
+  const handleDownloadTemplate = async () => {
+    const { downloadImportTemplate } = await import('../../utils/invoice-import');
     downloadImportTemplate();
-    toast.success(t('common.success'), {
-      description: 'CSV template downloaded',
-    });
+    toast.success(t('common.success'), { description: 'CSV template downloaded' });
   };
 
-  const handleDownloadJSONTemplate = () => {
-    const { downloadJSONTemplate } = require('../../utils/invoice-import');
+  const handleDownloadJSONTemplate = async () => {
+    const { downloadJSONTemplate } = await import('../../utils/invoice-import');
     downloadJSONTemplate();
-    toast.success(t('common.success'), {
-      description: 'JSON template downloaded',
-    });
+    toast.success(t('common.success'), { description: 'JSON template downloaded' });
   };
 
-  const handleDownloadUBLXMLTemplate = () => {
-    const { downloadUBLXMLTemplate } = require('../../utils/invoice-import');
+  const handleDownloadUBLXMLTemplate = async () => {
+    const { downloadUBLXMLTemplate } = await import('../../utils/invoice-import');
     downloadUBLXMLTemplate();
-    toast.success(t('common.success'), {
-      description: 'UBL XML template downloaded',
-    });
+    toast.success(t('common.success'), { description: 'UBL XML template downloaded' });
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -444,23 +400,12 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
           <div className="lg:col-span-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder={t(isLetter ? 'invoiceList.searchLetterPlaceholder' : 'invoiceList.searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                >
-                  <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
-                </button>
-              )}
-            </div>
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder={t(isLetter ? 'invoiceList.searchLetterPlaceholder' : 'invoiceList.searchPlaceholder')}
+              className="w-full"
+            />
           </div>
 
           {/* Status Filter */}
@@ -661,7 +606,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
             ) : (
               paginatedInvoices.map((invoice) => (
                 <InvoiceRow
-                  key={invoice.id || Math.random()}
+                  key={invoice.id ?? invoice.invoiceNumber ?? String(invoice.issueDate) + String(invoice.buyer?.name)}
                   invoice={invoice}
                   t={t}
                   isSelected={invoice.id ? selectedInvoices.has(invoice.id) : false}
@@ -914,25 +859,14 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('invoiceList.confirmDelete')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('invoiceList.confirmDeleteDesc', { count: selectedInvoices.size.toString() })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleBulkDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {t('common.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleBulkDelete}
+        title={t('invoiceList.confirmDelete')}
+        description={t('invoiceList.confirmDeleteDesc', { count: selectedInvoices.size.toString() })}
+        confirmLabel={t('common.delete')}
+      />
 
       {/* Bulk Status Change Dialog */}
       <Dialog open={showStatusChangeDialog} onOpenChange={setShowStatusChangeDialog}>

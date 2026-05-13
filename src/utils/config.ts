@@ -76,6 +76,22 @@ export const redirectToMainDomain = (hash: string = '') => {
     window.location.href = `${protocol}//${baseDomain}${port}/${hash}`;
 };
 
+/** Safely extract an API error message from an unknown catch value. */
+export function getErrorMessage(err: unknown, fallback = 'An error occurred'): string {
+    if (err && typeof err === 'object') {
+        const e = err as Record<string, unknown>;
+        const res = e['response'] as Record<string, unknown> | undefined;
+        const data = res?.['data'] as Record<string, unknown> | undefined;
+        const msg = data?.['message'] ?? data?.['messages'];
+        if (typeof msg === 'string') return msg;
+        if (msg && typeof msg === 'object') {
+            const m = (msg as Record<string, unknown>)['error'];
+            if (typeof m === 'string') return m;
+        }
+    }
+    return fallback;
+}
+
 /**
  * Get Ticketing Widget API key from environment
  */
@@ -83,4 +99,30 @@ export const getTicketingApiKey = (): string => {
     return import.meta.env.VITE_TICKETING_API_KEY || 'public';
 };
 
-export default { getApiBaseUrl, getBaseDomain, getTicketingApiKey, redirectToMainDomain };
+/**
+ * Decode a JWT payload without verifying the signature (client-side only).
+ * Returns null if the token is malformed.
+ */
+export function decodeJwtPayload(token: string): Record<string, unknown> | null {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        const json = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+        return JSON.parse(json) as Record<string, unknown>;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Returns true if the JWT is present and its exp claim is still in the future
+ * with at least `bufferSeconds` seconds remaining.
+ */
+export function isJwtValid(token: string | null | undefined, bufferSeconds = 60): boolean {
+    if (!token) return false;
+    const payload = decodeJwtPayload(token);
+    if (!payload || typeof payload['exp'] !== 'number') return false;
+    return payload['exp'] > Date.now() / 1000 + bufferSeconds;
+}
+
+export default { getApiBaseUrl, getBaseDomain, getTicketingApiKey, redirectToMainDomain, isJwtValid };

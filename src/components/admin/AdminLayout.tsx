@@ -14,7 +14,7 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children, currentScreen, onNavigate, onLogout }: AdminLayoutProps) {
-    const { adminUser } = useAdminStore();
+    const adminUser = useAdminStore(s => s.adminUser);
 
     return (
         <div className="flex min-h-screen bg-background">

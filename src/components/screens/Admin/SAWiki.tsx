@@ -9,14 +9,16 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '../../../lib/utils';
 import { toast } from 'sonner';
-import mermaid from 'mermaid';
+let mermaidInstance: typeof import('mermaid')['default'] | null = null;
 
-// Initialize mermaid
-mermaid.initialize({
-    startOnLoad: false,
-    theme: 'default',
-    securityLevel: 'loose',
-});
+async function getMermaid() {
+    if (!mermaidInstance) {
+        const mod = await import('mermaid');
+        mermaidInstance = mod.default;
+        mermaidInstance.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+    }
+    return mermaidInstance;
+}
 
 interface WikiItem {
     name: string;
@@ -65,6 +67,7 @@ function MermaidDiagram({ code }: { code: string }) {
         const render = async () => {
             try {
                 const sanitized = sanitizeMermaid(code);
+                const mermaid = await getMermaid();
 
                 // Step 1: Validate syntax with mermaid.parse() (Mermaid v10+ API).
                 // This throws a ParseError if the diagram has syntax issues,

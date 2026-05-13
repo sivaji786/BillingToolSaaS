@@ -37,15 +37,9 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
   // Sync local state when props change
   useEffect(() => {
     setQtyInput((line.quantity || 0).toString());
-  }, [line.quantity]);
-
-  useEffect(() => {
     setPriceInput((line.unitPrice || 0).toString());
-  }, [line.unitPrice]);
-
-  useEffect(() => {
     setTaxInput((line.taxPercent || 0).toString());
-  }, [line.taxPercent]);
+  }, [line.quantity, line.unitPrice, line.taxPercent]);
 
   const handleChange = (field: keyof InvoiceLine, value: any) => {
     onUpdate(line.id, { [field]: value });

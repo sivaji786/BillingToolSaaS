@@ -51,7 +51,25 @@ interface RichTextEditorProps {
     className?: string;
 }
 
-const MenuBar = ({ editor }: { editor: any }) => {
+export function createEditorExtensions() {
+    return [
+        StarterKit.configure({ underline: false, link: false }),
+        Underline,
+        TextStyle,
+        Color,
+        Subscript,
+        Superscript,
+        Highlight.configure({ multicolor: true }),
+        Image.configure({ inline: true, allowBase64: true }),
+        TextAlign.configure({ types: ['heading', 'paragraph'] }),
+        Link.configure({
+            openOnClick: false,
+            HTMLAttributes: { class: 'text-purple-600 underline cursor-pointer' },
+        }),
+    ];
+}
+
+export function MenuBar({ editor }: { editor: any }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     if (!editor) {
@@ -406,34 +424,11 @@ const MenuBar = ({ editor }: { editor: any }) => {
             </div>
         </div>
     );
-};
+}
 
 export function RichTextEditor({ value, onChange, placeholder, className }: RichTextEditorProps) {
     const editor = useEditor({
-        extensions: [
-            StarterKit.configure({
-                underline: false, // Disable underline in StarterKit to avoid duplicate
-            }),
-            Underline,
-            TextStyle,
-            Color,
-            Subscript,
-            Superscript,
-            Highlight.configure({ multicolor: true }),
-            Image.configure({
-                inline: true,
-                allowBase64: true,
-            }),
-            TextAlign.configure({
-                types: ['heading', 'paragraph'],
-            }),
-            Link.configure({
-                openOnClick: false,
-                HTMLAttributes: {
-                    class: 'text-purple-600 underline cursor-pointer',
-                },
-            }),
-        ],
+        extensions: createEditorExtensions(),
         content: value,
         editorProps: {
             attributes: {

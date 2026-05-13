@@ -1,25 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
-import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
-import {
-  Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  List,
-  ListOrdered,
-  Link as LinkIcon,
-  Check,
-  X,
-} from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { useInlineCms } from '../../contexts/InlineCmsContext';
-
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
+import { MenuBar, createEditorExtensions } from '../ui/RichTextEditor';
 
 interface Props {
   slug: string;
@@ -28,64 +11,6 @@ interface Props {
   value: string;
   className?: string;
 }
-
-// ---------------------------------------------------------------------------
-// Compact toolbar for the inline rich editor
-// ---------------------------------------------------------------------------
-
-function RichToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
-  if (!editor) return null;
-
-  const toolbarBtn = (
-    label: string,
-    isActive: boolean,
-    onClick: () => void,
-    icon: React.ReactNode,
-  ) => (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      onClick={onClick}
-      className={[
-        'rounded p-1 text-gray-600 transition-colors hover:bg-purple-100 hover:text-purple-700',
-        isActive ? 'bg-purple-100 text-purple-700' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      {icon}
-    </button>
-  );
-
-  const setLink = () => {
-    const prev = editor.getAttributes('link').href as string | undefined;
-    const url = window.prompt('URL', prev ?? '');
-    if (url === null) return;
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  };
-
-  return (
-    <div className="flex flex-wrap items-center gap-0.5 rounded-t-md border border-b-0 border-purple-300 bg-purple-50 px-2 py-1">
-      {toolbarBtn('Bold', editor.isActive('bold'), () => editor.chain().focus().toggleBold().run(), <Bold className="h-3.5 w-3.5" />)}
-      {toolbarBtn('Italic', editor.isActive('italic'), () => editor.chain().focus().toggleItalic().run(), <Italic className="h-3.5 w-3.5" />)}
-      {toolbarBtn('Underline', editor.isActive('underline'), () => editor.chain().focus().toggleUnderline().run(), <UnderlineIcon className="h-3.5 w-3.5" />)}
-      <div className="mx-1 h-4 w-px bg-purple-300" aria-hidden="true" />
-      {toolbarBtn('Bullet list', editor.isActive('bulletList'), () => editor.chain().focus().toggleBulletList().run(), <List className="h-3.5 w-3.5" />)}
-      {toolbarBtn('Numbered list', editor.isActive('orderedList'), () => editor.chain().focus().toggleOrderedList().run(), <ListOrdered className="h-3.5 w-3.5" />)}
-      <div className="mx-1 h-4 w-px bg-purple-300" aria-hidden="true" />
-      {toolbarBtn('Link', editor.isActive('link'), setLink, <LinkIcon className="h-3.5 w-3.5" />)}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// InlineEditableRich
-// ---------------------------------------------------------------------------
 
 export function InlineEditableRich({ slug, field, lang, value, className }: Props) {
   const { editMode, patchField } = useInlineCms();
@@ -102,30 +27,17 @@ export function InlineEditableRich({ slug, field, lang, value, className }: Prop
     }
   }, [value, isEditing]);
 
-  // ---------------------------------------------------------------------------
-  // Tiptap editor — only created while editing
-  // ---------------------------------------------------------------------------
   const editor = useEditor(
     {
-      extensions: [
-        StarterKit.configure({ underline: false }),
-        Underline,
-        TextAlign.configure({ types: ['heading', 'paragraph'] }),
-        Image.configure({ inline: true, allowBase64: true }),
-        Link.configure({
-          openOnClick: false,
-          HTMLAttributes: { class: 'text-purple-600 underline cursor-pointer' },
-        }),
-      ],
+      extensions: createEditorExtensions(),
       content: isEditing ? displayHtml : '',
       editorProps: {
         attributes: {
-          class:
-            'prose prose-sm dark:prose-invert max-w-none p-3 min-h-[120px] focus:outline-none',
+          class: 'prose prose-sm dark:prose-invert max-w-none p-4 min-h-[150px] focus:outline-none',
         },
       },
     },
-    [isEditing], // re-initialise when edit mode toggles
+    [isEditing],
   );
 
   // Seed editor content when it first mounts
@@ -158,32 +70,22 @@ export function InlineEditableRich({ slug, field, lang, value, className }: Prop
     setIsEditing(false);
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // View mode
-  // ---------------------------------------------------------------------------
-
+  // View mode — no edit UI at all
   if (!editMode) {
     return (
       <div
         className={className}
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: displayHtml }}
       />
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Edit mode — active Tiptap editor
-  // ---------------------------------------------------------------------------
-
+  // Edit mode — active Tiptap editor with full toolbar
   if (isEditing) {
     return (
       <div className="w-full">
-        <RichToolbar editor={editor} />
-        <div
-          className="w-full rounded-b-md border border-purple-300 bg-white"
-          style={{ minHeight: '120px' }}
-        >
+        <div className="border rounded-md bg-background">
+          <MenuBar editor={editor} />
           <EditorContent editor={editor} />
         </div>
         <div className="mt-2 flex items-center gap-2">
@@ -229,10 +131,7 @@ export function InlineEditableRich({ slug, field, lang, value, className }: Prop
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Edit mode — hoverable view
-  // ---------------------------------------------------------------------------
-
+  // Edit mode — hoverable view (double-click to activate)
   return (
     <div
       className={[
@@ -247,7 +146,6 @@ export function InlineEditableRich({ slug, field, lang, value, className }: Prop
       onMouseLeave={() => setIsHovered(false)}
       onDoubleClick={handleDoubleClick}
     >
-      {/* Tooltip hint */}
       {isHovered && (
         <span
           aria-hidden="true"
@@ -256,7 +154,6 @@ export function InlineEditableRich({ slug, field, lang, value, className }: Prop
           Double-click to edit
         </span>
       )}
-      {/* eslint-disable-next-line react/no-danger */}
       <div dangerouslySetInnerHTML={{ __html: displayHtml }} />
     </div>
   );

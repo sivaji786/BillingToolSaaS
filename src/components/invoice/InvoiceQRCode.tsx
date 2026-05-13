@@ -4,7 +4,6 @@
  */
 
 import { useEffect, useRef } from 'react';
-import QRCode from 'qrcode';
 import { Invoice } from '../../types/invoice';
 import { getInvoiceQRCodeData, canGenerateQRCode, getQRCodeStandardName } from '../../utils/qr-code-generator';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -35,25 +34,23 @@ export function InvoiceQRCode({
     const qrData = getInvoiceQRCodeData(invoice, standard);
     if (!qrData) return;
 
-    // Generate QR code
-    QRCode.toCanvas(
-      canvasRef.current,
-      qrData,
-      {
-        width: size,
-        margin: 2,
-        errorCorrectionLevel: 'M',
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF',
+    // Generate QR code — lazy-load qrcode to keep it out of the initial bundle
+    import('qrcode').then((QRCode) => {
+      if (!canvasRef.current) return;
+      QRCode.toCanvas(
+        canvasRef.current,
+        qrData,
+        {
+          width: size,
+          margin: 2,
+          errorCorrectionLevel: 'M',
+          color: { dark: '#000000', light: '#FFFFFF' },
         },
-      },
-      (error) => {
-        if (error) {
-          console.error('QR Code generation error:', error);
+        (error) => {
+          if (error) console.error('QR Code generation error:', error);
         }
-      }
-    );
+      );
+    });
   }, [invoice, standard, size]);
 
   if (!canGenerateQRCode(invoice)) {

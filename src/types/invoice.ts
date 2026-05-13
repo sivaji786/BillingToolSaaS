@@ -228,6 +228,29 @@ export interface AIPromptResponse {
   errors?: string[];
 }
 
+export interface Right {
+  id: string;
+  name: string;
+  module?: string;
+  description?: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  company_type_id?: number;
+  rights?: Right[];
+}
+
+export interface UserRecord {
+  id: string;
+  name: string;
+  email: string;
+  role_id?: string;
+  company_type_id?: number;
+  status?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';

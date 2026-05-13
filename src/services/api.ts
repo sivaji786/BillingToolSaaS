@@ -1,14 +1,12 @@
 import axios from 'axios';
 import { toast } from "sonner";
-import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry, AIPromptRequest, AIPromptResponse, Buyer } from '../types/invoice';
+import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry, AIPromptRequest, AIPromptResponse, Buyer, CompanyType, Role, Right, UserRecord } from '../types/invoice';
 import { getApiBaseUrl } from '../utils/config';
 import { useAuthStore } from '../stores/authStore';
 
-// Use runtime configuration for API URL (can be changed after build by installer)
 const API_URL = getApiBaseUrl();
-console.log('API_URL Final:', API_URL);
 
-const api = axios.create({
+export const api = axios.create({
     baseURL: API_URL,
     withCredentials: true,
 });
@@ -32,30 +30,20 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response) {
-            console.error('API Error Response:', error.response.status, error.response.data);
-        } else {
-            console.error('API Error Message:', error.message);
-        }
-
         if (error.response?.status === 401) {
-            // Don't auto-logout/redirect if we're on the login page or reset password page
             const isLoginRequest = error.config?.url?.includes('/auth/login');
             const hash = window.location.hash.replace('#', '').replace(/^\//, '');
             const publicScreens = ['landing', 'login', 'signup', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison', 'reset-password'];
             const isPublicPage = !hash || publicScreens.some(s => hash.startsWith(s));
 
             if (isLoginRequest || isPublicPage) {
-                console.warn('Unauthorized on public or sensitive page, clearing auth but skipping redirect.');
                 useAuthStore.getState().clearAuth();
             } else {
-                console.warn('Unauthorized or token expired, logging out from protected page...');
                 useAuthStore.getState().logout();
             }
         }
 
         if (error.response?.status === 403 && error.response.data?.redirect_url) {
-            console.log('Tenant mismatch detected, redirecting to correct workspace:', error.response.data.redirect_url);
             window.location.href = error.response.data.redirect_url;
         }
 
@@ -87,8 +75,6 @@ export const authService = {
         return data;
     },
     logout: () => {
-        // Broad clear is removed to avoid cross-portal logout. 
-        // Individual stores handle their own state.
     },
     me: async () => {
         const response = await api.get('/auth/me');
@@ -122,12 +108,18 @@ export const billingService = {
     },
     getPlans: async () => {
         const response = await api.get('/billing/plans');
-        // API returns { success: true, data: [...plans] }
-        return response.data.data || response.data;
+        const d = response.data;
+        if (Array.isArray(d)) return d;
+        if (Array.isArray(d?.data)) return d.data;
+        if (Array.isArray(d?.plans)) return d.plans;
+        return [];
     },
     getPackageServices: async () => {
         const response = await api.get('/billing/package-services');
-        return response.data.data || response.data;
+        const d = response.data;
+        if (Array.isArray(d)) return d;
+        if (Array.isArray(d?.data)) return d.data;
+        return [];
     },
     upgradePlan: async (planId: number) => {
         const response = await api.post('/billing/upgrade', { plan_id: planId });
@@ -244,14 +236,14 @@ export const buyerService = {
         return response.data;
     },
     getById: async (id: string) => {
-        const response = await api.get<import('../types/invoice').Buyer>(`/buyers/${id}`);
+        const response = await api.get<Buyer>(`/buyers/${id}`);
         return response.data;
     },
-    create: async (buyer: any) => {
+    create: async (buyer: Partial<Buyer>) => {
         const response = await api.post('/buyers', buyer);
         return response.data;
     },
-    update: async (id: string, buyer: any) => {
+    update: async (id: string, buyer: Partial<Buyer>) => {
         const response = await api.put(`/buyers/${id}`, buyer);
         return response.data;
     },
@@ -259,7 +251,7 @@ export const buyerService = {
         const response = await api.delete(`/buyers/${id}`);
         return response.data;
     },
-    import: async (buyers: any[]): Promise<{ created: number; skipped: number; errors: number }> => {
+    import: async (buyers: Partial<Buyer>[]): Promise<{ created: number; skipped: number; errors: number }> => {
         const response = await api.post('/buyers/import', { buyers });
         return response.data;
     },
@@ -319,14 +311,14 @@ export const aiLetterService = {
 
 export const companyTypeService = {
     getAll: async () => {
-        const response = await api.get<import('../types/invoice').CompanyType[]>('/company-types');
+        const response = await api.get<CompanyType[]>('/company-types');
         return response.data;
     },
-    create: async (data: any) => {
+    create: async (data: Pick<CompanyType, 'name'>) => {
         const response = await api.post('/company-types', data);
         return response.data;
     },
-    update: async (id: string, data: any) => {
+    update: async (id: string, data: Pick<CompanyType, 'name'>) => {
         const response = await api.put(`/company-types/${id}`, data);
         return response.data;
     },
@@ -338,18 +330,18 @@ export const companyTypeService = {
 
 export const roleService = {
     getAll: async (params?: { company_type_id?: string }) => {
-        const response = await api.get<any[]>('/roles', { params });
+        const response = await api.get<Role[]>('/roles', { params });
         return response.data;
     },
     getById: async (id: string) => {
-        const response = await api.get<any>(`/roles/${id}`);
+        const response = await api.get<Role>(`/roles/${id}`);
         return response.data;
     },
-    create: async (data: any) => {
+    create: async (data: Omit<Role, 'id'>) => {
         const response = await api.post('/roles', data);
         return response.data;
     },
-    update: async (id: string, data: any) => {
+    update: async (id: string, data: Partial<Omit<Role, 'id'>>) => {
         const response = await api.put(`/roles/${id}`, data);
         return response.data;
     },
@@ -361,21 +353,21 @@ export const roleService = {
 
 export const rightService = {
     getAll: async (params?: { group_by_module?: boolean }) => {
-        const response = await api.get<any[]>('/rights', { params });
+        const response = await api.get<Right[]>('/rights', { params });
         return response.data;
     },
 };
 
 export const userService = {
     getAll: async () => {
-        const response = await api.get<any[]>('/users');
+        const response = await api.get<UserRecord[]>('/users');
         return response.data;
     },
-    create: async (data: any) => {
+    create: async (data: Omit<UserRecord, 'id'>) => {
         const response = await api.post('/users', data);
         return response.data;
     },
-    update: async (id: string, data: any) => {
+    update: async (id: string, data: Partial<Omit<UserRecord, 'id'>>) => {
         const response = await api.put(`/users/${id}`, data);
         return response.data;
     },
@@ -386,7 +378,7 @@ export const workspaceService = {
         const response = await api.get('/workspace/list', { params: { path } });
         return response.data;
     },
-    upload: async (path: string, files: FileList | File[], onUploadProgress?: (progressEvent: any) => void) => {
+    upload: async (path: string, files: FileList | File[], onUploadProgress?: (progressEvent: import('axios').AxiosProgressEvent) => void) => {
         const formData = new FormData();
         formData.append('path', path);
         Array.from(files).forEach(file => {

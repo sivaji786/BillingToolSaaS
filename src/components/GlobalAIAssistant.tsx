@@ -52,13 +52,10 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
         recognition.lang = 'en-US';
 
         recognition.onstart = () => {
-            console.log('[AI] Mic started');
         };
         recognition.onend = () => {
-            console.log('[AI] Mic ended');
             // Only restart if user is actively dictating
             if (isDictatingRef.current) {
-                console.log('[AI] Restarting mic for active dictation...');
                 setTimeout(() => {
                     try { recognition.start(); } catch (e) { console.error('[AI] Restart failed', e); }
                 }, 500);
@@ -84,7 +81,6 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
             }
 
             if (finalTranscript && isDictatingRef.current) {
-                console.log('[AI] Heard:', finalTranscript);
                 setInputValue(prev => (prev ? prev + ' ' : '') + finalTranscript);
             }
         };
@@ -240,7 +236,7 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
                     description: t('ai.lowConfidenceDesc') || 'Please review the invoice carefully before using it.',
                 });
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('AI parsing error:', error);
             // Extract the actual server error message when available
             const serverMsg = error?.response?.data?.messages?.error

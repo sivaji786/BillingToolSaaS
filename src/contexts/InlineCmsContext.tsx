@@ -5,6 +5,7 @@ import React, {
   useState,
   useCallback,
   useRef,
+  useMemo,
 } from 'react';
 import { toast } from 'sonner';
 import adminApi from '../services/adminApi';
@@ -78,8 +79,13 @@ export function InlineCmsProvider({ children }: { children: React.ReactNode }) {
     [savingVersion],
   );
 
+  const ctxValue = useMemo(
+    () => ({ editMode, setEditMode, patchField, isSavingField }),
+    [editMode, setEditMode, patchField, isSavingField]
+  );
+
   return (
-    <InlineCmsContext.Provider value={{ editMode, setEditMode, patchField, isSavingField }}>
+    <InlineCmsContext.Provider value={ctxValue}>
       {children}
     </InlineCmsContext.Provider>
   );

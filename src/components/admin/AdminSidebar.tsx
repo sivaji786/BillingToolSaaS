@@ -28,7 +28,9 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSidebarProps) {
-    const { sidebarCollapsed, toggleSidebar, adminUser } = useAdminStore();
+    const sidebarCollapsed = useAdminStore(s => s.sidebarCollapsed);
+    const toggleSidebar = useAdminStore(s => s.toggleSidebar);
+    const adminUser = useAdminStore(s => s.adminUser);
     const { t } = useLanguage();
 
     const menuItems = [

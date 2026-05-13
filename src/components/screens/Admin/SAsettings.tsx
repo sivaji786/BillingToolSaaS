@@ -13,10 +13,13 @@ import { toast } from 'sonner';
 
 export function SAsettings() {
     const queryClient = useQueryClient();
-    const { adminUser, theme, setTheme } = useAdminStore();
+    const adminUser = useAdminStore(s => s.adminUser);
+    const theme = useAdminStore(s => s.theme);
+    const setTheme = useAdminStore(s => s.setTheme);
     const { data: settings, isLoading } = useQuery({
         queryKey: ['admin-settings'],
         queryFn: () => adminSettingsService.getSettings(),
+        staleTime: 60 * 60 * 1000,
     });
 
     const [apiKeys, setApiKeys] = useState<any[]>([]);

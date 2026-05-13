@@ -17,12 +17,12 @@ import {
 import {
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '../ui/dialog';
+import { ConfirmDeleteDialog } from '../ui/ConfirmDeleteDialog';
+import { SearchBar } from '../ui/SearchBar';
+import { TableEmptyState } from '../ui/TableEmptyState';
+import { usePagination } from '../../hooks/usePagination';
 import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '../ui/alert-dialog';
-import {
-    Search, Plus, Edit, Trash2, User, Mail, MapPin, RefreshCw,
+    Plus, Edit, Trash2, User, Mail, MapPin, RefreshCw,
     ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
     Download, Upload, AlertTriangle, CheckCircle2, FileDown,
 } from 'lucide-react';
@@ -156,8 +156,6 @@ export function Buyers() {
 
     // Table state
     const [searchQuery, setSearchQuery]   = useState('');
-    const [currentPage, setCurrentPage]   = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
     const [sortConfig, setSortConfig]     = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [columnFilters, setColumnFilters] = useState({ name: '', vatId: '', email: '', address: '' });
 
@@ -178,6 +176,7 @@ export function Buyers() {
     const { data: buyers = [], isLoading } = useQuery({
         queryKey: ['buyers'],
         queryFn: () => buyerService.getAll(),
+        staleTime: 2 * 60 * 1000,
     });
 
     const createMutation = useMutation({
@@ -364,8 +363,7 @@ export function Buyers() {
         });
     }
 
-    const totalPages      = Math.max(1, Math.ceil(processed.length / itemsPerPage));
-    const paginatedBuyers = processed.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const { currentPage, setCurrentPage, totalPages, paginatedData: paginatedBuyers, pageSize: itemsPerPage, setPageSize: setItemsPerPage } = usePagination(processed);
 
     const importNewCount  = importRows.filter(r => r.status === 'new').length;
     const importSkipCount = importRows.filter(r => r.status !== 'new').length;
@@ -410,15 +408,12 @@ export function Buyers() {
 
             {/* Search */}
             <Card className="p-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                        placeholder={t('buyers.searchPlaceholder')}
-                        value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                        className="pl-10"
-                    />
-                </div>
+                <SearchBar
+                    value={searchQuery}
+                    onChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+                    placeholder={t('buyers.searchPlaceholder')}
+                    className="w-full"
+                />
             </Card>
 
             {/* Table */}
@@ -634,25 +629,14 @@ export function Buyers() {
             </Dialog>
 
             {/* ── Delete Confirmation ───────────────────────────────────────── */}
-            <AlertDialog open={isDelDialogOpen} onOpenChange={setIsDelDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{t('buyers.deleteConfirm')}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {t('common.deleteAria', { index: selectedBuyer?.name || '' })}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                        <AlertDialogAction
-                            className="bg-red-600 hover:bg-red-700"
-                            onClick={() => selectedBuyer?.id && deleteMutation.mutate(selectedBuyer.id)}
-                        >
-                            {t('common.delete')}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <ConfirmDeleteDialog
+                open={isDelDialogOpen}
+                onOpenChange={setIsDelDialogOpen}
+                onConfirm={() => selectedBuyer?.id && deleteMutation.mutate(selectedBuyer.id)}
+                title={t('buyers.deleteConfirm')}
+                description={t('common.deleteAria', { index: selectedBuyer?.name || '' })}
+                confirmLabel={t('common.delete')}
+            />
 
             {/* ── Import Preview Modal ──────────────────────────────────────── */}
             <Dialog open={showImportModal} onOpenChange={setShowImportModal}>

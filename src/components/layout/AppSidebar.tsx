@@ -36,7 +36,6 @@ import {
 } from "../ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { useLanguage } from "../../contexts/LanguageContext"
-// Button import removed
 
 // Define props for the Sidebar
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {

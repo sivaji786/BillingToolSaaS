@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useLanguage } from '../../../contexts/LanguageContext';
 import { Button } from '../../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
 import { companyTypeService } from '../../../services/api';
 import { Plus, Pencil, Trash2, Building } from 'lucide-react';
+import { TableEmptyState } from '../../ui/TableEmptyState';
 import { toast } from 'sonner';
 import {
     Dialog,
@@ -97,14 +97,8 @@ export function CompanyTypeList() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {isLoading ? (
-                            <TableRow>
-                                <TableCell colSpan={2} className="text-center py-4">Loading...</TableCell>
-                            </TableRow>
-                        ) : types.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={2} className="text-center py-4">No company types found</TableCell>
-                            </TableRow>
+                        {isLoading || types.length === 0 ? (
+                            <TableEmptyState colSpan={2} isLoading={isLoading} emptyMessage="No company types found" />
                         ) : (
                             types.map(type => (
                                 <TableRow key={type.id}>

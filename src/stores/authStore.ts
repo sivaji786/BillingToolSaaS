@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { redirectToMainDomain } from '../utils/config';
+import { queryClient } from '../providers/QueryProvider';
 
 interface User {
     id: string;
@@ -58,7 +59,7 @@ export const useAuthStore = create<AuthState>()(
                     user: null,
                     tenant: null,
                 });
-                // Pass logout parameter to clear main domain state
+                queryClient.clear();
                 redirectToMainDomain('?logout=true');
             },
 
@@ -69,6 +70,7 @@ export const useAuthStore = create<AuthState>()(
                     user: null,
                     tenant: null,
                 });
+                queryClient.clear();
             },
 
             updateUser: (user) => {
@@ -79,9 +81,13 @@ export const useAuthStore = create<AuthState>()(
             name: 'auth-storage',
             partialize: (state) => ({
                 isAuthenticated: state.isAuthenticated,
-                user: state.user,
-                tenant: state.tenant,
                 token: state.token,
+                user: state.user,
+                tenant: state.tenant ? {
+                    ...state.tenant,
+                    gemini_api_key: undefined,
+                    openai_api_key: undefined,
+                } : null,
             }),
         }
     )

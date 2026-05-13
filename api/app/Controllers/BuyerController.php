@@ -15,10 +15,33 @@ class BuyerController extends BaseController
     {
         try {
             $model = new BuyerModel();
-            $buyers = $model->findAll();
-            
+
+            $search = $this->request->getGet('search');
+            if ($search) {
+                $model->groupStart()
+                    ->like('name', $search)
+                    ->orLike('email', $search)
+                    ->orLike('tax_id', $search)
+                    ->groupEnd();
+            }
+
+            $page     = (int)$this->request->getGet('page');
+            $pageSize = max(1, (int)($this->request->getGet('pageSize') ?? 50));
+
+            if ($page >= 1) {
+                $total    = $model->countAllResults(false);
+                $buyers   = $model->findAll($pageSize, ($page - 1) * $pageSize);
+                $transformed = array_map([$this, 'transformBuyer'], $buyers);
+                return $this->response->setJSON([
+                    'data'     => $transformed,
+                    'total'    => $total,
+                    'page'     => $page,
+                    'pageSize' => $pageSize,
+                ])->setStatusCode(200);
+            }
+
+            $buyers      = $model->findAll();
             $transformed = array_map([$this, 'transformBuyer'], $buyers);
-            
             return $this->response->setJSON($transformed)->setStatusCode(200);
         } catch (\Throwable $e) {
             return $this->failServerError('BUYER LIST ERROR: ' . $e->getMessage());

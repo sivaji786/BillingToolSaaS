@@ -4,6 +4,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { userService, roleService, companyTypeService } from '../../../services/api';
+import { getErrorMessage } from '../../../utils/config';
 import { CheckSquare, Square, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -73,8 +74,8 @@ export function UserForm({ userId, onBack, companyTypeId }: UserFormProps) {
                 toast.success(t('admin.users.userCreated'));
             }
             onBack();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.messages?.error || t('admin.users.failedToSave'));
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, t('admin.users.failedToSave')));
         }
     };
 

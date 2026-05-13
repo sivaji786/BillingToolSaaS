@@ -48,7 +48,7 @@ class AdminPackages extends ResourceController
             ];
         }, $plans);
 
-        return $this->response->setJSON([
+        return $this->response->setHeader('Cache-Control', 'public, max-age=3600')->setJSON([
             'data' => $packages,
             'pagination' => [
                 'currentPage' => (int)$page,

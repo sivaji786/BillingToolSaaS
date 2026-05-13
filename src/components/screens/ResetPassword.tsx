@@ -5,6 +5,7 @@ import { Input } from '../ui/input';
 import { KeyRound, Loader2, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../../services/api';
 import { toast } from 'sonner';
+import { getErrorMessage } from '../../utils/config';
 
 interface ResetPasswordProps {
   token: string;
@@ -36,8 +37,8 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
       await authService.resetPassword(token, password);
       toast.success('Password reset successfully! You can now log in.');
       onComplete(); // redirect to login
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to reset password. The link might be expired.');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to reset password. The link might be expired.'));
     } finally {
       setIsLoading(false);
     }

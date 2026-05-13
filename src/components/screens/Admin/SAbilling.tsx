@@ -41,6 +41,7 @@ export function SAbilling() {
     const { data: settings } = useQuery({
         queryKey: ['admin-settings'],
         queryFn: () => adminSettingsService.getSettings(),
+        staleTime: 60 * 60 * 1000,
     });
 
     const handleDownloadPdf = async (invoiceId: string) => {

@@ -30,8 +30,7 @@ import { PreviewModal } from '../invoice/PreviewModal';
 import { QuickAccessTour } from './QuickAccessTour';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../stores/authStore';
-import { invoiceService } from '../../services/api';
-import { getApiBaseUrl } from '../../utils/config';
+import { invoiceService, api } from '../../services/api';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { TicketingWidget } from '../TicketingWidget';
 import { getTicketingApiKey } from '../../utils/config';
@@ -128,10 +127,9 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
         if (!qaToken) return;
 
         setIsRestoringFromToken(true);
-        const apiBase = getApiBaseUrl();
-        fetch(`${apiBase}/auth/quick-access/draft?token=${encodeURIComponent(qaToken)}`)
-            .then((r) => r.json())
-            .then((data) => {
+        api.get(`/auth/quick-access/draft?token=${encodeURIComponent(qaToken)}`)
+            .then((r) => {
+                const data = r.data;
                 if (data.success && data.invoice_draft) {
                     setInvoice({ ...buildDraftInvoice(), ...data.invoice_draft });
                     toast.success(t('quickAccess.invoiceRestored'), {

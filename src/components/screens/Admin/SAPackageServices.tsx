@@ -8,7 +8,9 @@ import { Badge } from '../../ui/badge';
 import { Label } from '../../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
-import { Plus, Edit, Trash2, Search, LayoutGrid, List, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, LayoutGrid, List, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowLeft } from 'lucide-react';
+import { SearchBar } from '../../ui/SearchBar';
+import { usePagination } from '../../../hooks/usePagination';
 import { toast } from 'sonner';
 import { Skeleton } from '../../ui/skeleton';
 
@@ -25,8 +27,6 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
 
     // Data Table State
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'displayOrder', direction: 'asc' });
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
 
     const { data: services, isLoading } = useQuery({
         queryKey: ['package-services'],
@@ -104,14 +104,6 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
         }
     };
 
-    const handleSort = (key: string) => {
-        let direction: 'asc' | 'desc' = 'asc';
-        if (sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
-        }
-        setSortConfig({ key, direction });
-    };
-
     const renderSortIcon = (key: string) => {
         if (sortConfig.key !== key) {
             return <ArrowUpDown className="ml-1 h-3 w-3 text-muted-foreground opacity-50" />;
@@ -123,7 +115,7 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
     const processedServices = useMemo(() => {
         if (!services) return [];
         return [...services]
-            .filter((srv) => 
+            .filter((srv) =>
                 srv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 srv.type.toLowerCase().includes(searchQuery.toLowerCase())
             )
@@ -138,14 +130,16 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
             });
     }, [services, searchQuery, sortConfig]);
 
-    const totalPages = Math.ceil(processedServices.length / pageSize);
-    const paginatedServices = processedServices.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
-    );
+    const { currentPage, setCurrentPage, totalPages, paginatedData: paginatedServices, pageSize, setPageSize } = usePagination(processedServices);
 
-    // Reset page on search or sort
-    useMemo(() => setCurrentPage(1), [searchQuery, sortConfig]);
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+        setCurrentPage(1);
+    };
 
     if (isEditing) {
         return (
@@ -250,15 +244,12 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
 
             <div className="flex flex-col sm:flex-row justify-between gap-4">
                 <div className="flex flex-1 items-center gap-4 max-w-md">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search by name or type..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10"
-                        />
-                    </div>
+                    <SearchBar
+                        value={searchQuery}
+                        onChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+                        placeholder="Search by name or type..."
+                        className="flex-1"
+                    />
                     <div className="flex border rounded-md">
                         <Button
                             variant={viewMode === 'list' ? 'secondary' : 'ghost'}

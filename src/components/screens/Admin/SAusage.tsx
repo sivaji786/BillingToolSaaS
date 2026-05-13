@@ -72,6 +72,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
     const { data: metrics, isLoading } = useQuery({
         queryKey: ['usage-metrics', period],
         queryFn: () => adminAnalyticsService.getUsageMetrics({ period }),
+        staleTime: 10 * 60 * 1000,
     });
 
     const { data: tenantUsages, isLoading: isTenantLoading } = useQuery({

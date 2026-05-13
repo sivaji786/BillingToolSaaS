@@ -53,8 +53,8 @@ const SAWiki = lazy(() => import('./components/screens/Admin/SAWiki').then(modul
 const SAPages = lazy(() => import('./components/screens/Admin/SAPages').then(module => ({ default: module.SAPages })));
 
 
-import { TicketingWidget } from './components/TicketingWidget';
-import { GlobalAIAssistant } from './components/GlobalAIAssistant';
+const TicketingWidget = lazy(() => import('./components/TicketingWidget').then(m => ({ default: m.TicketingWidget })));
+const GlobalAIAssistant = lazy(() => import('./components/GlobalAIAssistant').then(m => ({ default: m.GlobalAIAssistant })));
 import { SidebarProvider, SidebarInset, SidebarTrigger } from './components/ui/sidebar';
 import { AppSidebar } from './components/layout/AppSidebar';
 import { Separator } from './components/ui/separator';
@@ -74,26 +74,26 @@ import {
 } from "./components/ui/breadcrumb"
 
 import { Toaster } from './components/ui/sonner';
-// Button removed as unused
-// Unused imports removed
 import {
   invoiceTemplateService,
   companyProfileService,
   auditLogService,
 } from './services/api';
-import { getApiBaseUrl, getTicketingApiKey } from './utils/config';
+import { getApiBaseUrl, getTicketingApiKey, isJwtValid } from './utils/config';
 import { calculateInvoiceTotals, generateInvoiceNumber } from './utils/invoice-calculations';
 import { toast } from 'sonner';
 import { authService, invoiceService, letterService } from './services/api';
 import { PLATFORM_TEMPLATES } from './utils/invoice-templates-defaults';
-// hasPermissionSync removed
 
 type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
   const { t } = useLanguage();
-  const { isAuthenticated, user, login, logout } = useAuthStore();
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+  const user = useAuthStore(s => s.user);
+  const login = useAuthStore(s => s.login);
+  const logout = useAuthStore(s => s.logout);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
@@ -136,7 +136,6 @@ function AppContent() {
       // 2. Migration: Check raw localStorage for legacy token
       const legacyToken = localStorage.getItem('token');
       if (!token && legacyToken) {
-        console.log('Migrating legacy token to authStore');
         token = legacyToken;
         // Temporarily set token so authService.me() can use it
         useAuthStore.setState({ token: legacyToken });
@@ -152,7 +151,6 @@ function AppContent() {
       const isLogout = urlParams.get('logout') === 'true';
 
       if (isLogout) {
-        console.log('Logout parameter detected, clearing main domain session');
         useAuthStore.getState().clearAuth();
         // Clean up URL without page reload
         const newUrl = window.location.pathname + window.location.hash;
@@ -162,7 +160,6 @@ function AppContent() {
       }
 
       if (tokenFromUrl) {
-        console.log('Token found in URL, updating store');
         token = tokenFromUrl;
         useAuthStore.setState({ token: tokenFromUrl });
         // Clean up URL without page reload
@@ -172,6 +169,19 @@ function AppContent() {
 
       if (token) {
         try {
+          const storeState = useAuthStore.getState();
+          const hasPersistedUser = !!storeState.user && !!storeState.tenant;
+
+          // Skip the /auth/me round-trip when the JWT is still valid and we
+          // already have hydrated user/tenant data from the persisted store.
+          if (hasPersistedUser && isJwtValid(token)) {
+            if (currentScreen === 'landing' || currentScreen === 'login') {
+              setCurrentScreen('dashboard');
+            }
+            setIsCheckingAuth(false);
+            return;
+          }
+
           // Verify token and get fresh user data including rights
           const userData = await authService.me();
 
@@ -199,11 +209,9 @@ function AppContent() {
 
     const handleHashChange = () => {
       const hash = window.location.hash.replace(/^#\/?/, '');
-      console.log('Hash changed:', hash);
       if (hash && [
         'landing', 'login', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison', 'SAPages'
       ].includes(hash)) {
-        console.log('Setting screen from hash change:', hash);
         setCurrentScreen(hash as Screen);
       } else if (hash.startsWith('cms/')) {
         const slug = hash.slice('cms/'.length);
@@ -212,13 +220,10 @@ function AppContent() {
           setCurrentScreen('cmsPage');
         }
       } else if (hash.startsWith('reset-password/')) {
-        console.log('Setting screen to resetPassword from parameterized route');
         setCurrentScreen('resetPassword');
       } else if (hash.startsWith('designLayout/')) {
-        console.log('Setting screen to designLayout from parameterized route');
         setCurrentScreen('designLayout');
       } else if (hash.startsWith('editor?data=')) {
-        console.log('Setting screen to editor from parameterized route');
         try {
           const dataStr = hash.split('data=')[1];
           const invoiceData = JSON.parse(decodeURIComponent(dataStr));
@@ -233,7 +238,6 @@ function AppContent() {
           toast.error('Failed to load invoice data');
         }
       } else if (hash.startsWith('preview?data=')) {
-        console.log('Setting screen to preview from parameterized route');
         try {
           const dataStr = hash.split('data=')[1];
           const invoiceData = JSON.parse(decodeURIComponent(dataStr));
@@ -248,7 +252,6 @@ function AppContent() {
           setCurrentScreen('dashboard');
         }
       } else if (!hash) {
-        console.log('Empty hash, defaulting to dashboard');
         setCurrentScreen('dashboard');
       }
     };
@@ -270,15 +273,17 @@ function AppContent() {
 
   // React Query for data fetching
   const { data: invoices = [], refetch: refetchInvoices } = useQuery({
-    queryKey: ['invoices'],
+    queryKey: ['invoices', user?.id],
     queryFn: () => invoiceService.getAll(),
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    staleTime: 2 * 60 * 1000,
   });
 
   const { data: userTemplates = [], refetch: refetchTemplates } = useQuery({
     queryKey: ['templates'],
     queryFn: () => invoiceTemplateService.getAll(),
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    staleTime: 30 * 60 * 1000,
   });
 
   const templates = [...PLATFORM_TEMPLATES, ...userTemplates];
@@ -286,13 +291,15 @@ function AppContent() {
   const { data: companyProfiles = [], refetch: refetchProfile } = useQuery({
     queryKey: ['profile'],
     queryFn: () => companyProfileService.getAll(),
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    staleTime: 30 * 60 * 1000,
   });
 
   const { data: logEntries = [] } = useQuery({
     queryKey: ['audit-logs'],
     queryFn: () => auditLogService.getAll(),
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
   });
 
   const profile = companyProfiles[0] || null;
@@ -329,7 +336,7 @@ function AppContent() {
       }
 
       setCurrentScreen('dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       // Requirement: form should inform "email/ password wrong" on incorrect credentials
       const errorMessage = error.response?.status === 401 
@@ -1068,30 +1075,32 @@ function AppContent() {
           </Suspense>
         </div>
 
-        <GlobalAIAssistant
-          onGenerateInvoiceNumber={() => generateInvoiceNumber(profile?.invoiceNumberFormat || 'INV-{YYYY}-{NNNNN}', invoices.length)}
-          onGenerateLetterNumber={() => generateInvoiceNumber(profile?.letterNumberFormat || 'LTR-{YYYY}-{NNNNN}', invoices.filter(inv => inv.templateType === 'business_letter').length)}
-          currentInvoice={currentInvoice}
-          currentScreen={currentScreen}
-          templateType={currentScreen === 'letters' || currentInvoice?.templateType === 'business_letter' ? 'business_letter' : 'invoice'}
-          onUpdateInvoice={(updatedInvoice) => {
-            setCurrentInvoice(updatedInvoice);
-            if (currentScreen === 'preview') {
-              const invoiceDataStr = encodeURIComponent(JSON.stringify(updatedInvoice));
-              window.location.hash = `#preview?data=${invoiceDataStr}`;
-            }
-          }}
-          onCreateLetter={(letter) => {
-            setCurrentInvoice(letter);
-            setPreviousScreen(currentScreen);
-            setCurrentScreen('preview');
-          }}
-        />
-        <TicketingWidget
-          apiKey={getTicketingApiKey()}
-          apiBaseUrl={getApiBaseUrl()}
-          userId={user?.id}
-        />
+        <Suspense fallback={null}>
+          <GlobalAIAssistant
+            onGenerateInvoiceNumber={() => generateInvoiceNumber(profile?.invoiceNumberFormat || 'INV-{YYYY}-{NNNNN}', invoices.length)}
+            onGenerateLetterNumber={() => generateInvoiceNumber(profile?.letterNumberFormat || 'LTR-{YYYY}-{NNNNN}', invoices.filter(inv => inv.templateType === 'business_letter').length)}
+            currentInvoice={currentInvoice}
+            currentScreen={currentScreen}
+            templateType={currentScreen === 'letters' || currentInvoice?.templateType === 'business_letter' ? 'business_letter' : 'invoice'}
+            onUpdateInvoice={(updatedInvoice) => {
+              setCurrentInvoice(updatedInvoice);
+              if (currentScreen === 'preview') {
+                const invoiceDataStr = encodeURIComponent(JSON.stringify(updatedInvoice));
+                window.location.hash = `#preview?data=${invoiceDataStr}`;
+              }
+            }}
+            onCreateLetter={(letter) => {
+              setCurrentInvoice(letter);
+              setPreviousScreen(currentScreen);
+              setCurrentScreen('preview');
+            }}
+          />
+          <TicketingWidget
+            apiKey={getTicketingApiKey()}
+            apiBaseUrl={getApiBaseUrl()}
+            userId={user?.id}
+          />
+        </Suspense>
         <Toaster />
       </SidebarInset>
     </SidebarProvider>
@@ -1125,7 +1134,8 @@ function AdminPortalRouter() {
 
   const [navigationParams, setNavigationParams] = useState<{ packageId?: string; userId?: string; ticketId?: string }>({});
 
-  const { isAuthenticated: isAdminAuth, _hasHydrated } = useAdminStore();
+  const isAdminAuth = useAdminStore(s => s.isAuthenticated);
+  const _hasHydrated = useAdminStore(s => s._hasHydrated);
 
   useEffect(() => {
     // Only handle routes after hydration

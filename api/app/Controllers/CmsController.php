@@ -271,10 +271,10 @@ class CmsController extends ResourceController
             'lang'          => $r['lang'],
         ], $rows);
 
-        return $this->respond([
+        return $this->response->setHeader('Cache-Control', 'public, max-age=300')->setJSON([
             'success' => true,
             'data'    => $result,
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I{} sh -c 'echo \"$\\(du -k {} | cut -f1\\)K  {}\"')",
+      "Bash(npx vite-bundle-visualizer *)",
+      "Bash(python3 -c ' *)",
+      "Bash(grep -rn 'className={.*`' /home/sivaji/Downloads/BillingTool/src/components --include=\"*.tsx\")",
+      "Bash(./node_modules/.bin/tsc --noEmit --noUnusedLocals)",
+      "Bash(npm uninstall *)",
+      "Read(//home/sivaji/Downloads/**)",
+      "Bash(mysql -u root -proot billing_tool -e \"SHOW TABLES;\")",
+      "Bash(mysql -u root -proot billing_tool -e ' *)",
+      "Bash(mysql -u root -proot billing_tool)",
+      "Bash(chmod +x /home/sivaji/Downloads/BillingTool/api/cron.sh)",
+      "Bash(grep -E \"\\\\.ts$\")",
+      "Bash(grep -n 'text-\\\\${' /home/sivaji/Downloads/BillingTool/src/components/screens/Workspace.tsx /home/sivaji/Downloads/BillingTool/src/components/screens/QuickAccessInvoice.tsx /home/sivaji/Downloads/BillingTool/src/components/screens/Billing.tsx)",
+      "Bash(grep -n 'className=.*\\\\$' /home/sivaji/Downloads/BillingTool/src/components/screens/Workspace.tsx /home/sivaji/Downloads/BillingTool/src/components/screens/QuickAccessInvoice.tsx /home/sivaji/Downloads/BillingTool/src/components/screens/Billing.tsx)",
+      "Bash(xargs -I {} bash -c 'echo \"=== {} ===\" && grep -l \"useQuery\" {} 2>/dev/null || echo \"NO useQuery\"')",
+      "Bash(sed -n '300,320p' /home/sivaji/Downloads/BillingTool/src/components/screens/InvoiceEditor.tsx)",
+      "Bash(sed -n '400,420p' /home/sivaji/Downloads/BillingTool/src/components/screens/InvoiceEditor.tsx)"
+    ]
+  }
+}

@@ -62,9 +62,23 @@ class BusinessLetterController extends InvoiceController
                 default:         $model->orderBy('issue_date', 'DESC');
             }
 
-            $letters = $model->findAll();
-            $transformed = array_map([$this, 'transformInvoice'], $letters);
+            $page     = (int)$this->request->getGet('page');
+            $pageSize = max(1, (int)($this->request->getGet('pageSize') ?? 50));
 
+            if ($page >= 1) {
+                $total    = $model->countAllResults(false);
+                $letters  = $model->findAll($pageSize, ($page - 1) * $pageSize);
+                $transformed = array_map([$this, 'transformInvoice'], $letters);
+                return $this->response->setJSON([
+                    'data'     => $transformed,
+                    'total'    => $total,
+                    'page'     => $page,
+                    'pageSize' => $pageSize,
+                ])->setStatusCode(200);
+            }
+
+            $letters     = $model->findAll();
+            $transformed = array_map([$this, 'transformInvoice'], $letters);
             return $this->response->setJSON($transformed)->setStatusCode(200);
         } catch (\Throwable $e) {
             return $this->failServerError('LETTER LIST ERROR: ' . $e->getMessage());

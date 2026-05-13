@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminTicketService } from '../../../services/adminApi';
 import { Card, CardContent } from '../../ui/card';
-import { Input } from '../../ui/input';
+import { SearchBar } from '../../ui/SearchBar';
+import { TableEmptyState } from '../../ui/TableEmptyState';
+import { usePagination } from '../../../hooks/usePagination';
+import { useSelection } from '../../../hooks/useSelection';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
 import { Checkbox } from '../../ui/checkbox';
@@ -16,7 +19,7 @@ import {
 } from '../../ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { format } from 'date-fns';
-import { Loader2, Search, ExternalLink, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, CheckSquare, X } from 'lucide-react';
+import { Loader2, ExternalLink, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, CheckSquare, X } from 'lucide-react';
 import { getApiBaseUrl } from '../../../utils/config';
 import { Ticket } from '../../../types/admin';
 import { useLanguage } from '../../../contexts/LanguageContext';
@@ -34,19 +37,18 @@ export function SATickets({ onNavigate }: SATicketsProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortColumn, setSortColumn] = useState<SortColumn>('created_at');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const { t } = useLanguage();
 
     const { data: tickets = [], isLoading } = useQuery({
         queryKey: ['admin-tickets'],
         queryFn: adminTicketService.getTickets,
+        staleTime: 1 * 60 * 1000,
     });
 
     const { data: adminStaff = [] } = useQuery({
         queryKey: ['admin-staff'],
         queryFn: adminTicketService.getAdminStaff,
+        staleTime: 60 * 60 * 1000,
     });
 
     const bulkMutation = useMutation({
@@ -54,7 +56,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
             adminTicketService.bulkUpdateTickets(ids, status),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
-            setSelectedIds(new Set());
+            clearAll();
             toast.success('Tickets updated successfully');
         },
         onError: () => toast.error('Failed to update tickets'),
@@ -84,11 +86,9 @@ export function SATickets({ onNavigate }: SATicketsProps) {
     });
 
     // 3. Paginate
-    const totalPages = Math.ceil(sortedTickets.length / itemsPerPage);
-    const paginatedTickets = sortedTickets.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const { currentPage, setCurrentPage, totalPages, paginatedData: paginatedTickets, pageSize: itemsPerPage, setPageSize: setItemsPerPage } = usePagination(sortedTickets);
+    const paginatedIds = paginatedTickets.map(t => String(t.id)).filter(Boolean);
+    const { selectedIds, toggleOne, toggleAll, clearAll, isAllSelected, isSomeSelected } = useSelection(paginatedIds);
 
     const handleSort = (column: SortColumn) => {
         if (sortColumn === column) {
@@ -117,28 +117,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
         onNavigate('SATicketDetails', { ticketId: ticket.id });
     };
 
-    // Selection helpers
-    const isAllSelected = paginatedTickets.length > 0 &&
-        paginatedTickets.every(t => selectedIds.has(t.id));
-    const isIndeterminate = paginatedTickets.some(t => selectedIds.has(t.id)) && !isAllSelected;
-
-    const toggleAll = () => {
-        if (isAllSelected) {
-            const next = new Set(selectedIds);
-            paginatedTickets.forEach(t => next.delete(t.id));
-            setSelectedIds(next);
-        } else {
-            const next = new Set(selectedIds);
-            paginatedTickets.forEach(t => next.add(t.id));
-            setSelectedIds(next);
-        }
-    };
-
-    const toggleOne = (id: string) => {
-        const next = new Set(selectedIds);
-        next.has(id) ? next.delete(id) : next.add(id);
-        setSelectedIds(next);
-    };
+    const isIndeterminate = isSomeSelected && !isAllSelected;
 
     const handleBulk = (status: string) => {
         bulkMutation.mutate({ ids: Array.from(selectedIds), status });
@@ -152,18 +131,12 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                     <p className="text-muted-foreground">{t('tickets.subtitle')}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="relative w-64">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder={t('tickets.searchPlaceholder')}
-                            value={searchQuery}
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="pl-8"
-                        />
-                    </div>
+                    <SearchBar
+                        value={searchQuery}
+                        onChange={(q) => { setSearchQuery(q); setCurrentPage(1); }}
+                        placeholder={t('tickets.searchPlaceholder')}
+                        className="w-64"
+                    />
                 </div>
             </div>
 
@@ -197,7 +170,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                         <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => setSelectedIds(new Set())}
+                            onClick={() => clearAll()}
                         >
                             <X className="h-3.5 w-3.5 mr-1" />
                             {t('tickets.bulk.clearSelection')}
@@ -244,18 +217,8 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {isLoading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={11} className="h-24 text-center">
-                                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-                                        </TableCell>
-                                    </TableRow>
-                                ) : paginatedTickets.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={11} className="h-24 text-center">
-                                            {t('tickets.ticketNotFound')}
-                                        </TableCell>
-                                    </TableRow>
+                                {isLoading || paginatedTickets.length === 0 ? (
+                                    <TableEmptyState colSpan={11} isLoading={isLoading} emptyMessage={t('tickets.ticketNotFound')} />
                                 ) : (
                                     paginatedTickets.map((ticket, index) => (
                                         <TableRow

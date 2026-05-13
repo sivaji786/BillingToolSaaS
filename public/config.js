@@ -4,10 +4,13 @@
     const hostname = window.location.hostname;
     const protocol = window.location.protocol;
 
-    // For localhost (development), use port 8080
-    // For production domains, use the current hostname with /api/public path
     let apiBaseUrl;
-    if (hostname.includes('localhost')) {
+    const port = window.location.port;
+    if (hostname.includes('localhost') && port === '4173') {
+        // Preview mode: use relative URLs so the vite preview proxy forwards to backend
+        apiBaseUrl = '';
+    } else if (hostname.includes('localhost')) {
+        // Dev mode (port 3000): backend runs locally on 8080
         apiBaseUrl = protocol + '//' + hostname + ':8080';
     } else {
         // Production: use the exact hostname to avoid Cross-Origin (CORS) issues

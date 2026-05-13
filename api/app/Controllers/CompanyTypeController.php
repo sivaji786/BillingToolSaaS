@@ -15,7 +15,7 @@ class CompanyTypeController extends BaseController
         $model = new CompanyTypeModel();
         $types = $model->findAll();
         // Return as is (id, name)
-        return $this->response->setJSON($types)->setStatusCode(200);
+        return $this->response->setHeader('Cache-Control', 'public, max-age=3600')->setJSON($types)->setStatusCode(200);
     }
 
     public function create()

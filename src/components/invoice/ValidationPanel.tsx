@@ -66,7 +66,7 @@ export function ValidationPanel({ errors }: ValidationPanelProps) {
               </div>
               {fieldErrors.map((error, index) => (
                 <Alert
-                  key={index}
+                  key={`${field}-${error.message}-${index}`}
                   variant={error.severity === 'error' ? 'destructive' : 'default'}
                 >
                   {error.severity === 'error' && <AlertCircle className="h-4 w-4" />}

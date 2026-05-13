@@ -46,10 +46,10 @@ class AdminPackageServices extends ResourceController
             ];
         }, $services);
 
-        return $this->respond([
+        return $this->response->setHeader('Cache-Control', 'public, max-age=3600')->setJSON([
             'success' => true,
             'data' => $mapped,
-        ]);
+        ])->setStatusCode(200);
     }
 
     /**

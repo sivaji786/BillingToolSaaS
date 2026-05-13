@@ -1,34 +1,35 @@
 import { en } from '../translations/en';
-import { de } from '../translations/de';
-import { ar } from '../translations/ar';
-import { pl } from '../translations/pl';
 
 export type Language = 'en' | 'de' | 'ar' | 'pl';
 
-export const translations = {
-  en,
-  de,
-  ar,
-  pl,
+const translations: Record<string, any> = { en };
+
+const loaders: Record<string, () => Promise<any>> = {
+  de: () => import('../translations/de').then(m => m.de),
+  ar: () => import('../translations/ar').then(m => m.ar),
+  pl: () => import('../translations/pl').then(m => m.pl),
 };
 
-export const getTranslation = (lang: Language, key: string): string => {
-  const keys = key.split('.');
-  let value: any = translations[lang];
+export async function ensureTranslation(lang: Language): Promise<void> {
+  if (lang === 'en' || translations[lang]) return;
+  translations[lang] = await loaders[lang]();
+}
 
+function lookup(obj: any, key: string): string | undefined {
+  const keys = key.split('.');
+  let value: any = obj;
   for (const k of keys) {
     if (value && typeof value === 'object' && k in value) {
       value = value[k];
     } else {
-      // Fallback to English if translation missing
-      if (lang !== 'en') {
-        return getTranslation('en', key);
-      }
-      return key;
+      return undefined;
     }
   }
+  return typeof value === 'string' ? value : undefined;
+}
 
-  return typeof value === 'string' ? value : key;
+export const getTranslation = (lang: Language, key: string): string => {
+  return lookup(translations[lang], key) ?? lookup(translations['en'], key) ?? key;
 };
 
 export const formatTranslation = (text: string, params: Record<string, string | number>): string => {
