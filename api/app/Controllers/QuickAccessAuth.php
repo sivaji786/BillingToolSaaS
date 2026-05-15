@@ -281,11 +281,10 @@ class QuickAccessAuth extends ResourceController
                 : $emailPrefix;
 
             $tenantId = $tenantModel->insert([
-                'company_name'  => $companyName,
-                'subdomain'     => $subdomain,
-                'plan_id'       => $planId,
-                'status'        => 'active',
-                'trial_ends_at' => date('Y-m-d H:i:s', strtotime('+14 days')),
+                'company_name' => $companyName,
+                'subdomain'    => $subdomain,
+                'plan_id'      => $planId,
+                'status'       => 'active',
             ]);
 
             if (!$tenantId) {
@@ -307,9 +306,9 @@ class QuickAccessAuth extends ResourceController
             $subscriptionModel->insert([
                 'tenant_id'            => $tenantId,
                 'plan_id'              => $planId,
-                'status'               => 'trialing',
+                'status'               => 'active',
                 'current_period_start' => date('Y-m-d H:i:s'),
-                'current_period_end'   => date('Y-m-d H:i:s', strtotime('+14 days')),
+                'current_period_end'   => date('Y-m-d H:i:s', strtotime('+1 year')),
             ]);
 
             // Assign owner role (role_id = 1) so RBAC filters pass immediately
@@ -340,7 +339,7 @@ class QuickAccessAuth extends ResourceController
 
             // Send welcome email (non-blocking)
             $loginUrl = rtrim(getenv('FRONTEND_URL') ?: 'http://localhost:3000', '/');
-            $this->sendWelcomeEmail($email, $user['name'] ?? $emailPrefix, $loginUrl, date('Y-m-d', strtotime('+14 days')));
+            $this->sendWelcomeEmail($email, $user['name'] ?? $emailPrefix, $loginUrl);
 
             return $this->response->setJSON([
                 'success'        => true,
@@ -398,7 +397,7 @@ class QuickAccessAuth extends ResourceController
         }
     }
 
-    private function sendWelcomeEmail(string $toEmail, string $name, string $loginUrl = '', string $trialEndsAt = ''): void
+    private function sendWelcomeEmail(string $toEmail, string $name, string $loginUrl = ''): void
     {
         try {
             $emailLib = \Config\Services::email();
@@ -408,8 +407,8 @@ class QuickAccessAuth extends ResourceController
                 getenv('MAIL_FROM_NAME')  ?: 'BillingTool'
             );
             $emailLib->setTo($toEmail);
-            $emailLib->setSubject('Welcome to BillingTool 🎉 – Your account is ready');
-            $emailLib->setMessage($this->buildWelcomeEmailHtml($name, $toEmail, $loginUrl, $trialEndsAt));
+            $emailLib->setSubject('Welcome to BillingTool – Your workspace is ready');
+            $emailLib->setMessage($this->buildWelcomeEmailHtml($name, $toEmail, $loginUrl));
             $emailLib->send();
         } catch (\Exception $e) {
             log_message('error', '[QuickAccess] sendWelcomeEmail: ' . $e->getMessage());
@@ -461,13 +460,10 @@ class QuickAccessAuth extends ResourceController
 HTML;
     }
 
-    private function buildWelcomeEmailHtml(string $name, string $email = '', string $loginUrl = '', string $trialEndsAt = ''): string
+    private function buildWelcomeEmailHtml(string $name, string $email = '', string $loginUrl = ''): string
     {
         if (!$loginUrl) $loginUrl = 'http://localhost:3000';
         $loginLink = $loginUrl . '/login';
-        $trialLine = $trialEndsAt
-            ? "<p style=\"margin:12px 0 0;color:#374151;font-size:14px;\">Your <strong>14-day free trial</strong> runs until <strong>{$trialEndsAt}</strong>. No credit card needed.</p>"
-            : '';
         $emailLine = $email
             ? "<p style=\"margin:12px 0 0;color:#6b7280;font-size:13px;\">Log in anytime with: <strong>{$email}</strong></p>"
             : '';
@@ -479,13 +475,12 @@ HTML;
 <tr><td align="center" style="padding:40px 20px;">
 <table width="520" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(124,58,237,.1);">
 <tr><td style="background:linear-gradient(135deg,#7c3aed,#c026d3);padding:32px 40px;text-align:center;">
-  <h1 style="margin:0;color:#fff;font-size:26px;font-weight:700;">Welcome to BillingTool 🎉</h1>
-  <p style="margin:8px 0 0;color:#e9d5ff;font-size:14px;">Your account is ready to go</p>
+  <h1 style="margin:0;color:#fff;font-size:26px;font-weight:700;">Welcome to BillingTool!</h1>
+  <p style="margin:8px 0 0;color:#e9d5ff;font-size:14px;">Your workspace is ready</p>
 </td></tr>
 <tr><td style="padding:36px 40px;">
   <p style="margin:0 0 12px;color:#374151;font-size:16px;">Hi <strong>{$name}</strong>,</p>
-  <p style="margin:0 0 16px;color:#374151;font-size:15px;line-height:1.6;">Your first invoice is saved and waiting in your dashboard. You can log in from any device using your email — we'll send you a one-time code, no password needed.</p>
-  {$trialLine}
+  <p style="margin:0 0 16px;color:#374151;font-size:15px;line-height:1.6;">Your invoice is saved and waiting in your dashboard. You can log in from any device using your email — we'll send you a one-time code, no password needed.</p>
   {$emailLine}
   <div style="text-align:center;margin:28px 0;">
     <a href="{$loginLink}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#c026d3);color:#fff;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;">Go to Dashboard →</a>

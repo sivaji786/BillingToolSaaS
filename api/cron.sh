@@ -9,3 +9,6 @@ php spark cleanup:logs
 
 echo "[$(date)] Running usage limit checks..."
 php spark usage:check 2>/dev/null || true
+
+echo "[$(date)] Marking overdue invoices..."
+php spark invoices:mark-overdue

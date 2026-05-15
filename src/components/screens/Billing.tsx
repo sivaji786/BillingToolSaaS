@@ -4,9 +4,55 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
-import { Check, Download, Loader2, ShieldCheck } from 'lucide-react';
+import { Check, Download, Loader2, ShieldCheck, AlertTriangle, FileText, HardDrive, Zap } from 'lucide-react';
 import { formatCurrency } from '../../utils/invoice-calculations';
 import { useLanguage } from '../../contexts/LanguageContext';
+
+// ── Usage bar with colour-coded warning states ────────────────────────────────
+function UsageBar({ label, icon: Icon, used, limit, unit = '' }: {
+    label: string; icon: React.ElementType;
+    used: number; limit: number; unit?: string;
+}) {
+    const unlimited = limit === -1;
+    const pct = unlimited ? 0 : limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+    const warning = !unlimited && pct >= 80 && pct < 100;
+    const exceeded = !unlimited && pct >= 100;
+
+    const barColor = exceeded ? 'bg-red-500' : warning ? 'bg-amber-500' : 'bg-violet-500';
+    const trackColor = exceeded ? 'bg-red-100' : warning ? 'bg-amber-100' : 'bg-gray-100';
+
+    return (
+        <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Icon className={`h-4 w-4 ${exceeded ? 'text-red-500' : warning ? 'text-amber-500' : 'text-gray-400'}`} />
+                    <span className="text-sm font-medium text-gray-700">{label}</span>
+                    {warning && (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                            <AlertTriangle className="h-3 w-3" /> Approaching limit
+                        </span>
+                    )}
+                    {exceeded && (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5">
+                            <AlertTriangle className="h-3 w-3" /> Limit reached
+                        </span>
+                    )}
+                </div>
+                <span className="text-sm text-gray-500 tabular-nums">
+                    {unlimited
+                        ? <span className="text-violet-600 font-medium">Unlimited</span>
+                        : <>{used}{unit} <span className="text-gray-400">/</span> {limit}{unit}</>}
+                </span>
+            </div>
+            <div className={`h-2 rounded-full overflow-hidden ${trackColor}`}>
+                <div
+                    className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                    style={{ width: unlimited ? '0%' : `${pct}%` }}
+                />
+            </div>
+        </div>
+    );
+}
 
 export const Billing = () => {
     const { t } = useLanguage();
@@ -66,7 +112,12 @@ export const Billing = () => {
     }
 
     const currentPlanId = data?.subscription?.plan_id;
-    const usage = data?.usage?.invoices || { used: 0, limit: 0, percentage: 0 };
+    const invoiceUsage  = data?.usage?.invoices  || { used: 0, limit: 0, percentage: 0 };
+    const storageUsage  = data?.usage?.storage   || { used: 0, limit: 0, percentage: 0 };
+    const apiUsage      = data?.usage?.api_calls || { used: 0, limit: 0, percentage: 0 };
+
+    const anyNearLimit  = [invoiceUsage, storageUsage, apiUsage].some(u => u.limit !== -1 && u.limit > 0 && (u.used / u.limit) >= 0.8);
+    const anyExceeded   = [invoiceUsage, storageUsage, apiUsage].some(u => u.limit !== -1 && u.limit > 0 && u.used >= u.limit);
 
     return (
         <div className="space-y-8 max-w-6xl mx-auto p-6">
@@ -75,32 +126,52 @@ export const Billing = () => {
                 <p className="text-muted-foreground">{t('billing.subtitle')}</p>
             </div>
 
+            {/* Usage limit warning banner */}
+            {(anyNearLimit || anyExceeded) && (
+                <div className={`flex items-start gap-3 rounded-xl border px-5 py-4 ${
+                    anyExceeded
+                        ? 'border-red-200 bg-red-50'
+                        : 'border-amber-200 bg-amber-50'
+                }`}>
+                    <AlertTriangle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${anyExceeded ? 'text-red-500' : 'text-amber-500'}`} />
+                    <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold ${anyExceeded ? 'text-red-800' : 'text-amber-800'}`}>
+                            {anyExceeded ? 'Usage limit reached' : 'You\'re approaching your plan limits'}
+                        </p>
+                        <p className={`text-sm mt-0.5 ${anyExceeded ? 'text-red-700' : 'text-amber-700'}`}>
+                            {anyExceeded
+                                ? 'Some features are now restricted. Upgrade your plan to continue.'
+                                : 'Upgrade to avoid interruptions as you approach your limits.'}
+                        </p>
+                    </div>
+                    <Button
+                        size="sm"
+                        className={`flex-shrink-0 ${anyExceeded ? 'bg-red-600 hover:bg-red-700' : 'bg-amber-500 hover:bg-amber-600'} text-white`}
+                        onClick={() => document.getElementById('plans-section')?.scrollIntoView({ behavior: 'smooth' })}
+                    >
+                        View Plans
+                    </Button>
+                </div>
+            )}
+
             {/* Usage Section */}
             <Card>
                 <CardHeader>
                     <CardTitle>{t('billing.currentUsage')}</CardTitle>
-                    <CardDescription>{t('billing.usageDescription')}</CardDescription>
+                    <CardDescription>Usage is measured against your current plan's limits.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span className="font-medium">{t('billing.invoicesGenerated')}</span>
-                            <span className="text-muted-foreground">
-                                {usage.used} / {usage.limit === -1 ? t('billing.unlimited') : usage.limit}
-                            </span>
-                        </div>
-                        <Progress value={usage.percentage} className="h-2" />
-                        <p className="text-xs text-muted-foreground text-right">
-                            {usage.limit === -1
-                                ? t('billing.unlimitedDesc')
-                                : t('billing.remainingInvoices', { count: usage.limit - usage.used })}
-                        </p>
-                    </div>
+                <CardContent className="space-y-5">
+                    <UsageBar label="Invoices" icon={FileText}
+                        used={invoiceUsage.used} limit={invoiceUsage.limit} />
+                    <UsageBar label="Storage" icon={HardDrive}
+                        used={Number(storageUsage.used.toFixed(2))} limit={storageUsage.limit} unit=" GB" />
+                    <UsageBar label="AI Queries" icon={Zap}
+                        used={apiUsage.used} limit={apiUsage.limit} />
                 </CardContent>
             </Card>
 
             {/* Plans Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div id="plans-section" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {plans.map((plan: any) => {
                     const isCurrent = plan.id === currentPlanId;
                     let features: [string, any][] = [];

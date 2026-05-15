@@ -36,7 +36,6 @@ class InvoiceController extends BaseController
 
             $dateFilter = $this->request->getGet('dateFilter');
             if ($dateFilter && $dateFilter !== 'anyDate') {
-                $now = date('Y-m-d');
                 switch ($dateFilter) {
                     case 'last7Days':
                         $model->where('issue_date >=', date('Y-m-d', strtotime('-7 days')));
@@ -58,6 +57,16 @@ class InvoiceController extends BaseController
                     case 'thisYear':
                         $model->where('issue_date >=', date('Y-01-01'));
                         $model->where('issue_date <=', date('Y-12-31'));
+                        break;
+                    case 'customRange':
+                        $dateFrom = $this->request->getGet('customDateFrom');
+                        $dateTo   = $this->request->getGet('customDateTo');
+                        if ($dateFrom) {
+                            $model->where('issue_date >=', $dateFrom);
+                        }
+                        if ($dateTo) {
+                            $model->where('issue_date <=', $dateTo);
+                        }
                         break;
                 }
             }
@@ -188,9 +197,9 @@ class InvoiceController extends BaseController
             ],
             'lines' => [],
             'taxTotals' => [],
-            'lineExtensionAmount' => 0,
-            'taxExclusiveAmount' => 0,
-            'taxInclusiveAmount' => 0,
+            'lineExtensionAmount' => (float)($invoice['line_extension_amount'] ?? 0),
+            'taxExclusiveAmount'  => (float)($invoice['tax_exclusive_amount'] ?? 0),
+            'taxInclusiveAmount'  => (float)($invoice['tax_inclusive_amount'] ?? 0),
         ];
     }
 
@@ -264,7 +273,8 @@ class InvoiceController extends BaseController
         $allowedTransitions = [
             'draft'     => ['draft', 'validated', 'cancelled'],
             'validated' => ['validated', 'draft', 'sent', 'cancelled'],
-            'sent'      => ['sent', 'paid', 'cancelled'],
+            'sent'      => ['sent', 'paid', 'cancelled', 'overdue'],
+            'overdue'   => ['overdue', 'paid', 'cancelled'],
             'paid'      => ['paid'],
             'cancelled' => ['cancelled'],
         ];
@@ -308,19 +318,19 @@ class InvoiceController extends BaseController
     {
         $model = new InvoiceModel();
         $lineModel = new InvoiceLineModel();
-        
-        if (!$model->find($id)) {
+
+        $invoice = $model->find($id);
+        if (!$invoice) {
             return $this->failNotFound('Invoice not found');
         }
-        
-        // Delete lines first (though foreign key cascade might handle this)
+
         $lineModel->where('invoice_id', $id)->delete();
-        
+
         if ($model->delete($id)) {
             $this->logAction('deleted', $invoice['invoice_number'] ?? 'Unknown', "Invoice deleted");
             return $this->respondDeleted(['id' => $id, 'message' => 'Invoice deleted']);
         }
-        
+
         return $this->fail($model->errors());
     }
 
@@ -386,12 +396,18 @@ class InvoiceController extends BaseController
             return $this->failNotFound('Invoice not found');
         }
 
+        $baseUrl = rtrim(getenv('FRONTEND_URL') ?: ($_ENV['FRONTEND_URL'] ?? 'http://localhost:5173'), '/');
+
+        // Return existing token unless caller explicitly requests a fresh one (?force=1)
+        if (!empty($invoice['share_token']) && $this->request->getGet('force') !== '1') {
+            $shareUrl = $baseUrl . '/#/shared/' . $invoice['share_token'];
+            return $this->respond(['shareUrl' => $shareUrl, 'token' => $invoice['share_token']]);
+        }
+
         $token = bin2hex(random_bytes(32));
         $model->update($id, ['share_token' => $token]);
 
-        $baseUrl  = rtrim(getenv('FRONTEND_URL') ?: ($_ENV['FRONTEND_URL'] ?? 'http://localhost:5173'), '/');
         $shareUrl = $baseUrl . '/#/shared/' . $token;
-
         return $this->respond(['shareUrl' => $shareUrl, 'token' => $token]);
     }
 
@@ -424,9 +440,18 @@ class InvoiceController extends BaseController
 
         if (!$existing) {
             $buyerModel->insert([
-                'name' => $buyerData['name'],
-                'vat_id' => $buyerData['vatId'] ?? null,
+                'name'                  => $buyerData['name'],
+                'vat_id'               => $buyerData['vatId'] ?? null,
                 'legal_organization_id' => $buyerData['legalOrganizationId'] ?? null,
+                'address_json'         => json_encode($buyerData['address'] ?? []),
+                'contact_json'         => json_encode([
+                    'email' => $buyerData['contactEmail'] ?? null,
+                    'phone' => $buyerData['contactPhone'] ?? null,
+                ]),
+            ]);
+        } else {
+            $buyerModel->update($existing['id'], [
+                'vat_id'       => $buyerData['vatId'] ?? $existing['vat_id'],
                 'address_json' => json_encode($buyerData['address'] ?? []),
                 'contact_json' => json_encode([
                     'email' => $buyerData['contactEmail'] ?? null,

@@ -17,7 +17,22 @@
       "Bash(grep -n 'className=.*\\\\$' /home/sivaji/Downloads/BillingTool/src/components/screens/Workspace.tsx /home/sivaji/Downloads/BillingTool/src/components/screens/QuickAccessInvoice.tsx /home/sivaji/Downloads/BillingTool/src/components/screens/Billing.tsx)",
       "Bash(xargs -I {} bash -c 'echo \"=== {} ===\" && grep -l \"useQuery\" {} 2>/dev/null || echo \"NO useQuery\"')",
       "Bash(sed -n '300,320p' /home/sivaji/Downloads/BillingTool/src/components/screens/InvoiceEditor.tsx)",
-      "Bash(sed -n '400,420p' /home/sivaji/Downloads/BillingTool/src/components/screens/InvoiceEditor.tsx)"
+      "Bash(sed -n '400,420p' /home/sivaji/Downloads/BillingTool/src/components/screens/InvoiceEditor.tsx)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool diff --name-only HEAD)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool log --oneline -5)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool show --stat HEAD)",
+      "Bash(mysql -uroot -proot billing_tool -e ' *)",
+      "Bash(mysql -uroot -proot billing_tool)",
+      "Bash(php -r ' *)",
+      "Bash(node_modules/.bin/vite build *)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool diff --stat HEAD~3 HEAD)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool status)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool diff --stat .claude/settings.json build/index.html src/components/screens/Billing.tsx)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool diff src/components/screens/Billing.tsx)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool diff build/index.html)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool diff .claude/settings.json)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool add .claude/settings.json api/app/Config/Routes.php api/app/Controllers/AdminBilling.php api/app/Controllers/InvoiceController.php api/app/Controllers/Onboarding.php api/app/Controllers/QuickAccessAuth.php api/app/Models/UserModel.php api/app/Commands/MarkOverdueInvoices.php api/app/Database/Migrations/2026-05-14-000001_AddEmailVerificationFeature.php api/app/Database/Migrations/2026-05-14-000002_SeedSignupPanelCmsPage.php api/cron.sh build/index.html src/App.tsx src/components/screens/Billing.tsx src/components/screens/InvoiceList.tsx src/components/screens/SharedInvoiceView.tsx src/components/screens/Signup.tsx src/services/api.ts src/translations/ar.ts src/translations/de.ts src/translations/en.ts src/translations/pl.ts BillingTool_Backlog_TODO_15-05-2026.md docs/)",
+      "Bash(git -C /home/sivaji/Downloads/BillingTool add .claude/settings.json api/app/Config/Routes.php api/app/Controllers/AdminBilling.php api/app/Controllers/InvoiceController.php api/app/Controllers/Onboarding.php api/app/Controllers/QuickAccessAuth.php api/app/Models/UserModel.php api/app/Commands/MarkOverdueInvoices.php api/app/Database/Migrations/2026-05-14-000001_AddEmailVerificationFeature.php api/app/Database/Migrations/2026-05-14-000002_SeedSignupPanelCmsPage.php api/cron.sh src/App.tsx src/components/screens/Billing.tsx src/components/screens/InvoiceList.tsx src/components/screens/SharedInvoiceView.tsx src/components/screens/Signup.tsx src/services/api.ts src/translations/ar.ts src/translations/de.ts src/translations/en.ts src/translations/pl.ts BillingTool_Backlog_TODO_15-05-2026.md docs/)"
     ]
   }
 }

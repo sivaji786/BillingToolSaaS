@@ -48,43 +48,22 @@ class AdminBilling extends ResourceController
             $builder->where('s.status', $statusMap[$status] ?? $status);
         }
 
-        // Get total count
+        // Get total count (before joining users to avoid inflated row counts)
         $totalItems = $builder->countAllResults(false);
 
-        // Apply sorting and pagination
+        // Join users for admin email after count; group to collapse multiple users per tenant
+        $builder->select('MIN(u.email) as admin_email', false);
+        $builder->join('users u', 'u.tenant_id = s.tenant_id', 'left');
+        $builder->groupBy('s.id');
         $builder->orderBy($sortBy, $sortOrder);
         $builder->limit($limit, ($page - 1) * $limit);
 
         $subscriptions = $builder->get()->getResultArray();
 
-        // Format subscriptions as invoices for frontend
-        $formattedInvoices = array_map(function($sub) {
-            // Generate invoice number from subscription
-            $invoiceNumber = 'SUB-' . str_pad($sub['id'], 6, '0', STR_PAD_LEFT);
-            
-            // Determine status for display
-            $displayStatus = match($sub['status']) {
-                'active' => 'paid',
-                'past_due' => 'unpaid',
-                'cancelled' => 'cancelled',
-                'trialing' => 'unpaid',
-                default => 'unpaid'
-            };
-
-            return [
-                'id' => $sub['id'],
-                'invoiceNumber' => $invoiceNumber,
-                'userName' => $sub['company_name'],
-                'userEmail' => $sub['subdomain'] . '@tenant',
-                'userId' => $sub['tenant_id'],
-                'amount' => (float)$sub['plan_price'],
-                'currency' => 'EUR',
-                'status' => $displayStatus,
-                'issueDate' => $sub['current_period_start'] ?? $sub['created_at'],
-                'dueDate' => $sub['current_period_end'] ?? date('Y-m-d', strtotime(($sub['created_at'] ?? 'now') . ' +30 days')),
-                'paidDate' => $sub['status'] === 'active' ? $sub['current_period_start'] : null,
-            ];
-        }, $subscriptions);
+        $formattedInvoices = array_map(
+            fn($sub) => $this->formatSubscriptionAsInvoice($sub),
+            $subscriptions
+        );
 
         return $this->response->setJSON([
             'data' => $formattedInvoices,
@@ -103,23 +82,19 @@ class AdminBilling extends ResourceController
      */
     public function show($id = null)
     {
-        $invoice = [
-            'id' => $id,
-            'invoiceNumber' => 'INV-2024-001',
-            'userName' => 'John Doe',
-            'userEmail' => 'john@example.com',
-            'userId' => '1',
-            'amount' => 79.99,
-            'currency' => 'EUR',
-            'status' => 'paid',
-            'issueDate' => '2024-06-01T00:00:00Z',
-            'dueDate' => '2024-06-15T00:00:00Z',
-            'paidDate' => '2024-06-05T10:30:00Z',
-        ];
+        if (!$id) {
+            return $this->failNotFound('Invoice ID required');
+        }
+
+        $sub = $this->fetchSubscription($id);
+
+        if (!$sub) {
+            return $this->failNotFound('Invoice not found');
+        }
 
         return $this->response->setJSON([
             'success' => true,
-            'data' => $invoice,
+            'data'    => $this->formatSubscriptionAsInvoice($sub),
         ])->setStatusCode(200);
     }
 
@@ -129,13 +104,88 @@ class AdminBilling extends ResourceController
      */
     public function downloadPdf($id = null)
     {
-        // Mock PDF content
-        $pdf = "%PDF-1.4\nMock PDF content for invoice {$id}";
+        if (!$id) {
+            return $this->failNotFound('Invoice ID required');
+        }
+
+        $sub = $this->fetchSubscription($id);
+
+        if (!$sub) {
+            return $this->failNotFound('Invoice not found');
+        }
+
+        $inv           = $this->formatSubscriptionAsInvoice($sub);
+        $invoiceNumber = htmlspecialchars($inv['invoiceNumber']);
+        $companyName   = htmlspecialchars($inv['userName']);
+        $userEmail     = htmlspecialchars($inv['userEmail']);
+        $planName      = htmlspecialchars($sub['plan_name'] ?? 'Subscription');
+        $displayStatus = ucfirst($inv['status']);
+        $amount        = number_format($inv['amount'], 2);
+        $currency      = htmlspecialchars($inv['currency']);
+        $issueDate     = date('Y-m-d', strtotime($inv['issueDate'] ?? 'now'));
+        $dueDate       = date('Y-m-d', strtotime($inv['dueDate'] ?? 'now'));
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Invoice {$invoiceNumber}</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 40px; color: #333; font-size: 14px; }
+  h1 { color: #6d28d9; margin-bottom: 4px; }
+  .subtitle { color: #888; margin-bottom: 24px; }
+  .meta { display: flex; gap: 40px; margin-bottom: 24px; }
+  .meta div { line-height: 1.8; }
+  label { font-weight: bold; color: #555; }
+  table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+  th { background: #f3f4f6; text-align: left; padding: 10px 12px; border-bottom: 2px solid #ddd; }
+  td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+  .total-row td { font-weight: bold; border-top: 2px solid #ddd; border-bottom: none; font-size: 1.05em; }
+  footer { margin-top: 48px; color: #aaa; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>BillingTool</h1>
+<p class="subtitle">Super Admin — Invoice Receipt</p>
+<div class="meta">
+  <div>
+    <div><label>Invoice #:</label> {$invoiceNumber}</div>
+    <div><label>Status:</label> {$displayStatus}</div>
+    <div><label>Issue Date:</label> {$issueDate}</div>
+    <div><label>Due Date:</label> {$dueDate}</div>
+  </div>
+  <div>
+    <div><label>Billed to:</label> {$companyName}</div>
+    <div><label>Email:</label> {$userEmail}</div>
+  </div>
+</div>
+<table>
+  <thead>
+    <tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Amount</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{$planName} Subscription</td>
+      <td>1</td>
+      <td>{$currency} {$amount}</td>
+      <td>{$currency} {$amount}</td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="3">Total</td>
+      <td>{$currency} {$amount}</td>
+    </tr>
+  </tbody>
+</table>
+<footer>Generated by BillingTool Super Admin Portal &mdash; {$issueDate}</footer>
+</body>
+</html>
+HTML;
 
         return $this->response
-            ->setHeader('Content-Type', 'application/pdf')
-            ->setHeader('Content-Disposition', "attachment; filename=\"invoice-{$id}.pdf\"")
-            ->setBody($pdf);
+            ->setHeader('Content-Type', 'text/html; charset=UTF-8')
+            ->setHeader('Content-Disposition', "inline; filename=\"invoice-{$invoiceNumber}.html\"")
+            ->setBody($html);
     }
 
     /**
@@ -257,6 +307,49 @@ class AdminBilling extends ResourceController
                 'total' => $total
             ]
         ])->setStatusCode(201);
+    }
+
+    private function fetchSubscription($id): ?array
+    {
+        $db = \Config\Database::connect();
+        return $db->table('subscriptions s')
+            ->select('s.*, t.company_name, t.subdomain, p.name as plan_name, p.price as plan_price, MIN(u.email) as admin_email')
+            ->join('tenants t', 't.id = s.tenant_id', 'left')
+            ->join('plans p', 'p.id = s.plan_id', 'left')
+            ->join('users u', 'u.tenant_id = s.tenant_id', 'left')
+            ->where('s.id', (int)$id)
+            ->groupBy('s.id')
+            ->get()
+            ->getRowArray() ?: null;
+    }
+
+    private function formatSubscriptionAsInvoice(array $sub): array
+    {
+        $displayStatus = match($sub['status']) {
+            'active'    => 'paid',
+            'past_due'  => 'unpaid',
+            'cancelled' => 'cancelled',
+            'trialing'  => 'unpaid',
+            default     => 'unpaid'
+        };
+
+        $userEmail = !empty($sub['admin_email'])
+            ? $sub['admin_email']
+            : ($sub['subdomain'] . '@tenant');
+
+        return [
+            'id'            => (string)$sub['id'],
+            'invoiceNumber' => 'SUB-' . str_pad($sub['id'], 6, '0', STR_PAD_LEFT),
+            'userName'      => $sub['company_name'],
+            'userEmail'     => $userEmail,
+            'userId'        => (string)$sub['tenant_id'],
+            'amount'        => (float)$sub['plan_price'],
+            'currency'      => 'EUR',
+            'status'        => $displayStatus,
+            'issueDate'     => $sub['current_period_start'] ?? $sub['created_at'],
+            'dueDate'       => $sub['current_period_end'] ?? date('Y-m-d', strtotime(($sub['created_at'] ?? 'now') . ' +30 days')),
+            'paidDate'      => $sub['status'] === 'active' ? $sub['current_period_start'] : null,
+        ];
     }
 
     private function logAction($action, $target, $details)

@@ -6,6 +6,7 @@ import { invoiceService } from '../../services/api';
 import { usePagination } from '../../hooks/usePagination';
 import { useSelection } from '../../hooks/useSelection';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import { hasPermissionSync } from '../../hooks/usePermission';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
@@ -66,6 +67,7 @@ import {
   FileUp,
   CalendarIcon,
   RefreshCw,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '../ui/card';
@@ -101,7 +103,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
   const [customDateTo, setCustomDateTo] = useState<Date | undefined>(undefined);
 
   const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
-  const [newStatus, setNewStatus] = useState<'draft' | 'validated' | 'sent' | 'paid' | 'cancelled'>('draft');
+  const [newStatus, setNewStatus] = useState<'draft' | 'validated' | 'sent' | 'paid' | 'cancelled' | 'overdue'>('draft');
 
   const fetchInvoices = async () => {
     setIsLoading(true);
@@ -110,6 +112,8 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
         search: debouncedSearch,
         status: statusFilter,
         dateFilter: dateFilter,
+        ...(dateFilter === 'customRange' && customDateFrom && { customDateFrom: customDateFrom.toISOString().split('T')[0] }),
+        ...(dateFilter === 'customRange' && customDateTo   && { customDateTo:   customDateTo.toISOString().split('T')[0] }),
         sort: sortBy,
         templateType: templateType,
       });
@@ -125,7 +129,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
   useEffect(() => {
     fetchInvoices();
-  }, [debouncedSearch, statusFilter, dateFilter, sortBy, templateType]);
+  }, [debouncedSearch, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, templateType]);
 
   const { currentPage, setCurrentPage, totalPages, paginatedData: paginatedInvoices, pageSize: itemsPerPage, setPageSize: setItemsPerPage } = usePagination(invoices);
   const paginatedIds = paginatedInvoices.map(inv => inv.id!).filter(Boolean);
@@ -176,21 +180,30 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
     }
   };
 
-  const handleBulkStatusChange = () => {
+  const handleBulkStatusChange = async () => {
     const count = selectedInvoices.size;
-    setInvoices(invoices.map((inv) =>
-      inv.id && selectedInvoices.has(inv.id)
-        ? { ...inv, status: newStatus, updatedAt: new Date().toISOString() }
-        : inv
-    ));
-    toast.success(t('invoiceList.statusChanged'), {
-      description: t('invoiceList.statusChangedDesc', {
-        count: count.toString(),
-        status: t(`status.${newStatus}`)
-      }),
-    });
-    clearSelection();
-    setShowStatusChangeDialog(false);
+    const selectedList = invoices.filter(inv => inv.id && selectedInvoices.has(inv.id));
+    setIsLoading(true);
+    try {
+      await Promise.all(
+        selectedList.map(inv => invoiceService.update(inv.id!, { ...inv, status: newStatus }))
+      );
+      toast.success(t('invoiceList.statusChanged'), {
+        description: t('invoiceList.statusChangedDesc', {
+          count: count.toString(),
+          status: t(`status.${newStatus}`)
+        }),
+      });
+      clearSelection();
+      setShowStatusChangeDialog(false);
+      await fetchInvoices();
+    } catch {
+      toast.error(t('common.error'), {
+        description: 'Failed to update status for some invoices',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleShare = async (invoice: Invoice) => {
@@ -207,7 +220,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
     const copy: Invoice = {
       ...invoice,
       id: undefined as any,
-      invoiceNumber: `${invoice.invoiceNumber}-COPY`,
+      invoiceNumber: `${invoice.invoiceNumber}-COPY-${String(Date.now()).slice(-6)}`,
       status: 'draft',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -294,12 +307,26 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
       // Calculate totals for imported invoices
       const calculatedInvoices = result.invoices.map(inv => calculateInvoiceTotals(inv));
 
-      // Add to existing invoices
-      setInvoices([...calculatedInvoices, ...invoices]);
+      // Persist each invoice to the DB
+      const failed: string[] = [];
+      for (const inv of calculatedInvoices) {
+        try {
+          await invoiceService.create(inv);
+        } catch {
+          failed.push(inv.invoiceNumber || 'Unknown');
+        }
+      }
 
+      const savedCount = calculatedInvoices.length - failed.length;
       toast.success(t('invoiceList.importSuccess'), {
-        description: t('invoiceList.importSuccessDesc', { count: result.invoices.length.toString() }),
+        description: t('invoiceList.importSuccessDesc', { count: savedCount.toString() }),
       });
+
+      if (failed.length > 0) {
+        toast.warning(t('common.warning'), {
+          description: `${failed.length} invoice(s) failed to save: ${failed.join(', ')}`,
+        });
+      }
 
       if (result.warnings.length > 0) {
         result.warnings.forEach(warning => {
@@ -311,6 +338,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
       setShowImportDialog(false);
       setSelectedFile(null);
+      await fetchInvoices();
     } catch (error) {
       toast.error(t('invoiceList.importFailed'), {
         description: error instanceof Error ? error.message : 'Unknown error',
@@ -419,6 +447,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
               <SelectItem value="validated">{t('status.validated')}</SelectItem>
               <SelectItem value="sent">{t('status.sent')}</SelectItem>
               <SelectItem value="paid">{t('status.paid')}</SelectItem>
+              <SelectItem value="overdue">{t('status.overdue')}</SelectItem>
               <SelectItem value="cancelled">{t('status.cancelled')}</SelectItem>
             </SelectContent>
           </Select>
@@ -627,7 +656,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
         </Table>
 
         {/* Pagination */}
-        {filteredAndSortedInvoices.length > 0 && (
+        {invoices.length > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>{t('invoiceList.showing')}</span>
@@ -636,10 +665,10 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
               </span>
               <span>{t('invoiceList.paginationTo')}</span>
               <span className="font-medium">
-                {Math.min(currentPage * itemsPerPage, filteredAndSortedInvoices.length)}
+                {Math.min(currentPage * itemsPerPage, invoices.length)}
               </span>
               <span>{t('invoiceList.of')}</span>
-              <span className="font-medium">{filteredAndSortedInvoices.length}</span>
+              <span className="font-medium">{invoices.length}</span>
               <span>{t('invoiceList.results')}</span>
             </div>
 
@@ -891,6 +920,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
                   <SelectItem value="draft">{t('status.draft')}</SelectItem>
                   <SelectItem value="validated">{t('status.validated')}</SelectItem>
                   <SelectItem value="sent">{t('status.sent')}</SelectItem>
+                  <SelectItem value="overdue">{t('status.overdue')}</SelectItem>
                   <SelectItem value="paid">{t('status.paid')}</SelectItem>
                   <SelectItem value="cancelled">{t('status.cancelled')}</SelectItem>
                 </SelectContent>

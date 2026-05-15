@@ -34,6 +34,7 @@ const LetterList = lazy(() => import('./components/screens/LetterList').then(mod
 const LetterEditor = lazy(() => import('./components/screens/LetterEditor').then(module => ({ default: module.LetterEditor })));
 const LetterPreview = lazy(() => import('./components/screens/LetterPreview').then(module => ({ default: module.LetterPreview })));
 const CmsPageView = lazy(() => import('./components/screens/CmsPageView').then(module => ({ default: module.CmsPageView })));
+const SharedInvoiceView = lazy(() => import('./components/screens/SharedInvoiceView').then(module => ({ default: module.SharedInvoiceView })));
 
 // Admin Portal Components
 const SALogin = lazy(() => import('./components/screens/Admin/SALogin').then(module => ({ default: module.SALogin })));
@@ -85,7 +86,7 @@ import { toast } from 'sonner';
 import { authService, invoiceService, letterService } from './services/api';
 import { PLATFORM_TEMPLATES } from './utils/invoice-templates-defaults';
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage' | 'sharedInvoice';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -110,6 +111,9 @@ function AppContent() {
       }
       if (hash.startsWith('cms/')) {
         return 'cmsPage';
+      }
+      if (hash.startsWith('shared/')) {
+        return 'sharedInvoice';
       }
     }
     return 'landing';
@@ -219,6 +223,8 @@ function AppContent() {
           setCurrentCmsSlug(slug);
           setCurrentScreen('cmsPage');
         }
+      } else if (hash.startsWith('shared/')) {
+        setCurrentScreen('sharedInvoice');
       } else if (hash.startsWith('reset-password/')) {
         setCurrentScreen('resetPassword');
       } else if (hash.startsWith('designLayout/')) {
@@ -263,7 +269,8 @@ function AppContent() {
   // Update hash when screen changes
   useEffect(() => {
     if ([
-      'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory', 'packageComparison'
+      'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory', 'packageComparison',
+      'signup', 'login', 'landing', 'billing', 'buyers', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison',
     ].includes(currentScreen)) {
       if (window.location.hash.replace('#', '') !== currentScreen) {
         window.location.hash = currentScreen;
@@ -795,6 +802,17 @@ function AppContent() {
     );
   }
 
+  if (currentScreen === 'sharedInvoice') {
+    const parts = window.location.hash.replace(/^#\/?/, '').split('/');
+    const shareToken = parts.slice(1).join('/');
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <SharedInvoiceView token={shareToken} />
+        <Toaster />
+      </Suspense>
+    );
+  }
+
   // Show login/signup/landing if not authenticated
   if (!isAuthenticated) {
     if (currentScreen === 'resetPassword') {
@@ -825,6 +843,7 @@ function AppContent() {
       return (
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
           <Signup initialPlan={selectedPlan} />
+          <EditModeBar />
           <Toaster />
         </Suspense>
       );

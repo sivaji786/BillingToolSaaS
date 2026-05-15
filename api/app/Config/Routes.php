@@ -26,6 +26,8 @@ $routes->get('api/public/invoices/(:segment)', '\App\Controllers\InvoiceControll
 $routes->group('onboarding', function($routes) {
     $routes->get('check-subdomain', '\App\Controllers\Onboarding::checkSubdomain');
     $routes->post('signup', '\App\Controllers\Onboarding::signup');
+    $routes->post('verify-email', '\App\Controllers\Onboarding::verifyEmail');
+    $routes->post('resend-verification', '\App\Controllers\Onboarding::resendVerification');
 });
 
 // Invoices Group (supports both JWT and session auth)

@@ -156,6 +156,14 @@ export const onboardingService = {
         const response = await api.post('/onboarding/signup', data);
         return response.data;
     },
+    verifyEmail: async (data: { email: string; code: string }) => {
+        const response = await api.post('/onboarding/verify-email', data);
+        return response.data;
+    },
+    resendVerification: async (data: { email: string }) => {
+        const response = await api.post('/onboarding/resend-verification', data);
+        return response.data;
+    },
 };
 
 export const invoiceService = {
@@ -163,6 +171,8 @@ export const invoiceService = {
         search?: string;
         status?: string;
         dateFilter?: string;
+        customDateFrom?: string;
+        customDateTo?: string;
         sort?: string;
         templateType?: string;
     }) => {
