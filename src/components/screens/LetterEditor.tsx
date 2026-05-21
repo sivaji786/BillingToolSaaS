@@ -102,8 +102,8 @@ export function LetterEditor({ letter: initialLetter, onSave, onBack, onPreview,
             {t('editor.back') || 'Back'}
           </Button>
           <div>
-            <h1 className="text-xl font-semibold">{t('editor.letterEditor') || 'Letter Editor'}</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <h1 className="text-heading-2 font-semibold">{t('editor.letterEditor') || 'Letter Editor'}</h1>
+            <p className="text-body text-muted-foreground mt-0.5">
               {letter.invoiceNumber || (t('editor.newLetter') || 'New Letter')}
             </p>
           </div>
@@ -140,7 +140,7 @@ export function LetterEditor({ letter: initialLetter, onSave, onBack, onPreview,
               {t('editor.saveLetter') || 'Save Letter'}
             </Button>
             {!hasUnsavedChanges && !String(letter.id ?? '').includes('_') && (
-              <span className="text-xs text-muted-foreground italic self-center px-2 py-1 bg-gray-50 dark:bg-gray-900 rounded border">
+              <span className="text-micro text-muted-foreground italic self-center px-2 py-1 bg-gray-50 dark:bg-gray-900 rounded border">
                 {t('editor.allChangesSaved') || 'All changes saved'}
               </span>
             )}
@@ -149,8 +149,8 @@ export function LetterEditor({ letter: initialLetter, onSave, onBack, onPreview,
               {t('editor.preview')}
             </Button>
           </div>
-          <span className="text-xs text-muted-foreground">
-            <kbd className="px-2 py-1 bg-muted rounded text-xs">Ctrl+S</kbd> {t('common.save')}
+          <span className="text-micro text-muted-foreground">
+            <kbd className="px-2 py-1 bg-muted rounded text-micro">Ctrl+S</kbd> {t('common.save')}
           </span>
         </div>
       </Card>
@@ -160,7 +160,7 @@ export function LetterEditor({ letter: initialLetter, onSave, onBack, onPreview,
         <div className="lg:col-span-2 space-y-6">
           {/* Letter Details */}
           <Card className="p-6 space-y-4">
-            <h2 className="text-base font-semibold">{t('editor.letterDetails') || 'Letter Details'}</h2>
+            <h2 className="text-heading-2 font-semibold">{t('editor.letterDetails') || 'Letter Details'}</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="letterNumber">{t('editor.letterNumber') || 'Letter Number'}</Label>
@@ -199,7 +199,7 @@ export function LetterEditor({ letter: initialLetter, onSave, onBack, onPreview,
           <Card className="p-6 space-y-5">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-purple-600" />
-              <h2 className="text-base font-semibold m-0">{t('editor.letterBody') || 'Letter Body'}</h2>
+              <h2 className="text-heading-2 font-semibold m-0">{t('editor.letterBody') || 'Letter Body'}</h2>
             </div>
 
             <div>
@@ -243,7 +243,7 @@ export function LetterEditor({ letter: initialLetter, onSave, onBack, onPreview,
           <Card className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <Building className="h-4 w-4 text-purple-600" />
-              <h3 className="font-medium text-sm">{t('editor.seller') || 'Sender'}</h3>
+              <h3 className="font-medium text-body">{t('editor.seller') || 'Sender'}</h3>
             </div>
             <PartyCard
               party={letter.seller}
@@ -264,7 +264,7 @@ export function LetterEditor({ letter: initialLetter, onSave, onBack, onPreview,
           <Card className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <User className="h-4 w-4 text-purple-600" />
-              <h3 className="font-medium text-sm">{t('editor.recipient') || 'Recipient (To)'}</h3>
+              <h3 className="font-medium text-body">{t('editor.recipient') || 'Recipient (To)'}</h3>
             </div>
             <PartyCard
               party={letter.buyer}

@@ -72,24 +72,24 @@ export function ActivityLog({ entries }: ActivityLogProps) {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Total Events</p>
-          <p className="text-2xl mt-1">{entries.length}</p>
+          <p className="text-body text-muted-foreground">Total Events</p>
+          <p className="text-heading-1 mt-1">{entries.length}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Signed Invoices</p>
-          <p className="text-2xl mt-1">
+          <p className="text-body text-muted-foreground">Signed Invoices</p>
+          <p className="text-heading-1 mt-1">
             {entries.filter((e) => e.signed).length}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Exports</p>
-          <p className="text-2xl mt-1">
+          <p className="text-body text-muted-foreground">Exports</p>
+          <p className="text-heading-1 mt-1">
             {entries.filter((e) => e.action === 'exported').length}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Validations</p>
-          <p className="text-2xl mt-1">
+          <p className="text-body text-muted-foreground">Validations</p>
+          <p className="text-heading-1 mt-1">
             {entries.filter((e) => e.action === 'validated').length}
           </p>
         </Card>
@@ -129,12 +129,12 @@ export function ActivityLog({ entries }: ActivityLogProps) {
                     </div>
 
                     {entry.details && (
-                      <p className="text-sm text-muted-foreground mb-2">
+                      <p className="text-body text-muted-foreground mb-2">
                         {entry.details}
                       </p>
                     )}
 
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4 text-body text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {date} at {time}
@@ -152,7 +152,7 @@ export function ActivityLog({ entries }: ActivityLogProps) {
       {/* Info */}
       <Card className="p-6 bg-muted/50">
         <h3 className="mb-2">EN 16931 Compliance & Audit Trail</h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body text-muted-foreground">
           All invoice operations are logged with timestamps and user information to maintain
           a complete audit trail. Digital signatures are tracked separately with signature
           dates for non-repudiation. This log helps ensure compliance with EN 16931

@@ -170,7 +170,7 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                         <TableCell>
                                             <div>
                                                 <p className="font-medium">{user.name}</p>
-                                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                                                <p className="text-body text-muted-foreground">{user.email}</p>
                                             </div>
                                         </TableCell>
                                         <TableCell>{user.packageId}</TableCell>
@@ -240,7 +240,7 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                     >
                         Previous
                     </Button>
-                    <span className="flex items-center px-4 text-sm">
+                    <span className="flex items-center px-4 text-body">
                         Page {filters.page || 1} of {usersData.pagination.totalPages}
                     </span>
                     <Button

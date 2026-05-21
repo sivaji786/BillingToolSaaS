@@ -67,7 +67,7 @@ export function UserList({ onCreate, onEdit, companyTypeId }: UserListProps) {
                                         {user.roles && user.roles
                                             .filter((r: any) => !companyTypeId || String(r.company_type_id) === String(companyTypeId))
                                             .map((r: any) => (
-                                                <span key={r.id} className="text-xs bg-muted px-2 py-1 rounded">
+                                                <span key={r.id} className="text-micro bg-muted px-2 py-1 rounded">
                                                     {r.name}
                                                     <span className="text-[10px] text-muted-foreground ml-1">
                                                         ({getCompanyName(r.company_type_id)})

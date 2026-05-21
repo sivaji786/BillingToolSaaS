@@ -89,8 +89,8 @@ export function SAdashboard({ onNavigate }: SAdashboardProps) {
                             <ResponsiveContainer width="100%" height={300}>
                                 <BarChart data={stats?.revenueHistory || []}>
                                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                                    <XAxis dataKey="month" className="text-xs" />
-                                    <YAxis className="text-xs" />
+                                    <XAxis dataKey="month" className="text-micro" />
+                                    <YAxis className="text-micro" />
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: 'hsl(var(--card))',
@@ -118,8 +118,8 @@ export function SAdashboard({ onNavigate }: SAdashboardProps) {
                             <ResponsiveContainer width="100%" height={300}>
                                 <LineChart data={stats?.userGrowthHistory || []}>
                                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                                    <XAxis dataKey="month" className="text-xs" />
-                                    <YAxis className="text-xs" />
+                                    <XAxis dataKey="month" className="text-micro" />
+                                    <YAxis className="text-micro" />
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: 'hsl(var(--card))',
@@ -168,11 +168,11 @@ export function SAdashboard({ onNavigate }: SAdashboardProps) {
                                         <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium">{activity.description}</p>
+                                        <p className="text-body font-medium">{activity.description}</p>
                                         {activity.userName && (
-                                            <p className="text-xs text-muted-foreground mt-1">{activity.userName}</p>
+                                            <p className="text-micro text-muted-foreground mt-1">{activity.userName}</p>
                                         )}
-                                        <p className="text-xs text-muted-foreground mt-1">
+                                        <p className="text-micro text-muted-foreground mt-1">
                                             {format(new Date(activity.timestamp), 'MMM dd, yyyy HH:mm')}
                                         </p>
                                     </div>
@@ -180,7 +180,7 @@ export function SAdashboard({ onNavigate }: SAdashboardProps) {
                             ))}
                         </div>
                     ) : (
-                        <p className="text-sm text-muted-foreground text-center py-8">
+                        <p className="text-body text-muted-foreground text-center py-8">
                             No recent activity to display
                         </p>
                     )}

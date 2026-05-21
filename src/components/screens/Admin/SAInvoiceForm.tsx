@@ -90,7 +90,7 @@ export function SAInvoiceForm({ onNavigate }: SAInvoiceFormProps) {
                 <Button variant="ghost" size="icon" onClick={() => onNavigate('SAdashboard')}>
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <h1 className="text-2xl font-bold">Generate Manual Invoice</h1>
+                <h1 className="text-heading-1 font-bold">Generate Manual Invoice</h1>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -204,7 +204,7 @@ export function SAInvoiceForm({ onNavigate }: SAInvoiceFormProps) {
                             </Table>
 
                             <div className="mt-4 flex flex-col items-end space-y-2">
-                                <div className="flex items-center gap-4 text-lg">
+                                <div className="flex items-center gap-4 text-heading-3">
                                     <span className="font-medium">Total:</span>
                                     <span className="font-bold text-primary">€{calculateTotal().toFixed(2)}</span>
                                 </div>
@@ -219,7 +219,7 @@ export function SAInvoiceForm({ onNavigate }: SAInvoiceFormProps) {
                         </CardHeader>
                         <CardContent>
                             <textarea
-                                className="w-full min-h-[100px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                className="w-full min-h-[100px] rounded-md border border-input bg-transparent px-3 py-2 text-body shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                 placeholder="Enter any additional notes..."
                                 value={formData.notes}
                                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}

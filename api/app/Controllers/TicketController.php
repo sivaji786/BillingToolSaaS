@@ -55,17 +55,28 @@ class TicketController extends ResourceController
         if (empty($admins)) {
             return;
         }
-        $subject  = '[New Ticket #' . $ticketId . '] ' . $ticket['subject'];
-        $priority = strtoupper($ticket['priority'] ?? 'medium');
+        $subject      = '[New Ticket #' . $ticketId . '] ' . $ticket['subject'];
+        $priority     = strtoupper($ticket['priority'] ?? 'medium');
+        $type         = ucfirst($ticket['type'] ?? 'bug');
+        $attachCount  = 0;
+        if (!empty($ticket['attachments'])) {
+            $paths = json_decode($ticket['attachments'], true);
+            $attachCount = is_array($paths) ? count($paths) : 0;
+        }
+        $attachLine = $attachCount > 0
+            ? "<p><strong>Attachments:</strong> {$attachCount} file(s) attached</p>"
+            : '';
         $body = "
             <h2>New Support Ticket Submitted</h2>
             <p><strong>Ticket #:</strong> {$ticketId}</p>
             <p><strong>Subject:</strong> " . htmlspecialchars($ticket['subject']) . "</p>
+            <p><strong>Type:</strong> {$type}</p>
             <p><strong>Priority:</strong> {$priority}</p>
             <p><strong>Description:</strong></p>
             <blockquote style='border-left:3px solid #ccc;padding-left:12px;color:#555'>"
                 . nl2br(htmlspecialchars($ticket['description']))
             . "</blockquote>
+            {$attachLine}
             <p><strong>IP:</strong> " . ($ticket['client_ip'] ?? 'N/A') . "</p>
             <p>Log in to the admin panel to respond.</p>
         ";
@@ -151,23 +162,29 @@ class TicketController extends ResourceController
 
         $data['client_ip'] = $this->request->getIPAddress();
 
-        // Screenshot upload
+        // Sanitise type
+        $allowedTypes = ['bug', 'feature', 'billing', 'other'];
+        $data['type'] = in_array($data['type'] ?? '', $allowedTypes) ? $data['type'] : 'bug';
+
+        // Build dated upload directory
+        $year       = date('Y');
+        $month      = strtoupper(date('M'));
+        $uploadPath = FCPATH . 'uploads/tickets/' . $year . '/' . $month . '/';
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+
+        // Screenshot (base64 data-URL → JPG)
         if (!empty($data['screenshot'])) {
             try {
                 $screenshotData = $data['screenshot'];
-                if (preg_match('/^data:image\/(\w+);base64,/', $screenshotData, $type)) {
+                if (preg_match('/^data:image\/(\w+);base64,/', $screenshotData)) {
                     $screenshotData = substr($screenshotData, strpos($screenshotData, ',') + 1);
                     $decoded        = base64_decode($screenshotData);
                     if ($decoded !== false) {
-                        $year       = date('Y');
-                        $month      = strtoupper(date('M'));
-                        $uploadPath = FCPATH . 'uploads/tickets/' . $year . '/' . $month . '/';
-                        if (!is_dir($uploadPath)) {
-                            mkdir($uploadPath, 0777, true);
-                        }
-                        $fileName = 'ticket_' . time() . '_' . uniqid() . '.jpg';
                         $img = imagecreatefromstring($decoded);
                         if ($img !== false) {
+                            $fileName = 'screenshot_' . time() . '_' . uniqid() . '.jpg';
                             imagejpeg($img, $uploadPath . $fileName, 85);
                             imagedestroy($img);
                             $data['screenshot_path'] = 'uploads/tickets/' . $year . '/' . $month . '/' . $fileName;
@@ -177,6 +194,43 @@ class TicketController extends ResourceController
             } catch (\Throwable $e) {
                 log_message('error', '[TicketController] Screenshot: ' . $e->getMessage());
             }
+        }
+        unset($data['screenshot']);
+
+        // File attachments (multipart upload)
+        $attachmentPaths = [];
+        $allowedMimes    = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+        $maxFileSize     = 10 * 1024 * 1024; // 10 MB
+
+        $uploadedFiles = $this->request->getFiles();
+        $attachFiles   = $uploadedFiles['attachments'] ?? [];
+        if (!is_array($attachFiles)) {
+            $attachFiles = [$attachFiles];
+        }
+
+        foreach ($attachFiles as $file) {
+            if (!$file || !$file->isValid() || $file->hasMoved()) {
+                continue;
+            }
+            if ($file->getSizeByUnit('b') > $maxFileSize) {
+                log_message('warning', '[TicketController] Attachment too large: ' . $file->getClientName());
+                continue;
+            }
+            if (!in_array($file->getMimeType(), $allowedMimes)) {
+                log_message('warning', '[TicketController] Rejected MIME: ' . $file->getMimeType());
+                continue;
+            }
+            try {
+                $newName = $file->getRandomName();
+                $file->move($uploadPath, $newName);
+                $attachmentPaths[] = 'uploads/tickets/' . $year . '/' . $month . '/' . $newName;
+            } catch (\Throwable $e) {
+                log_message('error', '[TicketController] Attachment upload: ' . $e->getMessage());
+            }
+        }
+
+        if (!empty($attachmentPaths)) {
+            $data['attachments'] = json_encode($attachmentPaths);
         }
 
         try {
@@ -190,15 +244,15 @@ class TicketController extends ResourceController
                     'comment'   => 'Initial creation',
                 ]);
 
-                // S4-07: notify all super admins
                 $this->notifySuperAdmins($data, $ticketId);
                 $this->telegram()->ticketCreated($data, $ticketId);
 
                 return $this->respondCreated([
-                    'status'  => 'success',
-                    'message' => 'Ticket created successfully',
-                    'id'      => $ticketId,
-                    'path'    => $data['screenshot_path'] ?? null,
+                    'status'      => 'success',
+                    'message'     => 'Ticket created successfully',
+                    'id'          => $ticketId,
+                    'path'        => $data['screenshot_path'] ?? null,
+                    'attachments' => $attachmentPaths,
                 ]);
             }
             return $this->fail($model->errors());

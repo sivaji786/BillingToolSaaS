@@ -226,13 +226,13 @@ export function PartyCard({ party, title, onUpdate, ublPath, defaultParty, sugge
           <div>
             <p>{party.name}</p>
             {party.vatId && (
-              <p className="text-sm text-muted-foreground">VAT: {party.vatId}</p>
+              <p className="text-body text-muted-foreground">VAT: {party.vatId}</p>
             )}
             {party.legalOrganizationId && (
-              <p className="text-sm text-muted-foreground">Legal ID: {party.legalOrganizationId}</p>
+              <p className="text-body text-muted-foreground">Legal ID: {party.legalOrganizationId}</p>
             )}
           </div>
-          <div className="text-sm">
+          <div className="text-body">
             <p>{party.address.street}</p>
             <p>
               {party.address.postalCode} {party.address.city}
@@ -240,7 +240,7 @@ export function PartyCard({ party, title, onUpdate, ublPath, defaultParty, sugge
             <p>{party.address.country}</p>
           </div>
           {(party.contactEmail || party.contactPhone) && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-body text-muted-foreground">
               {party.contactEmail && <p>{party.contactEmail}</p>}
               {party.contactPhone && <p>{party.contactPhone}</p>}
             </div>
@@ -248,7 +248,7 @@ export function PartyCard({ party, title, onUpdate, ublPath, defaultParty, sugge
         </div>
       )}
 
-      <div className="mt-4 pt-4 border-t text-xs text-muted-foreground">
+      <div className="mt-4 pt-4 border-t text-micro text-muted-foreground">
         <p>
           <strong>UBL Path:</strong> {ublPath}
         </p>

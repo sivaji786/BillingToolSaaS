@@ -118,7 +118,7 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
 
           <div className="col-span-2 text-right">
             <p className="font-medium">{formatCurrency(lineTotal + taxAmount, currency)}</p>
-            <p className="text-xs text-muted-foreground">{formatCurrency(lineTotal, currency)} + {t('editor.lineItem.tax')}</p>
+            <p className="text-micro text-muted-foreground">{formatCurrency(lineTotal, currency)} + {t('editor.lineItem.tax')}</p>
           </div>
         </div>
 
@@ -154,11 +154,11 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium">{t('editor.lineItem.lineId')}</Label>
+                <Label className="text-micro font-medium">{t('editor.lineItem.lineId')}</Label>
                 <Input
                   value={line.id}
                   readOnly
-                  className="bg-muted font-mono text-xs"
+                  className="bg-muted font-mono text-micro"
                 />
                 <p className="text-[10px] text-muted-foreground">{t('editor.lineItem.ublId')}</p>
               </div>
@@ -166,7 +166,7 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
 
             <div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium">{t('editor.lineItem.unitCode')}</Label>
+                <Label className="text-micro font-medium">{t('editor.lineItem.unitCode')}</Label>
                 <Select value={line.unitCode} onValueChange={(value: string) => onUpdate(line.id, { unitCode: value })}>
                   <SelectTrigger className="mt-1" aria-label={t('editor.lineItem.unitCodeAria')}>
                     <SelectValue placeholder={t('editor.lineItem.selectUnit')} />
@@ -185,7 +185,7 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
 
             <div>
               <div className="space-y-2">
-                <Label className="text-xs font-medium">{t('editor.lineItem.taxCategory')}</Label>
+                <Label className="text-micro font-medium">{t('editor.lineItem.taxCategory')}</Label>
                 <Select value={line.taxCategory} onValueChange={(value: string) => onUpdate(line.id, { taxCategory: value as any })}>
                   <SelectTrigger className="mt-1" aria-label={t('editor.lineItem.taxCategoryAria')}>
                     <SelectValue placeholder={t('editor.lineItem.selectCategory')} />
@@ -203,7 +203,7 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
             </div>
 
             <div>
-              <Label className="text-sm text-muted-foreground">{t('editor.lineItem.taxPercent')}</Label>
+              <Label className="text-body text-muted-foreground">{t('editor.lineItem.taxPercent')}</Label>
               <Input
                 type="text"
                 value={taxInput}
@@ -213,7 +213,7 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
                 className="mt-1"
                 aria-label={t('editor.lineItem.taxPercentAria')}
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-micro text-muted-foreground mt-1">
                 {t('editor.lineItem.ublTaxPercent')}
               </p>
             </div>
@@ -221,7 +221,7 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
 
           <div>
             <div className="space-y-2">
-              <Label className="text-xs font-medium">{t('editor.lineItem.notes')}</Label>
+              <Label className="text-micro font-medium">{t('editor.lineItem.notes')}</Label>
               <Input
                 value={line.note || ''}
                 onChange={(e) => handleChange('note', e.target.value)}
@@ -233,15 +233,15 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
           </div>
 
           <div className="grid grid-cols-3 gap-4 pt-2 border-t">
-            <div className="flex justify-between text-xs">
+            <div className="flex justify-between text-micro">
               <span className="text-muted-foreground">{t('editor.lineItem.netAmount')}:</span>
               <span>{formatCurrency(lineTotal, currency)}</span>
             </div>
-            <div className="flex justify-between text-xs">
+            <div className="flex justify-between text-micro">
               <span className="text-muted-foreground">{t('editor.lineItem.taxAmount')} ({line.taxPercent}%):</span>
               <span>{formatCurrency(taxAmount, currency)}</span>
             </div>
-            <div className="flex justify-between text-sm font-medium pt-2 border-t">
+            <div className="flex justify-between text-body font-medium pt-2 border-t">
               <span>{t('editor.lineItem.grossAmount')}:</span>
               <span>{formatCurrency(lineTotal + taxAmount, currency)}</span>
             </div>

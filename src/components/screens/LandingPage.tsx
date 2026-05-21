@@ -222,7 +222,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
                             <FileText className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
+                        <span className="text-heading-2 font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
                             {t('appName') || 'BillingTool'}
                         </span>
                     </div>
@@ -283,7 +283,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             variants={containerVariants}
                             className="flex flex-col items-center space-y-6 text-center"
                         >
-                            <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-4 py-1.5 text-xs font-semibold border-purple-100 bg-purple-50/50 text-purple-700 backdrop-blur-sm shadow-sm transition-all hover:bg-purple-100/50">
+                            <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-4 py-1.5 text-micro font-semibold border-purple-100 bg-purple-50/50 text-purple-700 backdrop-blur-sm shadow-sm transition-all hover:bg-purple-100/50">
                                 <Sparkles className="mr-2 h-3.5 w-3.5 text-purple-600" />
                                 <InlineEditableText slug="home" field="hero_badge" lang={language} value={cmsContent?.hero_badge || t('landing.hero.badge')} />
                             </motion.div>
@@ -295,11 +295,11 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 </span>{' '}
                                 <InlineEditableText slug="home" field="hero_title_suffix" lang={language} value={cmsContent?.hero_title_suffix || t('landing.hero.titleSuffix')} />
                             </motion.h1>
-                            <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                            <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2 dark:text-gray-400">
                                 <InlineEditableText slug="home" field="hero_subtitle" lang={language} value={cmsContent?.hero_subtitle || t('landing.hero.subtitle')} multiline />
                             </motion.p>
                             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 min-w-[300px] justify-center pt-4">
-                                <Button size="lg" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 h-12 px-8 text-lg shadow-xl shadow-purple-200 dark:shadow-none" onClick={() => onSignup()}>
+                                <Button size="lg" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 h-12 px-8 text-heading-3 shadow-xl shadow-purple-200 dark:shadow-none" onClick={() => onSignup()}>
                                     {t('landing.hero.getStarted')}
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
@@ -307,7 +307,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                     <Button
                                         size="lg"
                                         variant="outline"
-                                        className="h-12 px-8 text-lg border-2 border-purple-300 hover:border-purple-500 hover:bg-purple-50 text-purple-700 font-semibold gap-2 shadow-md"
+                                        className="h-12 px-8 text-heading-3 border-2 border-purple-300 hover:border-purple-500 hover:bg-purple-50 text-purple-700 font-semibold gap-2 shadow-md"
                                         onClick={onTryNow}
                                         id="hero-try-now"
                                     >
@@ -323,12 +323,12 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 {/* Trusted By Marquee */}
                 <section className="py-10 border-y bg-slate-50/50 dark:bg-slate-900/30 overflow-hidden">
                     <div className="container px-4 md:px-6">
-                        <p className="text-center text-sm font-medium text-muted-foreground mb-6">
+                        <p className="text-center text-body font-medium text-muted-foreground mb-6">
                             <InlineEditableText slug="home" field="trusted_by" lang={language} value={cmsContent?.trusted_by || t('landing.trustedBy')} />
                         </p>
                         <div className="flex justify-center flex-wrap gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
                             {['[mn]medianet', 'Voicepoint', 'Highgo', 'digitalks.in', 'we4service'].map((partner, i) => (
-                                <div key={i} className="flex items-center gap-2 text-xl font-bold text-slate-800 dark:text-slate-200">
+                                <div key={i} className="flex items-center gap-2 text-heading-2 font-bold text-slate-800 dark:text-slate-200">
                                     <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
                                         <div className="w-full h-full bg-gradient-to-br from-slate-400 to-slate-200 dark:from-slate-600 dark:to-slate-800" />
                                     </div> 
@@ -349,10 +349,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             variants={containerVariants}
                             className="text-center mb-16"
                         >
-                            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                            <motion.h2 variants={itemVariants} className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl">
                                 <InlineEditableText slug="home" field="features_tag" lang={language} value={cmsContent?.features_tag || t('landing.features.tag')} />
                             </motion.h2>
-                            <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400 mt-4">
+                            <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2/relaxed lg:text-heading-2/relaxed xl:text-heading-2/relaxed dark:text-gray-400 mt-4">
                                 <InlineEditableText slug="home" field="features_subtitle" lang={language} value={cmsContent?.features_subtitle || t('landing.features.subtitle')} multiline />
                             </motion.p>
                         </motion.div>
@@ -370,7 +370,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                             <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/20">
                                                 {feature.icon}
                                             </div>
-                                            <CardTitle className="text-xl">{feature.title}</CardTitle>
+                                            <CardTitle className="text-heading-2">{feature.title}</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-muted-foreground">{feature.description}</p>
@@ -386,10 +386,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 <section className="py-12 md:py-24 lg:py-32">
                     <div className="container px-4 md:px-6">
                         <div className="text-center mb-16">
-                            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                            <h2 className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl">
                                 <InlineEditableText slug="home" field="how_it_works_tag" lang={language} value={cmsContent?.how_it_works_tag || t('landing.howItWorks.tag')} />
                             </h2>
-                            <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400 mt-4">
+                            <p className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2 dark:text-gray-400 mt-4">
                                 <InlineEditableText slug="home" field="how_it_works_subtitle" lang={language} value={cmsContent?.how_it_works_subtitle || t('landing.howItWorks.subtitle')} multiline />
                             </p>
                         </div>
@@ -399,10 +399,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
 
                             {howItWorksSteps.map((step, idx) => (
                                 <div key={idx} className="relative z-10 flex flex-col items-center text-center">
-                                    <div className="w-24 h-24 rounded-full bg-background border-4 border-purple-100 dark:border-purple-900/50 flex items-center justify-center text-3xl font-bold text-purple-600 shadow-xl mb-6">
+                                    <div className="w-24 h-24 rounded-full bg-background border-4 border-purple-100 dark:border-purple-900/50 flex items-center justify-center text-heading-1 font-bold text-purple-600 shadow-xl mb-6">
                                         {idx + 1}
                                     </div>
-                                    <h3 className="text-xl font-bold mb-2">{step.title}</h3>
+                                    <h3 className="text-heading-2 font-bold mb-2">{step.title}</h3>
                                     <p className="text-muted-foreground">{step.desc}</p>
                                 </div>
                             ))}
@@ -420,22 +420,22 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 viewport={{ once: true }}
                                 variants={containerVariants}
                             >
-                                <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-6">
+                                <motion.h2 variants={itemVariants} className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl mb-6">
                                     <InlineEditableText slug="home" field="about_title" lang={language} value={cmsContent?.about_title || t('landing.aboutUs')} />
                                 </motion.h2>
-                                <motion.div variants={itemVariants} className="space-y-4 text-gray-500 md:text-lg dark:text-gray-400">
+                                <motion.div variants={itemVariants} className="space-y-4 text-gray-500 md:text-heading-3 dark:text-gray-400">
                                     <InlineEditableRich slug="home" field="about_text" lang={language} value={cmsContent?.about_text || t('landing.about.desc1')} />
                                     <InlineEditableRich slug="home" field="about_text2" lang={language} value={cmsContent?.about_text2 || t('landing.about.desc2')} />
                                     <div className="flex gap-4 pt-4">
                                         <div className="flex flex-col">
-                                            <span className="text-2xl font-bold text-purple-600">10k+</span>
-                                            <span className="text-sm">
+                                            <span className="text-heading-1 font-bold text-purple-600">10k+</span>
+                                            <span className="text-body">
                                                 <InlineEditableText slug="home" field="about_stat1_label" lang={language} value={cmsContent?.about_stat1_label || t('landing.about.activeUsers')} />
                                             </span>
                                         </div>
                                         <div className="border-l pl-4 flex flex-col">
-                                            <span className="text-2xl font-bold text-purple-600">500k+</span>
-                                            <span className="text-sm">
+                                            <span className="text-heading-1 font-bold text-purple-600">500k+</span>
+                                            <span className="text-body">
                                                 <InlineEditableText slug="home" field="about_stat2_label" lang={language} value={cmsContent?.about_stat2_label || t('landing.about.invoicesSent')} />
                                             </span>
                                         </div>
@@ -514,10 +514,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             variants={containerVariants}
                             className="text-center mb-16"
                         >
-                            <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                            <motion.h2 variants={itemVariants} className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl">
                                 <InlineEditableText slug="home" field="pricing_tag" lang={language} value={cmsContent?.pricing_tag || t('landing.pricing.tag')} />
                             </motion.h2>
-                            <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400 mt-4">
+                            <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2/relaxed lg:text-heading-2/relaxed xl:text-heading-2/relaxed dark:text-gray-400 mt-4">
                                 <InlineEditableText slug="home" field="pricing_subtitle" lang={language} value={cmsContent?.pricing_subtitle || t('landing.pricing.subtitle')} multiline />
                             </motion.p>
                         </motion.div>
@@ -533,21 +533,21 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                     <Card className={`flex flex-col h-full relative ${plan.highlight ? 'border-purple-600 shadow-xl scale-105 z-10' : 'border-slate-200'}`}>
                                         {plan.highlight && (
                                             <div className="absolute -top-4 left-0 right-0 flex justify-center">
-                                                <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide shadow-md">
+                                                <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-micro font-semibold uppercase tracking-wide shadow-md">
                                                     {t('landing.pricing.popular')}
                                                 </span>
                                             </div>
                                         )}
                                         <CardHeader>
-                                            <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                                            <CardTitle className="text-heading-1">{plan.name}</CardTitle>
                                             <CardDescription>{plan.description}</CardDescription>
                                         </CardHeader>
                                         <CardContent className="flex-1">
                                             <div className="mb-6">
-                                                <span className="text-4xl font-bold">{plan.price}</span>
+                                                <span className="text-display font-bold">{plan.price}</span>
                                                 {plan.price !== 'Custom' && <span className="text-muted-foreground">{t('billing.perMonth')}</span>}
                                             </div>
-                                            <ul className="space-y-3 text-sm">
+                                            <ul className="space-y-3 text-body">
                                                 {plan.features.map((feature: string, i: number) => (
                                                     <li key={i} className="flex items-center">
                                                         <Check className="mr-2 h-4 w-4 text-purple-600" />
@@ -576,10 +576,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 <section className="py-12 md:py-24 lg:py-32 bg-slate-50 dark:bg-slate-900/50">
                     <div className="container px-4 md:px-6">
                         <div className="text-center mb-16">
-                            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                            <h2 className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl">
                                 <InlineEditableText slug="home" field="testimonials_tag" lang={language} value={cmsContent?.testimonials_tag || t('landing.testimonials.tag')} />
                             </h2>
-                            <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400 mt-4">
+                            <p className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2 dark:text-gray-400 mt-4">
                                 <InlineEditableText slug="home" field="testimonials_subtitle" lang={language} value={cmsContent?.testimonials_subtitle || t('landing.testimonials.subtitle')} multiline />
                             </p>
                         </div>
@@ -603,16 +603,16 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                                 <Star fill="currentColor" className="w-5 h-5" />
                                                 <Star fill="currentColor" className="w-5 h-5" />
                                             </div>
-                                            <p className="text-lg italic text-slate-700 dark:text-slate-300 mb-8 min-h-[100px]">
+                                            <p className="text-heading-3 italic text-slate-700 dark:text-slate-300 mb-8 min-h-[100px]">
                                                 "{text}"
                                             </p>
                                             <div className="flex items-center gap-4 border-t pt-4 border-slate-100 dark:border-slate-800">
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white font-bold text-lg shadow-inner">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white font-bold text-heading-3 shadow-inner">
                                                     {name?.charAt(0)}
                                                 </div>
                                                 <div>
                                                     <h4 className="font-bold">{name}</h4>
-                                                    <p className="text-sm text-muted-foreground">{role}</p>
+                                                    <p className="text-body text-muted-foreground">{role}</p>
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -627,10 +627,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 <section className="py-12 md:py-24 lg:py-32">
                     <div className="container px-4 md:px-6 max-w-3xl mx-auto">
                         <div className="text-center mb-16">
-                            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                            <h2 className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl">
                                 <InlineEditableText slug="home" field="faq_tag" lang={language} value={cmsContent?.faq_tag || t('landing.faq.tag')} />
                             </h2>
-                            <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400 mt-4">
+                            <p className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2 dark:text-gray-400 mt-4">
                                 <InlineEditableText slug="home" field="faq_subtitle" lang={language} value={cmsContent?.faq_subtitle || t('landing.faq.subtitle')} multiline />
                             </p>
                         </div>
@@ -643,7 +643,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 return (
                                     <details key={idx} className="group bg-slate-50 dark:bg-slate-900/50 rounded-xl open:bg-white dark:open:bg-slate-900 border border-transparent open:border-purple-100 dark:open:border-purple-900/50 transition-all duration-300 open:shadow-md">
                                         <summary className="flex items-center justify-between font-semibold cursor-pointer p-6 list-none [&::-webkit-details-marker]:hidden">
-                                            <span className="text-lg pr-4">{question}</span>
+                                            <span className="text-heading-3 pr-4">{question}</span>
                                             <span className="transition-transform duration-300 group-open:rotate-180 flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 p-2 rounded-full text-purple-600">
                                                 <Plus className="w-4 h-4 block group-open:hidden" />
                                                 <Minus className="w-4 h-4 hidden group-open:block" />
@@ -670,17 +670,17 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
                         >
-                            <h2 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl mb-6">
+                            <h2 className="text-display font-extrabold tracking-tighter sm:text-5xl md:text-6xl mb-6">
                                 <InlineEditableText slug="home" field="cta_title" lang={language} value={cmsContent?.cta_title || t('landing.bottomCta.title')} />
                             </h2>
-                            <p className="text-purple-100 text-lg md:text-xl mb-10 max-w-[600px] mx-auto">
+                            <p className="text-purple-100 text-heading-3 md:text-heading-2 mb-10 max-w-[600px] mx-auto">
                                 <InlineEditableText slug="home" field="cta_subtitle" lang={language} value={cmsContent?.cta_subtitle || t('landing.bottomCta.subtitle')} multiline />
                             </p>
-                            <Button size="lg" className="bg-white text-purple-600 hover:bg-slate-50 h-14 px-10 text-lg shadow-2xl rounded-full transition-transform hover:scale-105" onClick={() => onSignup()}>
+                            <Button size="lg" className="bg-white text-purple-600 hover:bg-slate-50 h-14 px-10 text-heading-3 shadow-2xl rounded-full transition-transform hover:scale-105" onClick={() => onSignup()}>
                                 {t('landing.hero.getStarted')}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>
-                            <p className="mt-6 text-purple-200 text-sm font-medium">
+                            <p className="mt-6 text-purple-200 text-body font-medium">
                                 <InlineEditableText slug="home" field="cta_context" lang={language} value={cmsContent?.cta_context || t('landing.bottomCta.ctaContext')} />
                             </p>
                         </motion.div>
@@ -693,18 +693,18 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 <div className="container px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-2">
                         <FileText className="h-5 w-5 text-purple-600" />
-                        <span className="text-lg font-bold text-foreground">BillingTool</span>
+                        <span className="text-heading-3 font-bold text-foreground">BillingTool</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-body text-muted-foreground">
                         © 2026 BillingTool Inc. {t('landing.footer.rights')}
                     </p>
                     <div className="flex flex-wrap gap-4">
-                        <button onClick={() => onNavigate('impressum')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.impressum')}</button>
-                        <button onClick={() => onNavigate('privacyPolicy')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.privacy')}</button>
-                        <button onClick={() => onNavigate('termsAndConditions')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.terms')}</button>
-                        <button onClick={() => onNavigate('cookiePolicy')} className="text-sm text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.cookies')}</button>
+                        <button onClick={() => onNavigate('impressum')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.impressum')}</button>
+                        <button onClick={() => onNavigate('privacyPolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.privacy')}</button>
+                        <button onClick={() => onNavigate('termsAndConditions')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.terms')}</button>
+                        <button onClick={() => onNavigate('cookiePolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.cookies')}</button>
                         {navPages.map((p: any) => (
-                            <button key={p.slug} onClick={() => onNavigate(`cms/${p.slug}`)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                            <button key={p.slug} onClick={() => onNavigate(`cms/${p.slug}`)} className="text-body text-muted-foreground hover:text-primary transition-colors">
                                 {p.nav_label || p.title}
                             </button>
                         ))}

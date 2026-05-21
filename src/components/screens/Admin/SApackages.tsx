@@ -49,7 +49,7 @@ function DebouncedInput({
             type={type}
             value={localValue}
             onChange={(e) => setLocalValue(e.target.value)}
-            className={cn("h-8 px-2 text-sm", className)}
+            className={cn("h-8 px-2 text-body", className)}
         />
     );
 }
@@ -194,7 +194,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                                             <DebouncedInput 
                                                 value={pkg.name} 
                                                 onSave={(val) => handleUpdate(pkg.id, 'name', val)}
-                                                className="text-center font-bold text-lg h-10 border-none bg-transparent hover:bg-muted/50 focus:bg-white"
+                                                className="text-center font-bold text-heading-3 h-10 border-none bg-transparent hover:bg-muted/50 focus:bg-white"
                                             />
                                             <div className="flex gap-1">
                                                 <Button 
@@ -342,7 +342,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm" 
-                                                    className="h-7 text-xs"
+                                                    className="h-7 text-micro"
                                                     onClick={() => handleSetDefault(pkg.id)}
                                                 >
                                                     Set Default
@@ -355,7 +355,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
 
                             {/* Divider for Services */}
                             <TableRow className="bg-muted/20">
-                                <TableCell colSpan={filteredPackages.length + 1} className="py-2 px-6 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                <TableCell colSpan={filteredPackages.length + 1} className="py-2 px-6 text-micro font-bold uppercase tracking-wider text-muted-foreground">
                                     Service Limits & Features
                                 </TableCell>
                             </TableRow>
@@ -422,7 +422,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                     <div className="p-4 bg-muted rounded-full mb-4">
                         <Search className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium">No packages found</h3>
+                    <h3 className="text-heading-3 font-medium">No packages found</h3>
                     <p className="text-muted-foreground mb-6">Try adjusting your search query</p>
                     <Button onClick={() => setSearchQuery('')} variant="outline">Clear Search</Button>
                 </div>

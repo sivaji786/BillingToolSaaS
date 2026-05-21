@@ -149,9 +149,9 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                             <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-purple-600">
                                 <GalleryVerticalEnd className="size-4" />
                             </div>
-                            <div className="grid flex-1 text-left text-sm leading-tight">
+                            <div className="grid flex-1 text-left text-body leading-tight">
                                 <span className="truncate font-semibold">{profile?.name || t('appName')}</span>
-                                <span className="truncate text-xs text-purple-100">{t('appSubtitle') || "Enterprise"}</span>
+                                <span className="truncate text-micro text-purple-100">{t('appSubtitle') || "Enterprise"}</span>
                             </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -161,7 +161,7 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                 {navMain.map((group) => (
                     <React.Fragment key={group.title}>
                         <SidebarMenu>
-                            <div className="px-4 py-2 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                            <div className="px-4 py-2 text-micro font-semibold text-muted-foreground/70 uppercase tracking-wider">
                                 {group.title}
                             </div>
                             {group.items.map((item) => (
@@ -194,9 +194,9 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                                         <AvatarImage src={user?.avatar} alt={user?.name} />
                                         <AvatarFallback className="rounded-lg">{user?.name?.substring(0, 2)?.toUpperCase() || 'US'}</AvatarFallback>
                                     </Avatar>
-                                    <div className="grid flex-1 text-left text-sm leading-tight">
+                                    <div className="grid flex-1 text-left text-body leading-tight">
                                         <span className="truncate font-semibold">{user?.name || 'User'}</span>
-                                        <span className="truncate text-xs">{user?.email || 'example@humpl.org'}</span>
+                                        <span className="truncate text-micro">{user?.email || 'example@humpl.org'}</span>
                                     </div>
                                     <ChevronsUpDown className="ml-auto size-4" />
                                 </SidebarMenuButton>
@@ -208,14 +208,14 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                                 sideOffset={4}
                             >
                                 <DropdownMenuLabel className="p-0 font-normal">
-                                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-body">
                                         <Avatar className="h-8 w-8 rounded-lg">
                                             <AvatarImage src={user?.avatar} alt={user?.name} />
                                             <AvatarFallback className="rounded-lg">{user?.name?.substring(0, 2)?.toUpperCase() || 'US'}</AvatarFallback>
                                         </Avatar>
-                                        <div className="grid flex-1 text-left text-sm leading-tight">
+                                        <div className="grid flex-1 text-left text-body leading-tight">
                                             <span className="truncate font-semibold">{user?.name}</span>
-                                            <span className="truncate text-xs">{user?.email}</span>
+                                            <span className="truncate text-micro">{user?.email}</span>
                                         </div>
                                     </div>
                                 </DropdownMenuLabel>

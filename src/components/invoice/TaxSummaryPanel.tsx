@@ -42,7 +42,7 @@ export function TaxSummaryPanel({ invoice }: TaxSummaryPanelProps) {
 
         <div className="space-y-2">
           {invoice.taxTotals.map((tax, index) => (
-            <div key={index} className="flex justify-between text-sm">
+            <div key={index} className="flex justify-between text-body">
               <span className="text-muted-foreground">
                 {tax.taxType} {tax.taxPercent}% {t('editor.on')}{' '}
                 {formatCurrency(tax.taxableAmount, invoice.currency)}
@@ -88,11 +88,11 @@ export function TaxSummaryPanel({ invoice }: TaxSummaryPanelProps) {
           ) : (
             <ChevronRight className="h-4 w-4 mr-2" />
           )}
-          <strong className="text-xs">{t('editor.ublMappings')}</strong>
+          <strong className="text-micro">{t('editor.ublMappings')}</strong>
         </Button>
 
         {isUblExpanded && (
-          <div className="mt-2 space-y-1 text-xs text-muted-foreground pl-6">
+          <div className="mt-2 space-y-1 text-micro text-muted-foreground pl-6">
             <p>LineExtensionAmount: Invoice/LegalMonetaryTotal/LineExtensionAmount</p>
             <p>TaxExclusiveAmount: Invoice/LegalMonetaryTotal/TaxExclusiveAmount</p>
             <p>TaxInclusiveAmount: Invoice/LegalMonetaryTotal/TaxInclusiveAmount</p>

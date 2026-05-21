@@ -63,7 +63,7 @@ export function BuyerAutocomplete({ value, suggestions, onChange, onSelect, plac
                                     >
                                         <div className="flex flex-col w-full">
                                             <span className="font-medium">{buyer.name}</span>
-                                            <div className="flex justify-between text-xs text-muted-foreground">
+                                            <div className="flex justify-between text-micro text-muted-foreground">
                                                 <span>{buyer.vatId || 'No VAT ID'}</span>
                                                 <span>{buyer.address?.city}, {buyer.address?.country}</span>
                                             </div>

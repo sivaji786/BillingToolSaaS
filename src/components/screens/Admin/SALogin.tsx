@@ -53,7 +53,7 @@ export function SALogin({ onLoginSuccess }: SALoginProps) {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple-600 mb-4 shadow-lg">
                         <Shield className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h1 className="text-heading-1 font-bold text-gray-900 dark:text-white mb-2">
                         SaaS Admin Portal
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400">
@@ -128,7 +128,7 @@ export function SALogin({ onLoginSuccess }: SALoginProps) {
                 </Card>
 
                 {/* Footer */}
-                <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
+                <p className="text-center text-body text-gray-600 dark:text-gray-400 mt-6">
                     © 2026 SaaS Admin Portal. All rights reserved.
                 </p>
             </div>

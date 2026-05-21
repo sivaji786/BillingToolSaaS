@@ -93,7 +93,7 @@ export function InlineEditableRich({ slug, field, lang, value, className }: Prop
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-1.5 rounded-md bg-purple-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-md bg-purple-600 px-3 py-1.5 text-body font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-60"
           >
             {isSaving ? (
               <>
@@ -120,7 +120,7 @@ export function InlineEditableRich({ slug, field, lang, value, className }: Prop
             type="button"
             onClick={handleCancel}
             disabled={isSaving}
-            className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-body font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-60"
           >
             <X className="h-3.5 w-3.5" />
             Cancel
@@ -149,7 +149,7 @@ export function InlineEditableRich({ slug, field, lang, value, className }: Prop
       {isHovered && (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -top-6 right-0 z-10 whitespace-nowrap rounded bg-purple-700 px-2 py-0.5 text-xs text-white"
+          className="pointer-events-none absolute -top-6 right-0 z-10 whitespace-nowrap rounded bg-purple-700 px-2 py-0.5 text-micro text-white"
         >
           Double-click to edit
         </span>

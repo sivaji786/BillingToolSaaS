@@ -238,31 +238,31 @@ export function Signup({ initialPlan }: SignupProps) {
                         <div className="w-9 h-9 rounded-xl bg-white/20 group-hover:bg-white/30 transition-colors flex items-center justify-center">
                             <FileText className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-white font-bold text-xl tracking-tight">BillingTool</span>
+                        <span className="text-white font-bold text-heading-2 tracking-tight">BillingTool</span>
                     </a>
 
                     {/* Hero copy — CMS-managed, live-editable by SA admins */}
                     <div className="flex-1 flex flex-col justify-center">
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-3xl font-bold text-white leading-snug whitespace-pre-line">
+                            <h2 className="text-heading-1 font-bold text-white leading-snug whitespace-pre-line">
                                 <InlineEditableText
                                     slug={CMS_SLUG}
                                     field="heading"
                                     lang={language}
                                     value={cmsContent.heading}
                                     multiline
-                                    className="text-3xl font-bold text-white leading-snug whitespace-pre-line"
+                                    className="text-heading-1 font-bold text-white leading-snug whitespace-pre-line"
                                 />
                             </h2>
-                            <p className="mt-3 text-violet-200 text-base leading-relaxed max-w-xs">
+                            <p className="mt-3 text-violet-200 text-heading-2 leading-relaxed max-w-xs">
                                 <InlineEditableText
                                     slug={CMS_SLUG}
                                     field="subheading"
                                     lang={language}
                                     value={cmsContent.subheading}
                                     multiline
-                                    className="text-violet-200 text-base leading-relaxed"
+                                    className="text-violet-200 text-heading-2 leading-relaxed"
                                 />
                             </p>
                         </div>
@@ -281,7 +281,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                             field={fieldKey}
                                             lang={language}
                                             value={cmsContent[fieldKey]}
-                                            className="text-violet-100 text-sm leading-relaxed"
+                                            className="text-violet-100 text-body leading-relaxed"
                                         />
                                     </li>
                                 );
@@ -296,7 +296,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                 field="badge_text"
                                 lang={language}
                                 value={cmsContent.badge_text}
-                                className="text-violet-100 text-xs font-medium"
+                                className="text-violet-100 text-micro font-medium"
                             />
                         </div>
                     </div>
@@ -320,19 +320,19 @@ export function Signup({ initialPlan }: SignupProps) {
                     <a
                         href="#"
                         onClick={goHome}
-                        className="hidden lg:flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors group"
+                        className="hidden lg:flex items-center gap-1.5 text-body text-gray-500 hover:text-gray-800 transition-colors group"
                     >
                         <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
                         Back to home
                     </a>
                     <div className="ml-auto flex items-center gap-3">
-                        <span className="hidden sm:block text-sm text-gray-500">
+                        <span className="hidden sm:block text-body text-gray-500">
                             {t('signup.alreadyHaveAccount')}
                         </span>
                         <a
                             href="#login"
                             onClick={e => { e.preventDefault(); window.location.hash = 'login'; }}
-                            className="text-sm font-medium text-violet-600 hover:text-violet-700 transition-colors"
+                            className="text-body font-medium text-violet-600 hover:text-violet-700 transition-colors"
                         >
                             {t('signup.login')}
                         </a>
@@ -348,15 +348,15 @@ export function Signup({ initialPlan }: SignupProps) {
                             <>
                                 {/* Page heading */}
                                 <div className="mb-8">
-                                    <h1 className="text-2xl font-bold text-gray-900">{t('signup.getStarted')}</h1>
-                                    <p className="text-sm text-gray-500 mt-1">{t('signup.subtitle')}</p>
+                                    <h1 className="text-heading-1 font-bold text-gray-900">{t('signup.getStarted')}</h1>
+                                    <p className="text-body text-gray-500 mt-1">{t('signup.subtitle')}</p>
                                 </div>
 
                                 <form onSubmit={handleSignup} className="space-y-5">
 
                                     {/* Plan selection */}
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-gray-700">
+                                        <Label className="text-body font-medium text-gray-700">
                                             {t('signup.selectedPlan')}
                                         </Label>
                                         <div className="space-y-2">
@@ -378,15 +378,15 @@ export function Signup({ initialPlan }: SignupProps) {
                                                                 {active && <div className="w-2 h-2 rounded-full bg-violet-500" />}
                                                             </div>
                                                             <div>
-                                                                <span className="text-sm font-semibold text-gray-800">{plan.name}</span>
+                                                                <span className="text-body font-semibold text-gray-800">{plan.name}</span>
                                                                 {plan.description && (
-                                                                    <p className="text-xs text-gray-400 mt-0.5">{plan.description}</p>
+                                                                    <p className="text-micro text-gray-400 mt-0.5">{plan.description}</p>
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <span className={`text-sm font-bold whitespace-nowrap ml-3 ${active ? 'text-violet-600' : 'text-gray-600'}`}>
+                                                        <span className={`text-body font-bold whitespace-nowrap ml-3 ${active ? 'text-violet-600' : 'text-gray-600'}`}>
                                                             {plan.currency === 'USD' ? '$' : '€'}{plan.price}
-                                                            <span className="text-xs font-normal text-gray-400">{t('billing.perMonth')}</span>
+                                                            <span className="text-micro font-normal text-gray-400">{t('billing.perMonth')}</span>
                                                         </span>
                                                         <input
                                                             type="radio" name="plan" value={plan.id}
@@ -404,7 +404,7 @@ export function Signup({ initialPlan }: SignupProps) {
 
                                     {/* Company name */}
                                     <div className="space-y-1.5">
-                                        <Label htmlFor="company_name" className="text-sm font-medium text-gray-700">
+                                        <Label htmlFor="company_name" className="text-body font-medium text-gray-700">
                                             {t('signup.companyName')} <span className="text-red-400">*</span>
                                         </Label>
                                         <div className="relative">
@@ -421,7 +421,7 @@ export function Signup({ initialPlan }: SignupProps) {
 
                                         {/* Workspace URL inline preview */}
                                         {formData.company_name && (
-                                            <div className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs mt-1 transition-colors ${
+                                            <div className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-micro mt-1 transition-colors ${
                                                 subdomainStatus === 'available' ? 'border-green-200 bg-green-50' :
                                                 subdomainStatus === 'taken'     ? 'border-red-200 bg-red-50'   :
                                                                                    'border-gray-200 bg-gray-50'
@@ -448,16 +448,16 @@ export function Signup({ initialPlan }: SignupProps) {
                                             </div>
                                         )}
                                         {!isWorkspaceManual && formData.company_name && (
-                                            <p className="text-xs text-gray-400 ml-1">{t('signup.workspaceOptional')}</p>
+                                            <p className="text-micro text-gray-400 ml-1">{t('signup.workspaceOptional')}</p>
                                         )}
                                         {subdomainStatus === 'taken' && (
-                                            <p className="text-xs text-red-500 ml-1">{t('signup.taken')} — {t('signup.tryAnother')}</p>
+                                            <p className="text-micro text-red-500 ml-1">{t('signup.taken')} — {t('signup.tryAnother')}</p>
                                         )}
                                     </div>
 
                                     {/* Email */}
                                     <div className="space-y-1.5">
-                                        <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                                        <Label htmlFor="email" className="text-body font-medium text-gray-700">
                                             {t('signup.email')} <span className="text-red-400">*</span>
                                         </Label>
                                         <div className="relative">
@@ -476,7 +476,7 @@ export function Signup({ initialPlan }: SignupProps) {
 
                                     {/* Password */}
                                     <div className="space-y-1.5">
-                                        <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                                        <Label htmlFor="password" className="text-body font-medium text-gray-700">
                                             {t('signup.password')} <span className="text-red-400">*</span>
                                         </Label>
                                         <div className="relative">
@@ -518,7 +518,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                         ) : t('signup.getStarted')}
                                     </Button>
 
-                                    <p className="text-center text-xs text-gray-400">
+                                    <p className="text-center text-micro text-gray-400">
                                         {t('signup.trialNote')}
                                     </p>
                                 </form>
@@ -531,8 +531,8 @@ export function Signup({ initialPlan }: SignupProps) {
                                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-50 mb-4">
                                         <MailCheck className="h-8 w-8 text-violet-600" />
                                     </div>
-                                    <h1 className="text-2xl font-bold text-gray-900">{t('signup.verifyEmailTitle')}</h1>
-                                    <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                                    <h1 className="text-heading-1 font-bold text-gray-900">{t('signup.verifyEmailTitle')}</h1>
+                                    <p className="text-body text-gray-500 mt-2 leading-relaxed">
                                         {t('signup.verifyEmailDesc')}{' '}
                                         <span className="font-semibold text-gray-800 break-all">{pendingEmail}</span>
                                     </p>
@@ -540,7 +540,7 @@ export function Signup({ initialPlan }: SignupProps) {
 
                                 <form onSubmit={handleVerify} className="space-y-4">
                                     <div className="space-y-1.5">
-                                        <Label className="text-sm font-medium text-gray-700">
+                                        <Label className="text-body font-medium text-gray-700">
                                             {t('signup.verificationCode')}
                                         </Label>
                                         <Input
@@ -549,7 +549,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                             pattern="[0-9]{6}"
                                             maxLength={6}
                                             placeholder="000000"
-                                            className="h-14 text-center text-2xl font-bold tracking-[0.6em] border-2 border-gray-200 focus-visible:ring-violet-500"
+                                            className="h-14 text-center text-heading-1 font-bold tracking-[0.6em] border-2 border-gray-200 focus-visible:ring-violet-500"
                                             value={verificationCode}
                                             onChange={e => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                             autoFocus
@@ -577,7 +577,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                 </form>
 
                                 <div className="text-center space-y-2">
-                                    <p className="text-sm text-gray-500">
+                                    <p className="text-body text-gray-500">
                                         {t('signup.didntReceiveCode')}{' '}
                                         <button
                                             type="button"
@@ -592,13 +592,13 @@ export function Signup({ initialPlan }: SignupProps) {
                                                 : t('signup.resendCode')}
                                         </button>
                                     </p>
-                                    <p className="text-xs text-gray-400">{t('signup.verifyEmailNote')}</p>
+                                    <p className="text-micro text-gray-400">{t('signup.verifyEmailNote')}</p>
                                 </div>
 
                                 <button
                                     type="button"
                                     onClick={() => setStage('form')}
-                                    className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors mx-auto"
+                                    className="flex items-center gap-1.5 text-body text-gray-400 hover:text-gray-600 transition-colors mx-auto"
                                 >
                                     <ArrowLeft className="h-3.5 w-3.5" />
                                     Back to registration
@@ -645,7 +645,7 @@ function PasswordStrength({ password }: { password: string }) {
                     />
                 ))}
             </div>
-            <span className={`text-xs font-medium ${texts[score - 1]}`}>{labels[score - 1]}</span>
+            <span className={`text-micro font-medium ${texts[score - 1]}`}>{labels[score - 1]}</span>
         </div>
     );
 }

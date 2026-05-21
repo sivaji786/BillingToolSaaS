@@ -127,7 +127,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">{t('tickets.title')}</h2>
+                    <h2 className="text-heading-1 font-bold tracking-tight">{t('tickets.title')}</h2>
                     <p className="text-muted-foreground">{t('tickets.subtitle')}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
             {selectedIds.size > 0 && (
                 <div className="flex items-center gap-3 px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl">
                     <CheckSquare className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-primary">
+                    <span className="text-body font-semibold text-primary">
                         {t('tickets.bulk.selected').replace('{count}', String(selectedIds.size))}
                     </span>
                     <div className="flex gap-2 ml-auto">
@@ -202,6 +202,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('priority')}>
                                         {t('tickets.columns.priority')} <SortIcon column="priority" />
                                     </TableHead>
+                                    <TableHead>Type</TableHead>
                                     <TableHead>{t('tickets.assignee')}</TableHead>
                                     <TableHead className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleSort('description')}>
                                         {t('tickets.columns.description')} <SortIcon column="description" />
@@ -218,7 +219,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                             </TableHeader>
                             <TableBody>
                                 {isLoading || paginatedTickets.length === 0 ? (
-                                    <TableEmptyState colSpan={11} isLoading={isLoading} emptyMessage={t('tickets.ticketNotFound')} />
+                                    <TableEmptyState colSpan={12} isLoading={isLoading} emptyMessage={t('tickets.ticketNotFound')} />
                                 ) : (
                                     paginatedTickets.map((ticket, index) => (
                                         <TableRow
@@ -251,7 +252,12 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <span className="text-sm text-muted-foreground">
+                                                <span className="text-micro font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                                    {ticket.type || 'bug'}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="text-body text-muted-foreground">
                                                     {getAssigneeName(ticket.assigned_to) ?? (
                                                         <span className="italic opacity-50">{t('tickets.unassigned')}</span>
                                                     )}
@@ -303,11 +309,11 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                     {!isLoading && sortedTickets.length > 0 && (
                         <div className="flex items-center justify-between px-4 py-4 border-t">
                             <div className="flex items-center space-x-4">
-                                <div className="text-sm text-muted-foreground">
+                                <div className="text-body text-muted-foreground">
                                     {t('tickets.pagination.showing')} {((currentPage - 1) * itemsPerPage) + 1} {t('tickets.pagination.to')} {Math.min(currentPage * itemsPerPage, sortedTickets.length)} {t('tickets.pagination.of')} {sortedTickets.length} {t('tickets.pagination.entries')}
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                    <span className="text-sm text-muted-foreground whitespace-nowrap">{t('tickets.pagination.rowsPerPage')}</span>
+                                    <span className="text-body text-muted-foreground whitespace-nowrap">{t('tickets.pagination.rowsPerPage')}</span>
                                     <Select
                                         value={itemsPerPage.toString()}
                                         onValueChange={(val) => {
@@ -337,7 +343,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                     <ChevronLeft className="h-4 w-4 mr-1" />
                                     {t('tickets.pagination.previous')}
                                 </Button>
-                                <div className="text-sm font-medium">
+                                <div className="text-body font-medium">
                                     {t('tickets.pagination.page')} {currentPage} {t('tickets.pagination.of')} {totalPages}
                                 </div>
                                 <Button

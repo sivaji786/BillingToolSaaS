@@ -16,11 +16,15 @@ export interface Ticket {
     project_id?: string;
     client_ip?: string;
     screenshot_path?: string;
+    attachments?: string;
     status?: string;
     priority?: string;
+    type?: string;
     assigned_to?: number | null;
     first_response_at?: string | null;
     resolved_at?: string | null;
+    domain?: string;
+    page?: string;
     created_at?: string;
     updated_at?: string;
     comment?: string;

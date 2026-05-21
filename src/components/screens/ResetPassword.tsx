@@ -50,8 +50,8 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
         <div className="mx-auto h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center mb-4 text-purple-600">
           <KeyRound className="h-6 w-6" />
         </div>
-        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Set new password</h2>
-        <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto">
+        <h2 className="text-heading-1 font-extrabold text-slate-900 tracking-tight">Set new password</h2>
+        <p className="mt-2 text-body text-slate-500 max-w-sm mx-auto">
           Please enter your new password below. Make sure it's strong and unique.
         </p>
       </div>
@@ -61,7 +61,7 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
           <CardContent className="py-8 px-4 sm:px-10">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-body font-medium text-slate-700 mb-1">
                   New Password
                 </label>
                 <div className="relative">
@@ -91,7 +91,7 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-body font-medium text-slate-700 mb-1">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -123,7 +123,7 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
               <div className="pt-2">
                 <Button 
                   type="submit" 
-                  className="w-full h-11 text-base bg-purple-600 hover:bg-purple-700" 
+                  className="w-full h-11 text-heading-2 bg-purple-600 hover:bg-purple-700" 
                   disabled={isLoading || !password || !confirmPassword}
                 >
                   {isLoading ? (
@@ -141,7 +141,7 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
             <div className="mt-6 text-center">
               <Button 
                 variant="link" 
-                className="text-sm font-medium text-purple-600 hover:text-purple-500"
+                className="text-body font-medium text-purple-600 hover:text-purple-500"
                 onClick={onComplete}
                 type="button"
               >

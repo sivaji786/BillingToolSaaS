@@ -103,7 +103,7 @@ export function UserForm({ userId, onBack, companyTypeId }: UserFormProps) {
                 <Button variant="ghost" onClick={onBack}>
                     <ArrowLeft className="h-4 w-4 mr-2" /> {t('common.back')}
                 </Button>
-                <h2 className="text-xl font-semibold">{userId ? t('admin.users.editUser') : t('admin.users.newUser')}</h2>
+                <h2 className="text-heading-2 font-semibold">{userId ? t('admin.users.editUser') : t('admin.users.newUser')}</h2>
             </div>
 
             <div className="border p-6 rounded-md bg-card space-y-6">
@@ -150,8 +150,8 @@ export function UserForm({ userId, onBack, companyTypeId }: UserFormProps) {
                                     <Square className="h-4 w-4 text-muted-foreground shrink-0" />
                                 }
                                 <div>
-                                    <div className="font-medium text-sm">{role.name}</div>
-                                    <div className="text-xs text-muted-foreground">{getCompanyName(role.company_type_id)}</div>
+                                    <div className="font-medium text-body">{role.name}</div>
+                                    <div className="text-micro text-muted-foreground">{getCompanyName(role.company_type_id)}</div>
                                 </div>
                             </div>
                         ))}

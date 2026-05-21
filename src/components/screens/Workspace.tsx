@@ -383,7 +383,7 @@ export function Workspace() {
         <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-purple-900 dark:text-purple-100">{t('nav.workspace')}</h1>
+                    <h1 className="text-heading-1 font-bold text-purple-900 dark:text-purple-100">{t('nav.workspace')}</h1>
                     <p className="text-gray-600 dark:text-gray-400">Manage your project files and folders</p>
                 </div>
                 <div className="flex gap-2">
@@ -431,7 +431,7 @@ export function Workspace() {
             {uploadProgress !== null && (
                 <Card className="p-4 border-purple-200 bg-purple-50/50">
                     <div className="space-y-2">
-                        <div className="flex justify-between text-sm font-medium text-purple-800">
+                        <div className="flex justify-between text-body font-medium text-purple-800">
                             <span>Uploading files to {currentPath || 'workspace root'}...</span>
                             <span>{uploadProgress}%</span>
                         </div>
@@ -445,7 +445,7 @@ export function Workspace() {
             <Card className="p-4">
                 <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm text-gray-500 overflow-x-auto pb-2">
+                        <div className="flex items-center gap-2 text-body text-gray-500 overflow-x-auto pb-2">
                             <Button variant="ghost" size="sm" onClick={handleGoHome} className="h-8 w-8 p-0">
                                 <Home className="h-4 w-4" />
                             </Button>
@@ -467,7 +467,7 @@ export function Workspace() {
 
                         {selectedItems.length > 0 && (
                             <div className="flex items-center gap-2 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100">
-                                <span className="text-sm font-medium text-purple-700 mr-2">
+                                <span className="text-body font-medium text-purple-700 mr-2">
                                     {selectedItems.length} selected
                                 </span>
                                 <Button variant="outline" size="sm" className="h-8 shadow-sm" onClick={handleBulkDownload}>
@@ -486,7 +486,7 @@ export function Workspace() {
                         <div className="flex bg-gray-100 p-1 rounded-lg w-fit mb-2">
                             <button
                                 onClick={() => { setSearchMode('standard'); loadItems(currentPath); }}
-                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${searchMode === 'standard'
+                                className={`px-4 py-1.5 rounded-md text-body font-medium transition-all ${searchMode === 'standard'
                                     ? 'bg-white shadow-sm text-gray-900'
                                     : 'text-gray-500 hover:text-gray-700'
                                     }`}
@@ -495,7 +495,7 @@ export function Workspace() {
                             </button>
                             <button
                                 onClick={() => setSearchMode('ai')}
-                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1 ${searchMode === 'ai'
+                                className={`px-4 py-1.5 rounded-md text-body font-medium transition-all flex items-center gap-1 ${searchMode === 'ai'
                                     ? 'bg-purple-100 shadow-sm text-purple-700'
                                     : 'text-gray-500 hover:text-gray-700'
                                     }`}
@@ -571,7 +571,7 @@ export function Workspace() {
                                 <TableCell colSpan={6} className="h-64 text-center">
                                     <div className="flex flex-col items-center gap-2">
                                         <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-                                        <p className="text-sm text-gray-500">Loading workspace...</p>
+                                        <p className="text-body text-gray-500">Loading workspace...</p>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -580,8 +580,8 @@ export function Workspace() {
                                 <TableCell colSpan={6} className="h-64 text-center">
                                     <div className="flex flex-col items-center gap-2">
                                         <Folder className="h-12 w-12 text-gray-200" />
-                                        <p className="text-lg font-medium text-gray-400">This folder is empty</p>
-                                        <p className="text-sm text-gray-500">Upload files or create a new folder to get started</p>
+                                        <p className="text-heading-3 font-medium text-gray-400">This folder is empty</p>
+                                        <p className="text-body text-gray-500">Upload files or create a new folder to get started</p>
                                     </div>
                                 </TableCell>
                             </TableRow>

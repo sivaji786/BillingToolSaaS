@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import { ArrowLeft, Loader2, ExternalLink, Save, Calendar, MessageSquare, User, Clock, UserCheck } from 'lucide-react';
+import { ArrowLeft, Loader2, ExternalLink, Save, Calendar, MessageSquare, User, Clock, UserCheck, Paperclip, FileText } from 'lucide-react';
 import { format, formatDistanceStrict } from 'date-fns';
 import { getApiBaseUrl } from '../../../utils/config';
 import { useState, useEffect } from 'react';
@@ -110,7 +110,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                 </Button>
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center min-h-[400px]">
-                        <p className="text-xl text-muted-foreground">{t('tickets.ticketNotFound')}</p>
+                        <p className="text-heading-2 text-muted-foreground">{t('tickets.ticketNotFound')}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -132,14 +132,14 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         <div className="space-y-4 flex-1">
                             <div className="space-y-1">
                                 <div className="flex items-center gap-3">
-                                    <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+                                    <h2 className="text-heading-1 font-extrabold tracking-tight text-slate-900">
                                         {t('tickets.ticketId', { id: ticket.id.toString() })}
                                     </h2>
                                     <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-widest bg-slate-200/50 text-slate-600 border-none px-2 py-0">
                                         ID: {ticket.id}
                                     </Badge>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                                <div className="flex items-center gap-2 text-body text-slate-500 font-medium">
                                     <Calendar className="h-4 w-4 text-slate-400" />
                                     <span>
                                         {t('tickets.createdOn', { date: ticket.created_at ? format(new Date(ticket.created_at), "PPP 'at' p") : t('tickets.notAvailable') })}
@@ -147,9 +147,14 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 </div>
                             </div>
                             <div className="relative pl-5 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-1.5 before:bg-primary before:rounded-full">
-                                <h3 className="text-xl font-bold text-slate-800 leading-tight">
+                                <h3 className="text-heading-2 font-bold text-slate-800 leading-tight">
                                     {ticket.subject}
                                 </h3>
+                                {ticket.type && (
+                                    <span className="inline-block mt-1.5 text-micro font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                        {ticket.type}
+                                    </span>
+                                )}
                             </div>
                         </div>
 
@@ -193,7 +198,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 <div className="border-t border-slate-100 pt-3 px-2">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">{t('tickets.assignee')}</span>
                                     <Select value={assignedTo} onValueChange={setAssignedTo}>
-                                        <SelectTrigger className="w-full h-9 border border-slate-200 rounded-xl bg-white text-sm font-medium focus:ring-2 focus:ring-primary/20">
+                                        <SelectTrigger className="w-full h-9 border border-slate-200 rounded-xl bg-white text-body font-medium focus:ring-2 focus:ring-primary/20">
                                             <UserCheck className="h-3.5 w-3.5 mr-2 text-slate-400" />
                                             <SelectValue placeholder={t('tickets.assignTo')} />
                                         </SelectTrigger>
@@ -213,7 +218,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 <div className="flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-300">
                                     <div className="relative group">
                                         <textarea
-                                            className="w-full lg:w-[320px] min-h-[80px] p-3 text-sm border-2 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all bg-white hover:border-slate-300 resize-none shadow-sm"
+                                            className="w-full lg:w-[320px] min-h-[80px] p-3 text-body border-2 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all bg-white hover:border-slate-300 resize-none shadow-sm"
                                             placeholder={t('tickets.addCommentPlaceholder')}
                                             value={comment}
                                             onChange={(e) => setComment(e.target.value)}
@@ -242,7 +247,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         {/* Description */}
                         <div className="space-y-8">
                             <div className="space-y-4">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <h3 className="text-micro font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <MessageSquare className="h-3.5 w-3.5" />
                                     {t('tickets.columns.description')}
                                 </h3>
@@ -253,7 +258,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
 
                             {/* S4-09: SLA / Response time card */}
                             <div className="space-y-4">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <h3 className="text-micro font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <Clock className="h-3.5 w-3.5" />
                                     {t('tickets.sla.title')}
                                 </h3>
@@ -262,7 +267,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                         <span className="block text-[10px] uppercase tracking-wider text-indigo-400 font-bold mb-1">
                                             {t('tickets.sla.firstResponse')}
                                         </span>
-                                        <span className="text-sm font-semibold text-slate-800">
+                                        <span className="text-body font-semibold text-slate-800">
                                             {ticket.first_response_at && ticket.created_at
                                                 ? slaHours(ticket.created_at, ticket.first_response_at)
                                                 : <span className="italic text-slate-400">{t('tickets.sla.pending')}</span>}
@@ -272,7 +277,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                         <span className="block text-[10px] uppercase tracking-wider text-emerald-400 font-bold mb-1">
                                             {t('tickets.sla.resolution')}
                                         </span>
-                                        <span className="text-sm font-semibold text-slate-800">
+                                        <span className="text-body font-semibold text-slate-800">
                                             {ticket.resolved_at && ticket.created_at
                                                 ? slaHours(ticket.created_at, ticket.resolved_at)
                                                 : <span className="italic text-slate-400">{t('tickets.sla.notResolved')}</span>}
@@ -285,22 +290,22 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         {/* Metadata */}
                         <div className="space-y-8 md:border-l md:pl-12 border-slate-100">
                             <div className="space-y-4">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 opacity-70">
+                                <h3 className="text-micro font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 opacity-70">
                                     <User className="h-3.5 w-3.5" />
                                     {t('tickets.reporterInfo')}
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="p-3 rounded-xl bg-muted/10 border border-slate-100 transition-all hover:bg-muted/20">
                                         <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.columns.ip')}</span>
-                                        <span className="text-sm font-medium font-mono">{ticket.client_ip || t('tickets.notAvailable')}</span>
+                                        <span className="text-body font-medium font-mono">{ticket.client_ip || t('tickets.notAvailable')}</span>
                                     </div>
                                     <div className="p-3 rounded-xl bg-muted/10 border border-slate-100 transition-all hover:bg-muted/20">
                                         <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.projectId')}</span>
-                                        <span className="text-sm font-medium font-mono">{ticket.project_id || t('tickets.notAvailable')}</span>
+                                        <span className="text-body font-medium font-mono">{ticket.project_id || t('tickets.notAvailable')}</span>
                                     </div>
                                     <div className="p-3 rounded-xl bg-muted/10 border border-slate-100 col-span-2 transition-all hover:bg-muted/20">
                                         <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.assignee')}</span>
-                                        <span className="text-sm font-medium">
+                                        <span className="text-body font-medium">
                                             {ticket.assigned_to
                                                 ? (adminStaff.find(a => a.id === ticket.assigned_to)?.name ?? t('tickets.notAvailable'))
                                                 : <span className="italic text-slate-400">{t('tickets.unassigned')}</span>}
@@ -311,7 +316,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
 
                             {ticket.screenshot_path && (
                                 <div className="space-y-4">
-                                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-70">{t('tickets.attachedScreenshot')}</h3>
+                                    <h3 className="text-micro font-bold text-muted-foreground uppercase tracking-widest opacity-70">{t('tickets.attachedScreenshot')}</h3>
                                     <div className="border-2 border-slate-100 rounded-2xl overflow-hidden bg-muted/10 group relative shadow-sm transition-all hover:shadow-md">
                                         <img
                                             src={getImageUrl(ticket.screenshot_path)}
@@ -332,13 +337,54 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                     </div>
                                 </div>
                             )}
+
+                            {/* File attachments */}
+                            {(() => {
+                                const paths: string[] = (() => {
+                                    try { return ticket.attachments ? JSON.parse(ticket.attachments) : []; }
+                                    catch { return []; }
+                                })();
+                                if (!paths.length) return null;
+                                return (
+                                    <div className="space-y-4">
+                                        <h3 className="text-micro font-bold text-muted-foreground uppercase tracking-widest opacity-70 flex items-center gap-2">
+                                            <Paperclip className="h-3.5 w-3.5" />
+                                            Attachments ({paths.length})
+                                        </h3>
+                                        <ul className="space-y-2">
+                                            {paths.map((p, i) => {
+                                                const url = getImageUrl(p);
+                                                const isPdf = p.toLowerCase().endsWith('.pdf');
+                                                const name = p.split('/').pop() || p;
+                                                return (
+                                                    <li key={i} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-colors group">
+                                                        {isPdf
+                                                            ? <FileText className="h-8 w-8 text-red-400 shrink-0" />
+                                                            : <img src={url} alt={name} className="h-10 w-10 object-cover rounded-lg shrink-0 border border-slate-200" />
+                                                        }
+                                                        <span className="text-body text-slate-700 truncate flex-1 min-w-0">{name}</span>
+                                                        <a
+                                                            href={url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <ExternalLink className="h-4 w-4 text-slate-400 hover:text-primary" />
+                                                        </a>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
 
                     {/* Ticket Tracking */}
                     <div className="border-t border-slate-100 pt-12">
                         <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                            <h3 className="text-heading-2 font-bold text-slate-900 tracking-tight flex items-center gap-2">
                                 <span className="p-2 rounded-lg bg-primary/10 text-primary">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 </span>
@@ -350,11 +396,11 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         {isLoadingTracking ? (
                             <div className="flex flex-col items-center justify-center py-12 gap-3">
                                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                <p className="text-sm text-muted-foreground font-medium animate-pulse">{t('common.loading')}</p>
+                                <p className="text-body text-muted-foreground font-medium animate-pulse">{t('common.loading')}</p>
                             </div>
                         ) : tracking.length === 0 ? (
                             <div className="bg-slate-50 rounded-2xl p-8 border-2 border-dashed border-slate-200 text-center">
-                                <p className="text-sm text-slate-500 font-medium italic">{t('tickets.tracking.noActivity')}</p>
+                                <p className="text-body text-slate-500 font-medium italic">{t('tickets.tracking.noActivity')}</p>
                             </div>
                         ) : (
                             <div className="relative pl-12 space-y-8 before:absolute before:inset-0 before:left-[19px] before:w-0.5 before:bg-gradient-to-b before:from-primary/30 before:via-primary/30 before:to-transparent">
@@ -375,7 +421,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                                 <div className={`w-3 h-3 rounded-full ${dotColor}`} />
                                             </div>
                                             <div className="flex flex-col gap-2">
-                                                <div className="flex flex-wrap items-center gap-x-3 text-xs">
+                                                <div className="flex flex-wrap items-center gap-x-3 text-micro">
                                                     <span className={`font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${labelColor}`}>
                                                         {t(`tickets.tracking.${item.action}`) || item.action.replace('_', ' ')}
                                                     </span>
@@ -388,7 +434,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                                     <div className="text-[15px] prose-sm">
                                                         {item.old_value && (
                                                             <div className="flex items-center gap-3 text-slate-600 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
-                                                                <span className="text-xs font-bold uppercase tracking-widest opacity-60">{t('tickets.tracking.changedFrom')}:</span>
+                                                                <span className="text-micro font-bold uppercase tracking-widest opacity-60">{t('tickets.tracking.changedFrom')}:</span>
                                                                 <span className="line-through text-slate-400">{item.old_value}</span>
                                                                 <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                                                                 <span className="font-bold text-slate-900">{item.new_value}</span>

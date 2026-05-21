@@ -67,7 +67,7 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
                 <FileText className="h-16 w-16 text-muted-foreground opacity-20" />
-                <h1 className="text-2xl font-bold">Page not found</h1>
+                <h1 className="text-heading-1 font-bold">Page not found</h1>
                 <p className="text-muted-foreground">The page you are looking for does not exist or has not been published yet.</p>
                 <Button variant="outline" onClick={onBack}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
@@ -91,7 +91,7 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
                         <div className="h-5 w-px bg-border" />
                         <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate('landing')}>
                             <FileText className="h-5 w-5 text-purple-600" />
-                            <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
+                            <span className="text-heading-3 font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
                                 BillingTool
                             </span>
                         </div>
@@ -127,17 +127,17 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
                                     </Button>
                                 ) : (
                                     <div className="flex items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5">
-                                        <span className="text-xs font-medium text-red-700 whitespace-nowrap">Delete this page?</span>
+                                        <span className="text-micro font-medium text-red-700 whitespace-nowrap">Delete this page?</span>
                                         <button
                                             disabled={deleting}
                                             onClick={handleDelete}
-                                            className="rounded-md bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60 transition-colors"
+                                            className="rounded-md bg-red-600 px-2.5 py-1 text-micro font-semibold text-white hover:bg-red-700 disabled:opacity-60 transition-colors"
                                         >
                                             {deleting ? 'Deleting…' : 'Yes, delete'}
                                         </button>
                                         <button
                                             onClick={() => setDeleteConfirm(false)}
-                                            className="rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-100 transition-colors"
+                                            className="rounded-md px-2 py-1 text-micro font-medium text-red-600 hover:bg-red-100 transition-colors"
                                         >
                                             Cancel
                                         </button>
@@ -153,7 +153,7 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
             {/* Page Content */}
             <main className="flex-1 container px-4 md:px-6 py-12 max-w-4xl mx-auto">
                 {page?.title && (
-                    <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">{page.title}</h1>
+                    <h1 className="text-heading-1 md:text-display font-bold text-foreground mb-6">{page.title}</h1>
                 )}
                 {page?.content ? (
                     <div
@@ -169,7 +169,7 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
 
             {/* Footer */}
             <footer className="border-t bg-slate-50 dark:bg-slate-950 py-8 mt-auto">
-                <div className="container px-4 md:px-6 text-center text-sm text-muted-foreground">
+                <div className="container px-4 md:px-6 text-center text-body text-muted-foreground">
                     © 2026 BillingTool Inc.
                 </div>
             </footer>

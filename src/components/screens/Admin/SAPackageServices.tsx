@@ -146,7 +146,7 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
             <div className="space-y-6 max-w-2xl">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold">{editingService ? 'Edit Service Column' : 'Add Service Column'}</h2>
+                        <h2 className="text-heading-1 font-bold">{editingService ? 'Edit Service Column' : 'Add Service Column'}</h2>
                         <p className="text-muted-foreground">Define what columns will show up in package creation</p>
                     </div>
                 </div>
@@ -237,7 +237,7 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h2 className="text-2xl font-bold">Package Columns</h2>
+                    <h2 className="text-heading-1 font-bold">Package Columns</h2>
                     <p className="text-muted-foreground">Manage the columns available for packages</p>
                 </div>
             </div>
@@ -322,7 +322,7 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
                                     <CardHeader className="pb-4">
                                         <div className="flex items-start justify-between">
                                             <div>
-                                                <CardTitle className="text-xl">{srv.name}</CardTitle>
+                                                <CardTitle className="text-heading-2">{srv.name}</CardTitle>
                                                 <CardDescription className="mt-1">
                                                     Order: {srv.displayOrder} • {srv.description}
                                                 </CardDescription>
@@ -334,7 +334,7 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-4">
-                                            <div className="text-sm font-mono bg-muted p-2 rounded-md">
+                                            <div className="text-body font-mono bg-muted p-2 rounded-md">
                                                 Type Key: {srv.type}
                                             </div>
                                             <div className="flex gap-2 pt-2">
@@ -409,11 +409,11 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
                                         paginatedServices.map((srv) => (
                                             <TableRow key={srv.id}>
                                                 <TableCell>
-                                                    <div className="font-medium text-base">{srv.name}</div>
-                                                    <div className="text-sm text-muted-foreground mt-1">{srv.description}</div>
+                                                    <div className="font-medium text-heading-2">{srv.name}</div>
+                                                    <div className="text-body text-muted-foreground mt-1">{srv.description}</div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <div className="text-xs font-mono bg-muted px-2 py-1 rounded inline-block">
+                                                    <div className="text-micro font-mono bg-muted px-2 py-1 rounded inline-block">
                                                         {srv.type}
                                                     </div>
                                                 </TableCell>
@@ -461,12 +461,12 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
                     {/* Pagination Options */}
                     {processedServices.length > 0 && (
                         <div className="flex items-center justify-between px-2 pt-4">
-                            <div className="hidden sm:flex flex-1 text-sm text-muted-foreground">
+                            <div className="hidden sm:flex flex-1 text-body text-muted-foreground">
                                 Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, processedServices.length)} of {processedServices.length} entries
                             </div>
                             <div className="flex items-center space-x-6 lg:space-x-8">
                                 <div className="flex items-center space-x-2">
-                                    <p className="hidden sm:block text-sm font-medium">Rows per page</p>
+                                    <p className="hidden sm:block text-body font-medium">Rows per page</p>
                                     <Select
                                         value={`${pageSize}`}
                                         onValueChange={(value) => {
@@ -486,7 +486,7 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                                <div className="flex w-[100px] items-center justify-center text-body font-medium">
                                     Page {currentPage} of {totalPages || 1}
                                 </div>
                                 <div className="flex items-center space-x-2">

@@ -204,11 +204,11 @@ ${invoice.lines
                     <p className="text-muted-foreground mt-2">{invoice.invoiceNumber}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">{t('previewModal.issueDate') || 'Issue Date'}</p>
+                    <p className="text-body text-muted-foreground">{t('previewModal.issueDate') || 'Issue Date'}</p>
                     <p>{formatDate(invoice.issueDate)}</p>
                     {invoice.dueDate && (
                       <>
-                        <p className="text-sm text-muted-foreground mt-2">{t('previewModal.dueDate') || 'Due Date'}</p>
+                        <p className="text-body text-muted-foreground mt-2">{t('previewModal.dueDate') || 'Due Date'}</p>
                         <p>{formatDate(invoice.dueDate)}</p>
                       </>
                     )}
@@ -218,26 +218,26 @@ ${invoice.lines
                 {/* Parties */}
                 <div className="grid grid-cols-2 gap-8">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">{t('previewModal.billTo') || 'Bill To'}</p>
+                    <p className="text-body text-muted-foreground mb-2">{t('previewModal.billTo') || 'Bill To'}</p>
                     <p>{invoice.buyer.name}</p>
-                    {invoice.buyer.vatId && <p className="text-sm">{t('previewModal.vat') || 'VAT'}: {invoice.buyer.vatId}</p>}
-                    <p className="text-sm mt-2">{invoice.buyer.address.street}</p>
-                    <p className="text-sm">
+                    {invoice.buyer.vatId && <p className="text-body">{t('previewModal.vat') || 'VAT'}: {invoice.buyer.vatId}</p>}
+                    <p className="text-body mt-2">{invoice.buyer.address.street}</p>
+                    <p className="text-body">
                       {invoice.buyer.address.postalCode} {invoice.buyer.address.city}
                     </p>
-                    <p className="text-sm">{invoice.buyer.address.country}</p>
+                    <p className="text-body">{invoice.buyer.address.country}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">{t('previewModal.from') || 'From'}</p>
+                    <p className="text-body text-muted-foreground mb-2">{t('previewModal.from') || 'From'}</p>
                     <p>{invoice.seller.name}</p>
                     {invoice.seller.vatId && (
-                      <p className="text-sm">{t('previewModal.vat') || 'VAT'}: {invoice.seller.vatId}</p>
+                      <p className="text-body">{t('previewModal.vat') || 'VAT'}: {invoice.seller.vatId}</p>
                     )}
-                    <p className="text-sm mt-2">{invoice.seller.address.street}</p>
-                    <p className="text-sm">
+                    <p className="text-body mt-2">{invoice.seller.address.street}</p>
+                    <p className="text-body">
                       {invoice.seller.address.postalCode} {invoice.seller.address.city}
                     </p>
-                    <p className="text-sm">{invoice.seller.address.country}</p>
+                    <p className="text-body">{invoice.seller.address.country}</p>
                   </div>
                 </div>
 
@@ -300,17 +300,17 @@ ${invoice.lines
                 {/* Payment Info */}
                 {invoice.paymentMeans && (
                   <div className="border-t pt-4">
-                    <p className="text-sm mb-2">{t('previewModal.paymentInfo') || 'Payment Information'}</p>
+                    <p className="text-body mb-2">{t('previewModal.paymentInfo') || 'Payment Information'}</p>
                     {invoice.paymentMeans.iban && (
                       <>
-                        <p className="text-sm">{t('previewModal.iban') || 'IBAN'}: {invoice.paymentMeans.iban}</p>
+                        <p className="text-body">{t('previewModal.iban') || 'IBAN'}: {invoice.paymentMeans.iban}</p>
                         {invoice.paymentMeans.bic && (
-                          <p className="text-sm">{t('previewModal.bic') || 'BIC'}: {invoice.paymentMeans.bic}</p>
+                          <p className="text-body">{t('previewModal.bic') || 'BIC'}: {invoice.paymentMeans.bic}</p>
                         )}
                       </>
                     )}
                     {invoice.paymentTerms?.note && (
-                      <p className="text-sm mt-2">{invoice.paymentTerms.note}</p>
+                      <p className="text-body mt-2">{invoice.paymentTerms.note}</p>
                     )}
                   </div>
                 )}
@@ -322,7 +322,7 @@ ${invoice.lines
             <div className="h-[600px] w-full border border-slate-800 rounded-lg bg-slate-900 overflow-hidden shadow-inner flex flex-col">
               <ScrollArea className="flex-1 w-full">
                 <div className="p-6 min-w-0">
-                  <pre className="text-sm text-emerald-300 font-mono whitespace-pre-wrap break-words overflow-wrap-anywhere leading-relaxed">
+                  <pre className="text-body text-emerald-300 font-mono whitespace-pre-wrap break-words overflow-wrap-anywhere leading-relaxed">
                     <code>{generateUBL()}</code>
                   </pre>
                 </div>

@@ -218,8 +218,8 @@ export function AIAssistantChat({
                         {messages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                                 <MessageSquare className="h-12 w-12 mb-4 opacity-50" />
-                                <p className="text-sm">{t('ai.noMessages') || 'No messages yet'}</p>
-                                <p className="text-xs mt-2">
+                                <p className="text-body">{t('ai.noMessages') || 'No messages yet'}</p>
+                                <p className="text-micro mt-2">
                                     {t('ai.startConversation') || 'Start a conversation to create or edit invoices'}
                                 </p>
                             </div>
@@ -237,7 +237,7 @@ export function AIAssistantChat({
                                     <div className="flex justify-start">
                                         <div className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center gap-2">
                                             <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
-                                            <span className="text-sm text-muted-foreground">
+                                            <span className="text-body text-muted-foreground">
                                                 {t('ai.thinking') || 'Thinking...'}
                                             </span>
                                         </div>
@@ -267,7 +267,7 @@ export function AIAssistantChat({
                                 )}
                             </Button>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-2">
+                        <p className="text-micro text-muted-foreground mt-2">
                             {t('ai.hint') || 'Describe your invoice in natural language'}
                         </p>
                     </form>

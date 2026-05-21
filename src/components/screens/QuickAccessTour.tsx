@@ -299,7 +299,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                     >
                         <div className="flex justify-between items-start mb-3">
                             <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs text-center font-bold">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-micro text-center font-bold">
                                     {currentStep + 1}
                                 </span>
                                 {step.title}
@@ -309,7 +309,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                             </button>
                         </div>
 
-                        <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+                        <p className="text-body text-gray-600 mb-5 leading-relaxed">
                             {step.description}
                         </p>
 
@@ -335,7 +335,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                                 <Button
                                     size="sm"
                                     onClick={handleNext}
-                                    className="h-8 px-3 text-xs bg-purple-600 hover:bg-purple-700 shadow-sm"
+                                    className="h-8 px-3 text-micro bg-purple-600 hover:bg-purple-700 shadow-sm"
                                 >
                                     {currentStep === steps.length - 1 ? t('quickAccessTour.finish') : t('quickAccessTour.next')}
                                     {currentStep !== steps.length - 1 && <ChevronRight className="h-3.5 w-3.5 ml-1" />}

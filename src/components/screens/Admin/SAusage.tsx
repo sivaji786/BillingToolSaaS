@@ -99,7 +99,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Usage Analytics</h1>
+                    <h1 className="text-heading-1 font-bold tracking-tight">Usage Analytics</h1>
                     <p className="text-muted-foreground">Monitor platform resource usage and performance metrics</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -182,12 +182,12 @@ export function SAusage({ onNavigate }: SAusageProps) {
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted" />
                                         <XAxis 
                                             dataKey="date" 
-                                            className="text-xs" 
+                                            className="text-micro" 
                                             tickLine={false}
                                             axisLine={false}
                                         />
                                         <YAxis 
-                                            className="text-xs" 
+                                            className="text-micro" 
                                             tickLine={false}
                                             axisLine={false}
                                             tickFormatter={(value) => value > 1000 ? `${(value/1000).toFixed(1)}k` : value}
@@ -236,12 +236,12 @@ export function SAusage({ onNavigate }: SAusageProps) {
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted" />
                                         <XAxis 
                                             dataKey="date" 
-                                            className="text-xs"
+                                            className="text-micro"
                                             tickLine={false}
                                             axisLine={false}
                                         />
                                         <YAxis 
-                                            className="text-xs"
+                                            className="text-micro"
                                             tickLine={false}
                                             axisLine={false}
                                         />
@@ -284,7 +284,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
                             const percentage = Math.min(Math.round((quota.used / quota.limit) * 100), 100);
                             return (
                                 <div key={quota.label} className="space-y-2">
-                                    <div className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center justify-between text-body">
                                         <div className="flex items-center gap-2">
                                             <span className="font-medium">{quota.label}</span>
                                             <Badge variant={percentage > 80 ? "destructive" : "secondary"}>
@@ -342,8 +342,8 @@ export function SAusage({ onNavigate }: SAusageProps) {
                                             <TableCell className="font-medium">{tenant.tenantName}</TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm">{tenant.adminName}</span>
-                                                    <span className="text-xs text-muted-foreground">{tenant.adminEmail}</span>
+                                                    <span className="text-body">{tenant.adminName}</span>
+                                                    <span className="text-micro text-muted-foreground">{tenant.adminEmail}</span>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right">{formatBytes(tenant.storageUsed)}</TableCell>

@@ -436,7 +436,7 @@ export function Buyers() {
                             {(['name', 'vatId', 'email', 'address'] as const).map(col => (
                                 <TableHead key={col} className="p-2">
                                     <Input
-                                        className="h-8 text-xs font-normal"
+                                        className="h-8 text-micro font-normal"
                                         placeholder={`Filter ${col}...`}
                                         value={columnFilters[col]}
                                         onChange={(e) => { setColumnFilters(f => ({ ...f, [col]: e.target.value })); setCurrentPage(1); }}
@@ -452,7 +452,7 @@ export function Buyers() {
                                 <TableCell colSpan={5} className="text-center py-12">
                                     <div className="flex flex-col items-center gap-2">
                                         <RefreshCw className="h-8 w-8 animate-spin text-purple-600" />
-                                        <p className="text-sm text-gray-500">{t('common.loading')}</p>
+                                        <p className="text-body text-gray-500">{t('common.loading')}</p>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -462,7 +462,7 @@ export function Buyers() {
                                     <div className="flex flex-col items-center gap-2">
                                         <User className="h-12 w-12 text-gray-300" />
                                         <h3 className="text-gray-900 dark:text-gray-100">{t('buyers.noBuyers')}</h3>
-                                        <p className="text-sm text-gray-500">{t('buyers.noBuyersDesc')}</p>
+                                        <p className="text-body text-gray-500">{t('buyers.noBuyersDesc')}</p>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -481,7 +481,7 @@ export function Buyers() {
                                     </TableCell>
                                     <TableCell>
                                         {buyer.address && (
-                                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                                            <div className="flex items-center gap-1 text-micro text-gray-500">
                                                 <MapPin className="h-3 w-3" />
                                                 <span>{`${buyer.address.city}, ${buyer.address.country}`}</span>
                                             </div>
@@ -506,7 +506,7 @@ export function Buyers() {
                 {/* Pagination */}
                 {processed.length > 0 && (
                     <div className="flex items-center justify-between px-6 py-4 border-t flex-wrap gap-3">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-2 text-body text-gray-600">
                             <span>{t('invoiceList.showing')}</span>
                             <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>
                             <span>{t('invoiceList.paginationTo')}</span>
@@ -517,7 +517,7 @@ export function Buyers() {
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-600">{t('invoiceList.rowsPerPage')}:</span>
+                                <span className="text-body text-gray-600">{t('invoiceList.rowsPerPage')}:</span>
                                 <Select value={itemsPerPage.toString()} onValueChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1); }}>
                                     <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
                                     <SelectContent>
@@ -529,7 +529,7 @@ export function Buyers() {
                                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
                                     <ChevronLeft className="h-4 w-4" />
                                 </Button>
-                                <span className="text-sm text-gray-600">{t('invoiceList.page')} {currentPage} {t('invoiceList.of')} {totalPages}</span>
+                                <span className="text-body text-gray-600">{t('invoiceList.page')} {currentPage} {t('invoiceList.of')} {totalPages}</span>
                                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                                     <ChevronRight className="h-4 w-4" />
                                 </Button>
@@ -550,7 +550,7 @@ export function Buyers() {
 
                         {/* Duplicate warnings */}
                         {(formDupEmail || formDupVat) && (
-                            <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800 mt-2">
+                            <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-body text-amber-800 mt-2">
                                 <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                                 <span>
                                     {formDupEmail && formDupVat
@@ -566,11 +566,11 @@ export function Buyers() {
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2 col-span-2">
-                                    <label className="text-sm font-medium">{t('buyers.name')}</label>
+                                    <label className="text-body font-medium">{t('buyers.name')}</label>
                                     <Input required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">{t('buyers.vatId')}</label>
+                                    <label className="text-body font-medium">{t('buyers.vatId')}</label>
                                     <Input
                                         value={formData.vatId}
                                         onChange={(e) => setFormData({ ...formData, vatId: e.target.value })}
@@ -578,11 +578,11 @@ export function Buyers() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">{t('buyers.legalOrgId')}</label>
+                                    <label className="text-body font-medium">{t('buyers.legalOrgId')}</label>
                                     <Input value={formData.legalOrganizationId} onChange={(e) => setFormData({ ...formData, legalOrganizationId: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">{t('buyers.email')}</label>
+                                    <label className="text-body font-medium">{t('buyers.email')}</label>
                                     <Input
                                         type="email"
                                         value={formData.contactEmail}
@@ -591,30 +591,30 @@ export function Buyers() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">{t('buyers.phone')}</label>
+                                    <label className="text-body font-medium">{t('buyers.phone')}</label>
                                     <Input value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} />
                                 </div>
                             </div>
 
                             <div className="space-y-4 pt-4 border-t">
-                                <h4 className="text-sm font-medium flex items-center gap-2">
+                                <h4 className="text-body font-medium flex items-center gap-2">
                                     <MapPin className="h-4 w-4" />{t('buyers.address')}
                                 </h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2 col-span-2">
-                                        <label className="text-sm font-medium">{t('buyers.street')}</label>
+                                        <label className="text-body font-medium">{t('buyers.street')}</label>
                                         <Input value={formData.address?.street} onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, street: e.target.value } })} />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">{t('buyers.city')}</label>
+                                        <label className="text-body font-medium">{t('buyers.city')}</label>
                                         <Input value={formData.address?.city} onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, city: e.target.value } })} />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">{t('buyers.postalCode')}</label>
+                                        <label className="text-body font-medium">{t('buyers.postalCode')}</label>
                                         <Input value={formData.address?.postalCode} onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, postalCode: e.target.value } })} />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">{t('buyers.country')}</label>
+                                        <label className="text-body font-medium">{t('buyers.country')}</label>
                                         <Input placeholder="e.g. DE, US, FR" value={formData.address?.country} onChange={(e) => setFormData({ ...formData, address: { ...formData.address!, country: e.target.value } })} />
                                     </div>
                                 </div>
@@ -653,11 +653,11 @@ export function Buyers() {
 
                     {/* Summary bar */}
                     <div className="flex items-center gap-4 py-2 border-b">
-                        <div className="flex items-center gap-1.5 text-sm text-green-700">
+                        <div className="flex items-center gap-1.5 text-body text-green-700">
                             <CheckCircle2 className="h-4 w-4" />
                             <span><strong>{importNewCount}</strong> new</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-sm text-amber-700">
+                        <div className="flex items-center gap-1.5 text-body text-amber-700">
                             <AlertTriangle className="h-4 w-4" />
                             <span><strong>{importSkipCount}</strong> skipped (duplicate)</span>
                         </div>
@@ -665,13 +665,13 @@ export function Buyers() {
 
                     {/* Rows */}
                     <div className="overflow-auto flex-1 -mx-6 px-6">
-                        <table className="w-full text-sm">
+                        <table className="w-full text-body">
                             <thead className="sticky top-0 bg-slate-50 border-b">
                                 <tr>
-                                    <th className="text-left py-2 pr-3 font-medium text-xs text-muted-foreground">Status</th>
-                                    <th className="text-left py-2 pr-3 font-medium text-xs text-muted-foreground">Name</th>
-                                    <th className="text-left py-2 pr-3 font-medium text-xs text-muted-foreground">Email</th>
-                                    <th className="text-left py-2 font-medium text-xs text-muted-foreground">VAT ID</th>
+                                    <th className="text-left py-2 pr-3 font-medium text-micro text-muted-foreground">Status</th>
+                                    <th className="text-left py-2 pr-3 font-medium text-micro text-muted-foreground">Name</th>
+                                    <th className="text-left py-2 pr-3 font-medium text-micro text-muted-foreground">Email</th>
+                                    <th className="text-left py-2 font-medium text-micro text-muted-foreground">VAT ID</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y">

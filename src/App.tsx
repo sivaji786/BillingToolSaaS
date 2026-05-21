@@ -63,6 +63,8 @@ import { QueryProvider } from './providers/QueryProvider';
 import { useAdminStore } from './stores/adminStore';
 import { useAuthStore } from './stores/authStore';
 import { InlineCmsProvider } from './contexts/InlineCmsContext';
+import { FloatingDockProvider } from './contexts/FloatingDockContext';
+import { FloatingDock } from './components/FloatingDock';
 import { EditModeBar } from './components/cms/EditModeBar';
 import { AdminLayout as AdminLayoutWrapper } from './components/admin/AdminLayout';
 import {
@@ -931,7 +933,7 @@ function AppContent() {
             <div className="flex h-[50vh] items-center justify-center">
               <div className="flex flex-col items-center gap-2">
                 <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-                <p className="text-sm text-gray-500">Loading module...</p>
+                <p className="text-body text-gray-500">Loading module...</p>
               </div>
             </div>
           }>
@@ -1131,7 +1133,10 @@ export default function App() {
     <QueryProvider>
       <LanguageProvider>
         <InlineCmsProvider>
-          <AdminPortalRouter />
+          <FloatingDockProvider>
+            <AdminPortalRouter />
+            <FloatingDock />
+          </FloatingDockProvider>
         </InlineCmsProvider>
       </LanguageProvider>
     </QueryProvider>

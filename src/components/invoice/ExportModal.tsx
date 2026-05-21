@@ -130,7 +130,7 @@ export function ExportModal({ invoiceNumber, open, onOpenChange, onExport }: Exp
                       <Label htmlFor={option.id} className="cursor-pointer">
                         {option.label}
                       </Label>
-                      <p className="text-sm text-muted-foreground">{option.description}</p>
+                      <p className="text-body text-muted-foreground">{option.description}</p>
                     </div>
                   </div>
                 );
@@ -153,7 +153,7 @@ export function ExportModal({ invoiceNumber, open, onOpenChange, onExport }: Exp
                   <Label htmlFor="embedPdf" className="cursor-pointer">
                     Embed PDF/A-3 in UBL
                   </Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-body text-muted-foreground">
                     Include human-readable PDF in XML package
                   </p>
                 </div>
@@ -170,7 +170,7 @@ export function ExportModal({ invoiceNumber, open, onOpenChange, onExport }: Exp
                 <Label htmlFor="attachments" className="cursor-pointer">
                   Include attachments
                 </Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-body text-muted-foreground">
                   Export with any attached supporting documents
                 </p>
               </div>
@@ -186,7 +186,7 @@ export function ExportModal({ invoiceNumber, open, onOpenChange, onExport }: Exp
                 <Label htmlFor="sign" className="cursor-pointer">
                   Apply digital signature
                 </Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-body text-muted-foreground">
                   Sign document with your digital certificate
                 </p>
               </div>
@@ -196,7 +196,7 @@ export function ExportModal({ invoiceNumber, open, onOpenChange, onExport }: Exp
           {/* Progress */}
           {isExporting && (
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-body">
                 <span>Exporting...</span>
                 <span>{progress}%</span>
               </div>

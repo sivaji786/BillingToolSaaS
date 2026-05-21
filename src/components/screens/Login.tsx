@@ -118,7 +118,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
           <Card className="border-2 shadow-xl backdrop-blur-sm bg-white/80">
             {/* Card Header + optional pending action banner */}
             {hasPendingAction && (
-              <div className="mx-6 mt-4 mb-0 flex items-start gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-800">
+              <div className="mx-6 mt-4 mb-0 flex items-start gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-body text-violet-800">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
                 <span>{t('login.pendingActionBanner') || 'Account found! Log in below to continue with your invoice.'}</span>
               </div>
@@ -167,7 +167,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
                       <button
                         type="button"
                         onClick={() => setIsForgotPasswordMode(false)}
-                        className="text-sm font-medium text-violet-600 hover:text-violet-500"
+                        className="text-body font-medium text-violet-600 hover:text-violet-500"
                       >
                         Back to login
                       </button>
@@ -207,7 +207,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
                         <button
                           type="button"
                           onClick={() => setIsForgotPasswordMode(true)}
-                          className="text-xs font-medium text-violet-600 hover:text-violet-500"
+                          className="text-micro font-medium text-violet-600 hover:text-violet-500"
                         >
                           Forgot password?
                         </button>
@@ -251,7 +251,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
           </Card>
 
           {/* Footer */}
-          <div className="text-center text-sm text-muted-foreground">
+          <div className="text-center text-body text-muted-foreground">
             <p>
               {t('login.footer1')}
             </p>

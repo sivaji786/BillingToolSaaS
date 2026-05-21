@@ -291,13 +291,13 @@ export function SAPages() {
         <div className="flex h-[calc(100vh-10rem)] gap-6">
             {/* Sidebar */}
             <div className="w-64 flex flex-col gap-2 shrink-0 overflow-y-auto">
-                <h2 className="text-sm font-semibold text-muted-foreground px-2 mb-2 uppercase tracking-wider">Built-in Pages</h2>
+                <h2 className="text-body font-semibold text-muted-foreground px-2 mb-2 uppercase tracking-wider">Built-in Pages</h2>
                 {BUILTIN_PAGES.map((page) => (
                     <button
                         key={page.slug}
                         onClick={() => handlePageChange(page.slug)}
                         className={cn(
-                            "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group",
+                            "flex items-center gap-3 px-4 py-3 rounded-xl text-body font-medium transition-all group",
                             selectedSlug === page.slug
                                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200 dark:shadow-none translate-x-1"
                                 : "hover:bg-purple-50 dark:hover:bg-purple-900/20 text-muted-foreground hover:text-purple-600"
@@ -312,13 +312,13 @@ export function SAPages() {
                 {/* Custom pages */}
                 {customPages.length > 0 && (
                     <>
-                        <h2 className="text-sm font-semibold text-muted-foreground px-2 mt-4 mb-2 uppercase tracking-wider">Custom Pages</h2>
+                        <h2 className="text-body font-semibold text-muted-foreground px-2 mt-4 mb-2 uppercase tracking-wider">Custom Pages</h2>
                         {customPages.map((page: any) => (
                             <button
                                 key={page.slug}
                                 onClick={() => handlePageChange(page.slug)}
                                 className={cn(
-                                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group",
+                                    "flex items-center gap-3 px-4 py-3 rounded-xl text-body font-medium transition-all group",
                                     selectedSlug === page.slug
                                         ? "bg-purple-600 text-white shadow-lg shadow-purple-200 dark:shadow-none translate-x-1"
                                         : "hover:bg-purple-50 dark:hover:bg-purple-900/20 text-muted-foreground hover:text-purple-600"
@@ -356,9 +356,9 @@ export function SAPages() {
                         <div className="flex items-center justify-between gap-4">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit {selectedPage.title}</h1>
+                                    <h1 className="text-heading-1 font-bold text-slate-900 dark:text-white">Edit {selectedPage.title}</h1>
                                     <span className={cn(
-                                        "text-xs font-semibold px-2 py-0.5 rounded-full border",
+                                        "text-micro font-semibold px-2 py-0.5 rounded-full border",
                                         isPublished
                                             ? "bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400"
                                             : "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400"
@@ -366,14 +366,14 @@ export function SAPages() {
                                         {isPublished ? 'Published' : 'Draft'}
                                     </span>
                                 </div>
-                                <p className="text-sm text-muted-foreground">Manage content and SEO for this public page.</p>
+                                <p className="text-body text-muted-foreground">Manage content and SEO for this public page.</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <a
                                     href={getLiveUrl(selectedSlug)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md border border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 text-body font-medium rounded-md border border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 transition-colors"
                                 >
                                     <ExternalLink className="h-3.5 w-3.5" />
                                     View Live
@@ -404,7 +404,7 @@ export function SAPages() {
                                     type="button"
                                     onClick={() => handleLangChange(lang.code)}
                                     className={cn(
-                                        "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                                        "flex items-center gap-2 px-4 py-2 rounded-lg text-body font-medium transition-all",
                                         selectedLang === lang.code
                                             ? "bg-white dark:bg-slate-900 shadow text-purple-600 font-semibold"
                                             : "text-muted-foreground hover:text-slate-900 dark:hover:text-white"
@@ -418,7 +418,7 @@ export function SAPages() {
 
                         {/* Fallback notice */}
                         {isFallback && (
-                            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-sm">
+                            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-body">
                                 <AlertCircle className="h-4 w-4 shrink-0" />
                                 <span>
                                     No <strong>{LANGUAGES.find(l => l.code === selectedLang)?.label}</strong> content yet — showing English fallback.
@@ -430,7 +430,7 @@ export function SAPages() {
                         {/* Page Configuration */}
                         <Card className="border-none shadow-xl bg-white/60 dark:bg-slate-900/60 backdrop-blur">
                             <CardHeader>
-                                <CardTitle className="text-lg">Page Configuration</CardTitle>
+                                <CardTitle className="text-heading-3">Page Configuration</CardTitle>
                                 <CardDescription>Basic information, SEO, and navigation settings</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -445,8 +445,8 @@ export function SAPages() {
                                 <div className="border-t pt-4 space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <Label className="text-sm font-medium">Published</Label>
-                                            <p className="text-xs text-muted-foreground mt-0.5">Unpublished pages are hidden from public visitors</p>
+                                            <Label className="text-body font-medium">Published</Label>
+                                            <p className="text-micro text-muted-foreground mt-0.5">Unpublished pages are hidden from public visitors</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {isPublished
@@ -463,8 +463,8 @@ export function SAPages() {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <Label className="text-sm font-medium">Show in Navigation</Label>
-                                            <p className="text-xs text-muted-foreground mt-0.5">Adds this page to the website header and footer nav</p>
+                                            <Label className="text-body font-medium">Show in Navigation</Label>
+                                            <p className="text-micro text-muted-foreground mt-0.5">Adds this page to the website header and footer nav</p>
                                         </div>
                                         <Switch
                                             checked={currentNavState.show_in_nav}
@@ -491,7 +491,7 @@ export function SAPages() {
                                                         }))
                                                     }
                                                 />
-                                                <p className="text-xs text-muted-foreground">Leave blank to use the page title</p>
+                                                <p className="text-micro text-muted-foreground">Leave blank to use the page title</p>
                                             </div>
                                             <div className="grid gap-2">
                                                 <Label htmlFor="nav_order">Nav Order</Label>
@@ -507,7 +507,7 @@ export function SAPages() {
                                                         }))
                                                     }
                                                 />
-                                                <p className="text-xs text-muted-foreground">Lower = earlier in nav</p>
+                                                <p className="text-micro text-muted-foreground">Lower = earlier in nav</p>
                                             </div>
                                         </div>
                                     )}
@@ -545,11 +545,11 @@ export function SAPages() {
                                         {features.map((f, idx) => (
                                             <div key={idx} className="grid gap-4 md:grid-cols-2 p-4 rounded-xl border border-slate-100 bg-slate-50/50 dark:bg-slate-900/20 dark:border-slate-800">
                                                 <div>
-                                                    <Label className="text-xs mb-1.5 block">Feature {idx + 1} Title</Label>
+                                                    <Label className="text-micro mb-1.5 block">Feature {idx + 1} Title</Label>
                                                     <Input value={f.title} onChange={(e) => { const n = [...features]; n[idx] = { ...n[idx], title: e.target.value }; setFeatures(n); }} />
                                                 </div>
                                                 <div>
-                                                    <Label className="text-xs mb-1.5 block">Feature {idx + 1} Description</Label>
+                                                    <Label className="text-micro mb-1.5 block">Feature {idx + 1} Description</Label>
                                                     <Input value={f.desc} onChange={(e) => { const n = [...features]; n[idx] = { ...n[idx], desc: e.target.value }; setFeatures(n); }} />
                                                 </div>
                                             </div>
@@ -568,11 +568,11 @@ export function SAPages() {
                                         {howItWorksSteps.map((s, idx) => (
                                             <div key={idx} className="grid gap-4 md:grid-cols-2 p-4 rounded-xl border border-slate-100 bg-slate-50/50 dark:bg-slate-900/20 dark:border-slate-800">
                                                 <div>
-                                                    <Label className="text-xs mb-1.5 block">Step {idx + 1} Title</Label>
+                                                    <Label className="text-micro mb-1.5 block">Step {idx + 1} Title</Label>
                                                     <Input value={s.title} onChange={(e) => { const n = [...howItWorksSteps]; n[idx] = { ...n[idx], title: e.target.value }; setHowItWorksSteps(n); }} />
                                                 </div>
                                                 <div>
-                                                    <Label className="text-xs mb-1.5 block">Step {idx + 1} Description</Label>
+                                                    <Label className="text-micro mb-1.5 block">Step {idx + 1} Description</Label>
                                                     <Input value={s.desc} onChange={(e) => { const n = [...howItWorksSteps]; n[idx] = { ...n[idx], desc: e.target.value }; setHowItWorksSteps(n); }} />
                                                 </div>
                                             </div>
@@ -586,11 +586,11 @@ export function SAPages() {
                                     <Field label="Section Title" name="about_title" defaultValue={homeContent.about_title} />
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div>
-                                            <Label className="text-sm mb-1.5 block">First Paragraph</Label>
+                                            <Label className="text-body mb-1.5 block">First Paragraph</Label>
                                             <RichTextEditor value={aboutText} onChange={setAboutText} className="min-h-[180px]" />
                                         </div>
                                         <div>
-                                            <Label className="text-sm mb-1.5 block">Second Paragraph</Label>
+                                            <Label className="text-body mb-1.5 block">Second Paragraph</Label>
                                             <RichTextEditor value={aboutText2} onChange={setAboutText2} className="min-h-[180px]" />
                                         </div>
                                     </div>
@@ -614,7 +614,7 @@ export function SAPages() {
                                                     onClick={() => document.getElementById('about-image-upload')?.click()}
                                                 >
                                                     <Plus className="h-8 w-8 text-slate-400 mb-2" />
-                                                    <span className="text-xs text-slate-500 font-medium">Click to upload image</span>
+                                                    <span className="text-micro text-slate-500 font-medium">Click to upload image</span>
                                                     <span className="text-[10px] text-slate-400 mt-1">Recommended: 800x600px</span>
                                                 </div>
                                             )}
@@ -664,11 +664,11 @@ export function SAPages() {
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                                 <div className="grid gap-4 md:grid-cols-2 mb-4">
-                                                    <div className="grid gap-2"><Label className="text-xs">User Name</Label><Input value={t.name} onChange={(e) => { const n = [...testimonials]; n[idx] = { ...n[idx], name: e.target.value }; setTestimonials(n); }} placeholder="Jane Doe" /></div>
-                                                    <div className="grid gap-2"><Label className="text-xs">Role/Company</Label><Input value={t.role} onChange={(e) => { const n = [...testimonials]; n[idx] = { ...n[idx], role: e.target.value }; setTestimonials(n); }} placeholder="CEO at TechCo" /></div>
+                                                    <div className="grid gap-2"><Label className="text-micro">User Name</Label><Input value={t.name} onChange={(e) => { const n = [...testimonials]; n[idx] = { ...n[idx], name: e.target.value }; setTestimonials(n); }} placeholder="Jane Doe" /></div>
+                                                    <div className="grid gap-2"><Label className="text-micro">Role/Company</Label><Input value={t.role} onChange={(e) => { const n = [...testimonials]; n[idx] = { ...n[idx], role: e.target.value }; setTestimonials(n); }} placeholder="CEO at TechCo" /></div>
                                                 </div>
                                                 <div className="grid gap-2">
-                                                    <Label className="text-xs">Testimonial Text</Label>
+                                                    <Label className="text-micro">Testimonial Text</Label>
                                                     <RichTextEditor value={t.text} onChange={(val) => { const n = [...testimonials]; n[idx] = { ...n[idx], text: val }; setTestimonials(n); }} className="min-h-[120px]" />
                                                 </div>
                                             </div>
@@ -693,8 +693,8 @@ export function SAPages() {
                                                 <Button type="button" variant="ghost" size="icon" onClick={() => setFaqs(faqs.filter((_, i) => i !== idx))} className="absolute top-2 right-2 h-7 w-7 text-slate-400 hover:text-red-500">
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
-                                                <div className="grid gap-2 mb-4"><Label className="text-xs">Question</Label><Input value={f.q} onChange={(e) => { const n = [...faqs]; n[idx] = { ...n[idx], q: e.target.value }; setFaqs(n); }} placeholder="How does it work?" /></div>
-                                                <div className="grid gap-2"><Label className="text-xs">Answer</Label><RichTextEditor value={f.a} onChange={(val) => { const n = [...faqs]; n[idx] = { ...n[idx], a: val }; setFaqs(n); }} className="min-h-[120px]" /></div>
+                                                <div className="grid gap-2 mb-4"><Label className="text-micro">Question</Label><Input value={f.q} onChange={(e) => { const n = [...faqs]; n[idx] = { ...n[idx], q: e.target.value }; setFaqs(n); }} placeholder="How does it work?" /></div>
+                                                <div className="grid gap-2"><Label className="text-micro">Answer</Label><RichTextEditor value={f.a} onChange={(val) => { const n = [...faqs]; n[idx] = { ...n[idx], a: val }; setFaqs(n); }} className="min-h-[120px]" /></div>
                                             </div>
                                         ))}
                                     </div>
@@ -734,8 +734,8 @@ export function SAPages() {
                             /* Legal / custom page rich-text editor */
                             <Card className="border-none shadow-xl bg-white/60 dark:bg-slate-900/60 backdrop-blur">
                                 <CardHeader>
-                                    <CardTitle className="text-lg">Content</CardTitle>
-                                    <CardDescription>Rich text content for this page. The URL on the live website will be <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded text-xs">/#/cms/{selectedSlug}</code></CardDescription>
+                                    <CardTitle className="text-heading-3">Content</CardTitle>
+                                    <CardDescription>Rich text content for this page. The URL on the live website will be <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded text-micro">/#/cms/{selectedSlug}</code></CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <CMSContentEditor key={`${selectedSlug}-${selectedLang}`} initialValue={selectedPage.content} name="content" />
@@ -753,8 +753,8 @@ export function SAPages() {
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center p-12 bg-slate-50 dark:bg-slate-900/20 rounded-2xl border-2 border-dashed">
                         <FileText className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
-                        <h3 className="text-lg font-semibold">Select a page to edit</h3>
-                        <p className="text-sm text-muted-foreground max-w-xs">Choose a page from the sidebar to modify its public content.</p>
+                        <h3 className="text-heading-3 font-semibold">Select a page to edit</h3>
+                        <p className="text-body text-muted-foreground max-w-xs">Choose a page from the sidebar to modify its public content.</p>
                     </div>
                 )}
             </div>
@@ -783,7 +783,7 @@ export function SAPages() {
                     <div className="grid gap-2">
                         <Label htmlFor="new-slug">URL Slug</Label>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground whitespace-nowrap">#/cms/</span>
+                            <span className="text-body text-muted-foreground whitespace-nowrap">#/cms/</span>
                             <Input
                                 id="new-slug"
                                 placeholder="about-us"
@@ -791,12 +791,12 @@ export function SAPages() {
                                 onChange={(e) => setNewSlug(slugify(e.target.value))}
                             />
                         </div>
-                        <p className="text-xs text-muted-foreground">Auto-generated from title. Lowercase letters, numbers, and hyphens only.</p>
+                        <p className="text-micro text-muted-foreground">Auto-generated from title. Lowercase letters, numbers, and hyphens only.</p>
                     </div>
                     <div className="flex items-center justify-between pt-1 border-t">
                         <div>
-                            <Label className="text-sm font-medium">Show in Navigation</Label>
-                            <p className="text-xs text-muted-foreground mt-0.5">Add to header/footer nav links</p>
+                            <Label className="text-body font-medium">Show in Navigation</Label>
+                            <p className="text-micro text-muted-foreground mt-0.5">Add to header/footer nav links</p>
                         </div>
                         <Switch checked={newShowInNav} onCheckedChange={setNewShowInNav} />
                     </div>
@@ -868,7 +868,7 @@ function SectionCard({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-purple-600 font-semibold">
                         {icon}
-                        <CardTitle className="text-lg text-foreground">{title}</CardTitle>
+                        <CardTitle className="text-heading-3 text-foreground">{title}</CardTitle>
                     </div>
                     {action}
                 </div>

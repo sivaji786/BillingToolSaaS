@@ -62,7 +62,7 @@ export function ValidationPanel({ errors }: ValidationPanelProps) {
           {Object.entries(errorsByField).map(([field, fieldErrors], fieldIndex) => (
             <div key={field} className="space-y-2">
               <div>
-                <p className="text-muted-foreground text-sm">{field}</p>
+                <p className="text-muted-foreground text-body">{field}</p>
               </div>
               {fieldErrors.map((error, index) => (
                 <Alert
@@ -76,11 +76,11 @@ export function ValidationPanel({ errors }: ValidationPanelProps) {
                     {error.message}
                   </AlertTitle>
                   <AlertDescription className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
-                      UBL Path: <code className="text-xs">{error.ublPath}</code>
+                    <p className="text-micro text-muted-foreground">
+                      UBL Path: <code className="text-micro">{error.ublPath}</code>
                     </p>
                     {error.suggestion && (
-                      <p className="text-sm">{error.suggestion}</p>
+                      <p className="text-body">{error.suggestion}</p>
                     )}
                   </AlertDescription>
                 </Alert>

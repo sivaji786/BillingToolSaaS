@@ -70,7 +70,7 @@ export function AIHistory() {
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold text-purple-900 dark:text-purple-100">AI Query History</h1>
+                    <h1 className="text-heading-1 font-bold text-purple-900 dark:text-purple-100">AI Query History</h1>
                     <p className="text-gray-600 dark:text-gray-400">View your past AI queries within the workspace</p>
                 </div>
             </div>
@@ -111,7 +111,7 @@ export function AIHistory() {
                             ) : (
                                 paginatedEntries.map((entry, index) => (
                                     <TableRow key={entry.id}>
-                                        <TableHead className="text-gray-500 text-sm font-normal">
+                                        <TableHead className="text-gray-500 text-body font-normal">
                                             {(currentPage - 1) * pageSize + index + 1}
                                         </TableHead>
                                         <TableHead
@@ -120,7 +120,7 @@ export function AIHistory() {
                                         >
                                             {entry.prompt}
                                         </TableHead>
-                                        <TableHead className="text-gray-500 font-mono text-sm font-normal">
+                                        <TableHead className="text-gray-500 font-mono text-body font-normal">
                                             {entry.folder_path || '/'}
                                         </TableHead>
                                         <TableHead className="text-right text-gray-500 font-normal">
@@ -135,7 +135,7 @@ export function AIHistory() {
 
                 {!isLoading && totalPages > 1 && (
                     <div className="flex items-center justify-between mt-4">
-                        <p className="text-sm text-gray-500">
+                        <p className="text-body text-gray-500">
                             Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, sorted.length)} of {sorted.length} entries
                         </p>
                         <div className="flex gap-2">

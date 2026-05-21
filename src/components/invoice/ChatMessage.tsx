@@ -29,8 +29,8 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
                             : 'bg-card border border-border'
                         }`}
                 >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    <p className={`text-xs mt-1 ${isUser ? 'text-purple-200' : 'text-muted-foreground'}`}>
+                    <p className="text-body whitespace-pre-wrap">{message.content}</p>
+                    <p className={`text-micro mt-1 ${isUser ? 'text-purple-200' : 'text-muted-foreground'}`}>
                         {new Date(message.timestamp).toLocaleTimeString()}
                     </p>
                 </div>
@@ -59,7 +59,7 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
                                     )}
                                 </div>
 
-                                <div className="space-y-2 text-sm">
+                                <div className="space-y-2 text-body">
                                     {/* Recipient */}
                                     {message.invoiceData.buyer?.name && (
                                         <div className="flex items-start gap-2">
@@ -73,7 +73,7 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
 
                                     {/* Salutation */}
                                     {message.invoiceData.salutation && (
-                                        <div className="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 rounded text-xs italic text-purple-800 dark:text-purple-200">
+                                        <div className="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 rounded text-micro italic text-purple-800 dark:text-purple-200">
                                             {message.invoiceData.salutation}
                                         </div>
                                     )}
@@ -82,7 +82,7 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
                                     {message.invoiceData.body && (
                                         <div className="flex items-start gap-2">
                                             <AlignLeft className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                                            <p className="text-muted-foreground text-xs leading-relaxed line-clamp-3">
+                                            <p className="text-muted-foreground text-micro leading-relaxed line-clamp-3">
                                                 {stripHtml(message.invoiceData.body).slice(0, 180)}
                                                 {stripHtml(message.invoiceData.body).length > 180 ? '…' : ''}
                                             </p>
@@ -91,7 +91,7 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
 
                                     {/* Closing */}
                                     {message.invoiceData.closing && (
-                                        <div className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800/50 rounded text-xs italic text-gray-600 dark:text-gray-400">
+                                        <div className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800/50 rounded text-micro italic text-gray-600 dark:text-gray-400">
                                             {message.invoiceData.closing}
                                         </div>
                                     )}
@@ -136,7 +136,7 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
                                     )}
                                 </div>
 
-                                <div className="space-y-2 text-sm">
+                                <div className="space-y-2 text-body">
                                     {message.invoiceData.buyer?.name && (
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">{t('editor.buyer')}:</span>
@@ -152,7 +152,7 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
                                     {message.invoiceData.payableAmount !== undefined && (
                                         <div className="flex justify-between border-t pt-2">
                                             <span className="text-muted-foreground">{t('editor.total')}:</span>
-                                            <span className="font-bold text-lg">
+                                            <span className="font-bold text-heading-3">
                                                 {message.invoiceData.currency} {message.invoiceData.payableAmount.toFixed(2)}
                                             </span>
                                         </div>

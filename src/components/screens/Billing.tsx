@@ -26,19 +26,19 @@ function UsageBar({ label, icon: Icon, used, limit, unit = '' }: {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Icon className={`h-4 w-4 ${exceeded ? 'text-red-500' : warning ? 'text-amber-500' : 'text-gray-400'}`} />
-                    <span className="text-sm font-medium text-gray-700">{label}</span>
+                    <span className="text-body font-medium text-gray-700">{label}</span>
                     {warning && (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                        <span className="inline-flex items-center gap-1 text-micro font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
                             <AlertTriangle className="h-3 w-3" /> Approaching limit
                         </span>
                     )}
                     {exceeded && (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5">
+                        <span className="inline-flex items-center gap-1 text-micro font-medium text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5">
                             <AlertTriangle className="h-3 w-3" /> Limit reached
                         </span>
                     )}
                 </div>
-                <span className="text-sm text-gray-500 tabular-nums">
+                <span className="text-body text-gray-500 tabular-nums">
                     {unlimited
                         ? <span className="text-violet-600 font-medium">Unlimited</span>
                         : <>{used}{unit} <span className="text-gray-400">/</span> {limit}{unit}</>}
@@ -122,7 +122,7 @@ export const Billing = () => {
     return (
         <div className="space-y-8 max-w-6xl mx-auto p-6">
             <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">{t('billing.title')}</h1>
+                <h1 className="text-heading-1 font-bold tracking-tight">{t('billing.title')}</h1>
                 <p className="text-muted-foreground">{t('billing.subtitle')}</p>
             </div>
 
@@ -135,10 +135,10 @@ export const Billing = () => {
                 }`}>
                     <AlertTriangle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${anyExceeded ? 'text-red-500' : 'text-amber-500'}`} />
                     <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-semibold ${anyExceeded ? 'text-red-800' : 'text-amber-800'}`}>
+                        <p className={`text-body font-semibold ${anyExceeded ? 'text-red-800' : 'text-amber-800'}`}>
                             {anyExceeded ? 'Usage limit reached' : 'You\'re approaching your plan limits'}
                         </p>
-                        <p className={`text-sm mt-0.5 ${anyExceeded ? 'text-red-700' : 'text-amber-700'}`}>
+                        <p className={`text-body mt-0.5 ${anyExceeded ? 'text-red-700' : 'text-amber-700'}`}>
                             {anyExceeded
                                 ? 'Some features are now restricted. Upgrade your plan to continue.'
                                 : 'Upgrade to avoid interruptions as you approach your limits.'}
@@ -189,20 +189,20 @@ export const Billing = () => {
                     return (
                         <Card key={plan.id} className={`flex flex-col relative ${isCurrent ? 'border-primary border-2 shadow-lg' : ''}`}>
                             {isCurrent && (
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-micro font-bold flex items-center gap-1">
                                     <ShieldCheck className="w-3 h-3" /> {t('billing.currentPlan')}
                                 </div>
                             )}
                             <CardHeader>
                                 <CardTitle>{plan.name}</CardTitle>
                                 <div className="flex items-baseline gap-1 mt-2">
-                                    <span className="text-3xl font-bold">{formatCurrency(Number(plan.price), 'EUR')}</span>
-                                    <span className="text-muted-foreground text-sm">{t('billing.perMonth')}</span>
+                                    <span className="text-heading-1 font-bold">{formatCurrency(Number(plan.price), 'EUR')}</span>
+                                    <span className="text-muted-foreground text-body">{t('billing.perMonth')}</span>
                                 </div>
                             </CardHeader>
                             <CardContent className="flex-1 space-y-3 pt-0">
                                 <hr className="border-border/50" />
-                                <ul className="space-y-2 text-sm">
+                                <ul className="space-y-2 text-body">
                                     {features.map(([key, value], index) => (
                                         <li key={`${key}-${index}`} className="flex items-center gap-2">
                                             <Check className="w-4 h-4 text-green-500 shrink-0" />
@@ -237,7 +237,7 @@ export const Billing = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="border rounded-lg overflow-hidden">
-                        <table className="w-full text-sm text-left">
+                        <table className="w-full text-body text-left">
                             <thead className="bg-muted text-muted-foreground">
                                 <tr>
                                     <th className="px-4 py-3 font-medium">{t('billing.invoiceId')}</th>
@@ -254,7 +254,7 @@ export const Billing = () => {
                                         <td className="px-4 py-3">{item.date}</td>
                                         <td className="px-4 py-3">{formatCurrency(item.amount, 'EUR')}</td>
                                         <td className="px-4 py-3">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-micro font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                                                 {item.status}
                                             </span>
                                         </td>

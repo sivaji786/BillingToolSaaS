@@ -141,7 +141,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                     <Button variant="ghost" size="icon" onClick={() => onNavigate('SApackages')}>
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <h2 className="text-2xl font-bold">Loading...</h2>
+                    <h2 className="text-heading-1 font-bold">Loading...</h2>
                 </div>
             </div>
         );
@@ -155,8 +155,8 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h2 className="text-2xl font-bold">{isEditing ? 'Edit Package' : 'Add New Package'}</h2>
-                    <p className="text-sm text-muted-foreground">
+                    <h2 className="text-heading-1 font-bold">{isEditing ? 'Edit Package' : 'Add New Package'}</h2>
+                    <p className="text-body text-muted-foreground">
                         {isEditing ? 'Update package details and features' : 'Create a new subscription package'}
                     </p>
                 </div>
@@ -260,7 +260,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                                 <Label htmlFor="isTrailing" className="font-medium cursor-pointer">
                                     Default (Trailing) Package
                                 </Label>
-                                <span className="text-xs text-muted-foreground ml-2">
+                                <span className="text-micro text-muted-foreground ml-2">
                                     (New tenants from QuickAccess will receive this plan)
                                 </span>
                             </div>
@@ -276,7 +276,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                                 <Label htmlFor="isPublic" className="font-medium cursor-pointer">
                                     Visible to Public
                                 </Label>
-                                <span className="text-xs text-muted-foreground ml-2">
+                                <span className="text-micro text-muted-foreground ml-2">
                                     (Show this plan on the public pricing page)
                                 </span>
                             </div>
@@ -363,7 +363,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                                     <Plus className="h-4 w-4 mr-2" />
                                     Add Custom Feature
                                 </Button>
-                                <p className="text-xs text-muted-foreground mt-2">
+                                <p className="text-micro text-muted-foreground mt-2">
                                     Add an extra feature that is unique to this package.
                                 </p>
                             </div>

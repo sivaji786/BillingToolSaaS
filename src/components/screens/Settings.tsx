@@ -52,8 +52,8 @@ function ImageUploadField({ label, value, inputRef, onUpload, onRemove, hint, pr
           className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/20 transition-colors cursor-pointer gap-2 text-muted-foreground"
         >
           <Upload className="h-5 w-5" />
-          <span className="text-sm font-medium">Upload {label}</span>
-          {hint && <span className="text-xs">{hint}</span>}
+          <span className="text-body font-medium">Upload {label}</span>
+          {hint && <span className="text-micro">{hint}</span>}
         </button>
       )}
     </div>
@@ -188,7 +188,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
           <Card className="p-6 space-y-6">
             <div>
               <h2>Company Information</h2>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-body text-muted-foreground mt-1">
                 This information will be used as the default seller on invoices
               </p>
             </div>
@@ -212,7 +212,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body text-muted-foreground">
                 Determines available roles and permissions structure.
               </p>
             </div>
@@ -314,7 +314,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                     maxLength={2}
                     className="mt-1"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-micro text-muted-foreground mt-1">
                     ISO 3166-1 alpha-2 code
                   </p>
                 </div>
@@ -389,7 +389,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
           <Card className="p-6 space-y-6">
             <div>
               <h2>Bank Account Information</h2>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-body text-muted-foreground mt-1">
                 Default payment information for invoices
               </p>
             </div>
@@ -438,7 +438,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
           <Card className="p-6 space-y-6">
             <div>
               <h2>Invoice Defaults</h2>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-body text-muted-foreground mt-1">
                 Default settings for new invoices
               </p>
             </div>
@@ -476,10 +476,10 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                   placeholder="INV-{YYYY}-{NNNNN}"
                   className="mt-1"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-micro text-muted-foreground mt-1">
                   Tokens: <code className="bg-muted px-1 rounded">{'{YYYY}'}</code> <code className="bg-muted px-1 rounded">{'{YY}'}</code> <code className="bg-muted px-1 rounded">{'{MM}'}</code> <code className="bg-muted px-1 rounded">{'{NNN…}'}</code>
                 </p>
-                <p className="text-xs mt-1 font-mono text-purple-700 bg-purple-50 border border-purple-100 rounded px-2 py-1">
+                <p className="text-micro mt-1 font-mono text-purple-700 bg-purple-50 border border-purple-100 rounded px-2 py-1">
                   Preview: {formatNumberPreview(editedProfile.invoiceNumberFormat || 'INV-{YYYY}-{NNNNN}', 42)}
                 </p>
               </div>
@@ -493,10 +493,10 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                   placeholder="LTR-{YYYY}-{NNNNN}"
                   className="mt-1"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-micro text-muted-foreground mt-1">
                   Tokens: <code className="bg-muted px-1 rounded">{'{YYYY}'}</code> <code className="bg-muted px-1 rounded">{'{YY}'}</code> <code className="bg-muted px-1 rounded">{'{MM}'}</code> <code className="bg-muted px-1 rounded">{'{NNN…}'}</code>
                 </p>
-                <p className="text-xs mt-1 font-mono text-purple-700 bg-purple-50 border border-purple-100 rounded px-2 py-1">
+                <p className="text-micro mt-1 font-mono text-purple-700 bg-purple-50 border border-purple-100 rounded px-2 py-1">
                   Preview: {formatNumberPreview(editedProfile.letterNumberFormat || 'LTR-{YYYY}-{NNNNN}', 7)}
                 </p>
               </div>
@@ -526,7 +526,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                     placeholder="Enter text to appear at the top of invoices"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-4">
+                <p className="text-micro text-muted-foreground mt-4">
                   {t('templates.headerDesc') || 'This text will appear at the top of your invoices, below the logo.'}
                 </p>
               </div>
@@ -541,7 +541,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                     placeholder="Enter text to appear at the bottom of invoices"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground mt-4">
+                <p className="text-micro text-muted-foreground mt-4">
                   {t('templates.footerDesc') || 'This text will appear at the bottom of your invoices.'}
                 </p>
               </div>

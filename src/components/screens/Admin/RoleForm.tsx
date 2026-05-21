@@ -88,7 +88,7 @@ export function RoleForm({ roleId, onBack, companyTypeId }: RoleFormProps) {
                 <Button variant="ghost" onClick={onBack}>
                     <ArrowLeft className="h-4 w-4 mr-2" /> {t('common.back')}
                 </Button>
-                <h2 className="text-xl font-semibold">{roleId ? t('admin.roles.editRole') : t('admin.roles.createRole')}</h2>
+                <h2 className="text-heading-2 font-semibold">{roleId ? t('admin.roles.editRole') : t('admin.roles.createRole')}</h2>
             </div>
 
             <div className="border p-6 rounded-md bg-card space-y-6">
@@ -106,7 +106,7 @@ export function RoleForm({ roleId, onBack, companyTypeId }: RoleFormProps) {
                 <div>
                     <Label className="mb-2 block">{t('admin.roles.permissions')}</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 border p-4 rounded-md h-96 overflow-y-auto bg-background/50">
-                        {rights.length === 0 ? <p className="text-muted-foreground p-2 text-sm italic">{t('admin.roles.noPermissions')}</p> :
+                        {rights.length === 0 ? <p className="text-muted-foreground p-2 text-body italic">{t('admin.roles.noPermissions')}</p> :
                             rights.sort((a, b) => a.module.localeCompare(b.module)).map(right => (
                                 <div
                                     key={right.id}
@@ -117,8 +117,8 @@ export function RoleForm({ roleId, onBack, companyTypeId }: RoleFormProps) {
                                         <CheckSquare className="h-4 w-4 text-primary shrink-0" /> :
                                         <Square className="h-4 w-4 text-muted-foreground shrink-0" />
                                     }
-                                    <span className="text-sm">
-                                        <span className="font-semibold text-xs text-muted-foreground uppercase mr-1">{right.module}</span>
+                                    <span className="text-body">
+                                        <span className="font-semibold text-micro text-muted-foreground uppercase mr-1">{right.module}</span>
                                         {right.action}
                                     </span>
                                 </div>

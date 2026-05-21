@@ -12,7 +12,7 @@ class TicketModel extends BaseModel
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['user_id', 'subject', 'description', 'priority', 'status', 'assigned_to', 'first_response_at', 'resolved_at', 'domain', 'page', 'client_ip', 'screenshot_path', 'created_at', 'updated_at'];
+    protected $allowedFields    = ['user_id', 'subject', 'description', 'priority', 'type', 'status', 'assigned_to', 'first_response_at', 'resolved_at', 'domain', 'page', 'client_ip', 'screenshot_path', 'attachments', 'created_at', 'updated_at'];
 
     // Disable TenantScope inherited from BaseModel
     protected $beforeFind   = [];
@@ -31,6 +31,7 @@ class TicketModel extends BaseModel
         'subject'     => 'required|min_length[3]|max_length[255]',
         'description' => 'required',
         'priority'    => 'permit_empty|in_list[low,medium,high,critical]',
+        'type'        => 'permit_empty|in_list[bug,feature,billing,other]',
         'status'      => 'permit_empty|in_list[open,in_progress,resolved,closed]',
     ];
     protected $validationMessages   = [];

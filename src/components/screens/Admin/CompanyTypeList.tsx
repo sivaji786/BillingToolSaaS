@@ -82,8 +82,8 @@ export function CompanyTypeList() {
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-lg font-semibold">Company Types</h2>
-                    <p className="text-sm text-gray-500">Manage different types of organizations (e.g. Agency, Client).</p>
+                    <h2 className="text-heading-3 font-semibold">Company Types</h2>
+                    <p className="text-body text-gray-500">Manage different types of organizations (e.g. Agency, Client).</p>
                 </div>
                 <Button onClick={handleCreate}><Plus className="h-4 w-4 mr-2" /> Add Type</Button>
             </div>
@@ -129,7 +129,7 @@ export function CompanyTypeList() {
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Name</label>
+                            <label className="text-body font-medium">Name</label>
                             <Input
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}

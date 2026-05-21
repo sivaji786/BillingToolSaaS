@@ -115,7 +115,7 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                     <Button variant="ghost" size="icon" onClick={() => onNavigate('SAASusers')}>
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <h2 className="text-2xl font-bold">User Not Found</h2>
+                    <h2 className="text-heading-1 font-bold">User Not Found</h2>
                 </div>
             </div>
         );
@@ -205,8 +205,8 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
                     <div>
-                        <h2 className="text-2xl font-bold">{user.name}</h2>
-                        <p className="text-sm text-muted-foreground">Complete user profile and billing information</p>
+                        <h2 className="text-heading-1 font-bold">{user.name}</h2>
+                        <p className="text-body text-muted-foreground">Complete user profile and billing information</p>
                     </div>
                 </div>
                 <div className="flex gap-2">
@@ -251,15 +251,15 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                         <div className="flex items-center gap-3">
                             <Mail className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <p className="text-sm font-medium">Email</p>
-                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                                <p className="text-body font-medium">Email</p>
+                                <p className="text-body text-muted-foreground">{user.email}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <Calendar className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <p className="text-sm font-medium">Joined Date</p>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-body font-medium">Joined Date</p>
+                                <p className="text-body text-muted-foreground">
                                     {user.joinedDate ? format(new Date(user.joinedDate), 'MMM dd, yyyy') : 'N/A'}
                                 </p>
                             </div>
@@ -267,7 +267,7 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                         <div className="flex items-center gap-3">
                             <Activity className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <p className="text-sm font-medium">Status</p>
+                                <p className="text-body font-medium">Status</p>
                                 <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
                                     {user.status}
                                 </Badge>
@@ -283,8 +283,8 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                     </CardHeader>
                     <CardContent className="flex items-center justify-center py-12">
                         <div className="text-center">
-                            <p className="text-lg font-semibold text-muted-foreground">Coming Soon</p>
-                            <p className="text-sm text-muted-foreground mt-1">Subscription details will be available soon</p>
+                            <p className="text-heading-3 font-semibold text-muted-foreground">Coming Soon</p>
+                            <p className="text-body text-muted-foreground mt-1">Subscription details will be available soon</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -298,8 +298,8 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                 </CardHeader>
                 <CardContent className="flex items-center justify-center py-12">
                     <div className="text-center">
-                        <p className="text-lg font-semibold text-muted-foreground">Coming Soon</p>
-                        <p className="text-sm text-muted-foreground mt-1">Payment information will be available soon</p>
+                        <p className="text-heading-3 font-semibold text-muted-foreground">Coming Soon</p>
+                        <p className="text-body text-muted-foreground mt-1">Payment information will be available soon</p>
                     </div>
                 </CardContent>
             </Card>
@@ -390,8 +390,8 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                                 <CardContent className="pt-6">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Storage Used</p>
-                                            <p className="text-2xl font-bold">{formatBytes(usage?.storageUsed || 0)}</p>
+                                            <p className="text-body font-medium text-muted-foreground uppercase tracking-wider">Storage Used</p>
+                                            <p className="text-heading-1 font-bold">{formatBytes(usage?.storageUsed || 0)}</p>
                                         </div>
                                         <div className="p-2 bg-primary/10 rounded-lg">
                                             <FileText className="h-5 w-5 text-primary" />
@@ -403,8 +403,8 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                                 <CardContent className="pt-6">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">API Calls</p>
-                                            <p className="text-2xl font-bold">{usage?.apiCalls?.toLocaleString()}</p>
+                                            <p className="text-body font-medium text-muted-foreground uppercase tracking-wider">API Calls</p>
+                                            <p className="text-heading-1 font-bold">{usage?.apiCalls?.toLocaleString()}</p>
                                         </div>
                                         <div className="p-2 bg-primary/10 rounded-lg">
                                             <Activity className="h-5 w-5 text-primary" />
@@ -416,8 +416,8 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                                 <CardContent className="pt-6">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Bandwidth</p>
-                                            <p className="text-2xl font-bold">{formatBytes(usage?.bandwidthUsed || 0)}</p>
+                                            <p className="text-body font-medium text-muted-foreground uppercase tracking-wider">Bandwidth</p>
+                                            <p className="text-heading-1 font-bold">{formatBytes(usage?.bandwidthUsed || 0)}</p>
                                         </div>
                                         <div className="p-2 bg-primary/10 rounded-lg">
                                             <Download className="h-5 w-5 text-primary" />

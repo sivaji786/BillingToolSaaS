@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pencil, X, ArrowLeft, Plus, Loader2 } from 'lucide-react';
 import { useInlineCms } from '../../contexts/InlineCmsContext';
 import { useAdminStore } from '../../stores/adminStore';
 import { adminCmsService } from '../../services/adminApi';
 import { toast } from 'sonner';
+import { useDockSlot } from '../../hooks/useDockSlot';
 
 // ---------------------------------------------------------------------------
 // EditModeBar — fixed bottom-right floating bar (SA admin only)
@@ -30,6 +31,57 @@ export function EditModeBar() {
     const [showInNav, setShowInNav] = useState(false);
     const [navLabel, setNavLabel] = useState('');
     const [creating, setCreating] = useState(false);
+
+    // Register floating bar in FloatingDock (order 3 = top slot, admin-only)
+    const ping = useDockSlot('edit-mode', 3, () => {
+        if (!isAuthenticated) return null;
+        return (
+            <div className="flex items-center gap-2" role="toolbar" aria-label="CMS edit mode controls">
+                {editMode ? (
+                    <>
+                        <button
+                            onClick={() => { window.location.hash = '#/SAdashboard'; }}
+                            className="flex items-center gap-1.5 rounded-full border border-purple-300 bg-white px-4 py-2 text-body font-medium text-purple-700 shadow-lg transition-colors hover:bg-purple-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
+                            type="button"
+                        >
+                            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                            Admin Portal
+                        </button>
+                        <button
+                            onClick={() => setShowModal(true)}
+                            className="flex items-center gap-1.5 rounded-full border border-purple-300 bg-white px-4 py-2 text-body font-medium text-purple-700 shadow-lg transition-colors hover:bg-purple-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
+                            type="button"
+                        >
+                            <Plus className="h-4 w-4" aria-hidden="true" />
+                            New Page
+                        </button>
+                        <div className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-body font-semibold text-white shadow-lg">
+                            <span className="inline-block h-2 w-2 rounded-full bg-white" style={{ animation: 'pulse 1.5s ease-in-out infinite' }} aria-hidden="true" />
+                            EDITING LIVE
+                        </div>
+                        <button
+                            onClick={() => setEditMode(false)}
+                            className="flex items-center gap-1.5 rounded-full border border-red-300 bg-white px-4 py-2 text-body font-medium text-red-600 shadow-lg transition-colors hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-500"
+                            type="button"
+                        >
+                            <X className="h-4 w-4" aria-hidden="true" />
+                            Exit Edit Mode
+                        </button>
+                    </>
+                ) : (
+                    <button
+                        onClick={() => setEditMode(true)}
+                        className="flex items-center gap-2 rounded-full bg-purple-600 px-5 py-2.5 text-body font-semibold text-white shadow-md transition-all hover:bg-purple-700 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
+                        type="button"
+                    >
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
+                        Edit Page
+                    </button>
+                )}
+            </div>
+        );
+    });
+    useEffect(() => { ping(); }, [isAuthenticated, editMode]);
 
     if (!isAuthenticated) return null;
 
@@ -68,71 +120,6 @@ export function EditModeBar() {
                 />
             )}
 
-            {/* Floating bar */}
-            <div
-                className="fixed bottom-6 right-6 flex items-center gap-2"
-                style={{ zIndex: 9000 }}
-                role="toolbar"
-                aria-label="CMS edit mode controls"
-            >
-                {editMode ? (
-                    <>
-                        {/* Back to Admin button */}
-                        <button
-                            onClick={() => { window.location.hash = '#/SAdashboard'; }}
-                            className="flex items-center gap-1.5 rounded-full border border-purple-300 bg-white px-4 py-2 text-sm font-medium text-purple-700 shadow-lg transition-colors hover:bg-purple-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
-                            type="button"
-                            aria-label="Back to Admin Portal"
-                        >
-                            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                            Admin Portal
-                        </button>
-
-                        {/* + New Page button */}
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="flex items-center gap-1.5 rounded-full border border-purple-300 bg-white px-4 py-2 text-sm font-medium text-purple-700 shadow-lg transition-colors hover:bg-purple-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
-                            type="button"
-                            aria-label="Create new page"
-                        >
-                            <Plus className="h-4 w-4" aria-hidden="true" />
-                            New Page
-                        </button>
-
-                        {/* EDITING LIVE badge */}
-                        <div className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
-                            <span
-                                className="inline-block h-2 w-2 rounded-full bg-white"
-                                style={{ animation: 'pulse 1.5s ease-in-out infinite' }}
-                                aria-hidden="true"
-                            />
-                            EDITING LIVE
-                        </div>
-
-                        {/* Exit button */}
-                        <button
-                            onClick={() => setEditMode(false)}
-                            className="flex items-center gap-1.5 rounded-full border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-lg transition-colors hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-500"
-                            type="button"
-                            aria-label="Exit edit mode"
-                        >
-                            <X className="h-4 w-4" aria-hidden="true" />
-                            Exit Edit Mode
-                        </button>
-                    </>
-                ) : (
-                    <button
-                        onClick={() => setEditMode(true)}
-                        className="flex items-center gap-2 rounded-full bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-purple-700 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
-                        type="button"
-                        aria-label="Enter page edit mode"
-                    >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
-                        Edit Page
-                    </button>
-                )}
-            </div>
-
             {/* New Page Modal — rendered as a portal-like fixed overlay */}
             {showModal && (
                 <div
@@ -146,7 +133,7 @@ export function EditModeBar() {
                     {/* Panel */}
                     <div className="relative w-full max-w-md mx-4 rounded-2xl bg-white shadow-2xl dark:bg-slate-900 p-6 space-y-5">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Create New Page</h2>
+                            <h2 className="text-heading-3 font-semibold text-slate-900 dark:text-white">Create New Page</h2>
                             <button
                                 onClick={() => setShowModal(false)}
                                 className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
@@ -156,15 +143,15 @@ export function EditModeBar() {
                             </button>
                         </div>
 
-                        <p className="text-sm text-muted-foreground -mt-2">
-                            The new page will be available at <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded text-xs">#/cms/{slug || 'your-slug'}</code>
+                        <p className="text-body text-muted-foreground -mt-2">
+                            The new page will be available at <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded text-micro">#/cms/{slug || 'your-slug'}</code>
                         </p>
 
                         {/* Title */}
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Page Title</label>
+                            <label className="text-body font-medium text-slate-700 dark:text-slate-300">Page Title</label>
                             <input
-                                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-body outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                 placeholder="e.g. About Us"
                                 value={title}
                                 onChange={(e) => {
@@ -177,24 +164,24 @@ export function EditModeBar() {
 
                         {/* Slug */}
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">URL Slug</label>
+                            <label className="text-body font-medium text-slate-700 dark:text-slate-300">URL Slug</label>
                             <div className="flex items-center gap-1.5">
-                                <span className="text-xs text-muted-foreground whitespace-nowrap">#/cms/</span>
+                                <span className="text-micro text-muted-foreground whitespace-nowrap">#/cms/</span>
                                 <input
-                                    className="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    className="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-body outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                     placeholder="about-us"
                                     value={slug}
                                     onChange={(e) => setSlug(slugify(e.target.value))}
                                 />
                             </div>
-                            <p className="text-xs text-muted-foreground">Auto-generated · lowercase letters, numbers, hyphens only</p>
+                            <p className="text-micro text-muted-foreground">Auto-generated · lowercase letters, numbers, hyphens only</p>
                         </div>
 
                         {/* Show in Nav toggle */}
                         <div className="flex items-center justify-between rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 py-3">
                             <div>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Show in Navigation</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">Adds a link in the header &amp; footer</p>
+                                <p className="text-body font-medium text-slate-700 dark:text-slate-300">Show in Navigation</p>
+                                <p className="text-micro text-muted-foreground mt-0.5">Adds a link in the header &amp; footer</p>
                             </div>
                             <button
                                 type="button"
@@ -209,9 +196,9 @@ export function EditModeBar() {
 
                         {showInNav && (
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Navigation Label <span className="text-muted-foreground font-normal">(optional)</span></label>
+                                <label className="text-body font-medium text-slate-700 dark:text-slate-300">Navigation Label <span className="text-muted-foreground font-normal">(optional)</span></label>
                                 <input
-                                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-body outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                     placeholder={title || 'e.g. About Us'}
                                     value={navLabel}
                                     onChange={(e) => setNavLabel(e.target.value)}
@@ -224,7 +211,7 @@ export function EditModeBar() {
                             <button
                                 type="button"
                                 onClick={() => setShowModal(false)}
-                                className="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                className="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-body font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                             >
                                 Cancel
                             </button>
@@ -232,7 +219,7 @@ export function EditModeBar() {
                                 type="button"
                                 disabled={creating || !title.trim() || !slug.trim()}
                                 onClick={handleCreate}
-                                className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-body font-semibold text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 {creating ? (
                                     <><Loader2 className="h-4 w-4 animate-spin" /> Creating…</>

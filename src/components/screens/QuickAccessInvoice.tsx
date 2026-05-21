@@ -204,7 +204,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
                 <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-                <p className="text-sm text-gray-500">{t('quickAccess.restoring')}</p>
+                <p className="text-body text-gray-500">{t('quickAccess.restoring')}</p>
             </div>
         );
     }
@@ -323,7 +323,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                 title="Click to edit"
                 data-invalid={isInvalid ? 'true' : undefined}
             >
-                {value || <span className="text-gray-400 italic text-sm">{placeholder}</span>}
+                {value || <span className="text-gray-400 italic text-body">{placeholder}</span>}
                 <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-40 text-purple-600" />
             </div>
         );
@@ -430,8 +430,8 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                     <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
                         <FileText className="h-4 w-4 text-white" />
                     </div>
-                    <span className="font-bold text-gray-800 text-sm">BillingTool</span>
-                    <span className="ml-2 text-xs text-purple-600 bg-purple-50 border border-purple-200 rounded-full px-2 py-0.5 font-medium hidden sm:inline">
+                    <span className="font-bold text-gray-800 text-body">BillingTool</span>
+                    <span className="ml-2 text-micro text-purple-600 bg-purple-50 border border-purple-200 rounded-full px-2 py-0.5 font-medium hidden sm:inline">
                         {t('quickAccess.title')}
                     </span>
                 </button>
@@ -440,34 +440,34 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                 <nav className="flex items-center gap-1">
                     {/* Desktop nav links */}
                     {/* <div className="hidden md:flex items-center gap-1">
-                        <Button variant="ghost" size="sm" className="text-xs text-gray-600"
+                        <Button variant="ghost" size="sm" className="text-micro text-gray-600"
                             onClick={() => onNavigate?.('landing')}>
                             {t('landing.aboutUs')}
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-xs text-gray-600"
+                        <Button variant="ghost" size="sm" className="text-micro text-gray-600"
                             onClick={() => onNavigate?.('landing')}>
                             {t('nav.products')}
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-xs text-gray-600"
+                        <Button variant="ghost" size="sm" className="text-micro text-gray-600"
                             onClick={() => onNavigate?.('impressum')}>
                             {t('landing.footer.impressum')}
                         </Button>
                     </div> */}
 
                     {/* Auto-save note */}
-                    <span className="text-xs text-gray-400 hidden lg:inline mx-2">
+                    <span className="text-micro text-gray-400 hidden lg:inline mx-2">
                         {t('quickAccess.autoSavedLocally')}
                     </span>
 
                     {/* Guide tour button */}
                     <Button variant="outline" size="sm" onClick={() => setStartTour(true)}
-                        className="gap-1.5 text-xs text-purple-600 border-purple-200 hover:bg-purple-50">
+                        className="gap-1.5 text-micro text-purple-600 border-purple-200 hover:bg-purple-50">
                         <HelpCircle className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">{t('quickAccess.guide')}</span>
                     </Button>
                     <LanguageSwitcher variant="login" />
                     {/* Login */}
-                    <Button variant="outline" size="sm" onClick={onLogin} className="gap-1.5 text-xs">
+                    <Button variant="outline" size="sm" onClick={onLogin} className="gap-1.5 text-micro">
                         <LogIn className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">{t('landing.login')}</span>
                     </Button>
@@ -485,8 +485,8 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                     {/* Top action bar */}
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h1 className="text-lg font-semibold text-gray-800">{t('quickAccess.newInvoice')}</h1>
-                            <p className="text-xs text-gray-500">{t('quickAccess.editInvoiceNoAccount')}</p>
+                            <h1 className="text-heading-3 font-semibold text-gray-800">{t('quickAccess.newInvoice')}</h1>
+                            <p className="text-micro text-gray-500">{t('quickAccess.editInvoiceNoAccount')}</p>
                         </div>
                         <div className="flex gap-2">
                             <Button
@@ -494,7 +494,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                 variant="outline"
                                 size="sm"
                                 onClick={() => triggerGatedAction('download')}
-                                className="gap-1.5 text-xs"
+                                className="gap-1.5 text-micro"
                             >
                                 <Download className="h-3.5 w-3.5" />
                                 {t('quickAccess.pdf')}
@@ -506,7 +506,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                     setPreviewTab('ubl');
                                     setIsPreviewOpen(true);
                                 }}
-                                className="gap-1.5 text-xs"
+                                className="gap-1.5 text-micro"
                             >
                                 <Code className="h-3.5 w-3.5" />
                                 {t('quickAccess.eInvoice')}
@@ -516,7 +516,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                 variant="outline"
                                 size="sm"
                                 onClick={() => triggerGatedAction('send')}
-                                className="gap-1.5 text-xs"
+                                className="gap-1.5 text-micro"
                             >
                                 <Send className="h-3.5 w-3.5" />
                                 {t('quickAccess.send')}
@@ -525,7 +525,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                 id="tour-btn-save"
                                 size="sm"
                                 onClick={() => triggerGatedAction('save')}
-                                className="gap-1.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 text-xs shadow-md"
+                                className="gap-1.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 text-micro shadow-md"
                             >
                                 <Save className="h-3.5 w-3.5" />
                                 {t('quickAccess.saveDraft')}
@@ -542,7 +542,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                     {/* ── Header ── */}
                                     <div className="flex justify-between items-start pb-8 border-b-2 border-purple-200">
                                         <div className="flex-1">
-                                            <div id="tour-seller-name" className="text-4xl font-light text-purple-700 w-max">
+                                            <div id="tour-seller-name" className="text-display font-light text-purple-700 w-max">
                                                 {renderField(
                                                     'seller.name',
                                                     invoice.seller.name,
@@ -552,7 +552,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                                     t('quickAccess.yourCompanyName')
                                                 )}
                                             </div>
-                                            <div id="tour-invoice-number" className="mt-2 text-base text-gray-500 w-max">
+                                            <div id="tour-invoice-number" className="mt-2 text-heading-2 text-gray-500 w-max">
                                                 {renderField(
                                                     'invoiceNumber',
                                                     invoice.invoiceNumber,
@@ -564,8 +564,8 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                             </div>
                                         </div>
                                         <div className="text-right space-y-2 shrink-0 ml-6">
-                                            <p className="text-xs text-gray-400 uppercase tracking-wide">{t('quickAccess.issueDate')}</p>
-                                            <div className="text-base">
+                                            <p className="text-micro text-gray-400 uppercase tracking-wide">{t('quickAccess.issueDate')}</p>
+                                            <div className="text-heading-2">
                                                 {renderField(
                                                     'issueDate',
                                                     invoice.issueDate,
@@ -592,14 +592,14 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                     <div className="grid grid-cols-2 gap-10">
                                         {/* Bill To */}
                                         <div>
-                                            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">{t('quickAccess.billTo')}</p>
-                                            <div className="space-y-1 text-sm">
+                                            <p className="text-micro text-gray-400 uppercase tracking-wide mb-2">{t('quickAccess.billTo')}</p>
+                                            <div className="space-y-1 text-body">
                                                 <div id="tour-buyer-name" className="font-medium w-max">
                                                     {renderField(
                                                         'buyer.name',
                                                         invoice.buyer.name,
                                                         (v) => handleFieldChange('buyer.name', v),
-                                                        'text-base',
+                                                        'text-heading-2',
                                                         false,
                                                         t('quickAccess.clientCompanyName'),
                                                         'buyer.name'
@@ -652,14 +652,14 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
 
                                         {/* From */}
                                         <div>
-                                            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">{t('quickAccess.from')}</p>
-                                            <div className="space-y-1 text-sm">
+                                            <p className="text-micro text-gray-400 uppercase tracking-wide mb-2">{t('quickAccess.from')}</p>
+                                            <div className="space-y-1 text-body">
                                                 <div className="font-medium">
                                                     {renderField(
                                                         'seller.name2',
                                                         invoice.seller.name,
                                                         (v) => handleFieldChange('seller.name', v),
-                                                        'text-base',
+                                                        'text-heading-2',
                                                         false,
                                                         t('quickAccess.yourCompanyName'),
                                                         'seller.name'
@@ -713,9 +713,9 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
 
                                     {/* ── Line Items ── */}
                                     <div id="tour-line-items">
-                                        <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">{t('quickAccess.items')}</h3>
+                                        <h3 className="text-body font-semibold uppercase tracking-wide text-gray-500 mb-3">{t('quickAccess.items')}</h3>
                                         <div className="border rounded-xl overflow-hidden">
-                                            <table className="w-full text-sm">
+                                            <table className="w-full text-body">
                                                 <thead className="bg-purple-50 text-gray-500">
                                                     <tr>
                                                         <th className="text-center p-3 w-8">#</th>
@@ -740,7 +740,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                                                             onChange={(e) => handleLineChange(line.id, 'description', e.target.value)}
                                                                             onBlur={handleBlur}
                                                                             autoFocus
-                                                                            className="min-h-[48px] text-sm"
+                                                                            className="min-h-[48px] text-body"
                                                                         />
                                                                     ) : (
                                                                         <div
@@ -844,7 +844,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                             variant="outline"
                                             size="sm"
                                             onClick={handleAddLine}
-                                            className="mt-3 gap-1.5 text-xs border-dashed"
+                                            className="mt-3 gap-1.5 text-micro border-dashed"
                                         >
                                             <Plus className="h-3.5 w-3.5" />
                                             {t('quickAccess.addLineItem')}
@@ -862,8 +862,8 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                                 </div>
                                             </div>
                                             <div className="flex-1">
-                                                <p className="text-sm font-medium text-gray-700">{t('quickAccess.giroTitle')}</p>
-                                                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                                <p className="text-body font-medium text-gray-700">{t('quickAccess.giroTitle')}</p>
+                                                <p className="text-micro text-gray-500 mt-1 leading-relaxed">
                                                     {t('quickAccess.giroNote')}
                                                 </p>
                                             </div>
@@ -871,7 +871,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
 
                                         {/* Real Totals */}
                                         <div className="flex justify-end">
-                                            <div className="w-72 space-y-2 text-sm">
+                                            <div className="w-72 space-y-2 text-body">
                                                 <div className="flex justify-between text-gray-500">
                                                     <span>{t('quickAccess.subtotal')}</span>
                                                     <span>{formatCurrency(calculated.lineExtensionAmount, invoice.currency)}</span>
@@ -882,7 +882,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                                         <span>{formatCurrency(tax.taxAmount, invoice.currency)}</span>
                                                     </div>
                                                 ))}
-                                                <div className="border-t-2 border-purple-200 pt-3 flex justify-between text-lg font-semibold">
+                                                <div className="border-t-2 border-purple-200 pt-3 flex justify-between text-heading-3 font-semibold">
                                                     <span>{t('quickAccess.total')}</span>
                                                     <span className="text-purple-700">
                                                         {formatCurrency(calculated.payableAmount, invoice.currency)}
@@ -899,13 +899,13 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                                 size="lg"
                                                 onClick={() => triggerGatedAction('save')}
                                                 disabled={isSaving}
-                                                className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white min-w-[220px] shadow-xl hover:shadow-purple-300 transition-shadow text-base"
+                                                className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white min-w-[220px] shadow-xl hover:shadow-purple-300 transition-shadow text-heading-2"
                                             >
                                                 <Save className="h-5 w-5 mr-2" />
                                                 {isSaving ? t('quickAccess.saving') : t('quickAccess.saveInvoice')}
                                             </Button>
                                         </motion.div>
-                                        <p className="text-xs text-gray-400">
+                                        <p className="text-micro text-gray-400">
                                             {t('quickAccess.freeNote')}
                                         </p>
                                     </div>
@@ -932,7 +932,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                     />
 
                     {/* Bottom note */}
-                    <p className="text-xs text-gray-400 mt-6 text-center max-w-lg">
+                    <p className="text-micro text-gray-400 mt-6 text-center max-w-lg">
                         {t('quickAccess.bottomNote')}
                     </p>
                     <QuickAccessTour forceShow={startTour} onClose={() => setStartTour(false)} />
@@ -944,7 +944,7 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                         {/* Panel header */}
                         <div className="bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-3 flex items-center gap-2">
                             <Lightbulb className="h-4 w-4 text-white/90" />
-                            <span className="text-sm font-semibold text-white">{t('quickAccess.guidePanel.title')}</span>
+                            <span className="text-body font-semibold text-white">{t('quickAccess.guidePanel.title')}</span>
                         </div>
 
                         <div className="divide-y divide-gray-50">
@@ -990,11 +990,11 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                     className={`flex items-start gap-3 px-4 py-3 transition-colors ${step.active ? 'bg-purple-50 border-l-2 border-purple-500' : 'border-l-2 border-transparent'
                                         }`}
                                 >
-                                    <span className="text-xl leading-none mt-0.5 flex-shrink-0">{step.icon}</span>
+                                    <span className="text-heading-2 leading-none mt-0.5 flex-shrink-0">{step.icon}</span>
                                     <div>
-                                        <p className={`text-xs font-semibold mb-0.5 ${step.active ? 'text-purple-700' : 'text-gray-700'
+                                        <p className={`text-micro font-semibold mb-0.5 ${step.active ? 'text-purple-700' : 'text-gray-700'
                                             }`}>{step.title}</p>
-                                        <p className="text-xs text-gray-500 leading-relaxed">{step.desc}</p>
+                                        <p className="text-micro text-gray-500 leading-relaxed">{step.desc}</p>
                                     </div>
                                     {step.active && <ChevronRight className="h-3.5 w-3.5 text-purple-400 flex-shrink-0 mt-0.5 ml-auto" />}
                                 </div>
@@ -1004,8 +1004,8 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
 
                     {/* Quick tip card */}
                     <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-2">
-                        <span className="text-base">💡</span>
-                        <p className="text-xs text-amber-800 leading-relaxed">
+                        <span className="text-heading-2">💡</span>
+                        <p className="text-micro text-amber-800 leading-relaxed">
                             <span className="font-semibold">{t('quickAccess.guidePanel.tipLabel')}</span>{' '}
                             {t('quickAccess.guidePanel.tipText')}
                         </p>
@@ -1014,11 +1014,11 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                     {/* Save CTA */}
                     <div className="bg-gradient-to-br from-violet-50 to-fuchsia-50 border border-purple-100 rounded-xl px-4 py-4 text-center">
                         <CheckCircle2 className="h-6 w-6 text-purple-500 mx-auto mb-2" />
-                        <p className="text-xs font-medium text-gray-700 mb-1">{t('quickAccess.guidePanel.ctaTitle')}</p>
-                        <p className="text-xs text-gray-500 leading-relaxed">{t('quickAccess.guidePanel.ctaDesc')}</p>
+                        <p className="text-micro font-medium text-gray-700 mb-1">{t('quickAccess.guidePanel.ctaTitle')}</p>
+                        <p className="text-micro text-gray-500 leading-relaxed">{t('quickAccess.guidePanel.ctaDesc')}</p>
                         <button
                             onClick={() => triggerGatedAction('save')}
-                            className="mt-3 w-full text-xs font-semibold py-1.5 px-3 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 transition-all"
+                            className="mt-3 w-full text-micro font-semibold py-1.5 px-3 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 transition-all"
                         >
                             {t('quickAccess.guidePanel.ctaButton')}
                         </button>

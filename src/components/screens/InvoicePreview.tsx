@@ -458,18 +458,18 @@ export function InvoicePreview({
           return (
             <div key={key} className="w-full space-y-5 pt-2">
               {/* Salutation */}
-              <div className="text-sm text-gray-800">
+              <div className="text-body text-gray-800">
                 {renderEditableField('salutation', editedInvoice.salutation || '', (val) => handleFieldChange('salutation', val), '', false, 'Dear Sir/Madam,', !isInteractive)}
               </div>
               {/* Body */}
-              <div className="text-sm text-gray-700 leading-relaxed min-h-[240px]">
+              <div className="text-body text-gray-700 leading-relaxed min-h-[240px]">
                 {isInteractive
-                  ? renderEditableField('body', editedInvoice.body || '', (val) => handleFieldChange('body', val), 'w-full min-h-[240px] text-sm leading-relaxed', true, 'Letter content...', false)
+                  ? renderEditableField('body', editedInvoice.body || '', (val) => handleFieldChange('body', val), 'w-full min-h-[240px] text-body leading-relaxed', true, 'Letter content...', false)
                   : <div dangerouslySetInnerHTML={{ __html: editedInvoice.body || '<p style="color:#9ca3af;font-style:italic">No content</p>' }} />
                 }
               </div>
               {/* Closing */}
-              <div className="text-sm text-gray-800 pt-6">
+              <div className="text-body text-gray-800 pt-6">
                 {renderEditableField('closing', editedInvoice.closing || '', (val) => handleFieldChange('closing', val), '', false, 'Yours sincerely,', !isInteractive)}
               </div>
             </div>
@@ -477,9 +477,9 @@ export function InvoicePreview({
         }
         return (
           <div key={key} className="w-full">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">{t('previewModal.items')}</h3>
+            <h3 className="text-body font-semibold uppercase tracking-wide text-gray-500 mb-3">{t('previewModal.items')}</h3>
             <div className="border rounded-xl overflow-hidden shadow-sm">
-              <table className="w-full text-sm">
+              <table className="w-full text-body">
                 <thead className="bg-purple-50 text-gray-500">
                   <tr>
                     <th className="text-center p-3 w-8">#</th>
@@ -496,7 +496,7 @@ export function InvoicePreview({
                     const lineTotal = line.quantity * line.unitPrice;
                     return (
                       <tr key={line.id} className="border-t hover:bg-gray-50 transition-colors">
-                        <td className="p-3 text-center text-gray-400 font-mono text-xs">{index + 1}</td>
+                        <td className="p-3 text-center text-gray-400 font-mono text-micro">{index + 1}</td>
                         <td className="p-3">
                           {renderEditableField(`line.${line.id}.description`, line.description || '', (val) => handleLineChange(line.id, 'description', val), 'min-h-[32px]', true, undefined, !isInteractive)}
                         </td>
@@ -531,7 +531,7 @@ export function InvoicePreview({
               </table>
             </div>
             {isInteractive && (
-              <Button variant="outline" size="sm" onClick={handleAddLine} className="mt-3 gap-1.5 text-xs border-dashed text-purple-600 border-purple-200 hover:bg-purple-50">
+              <Button variant="outline" size="sm" onClick={handleAddLine} className="mt-3 gap-1.5 text-micro border-dashed text-purple-600 border-purple-200 hover:bg-purple-50">
                 <Plus className="h-3.5 w-3.5" />
                 {t('previewModal.addLineItem')}
               </Button>
@@ -545,7 +545,7 @@ export function InvoicePreview({
         const showTaxSummary = template.layout?.find((e: any) => e.type === 'tax_summary')?.visible === true;
         return (
           <div key={key} className="flex justify-end pt-4 w-full">
-            <div className="w-72 space-y-2 text-sm">
+            <div className="w-72 space-y-2 text-body">
               <div className="flex justify-between text-gray-500">
                 <span>{t('previewModal.subtotal')}</span>
                 <span>{formatCurrency(calculated.lineExtensionAmount, editedInvoice.currency)}</span>
@@ -556,7 +556,7 @@ export function InvoicePreview({
                   <span>{formatCurrency(tax.taxAmount, editedInvoice.currency)}</span>
                 </div>
               ))}
-              <div className="border-t-2 border-purple-200 pt-3 flex justify-between text-lg font-semibold">
+              <div className="border-t-2 border-purple-200 pt-3 flex justify-between text-heading-3 font-semibold">
                 <span>{t('previewModal.total')}</span>
                 <span className="text-purple-700 font-bold">{formatCurrency(calculated.payableAmount, editedInvoice.currency)}</span>
               </div>
@@ -569,9 +569,9 @@ export function InvoicePreview({
         if (isBusinessLetter || !isTaxSummaryVisible || calculated.taxTotals.length === 0) return null;
         return (
           <div key={key} className="w-full">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">{t('previewModal.taxSummary')}</h3>
+            <h3 className="text-body font-semibold uppercase tracking-wide text-gray-500 mb-3">{t('previewModal.taxSummary')}</h3>
             <div className="border rounded-xl overflow-hidden shadow-sm">
-              <table className="w-full text-sm">
+              <table className="w-full text-body">
                 <thead className="bg-purple-50 text-gray-500">
                   <tr>
                     <th className="text-left p-3">{t('previewModal.colTaxType')}</th>
@@ -599,7 +599,7 @@ export function InvoicePreview({
       if (el.type === 'header') {
         if (!effectiveHeaderHtml) return null;
         return (
-          <div key={key} className="w-full text-center text-xs text-gray-400 mb-6 italic">
+          <div key={key} className="w-full text-center text-micro text-gray-400 mb-6 italic">
             <div dangerouslySetInnerHTML={{ __html: effectiveHeaderHtml }} />
           </div>
         );
@@ -609,8 +609,8 @@ export function InvoicePreview({
         if (!effectiveNote) return null;
         return (
           <div key={key} className="pt-2 border-t border-gray-100 mt-6 w-full">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">{t('previewModal.notes')}</p>
-            <div className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl italic">
+            <p className="text-micro text-gray-400 uppercase tracking-wide mb-2">{t('previewModal.notes')}</p>
+            <div className="text-body text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl italic">
               {renderEditableField('note', effectiveNote, (val) => handleFieldChange('note', val), 'italic', true, undefined, !isInteractive)}
             </div>
           </div>
@@ -638,7 +638,7 @@ export function InvoicePreview({
                   <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
                     <Code className="h-4 w-4" />
                   </div>
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-purple-900">
+                  <h4 className="text-body font-bold uppercase tracking-widest text-purple-900">
                     {t('previewModal.paymentDetails')}
                   </h4>
                 </div>
@@ -647,17 +647,17 @@ export function InvoicePreview({
                   {effectivePaymentMeans.accountName && (
                     <div className="flex flex-col">
                       <span className="text-[10px] text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.accountOwner')}</span>
-                      <span className="text-sm font-medium text-purple-900">{effectivePaymentMeans.accountName}</span>
+                      <span className="text-body font-medium text-purple-900">{effectivePaymentMeans.accountName}</span>
                     </div>
                   )}
                   <div className="flex flex-col">
                     <span className="text-[10px] text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.iban')}</span>
-                    <span className="text-sm font-mono font-medium text-purple-900 break-all">{effectivePaymentMeans.iban}</span>
+                    <span className="text-body font-mono font-medium text-purple-900 break-all">{effectivePaymentMeans.iban}</span>
                   </div>
                   {effectivePaymentMeans.bic && (
                     <div className="flex flex-col">
                       <span className="text-[10px] text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.bic')}</span>
-                      <span className="text-sm font-mono font-medium text-purple-900">{effectivePaymentMeans.bic}</span>
+                      <span className="text-body font-mono font-medium text-purple-900">{effectivePaymentMeans.bic}</span>
                     </div>
                   )}
                 </div>
@@ -669,7 +669,7 @@ export function InvoicePreview({
                   <InvoiceQRCode invoice={qrInvoice} size={140} showLabel={false} />
                 </div>
                 <div className={`mt-4 text-center ${isRtl ? 'md:text-left' : 'md:text-right'}`}>
-                  <p className="text-sm font-bold text-purple-900">{t('qrCode.giroTitle')}</p>
+                  <p className="text-body font-bold text-purple-900">{t('qrCode.giroTitle')}</p>
                   <p className="text-[11px] text-purple-700/60 leading-relaxed max-w-[200px]">
                     {t('qrCode.giroNote')}
                   </p>
@@ -705,8 +705,8 @@ export function InvoicePreview({
         return (
           <div key={key} className="w-full mb-8">
             <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-3 border-b border-gray-100 pb-2">{t('editor.buyer')}</p>
-            <div className="text-sm space-y-1">
-              <div className="text-lg font-bold text-gray-900">
+            <div className="text-body space-y-1">
+              <div className="text-heading-3 font-bold text-gray-900">
                 {renderEditableField('buyer.name', buyer.name || '', (val) => handleFieldChange('buyer.name', val), 'font-bold', false, t('previewModal.placeholderBuyerName'), !isInteractive)}
               </div>
               <div className="text-gray-600">
@@ -728,8 +728,8 @@ export function InvoicePreview({
       if (el.type === 'description') {
         return (
           <div key={key} className="w-full mb-8 min-h-[300px]">
-            <div className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">
-              {renderEditableField('body', editedInvoice.body || '', (val) => handleFieldChange('body', val), 'w-full min-h-[300px] text-base leading-relaxed', true, t('templates.letterBodyPlaceholder'), !isInteractive)}
+            <div className="text-heading-2 text-gray-700 leading-relaxed whitespace-pre-wrap">
+              {renderEditableField('body', editedInvoice.body || '', (val) => handleFieldChange('body', val), 'w-full min-h-[300px] text-heading-2 leading-relaxed', true, t('templates.letterBodyPlaceholder'), !isInteractive)}
             </div>
           </div>
         );
@@ -762,13 +762,13 @@ export function InvoicePreview({
             <div className="flex-1">
               {hasTitleEl && (
                 <>
-                  <div className="text-4xl font-light text-purple-700 tracking-tight">
+                  <div className="text-display font-light text-purple-700 tracking-tight">
                     {isBusinessLetter 
                       ? renderEditableField('title', editedInvoice.title || 'Business Letter', (val) => handleFieldChange('title', val), '', false, 'Letter Title', !isInteractive)
                       : renderEditableField('seller.name', effectiveSeller.name || '', (val) => handleFieldChange('seller.name', val), '', false, t('previewModal.placeholderSellerName'), !isInteractive)
                     }
                   </div>
-                  <div className="mt-2 text-base text-gray-500 font-mono tracking-wider">
+                  <div className="mt-2 text-heading-2 text-gray-500 font-mono tracking-wider">
                     {renderEditableField('invoiceNumber', editedInvoice.invoiceNumber || '', (val) => handleFieldChange('invoiceNumber', val), '', false, isBusinessLetter ? 'Reference' : t('previewModal.placeholderInvoiceNumber'), !isInteractive)}
                   </div>
                 </>
@@ -777,13 +777,13 @@ export function InvoicePreview({
             {hasDatesEl && (
               <div className="text-right space-y-1 shrink-0 ml-6">
                 <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{t('previewModal.issueDate')}</p>
-                <div className="text-base text-gray-900">
+                <div className="text-heading-2 text-gray-900">
                   {renderEditableField('issueDate', editedInvoice.issueDate || '', (val) => handleFieldChange('issueDate', val), '', false, t('previewModal.placeholderIssueDate'), !isInteractive)}
                 </div>
                 {editedInvoice.dueDate && (
                   <>
                     <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-3">{t('previewModal.dueDate')}</p>
-                    <div className="text-base text-gray-900">
+                    <div className="text-heading-2 text-gray-900">
                       {renderEditableField('dueDate', editedInvoice.dueDate || '', (val) => handleFieldChange('dueDate', val), '', false, t('previewModal.placeholderDueDate'), !isInteractive)}
                     </div>
                   </>
@@ -815,7 +815,7 @@ export function InvoicePreview({
                       </SelectTrigger>
                       <SelectContent>
                         {buyers.map((b) => (
-                          <SelectItem key={b.id} value={b.id} className="text-xs">
+                          <SelectItem key={b.id} value={b.id} className="text-micro">
                             {b.name}
                           </SelectItem>
                         ))}
@@ -823,12 +823,12 @@ export function InvoicePreview({
                     </Select>
                   )}
                 </div>
-                <div className="space-y-1 text-sm">
-                  <div className="font-bold text-base text-gray-900">
+                <div className="space-y-1 text-body">
+                  <div className="font-bold text-heading-2 text-gray-900">
                     {renderEditableField('buyer.name', editedInvoice.buyer.name || '', (val) => handleFieldChange('buyer.name', val), '', false, t('previewModal.placeholderBuyerName'), !isInteractive)}
                   </div>
                   <div className="text-gray-500 leading-relaxed">
-                    {renderEditableField('buyer.vatId', editedInvoice.buyer.vatId || '', (val) => handleFieldChange('buyer.vatId', val), 'block italic text-xs', false, t('previewModal.vatPlaceholder'), !isInteractive)}
+                    {renderEditableField('buyer.vatId', editedInvoice.buyer.vatId || '', (val) => handleFieldChange('buyer.vatId', val), 'block italic text-micro', false, t('previewModal.vatPlaceholder'), !isInteractive)}
                     {renderEditableField('buyer.address.street', editedInvoice.buyer.address.street || '', (val) => handleFieldChange('buyer.address.street', val), 'block', false, t('previewModal.placeholderStreet'), !isInteractive)}
                     <div className="flex gap-1">
                       {renderEditableField('buyer.address.postalCode', editedInvoice.buyer.address.postalCode || '', (val) => handleFieldChange('buyer.address.postalCode', val), 'inline-block', false, t('previewModal.placeholderZip'), !isInteractive)}
@@ -842,12 +842,12 @@ export function InvoicePreview({
             {hasSellerEl && (
               <div>
                 <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-3">{t('previewModal.from')}</p>
-                <div className="space-y-1 text-sm">
-                  <div className="font-bold text-base text-gray-900">
+                <div className="space-y-1 text-body">
+                  <div className="font-bold text-heading-2 text-gray-900">
                     {renderEditableField('seller.name2', effectiveSeller.name || '', (val) => handleFieldChange('seller.name', val), '', false, t('previewModal.placeholderSellerName'), !isInteractive)}
                   </div>
                   <div className="text-gray-500 leading-relaxed">
-                    {renderEditableField('seller.vatId', effectiveSeller.vatId || '', (val) => handleFieldChange('seller.vatId', val), 'block italic text-xs', false, t('previewModal.vatPlaceholder'), !isInteractive)}
+                    {renderEditableField('seller.vatId', effectiveSeller.vatId || '', (val) => handleFieldChange('seller.vatId', val), 'block italic text-micro', false, t('previewModal.vatPlaceholder'), !isInteractive)}
                     {renderEditableField('seller.address.street', effectiveSeller.address?.street || '', (val) => handleFieldChange('seller.address.street', val), 'block', false, t('previewModal.placeholderStreet'), !isInteractive)}
                     <div className="flex gap-1">
                       {renderEditableField('seller.address.postalCode', effectiveSeller.address?.postalCode || '', (val) => handleFieldChange('seller.address.postalCode', val), 'inline-block', false, t('previewModal.placeholderZip'), !isInteractive)}
@@ -929,7 +929,7 @@ export function InvoicePreview({
             {isSaving ? t('common.saving') || 'Saving...' : t('common.save')}
           </Button>
           {!hasChanges && !String(editedInvoice.id ?? '').includes('_') && (
-            <span className="text-xs text-muted-foreground self-center italic px-2">
+            <span className="text-micro text-muted-foreground self-center italic px-2">
               {t('previewModal.allChangesSaved') || 'All changes saved'}
             </span>
           )}
@@ -1008,7 +1008,7 @@ export function InvoicePreview({
 
           <TabsContent value="ubl" className="mt-0">
             <div className="border rounded-lg bg-gray-50 dark:bg-gray-950">
-              <pre className="p-6 text-xs">
+              <pre className="p-6 text-micro">
                 {generateUBLXML(calculated)}
               </pre>
             </div>

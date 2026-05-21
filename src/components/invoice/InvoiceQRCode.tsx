@@ -55,7 +55,7 @@ export function InvoiceQRCode({
 
   if (!canGenerateQRCode(invoice)) {
     return (
-      <div className={`flex items-center gap-2 text-sm text-muted-foreground ${className}`}>
+      <div className={`flex items-center gap-2 text-body text-muted-foreground ${className}`}>
         <Info className="h-4 w-4" />
         <span>{t('qrCode.noPaymentInfo') || 'IBAN required for QR code generation'}</span>
       </div>
@@ -73,14 +73,14 @@ export function InvoiceQRCode({
       />
       {showLabel && (
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <p className="text-body font-medium text-gray-900 dark:text-gray-100">
             {t('qrCode.scanToPay') || 'Scan to Pay'}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-micro text-muted-foreground mt-1">
             {standardName}
           </p>
           {invoice.paymentMeans?.iban && (
-            <p className="text-xs text-muted-foreground mt-1 font-mono">
+            <p className="text-micro text-muted-foreground mt-1 font-mono">
               {invoice.paymentMeans.iban.replace(/\s/g, '').replace(/(.{4})/g, '$1 ')}
             </p>
           )}

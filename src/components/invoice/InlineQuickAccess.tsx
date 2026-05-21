@@ -251,7 +251,7 @@ export function InlineQuickAccess({
                             <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 shadow-sm">
                                 <Zap className="h-3.5 w-3.5 text-white" />
                             </div>
-                            <span className="font-semibold text-sm text-purple-900 tracking-tight">{t('inlineQuickAccess.title')}</span>
+                            <span className="font-semibold text-body text-purple-900 tracking-tight">{t('inlineQuickAccess.title')}</span>
                         </div>
                         {onDismiss && (
                             <button
@@ -272,7 +272,7 @@ export function InlineQuickAccess({
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
                         >
-                            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                            <p className="text-body text-gray-600 mb-4 leading-relaxed">
                                 {t('inlineQuickAccess.emailPrompt').split('{reason}')[0]}
                                 <span className="font-medium text-purple-700">{reasonLabel}</span>
                                 {t('inlineQuickAccess.emailPrompt').split('{reason}')[1]}
@@ -293,7 +293,7 @@ export function InlineQuickAccess({
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder={t('inlineQuickAccess.emailPlaceholder')}
-                                        className="pl-9 border-purple-200 focus-visible:ring-purple-400 bg-white text-sm"
+                                        className="pl-9 border-purple-200 focus-visible:ring-purple-400 bg-white text-body"
                                         autoFocus
                                         required
                                         id="qa-email"
@@ -307,7 +307,7 @@ export function InlineQuickAccess({
                                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('inlineQuickAccess.continue')}
                                 </Button>
                             </form>
-                            <p className="text-xs text-gray-400 mt-2">
+                            <p className="text-micro text-gray-400 mt-2">
                                 {t('inlineQuickAccess.noPasswordNote')}{' '}
                                 <span className="text-purple-500 cursor-pointer hover:text-purple-700 font-medium">
                                     {t('inlineQuickAccess.alreadyHaveAccount')}
@@ -324,7 +324,7 @@ export function InlineQuickAccess({
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
                         >
-                            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                            <p className="text-body text-gray-600 mb-4 leading-relaxed">
                                 {t('inlineQuickAccess.otpPrompt').split('{email}')[0]}
                                 <span className="font-medium text-purple-700">{email}</span>
                                 {t('inlineQuickAccess.otpPrompt').split('{email}')[1]}
@@ -340,7 +340,7 @@ export function InlineQuickAccess({
                                         value={otp}
                                         onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                                         placeholder="123456"
-                                        className="pl-9 border-purple-200 focus-visible:ring-purple-400 bg-white text-sm tracking-widest font-mono"
+                                        className="pl-9 border-purple-200 focus-visible:ring-purple-400 bg-white text-body tracking-widest font-mono"
                                         autoFocus
                                         required
                                         id="qa-otp"
@@ -356,7 +356,7 @@ export function InlineQuickAccess({
                             </form>
                             <button
                                 onClick={() => setStep('email')}
-                                className="text-xs text-gray-400 hover:text-purple-600 mt-2 transition-colors"
+                                className="text-micro text-gray-400 hover:text-purple-600 mt-2 transition-colors"
                             >
                                 {t('inlineQuickAccess.changeEmail')}
                             </button>
@@ -375,9 +375,9 @@ export function InlineQuickAccess({
                                 <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100">
                                     <CheckCircle2 className="h-4 w-4 text-green-500" />
                                 </div>
-                                <p className="text-sm font-semibold text-green-700">{t('inlineQuickAccess.accountCreated')}</p>
+                                <p className="text-body font-semibold text-green-700">{t('inlineQuickAccess.accountCreated')}</p>
                             </div>
-                            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                            <p className="text-body text-gray-600 mb-4 leading-relaxed">
                                 {t('inlineQuickAccess.passwordSetupPrompt') || 'Set a password for quick login next time. You can always skip and use email + OTP instead.'}
                             </p>
                             <form onSubmit={handlePasswordSubmit} className="space-y-2">
@@ -388,7 +388,7 @@ export function InlineQuickAccess({
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder={t('inlineQuickAccess.passwordPlaceholder') || 'New password (min. 8 chars)'}
-                                        className="pl-9 pr-9 border-purple-200 focus-visible:ring-purple-400 bg-white text-sm"
+                                        className="pl-9 pr-9 border-purple-200 focus-visible:ring-purple-400 bg-white text-body"
                                         autoFocus
                                         id="qa-password"
                                     />
@@ -408,7 +408,7 @@ export function InlineQuickAccess({
                                         value={passwordConfirm}
                                         onChange={(e) => setPasswordConfirm(e.target.value)}
                                         placeholder={t('inlineQuickAccess.passwordConfirmPlaceholder') || 'Confirm password'}
-                                        className="pl-9 border-purple-200 focus-visible:ring-purple-400 bg-white text-sm"
+                                        className="pl-9 border-purple-200 focus-visible:ring-purple-400 bg-white text-body"
                                         id="qa-password-confirm"
                                     />
                                 </div>
@@ -416,7 +416,7 @@ export function InlineQuickAccess({
                                     <Button
                                         type="submit"
                                         disabled={isLoading}
-                                        className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-sm text-sm"
+                                        className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-sm text-body"
                                     >
                                         {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (t('inlineQuickAccess.setPassword') || 'Set Password')}
                                     </Button>
@@ -425,7 +425,7 @@ export function InlineQuickAccess({
                                         variant="outline"
                                         onClick={completeAuth}
                                         disabled={isLoading}
-                                        className="text-sm border-gray-200 text-gray-500 hover:text-gray-700"
+                                        className="text-body border-gray-200 text-gray-500 hover:text-gray-700"
                                     >
                                         {t('inlineQuickAccess.skipForNow') || 'Skip'}
                                     </Button>
@@ -444,8 +444,8 @@ export function InlineQuickAccess({
                         >
                             <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
                             <div>
-                                <p className="font-semibold text-sm text-green-700">{t('inlineQuickAccess.accountCreated')}</p>
-                                <p className="text-xs text-gray-500">{t('inlineQuickAccess.savingRedirecting')}</p>
+                                <p className="font-semibold text-body text-green-700">{t('inlineQuickAccess.accountCreated')}</p>
+                                <p className="text-micro text-gray-500">{t('inlineQuickAccess.savingRedirecting')}</p>
                             </div>
                         </motion.div>
                     )}

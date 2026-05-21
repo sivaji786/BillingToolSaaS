@@ -144,7 +144,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                     </div>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h2 className="text-lg font-black uppercase tracking-tight text-slate-900 leading-none">
+                            <h2 className="text-heading-3 font-black uppercase tracking-tight text-slate-900 leading-none">
                                 {template.name || t('designLayout.newTemplate')}
                             </h2>
                             <Badge variant="outline" className="h-5 px-2 text-[8px] font-black tracking-widest border-indigo-200 bg-indigo-50 text-indigo-600 border-none shadow-sm uppercase">
@@ -609,7 +609,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                             const val = Math.max(0, Math.min(parseInt(e.target.value) || 0, field.max));
                                                             handleLayoutChange(selectedElement.id, { [field.key]: val });
                                                         }}
-                                                        className="h-12 bg-white border-slate-200 text-slate-900 text-sm font-bold transition-all focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 rounded-2xl pl-5 shadow-sm"
+                                                        className="h-12 bg-white border-slate-200 text-slate-900 text-body font-bold transition-all focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 rounded-2xl pl-5 shadow-sm"
                                                     />
                                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-300 pointer-events-none group-hover/field:text-indigo-300">PX</div>
                                                 </div>
@@ -637,7 +637,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                         const val = parseInt(e.target.value) || 10;
                                                         handleLayoutChange(selectedElement.id, { fontSize: val });
                                                     }}
-                                                    className="h-12 bg-white border-slate-200 text-slate-900 text-sm font-bold transition-all focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 rounded-2xl pl-5 shadow-sm"
+                                                    className="h-12 bg-white border-slate-200 text-slate-900 text-body font-bold transition-all focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 rounded-2xl pl-5 shadow-sm"
                                                     min="6" max="72"
                                                 />
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-300 pointer-events-none group-hover/field:text-indigo-300">PX</div>
@@ -662,7 +662,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                     value={selectedElement.content || ''}
                                                     onChange={(e) => handleLayoutChange(selectedElement.id, { content: e.target.value })}
                                                     placeholder={t('designLayout.contentPlaceholder') || "Enter custom text for this element..."}
-                                                    className="min-h-[100px] bg-white border-slate-200 text-slate-900 text-sm font-medium transition-all focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 rounded-2xl p-4 shadow-sm"
+                                                    className="min-h-[100px] bg-white border-slate-200 text-slate-900 text-body font-medium transition-all focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 rounded-2xl p-4 shadow-sm"
                                                 />
                                                 <p className="text-[10px] text-slate-400 font-semibold italic px-1">
                                                     Overwrites the default value for this element.

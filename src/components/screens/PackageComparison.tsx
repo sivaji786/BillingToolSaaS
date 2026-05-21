@@ -192,7 +192,7 @@ function InlineFeatureCell({
                 value={rawValue}
                 onSave={handleSave}
                 placeholder="—"
-                className="font-medium text-slate-700 dark:text-slate-300 text-sm"
+                className="font-medium text-slate-700 dark:text-slate-300 text-body"
             />
         );
     }
@@ -288,7 +288,7 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
                         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
                             <FileText className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
+                        <span className="text-heading-2 font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
                             {t('appName') || 'BillingTool'}
                         </span>
                     </div>
@@ -301,10 +301,10 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
 
                     {/* Page title / subtitle — CMS editable */}
                     <div className="text-center space-y-4">
-                        <motion.h1 variants={itemVariants} className="text-4xl font-extrabold tracking-tight lg:text-5xl">
+                        <motion.h1 variants={itemVariants} className="text-display font-extrabold tracking-tight lg:text-5xl">
                             <InlineEditableText slug="package-comparison" field="compare_title" lang={language} value={cmsContent?.compare_title || t('landing.pricing.compareTitle') || 'Compare our plans'} />
                         </motion.h1>
-                        <motion.p variants={itemVariants} className="text-xl text-slate-500 max-w-2xl mx-auto">
+                        <motion.p variants={itemVariants} className="text-heading-2 text-slate-500 max-w-2xl mx-auto">
                             <InlineEditableText slug="package-comparison" field="compare_subtitle" lang={language} value={cmsContent?.compare_subtitle || t('landing.pricing.compareSubtitle') || 'Find the perfect fit for your business needs'} multiline />
                         </motion.p>
                     </div>
@@ -315,38 +315,38 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
                             <Table>
                                 <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b-2">
                                     <TableRow>
-                                        <TableHead className="w-[300px] py-8 px-6 text-lg font-bold">
+                                        <TableHead className="w-[300px] py-8 px-6 text-heading-3 font-bold">
                                             {t('landing.pricing.features') || 'Features'}
                                         </TableHead>
                                         {plans.map(plan => (
                                             <TableHead key={plan.id} className="text-center py-8 min-w-[200px]">
                                                 <div className="space-y-2">
                                                     {/* Plan name — DB inline editable */}
-                                                    <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                                                    <div className="text-heading-1 font-bold text-slate-900 dark:text-white">
                                                         <InlineField
                                                             value={plan.name}
                                                             onSave={(v) => savePlan(plan.id, { name: v })}
-                                                            className="text-2xl font-bold text-slate-900 dark:text-white"
+                                                            className="text-heading-1 font-bold text-slate-900 dark:text-white"
                                                         />
                                                     </div>
                                                     {/* Plan price — DB inline editable (raw number, € prefix shown outside) */}
-                                                    <div className="text-purple-600 font-extrabold text-xl">
+                                                    <div className="text-purple-600 font-extrabold text-heading-2">
                                                         {parseFloat(plan.price) === 0 ? (
                                                             <InlineField
                                                                 value={plan.price}
                                                                 onSave={(v) => savePlan(plan.id, { price: v })}
-                                                                className="text-purple-600 font-extrabold text-xl"
+                                                                className="text-purple-600 font-extrabold text-heading-2"
                                                             />
                                                         ) : (
                                                             <>
                                                                 €<InlineField
                                                                     value={plan.price}
                                                                     onSave={(v) => savePlan(plan.id, { price: v })}
-                                                                    className="text-purple-600 font-extrabold text-xl"
+                                                                    className="text-purple-600 font-extrabold text-heading-2"
                                                                 />
                                                             </>
                                                         )}
-                                                        <span className="text-sm font-normal text-slate-400 ml-1">/mo</span>
+                                                        <span className="text-body font-normal text-slate-400 ml-1">/mo</span>
                                                     </div>
                                                     <Button
                                                         size="sm"
@@ -373,11 +373,11 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
                                                     />
                                                     {/* Column description — DB inline editable */}
                                                     {col.description && (
-                                                        <p className="text-xs font-normal text-slate-400 mt-1">
+                                                        <p className="text-micro font-normal text-slate-400 mt-1">
                                                             <InlineField
                                                                 value={col.description}
                                                                 onSave={(v) => saveColumn(col.id, { description: v })}
-                                                                className="text-xs font-normal text-slate-400"
+                                                                className="text-micro font-normal text-slate-400"
                                                                 multiline
                                                             />
                                                         </p>
@@ -414,12 +414,12 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
                                     <div className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm">
                                         {item.icon}
                                     </div>
-                                    <CardTitle className="text-lg">
+                                    <CardTitle className="text-heading-3">
                                         <InlineEditableText slug="package-comparison" field={item.titleField} lang={language} value={cmsContent?.[item.titleField] || item.defaultTitle} />
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-slate-500 text-sm">
+                                    <p className="text-slate-500 text-body">
                                         <InlineEditableText slug="package-comparison" field={item.descField} lang={language} value={cmsContent?.[item.descField] || item.defaultDesc} multiline />
                                     </p>
                                 </CardContent>

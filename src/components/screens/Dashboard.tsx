@@ -225,8 +225,8 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-violet-700">{t('dashboard.totalInvoices')}</p>
-              <p className="text-3xl mt-2 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">{stats.total}</p>
+              <p className="text-body text-violet-700">{t('dashboard.totalInvoices')}</p>
+              <p className="text-heading-1 mt-2 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">{stats.total}</p>
             </div>
             <div className="p-3 bg-violet-100 rounded-xl">
               <FileText className="h-8 w-8 text-violet-600" />
@@ -237,11 +237,11 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
         <Card className="p-6 border-2 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200 shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-emerald-700">{t('dashboard.paidRevenue')}</p>
-              <p className="text-3xl mt-2 bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+              <p className="text-body text-emerald-700">{t('dashboard.paidRevenue')}</p>
+              <p className="text-heading-1 mt-2 bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
                 €{(stats.paidRevenue / 1000).toFixed(1)}k
               </p>
-              <p className="text-xs text-emerald-600 mt-1">{stats.paid} {t('dashboard.invoices')}</p>
+              <p className="text-micro text-emerald-600 mt-1">{stats.paid} {t('dashboard.invoices')}</p>
             </div>
             <div className="p-3 bg-emerald-100 rounded-xl">
               <DollarSign className="h-8 w-8 text-emerald-600" />
@@ -252,11 +252,11 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
         <Card className="p-6 border-2 bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200 shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-cyan-700">{t('dashboard.pendingRevenue')}</p>
-              <p className="text-3xl mt-2 bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+              <p className="text-body text-cyan-700">{t('dashboard.pendingRevenue')}</p>
+              <p className="text-heading-1 mt-2 bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
                 €{(stats.pendingRevenue / 1000).toFixed(1)}k
               </p>
-              <p className="text-xs text-cyan-600 mt-1">{stats.sent} {t('dashboard.invoices')}</p>
+              <p className="text-micro text-cyan-600 mt-1">{stats.sent} {t('dashboard.invoices')}</p>
             </div>
             <div className="p-3 bg-cyan-100 rounded-xl">
               <Clock className="h-8 w-8 text-cyan-600" />
@@ -267,11 +267,11 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
         <Card className="p-6 border-2 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-amber-700">{t('dashboard.overdue')}</p>
-              <p className="text-3xl mt-2 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+              <p className="text-body text-amber-700">{t('dashboard.overdue')}</p>
+              <p className="text-heading-1 mt-2 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                 €{(stats.overdueValue / 1000).toFixed(1)}k
               </p>
-              <p className="text-xs text-amber-600 mt-1">{stats.overdueCount} {t('dashboard.invoices')}</p>
+              <p className="text-micro text-amber-600 mt-1">{stats.overdueCount} {t('dashboard.invoices')}</p>
             </div>
             <div className="p-3 bg-amber-100 rounded-xl">
               <AlertTriangle className="h-8 w-8 text-amber-600" />
@@ -372,7 +372,7 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
                 <FileText className="h-5 w-5 text-violet-600" />
               </div>
               <p className="text-violet-900">{t('dashboard.createInvoice')}</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-body text-muted-foreground mt-1">
                 {t('dashboard.createInvoiceDesc')}
               </p>
             </div>
@@ -388,7 +388,7 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
                 <Upload className="h-5 w-5 text-fuchsia-600" />
               </div>
               <p className="text-fuchsia-900">{t('dashboard.importData')}</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-body text-muted-foreground mt-1">
                 {t('dashboard.importDataDesc')}
               </p>
             </div>
@@ -405,7 +405,7 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
                 <CheckCircle className="h-5 w-5 text-cyan-600" />
               </div>
               <p className="text-cyan-900">{t('dashboard.validateBatch')}</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-body text-muted-foreground mt-1">
                 {isValidating ? t('dashboard.validating') : t('dashboard.validateBatchDesc')}
               </p>
             </div>
@@ -423,7 +423,7 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
                 <FileText className="h-12 w-12 text-violet-600" />
               </div>
               <p>{t('dashboard.noInvoices')}</p>
-              <p className="text-sm mt-2">{t('dashboard.noInvoicesDesc')}</p>
+              <p className="text-body mt-2">{t('dashboard.noInvoicesDesc')}</p>
             </div>
           ) : (
             recentInvoices.map((invoice) => (
@@ -447,7 +447,7 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-body text-muted-foreground mt-1">
                       {invoice.buyer.name} • {formatDate(invoice.issueDate)}
                     </p>
                   </div>
@@ -455,7 +455,7 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
                 <div className="text-right">
                   <p>{formatCurrency(invoice.payableAmount, invoice.currency)}</p>
                   {invoice.dueDate && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-body text-muted-foreground">
                       {t('dashboard.due')} {formatDate(invoice.dueDate)}
                     </p>
                   )}
@@ -488,10 +488,10 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
                   type="file"
                   accept=".json,.csv,.xml"
                   onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  className="block w-full text-sm text-muted-foreground
+                  className="block w-full text-body text-muted-foreground
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-lg file:border-2
-                    file:text-sm file:font-medium
+                    file:text-body file:font-medium
                     file:bg-violet-50 file:text-violet-700
                     file:border-violet-200
                     hover:file:bg-violet-100
@@ -499,15 +499,15 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
                 />
               </div>
               {selectedFile && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-body text-muted-foreground">
                   {t('import.selectedFile')}: {selectedFile.name}
                 </p>
               )}
             </div>
 
             <div className="p-4 bg-violet-50 border-2 border-violet-200 rounded-lg">
-              <p className="text-sm text-violet-900 mb-2">{t('import.supportedFormats')}:</p>
-              <ul className="text-sm text-violet-700 space-y-1 list-disc list-inside">
+              <p className="text-body text-violet-900 mb-2">{t('import.supportedFormats')}:</p>
+              <ul className="text-body text-violet-700 space-y-1 list-disc list-inside">
                 <li>JSON (.json)</li>
                 <li>CSV (.csv)</li>
                 <li>UBL XML (.xml)</li>

@@ -331,7 +331,7 @@ export function SAWiki() {
                         <div key={item.name} className="flex flex-col">
                             <button
                                 onClick={() => toggleFolder(item.name)}
-                                className="flex items-center gap-2 px-2 py-1.5 hover:bg-accent rounded-md text-sm font-medium text-muted-foreground w-full text-left transition-colors"
+                                className="flex items-center gap-2 px-2 py-1.5 hover:bg-accent rounded-md text-body font-medium text-muted-foreground w-full text-left transition-colors"
                                 style={{ paddingLeft: `${depth * 1.5 + 0.5}rem` }}
                             >
                                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -352,7 +352,7 @@ export function SAWiki() {
                         key={item.path}
                         onClick={() => item.path && setSelectedPath(item.path)}
                         className={cn(
-                            "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm w-full text-left transition-all mb-0.5",
+                            "flex items-center gap-2 px-2 py-1.5 rounded-md text-body w-full text-left transition-all mb-0.5",
                             isSelected
                                 ? "bg-purple-100 text-purple-700 font-semibold border-l-2 border-purple-600"
                                 : "hover:bg-accent text-muted-foreground"
@@ -379,7 +379,7 @@ export function SAWiki() {
         return (
             <code
                 className={cn(
-                    "rounded text-sm font-mono",
+                    "rounded text-body font-mono",
                     className?.includes('language-')
                         ? "block bg-slate-900 text-slate-100 p-4 overflow-x-auto"
                         : "bg-slate-100 text-slate-800 px-1.5 py-0.5"
@@ -512,7 +512,7 @@ export function SAWiki() {
                     </div>
                 </ScrollArea>
 
-                <div className="p-4 bg-muted/30 rounded-lg border border-dashed text-xs text-muted-foreground flex flex-col gap-2">
+                <div className="p-4 bg-muted/30 rounded-lg border border-dashed text-micro text-muted-foreground flex flex-col gap-2">
                     <div className="flex items-center gap-2">
                         <BookOpen className="h-3 w-3" />
                         <span className="font-semibold uppercase tracking-wider text-[10px]">Platform Wiki v1.0</span>
@@ -528,7 +528,7 @@ export function SAWiki() {
             <div className="flex-1 h-full flex flex-col min-w-0 overflow-hidden">
                 {/* Content Header */}
                 <div className="flex items-center justify-between mb-3 shrink-0">
-                    <h2 className="text-base font-semibold text-slate-700 capitalize truncate">
+                    <h2 className="text-heading-2 font-semibold text-slate-700 capitalize truncate">
                         {getPageTitle()}
                     </h2>
                     {selectedPath && !contentLoading && (
@@ -538,14 +538,14 @@ export function SAWiki() {
                                     <button
                                         onClick={handleSave}
                                         disabled={saving}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-micro font-medium rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
                                     >
                                         <Save className="h-3.5 w-3.5" />
                                         {saving ? 'Saving…' : 'Save'}
                                     </button>
                                     <button
                                         onClick={handleCancelEdit}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors shadow-sm"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-micro font-medium rounded-md bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors shadow-sm"
                                     >
                                         <X className="h-3.5 w-3.5" />
                                         Cancel
@@ -555,7 +555,7 @@ export function SAWiki() {
                                 <>
                                     <button
                                         onClick={handleEditToggle}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shadow-sm"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-micro font-medium rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors shadow-sm"
                                         title="Edit this document"
                                     >
                                         <Pencil className="h-3.5 w-3.5" />
@@ -563,7 +563,7 @@ export function SAWiki() {
                                     </button>
                                     <button
                                         onClick={handleExportPDF}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-micro font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm"
                                         title="Export this page as PDF"
                                     >
                                         <Download className="h-3.5 w-3.5" />
@@ -578,7 +578,7 @@ export function SAWiki() {
                     <CardContent className="p-0 h-full">
                         {editMode ? (
                             <textarea
-                                className="w-full h-full p-6 font-mono text-sm bg-white resize-none focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
+                                className="w-full h-full p-6 font-mono text-body bg-white resize-none focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
                                 value={editContent}
                                 onChange={(e) => setEditContent(e.target.value)}
                                 spellCheck={false}
@@ -589,7 +589,7 @@ export function SAWiki() {
                                 {contentLoading ? (
                                     <div className="flex flex-col items-center justify-center h-64 gap-3">
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                                        <p className="text-sm text-slate-500">Loading documentation...</p>
+                                        <p className="text-body text-slate-500">Loading documentation...</p>
                                     </div>
                                 ) : (
                                     <ReactMarkdown
@@ -599,7 +599,7 @@ export function SAWiki() {
                                             a: WikiLink,
                                             table: ({ children }) => (
                                                 <div className="overflow-x-auto my-6">
-                                                    <table className="min-w-full border-collapse border border-slate-300 text-sm">
+                                                    <table className="min-w-full border-collapse border border-slate-300 text-body">
                                                         {children}
                                                     </table>
                                                 </div>

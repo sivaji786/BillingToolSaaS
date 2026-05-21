@@ -317,11 +317,11 @@ export function LetterPreview({
       >
         {letter.body ? (
           <div
-            className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+            className="text-body text-gray-700 leading-relaxed prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{ __html: letter.body }}
           />
         ) : (
-          <p className="text-gray-400 italic text-sm min-h-[160px] flex items-start pt-2">
+          <p className="text-gray-400 italic text-body min-h-[160px] flex items-start pt-2">
             {t('templates.letterBodyPlaceholder') || 'No letter content. Double-click to add.'}
           </p>
         )}
@@ -371,7 +371,7 @@ export function LetterPreview({
           )}
 
           {!hasChanges && !String(letter.id ?? '').includes('_') && (
-            <span className="text-xs text-muted-foreground italic px-2">
+            <span className="text-micro text-muted-foreground italic px-2">
               {t('previewModal.allChangesSaved') || 'All changes saved'}
             </span>
           )}
@@ -391,7 +391,7 @@ export function LetterPreview({
       </div>
 
       {/* Edit hint */}
-      <div className="mb-4 flex items-center gap-2 text-xs text-purple-500 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">
+      <div className="mb-4 flex items-center gap-2 text-micro text-purple-500 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">
         <Edit2 className="h-3.5 w-3.5 shrink-0" />
         <span>Double-click any text field on the letter to edit it inline. Use the rich text editor for the body content.</span>
       </div>
@@ -415,7 +415,7 @@ export function LetterPreview({
                   ) : null;
 
                   if (type === 'header') return effectiveHeader ? (
-                    <div key="header" className="text-center text-xs text-gray-400 italic">
+                    <div key="header" className="text-center text-micro text-gray-400 italic">
                       <div dangerouslySetInnerHTML={{ __html: effectiveHeader }} />
                     </div>
                   ) : null;
@@ -423,10 +423,10 @@ export function LetterPreview({
                   if (type === 'title') return (
                     <div key="title" className="flex justify-between items-start pb-8 border-b-2 border-purple-200">
                       <div className="flex-1">
-                        <div className="text-4xl font-light text-purple-700 tracking-tight">
+                        <div className="text-display font-light text-purple-700 tracking-tight">
                           {renderField('title', (letter as any).title || '', '', 'Business Letter')}
                         </div>
-                        <div className="mt-2 text-base text-gray-500 font-mono tracking-wider">
+                        <div className="mt-2 text-heading-2 text-gray-500 font-mono tracking-wider">
                           {renderField('invoiceNumber', letter.invoiceNumber || '', '', 'Reference')}
                         </div>
                       </div>
@@ -435,7 +435,7 @@ export function LetterPreview({
                           <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">
                             {t('previewModal.issueDate') || 'ISSUE DATE'}
                           </p>
-                          <div className="text-base text-gray-900">
+                          <div className="text-heading-2 text-gray-900">
                             {letter.issueDate ? new Date(letter.issueDate).toLocaleDateString() : '—'}
                           </div>
                         </div>
@@ -452,8 +452,8 @@ export function LetterPreview({
                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-3 border-b border-gray-100 pb-2">
                           {t('previewModal.from') || 'FROM'}
                         </p>
-                        <div className="text-sm space-y-1">
-                          <div className="text-base font-semibold text-gray-900">
+                        <div className="text-body space-y-1">
+                          <div className="text-heading-2 font-semibold text-gray-900">
                             {renderEditableText('seller.name', effectiveSeller.name, updateSeller.bind(null, 'name'), 'font-semibold text-gray-900', 'Sender name')}
                           </div>
                           <div className="text-gray-600">
@@ -466,8 +466,8 @@ export function LetterPreview({
                           <div className="text-gray-600">
                             {renderEditableText('seller.address.country', effectiveSeller.address?.country || '', updateSellerAddress.bind(null, 'country'), 'text-gray-600', 'Country')}
                           </div>
-                          <div className="text-gray-500 text-xs">
-                            {renderEditableText('seller.contactEmail', effectiveSeller.contactEmail, updateSeller.bind(null, 'contactEmail'), 'text-gray-500 text-xs', 'Email')}
+                          <div className="text-gray-500 text-micro">
+                            {renderEditableText('seller.contactEmail', effectiveSeller.contactEmail, updateSeller.bind(null, 'contactEmail'), 'text-gray-500 text-micro', 'Email')}
                           </div>
                         </div>
                       </div>
@@ -488,14 +488,14 @@ export function LetterPreview({
                             </SelectTrigger>
                             <SelectContent>
                               {buyers.map(b => (
-                                <SelectItem key={b.id} value={b.id} className="text-xs">{b.name}</SelectItem>
+                                <SelectItem key={b.id} value={b.id} className="text-micro">{b.name}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         )}
                       </div>
-                      <div className="text-sm space-y-1">
-                        <div className="text-lg font-bold text-gray-900">
+                      <div className="text-body space-y-1">
+                        <div className="text-heading-3 font-bold text-gray-900">
                           {renderEditableText('buyer.name', letter.buyer?.name || '', updateBuyer.bind(null, 'name'), 'font-bold text-gray-900', 'Recipient name')}
                         </div>
                         <div className="text-gray-600">
@@ -516,20 +516,20 @@ export function LetterPreview({
                     <div key="description" className="space-y-5 pt-2">
                       {/* Subject */}
                       <div className="py-2">
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-body font-semibold text-gray-700">
                           {t('editor.letterSubject') || 'Re:'}{' '}
                           {renderField('note', letter.note || '', 'text-gray-700', 'e.g. Project Update, Meeting Follow-up')}
                         </p>
                       </div>
                       {/* Salutation */}
-                      <p className="text-sm text-gray-800">
+                      <p className="text-body text-gray-800">
                         {renderField('salutation', letter.salutation || '', 'text-gray-800', 'e.g. Dear Sir/Madam,')}
                       </p>
                       {/* Body */}
                       {renderBodyField()}
                       {/* Closing */}
                       <div className="pt-6">
-                        <p className="text-sm text-gray-800">
+                        <p className="text-body text-gray-800">
                           {renderField('closing', letter.closing || '', 'text-gray-800', 'e.g. Yours sincerely,')}
                         </p>
                       </div>
@@ -538,7 +538,7 @@ export function LetterPreview({
 
                   if (type === 'signature') return (
                     <div key="signature" className="mt-8 w-40 border-t border-gray-300 pt-1">
-                      <p className="text-xs text-gray-500">{effectiveSeller.name}</p>
+                      <p className="text-micro text-gray-500">{effectiveSeller.name}</p>
                     </div>
                   );
 

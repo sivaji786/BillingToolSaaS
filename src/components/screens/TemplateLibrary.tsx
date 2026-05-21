@@ -158,7 +158,7 @@ export function TemplateLibrary({
       <div className="flex gap-2 border-b border-border pb-0">
         <button
           onClick={() => setActiveFilter('invoice')}
-          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 text-body font-medium border-b-2 -mb-px transition-colors ${
             activeFilter === 'invoice'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -166,13 +166,13 @@ export function TemplateLibrary({
         >
           <FileText className="h-4 w-4" />
           {t('nav.invoices') || 'Invoices'}
-          <Badge variant="secondary" className="ml-1 text-xs">
+          <Badge variant="secondary" className="ml-1 text-micro">
             {templates.filter(t => t.templateType === 'invoice' || !t.templateType).length}
           </Badge>
         </button>
         <button
           onClick={() => setActiveFilter('business_letter')}
-          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 text-body font-medium border-b-2 -mb-px transition-colors ${
             activeFilter === 'business_letter'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -180,7 +180,7 @@ export function TemplateLibrary({
         >
           <Mail className="h-4 w-4" />
           {t('nav.letters') || 'Business Letters'}
-          <Badge variant="secondary" className="ml-1 text-xs">
+          <Badge variant="secondary" className="ml-1 text-micro">
             {templates.filter(t => t.templateType === 'business_letter').length}
           </Badge>
         </button>
@@ -190,7 +190,7 @@ export function TemplateLibrary({
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-lg">
           <p className="font-medium">{t('templates.noTemplatesOfType') || 'No templates yet'}</p>
-          <p className="text-sm mt-1">{t('templates.createFirst') || 'Create your first template to get started'}</p>
+          <p className="text-body mt-1">{t('templates.createFirst') || 'Create your first template to get started'}</p>
           <Button className="mt-4" onClick={() => onNewTemplate(activeFilter)}>
             <Plus className="h-4 w-4 mr-2" />
             {t('templates.newTemplate')}
@@ -220,15 +220,15 @@ export function TemplateLibrary({
 
                 {/* Name + description */}
                 <div>
-                  <h3 className="font-semibold text-base">{template.name}</h3>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                  <h3 className="font-semibold text-heading-2">{template.name}</h3>
+                  <p className="text-body text-muted-foreground mt-1 line-clamp-2">
                     {template.description}
                   </p>
                 </div>
 
                 {/* Stats */}
                 {template.templateType !== 'business_letter' && (
-                  <div className="space-y-1.5 text-sm">
+                  <div className="space-y-1.5 text-body">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t('templates.defaultTax')}</span>
                       <span>{template.defaultTaxCategory} {template.defaultTaxPercent}%</span>
@@ -243,7 +243,7 @@ export function TemplateLibrary({
                 )}
 
                 {template.templateType === 'business_letter' && template.seller.name && (
-                  <div className="space-y-1.5 text-sm">
+                  <div className="space-y-1.5 text-body">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t('templates.seller')}</span>
                       <span className="truncate max-w-[140px] text-right">{template.seller.name}</span>
@@ -291,7 +291,7 @@ export function TemplateLibrary({
                 </div>
 
                 {/* Footer note */}
-                <div className="pt-2 border-t text-xs text-muted-foreground">
+                <div className="pt-2 border-t text-micro text-muted-foreground">
                   {template.templateType === 'business_letter' ? (
                     <p>{t('templates.preConfiguredFor') || 'Pre-configured for'} {t('nav.letters') || 'Business Letters'}</p>
                   ) : (
@@ -310,7 +310,7 @@ export function TemplateLibrary({
       {/* Info Card */}
       <Card className="p-6 bg-muted/50">
         <h3 className="mb-2">{t('templates.aboutTemplates')}</h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body text-muted-foreground">
           {t('templates.aboutTemplatesDesc')}
         </p>
       </Card>

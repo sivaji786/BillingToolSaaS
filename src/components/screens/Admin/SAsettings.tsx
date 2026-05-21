@@ -255,7 +255,7 @@ export function SAsettings() {
                         </div>
 
                         <Separator />
-                        <h4 className="text-sm font-medium">Headquarters Address</h4>
+                        <h4 className="text-body font-medium">Headquarters Address</h4>
 
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="grid gap-2">
@@ -279,7 +279,7 @@ export function SAsettings() {
                         </div>
 
                         <Separator />
-                        <h4 className="text-sm font-medium">Bank Account Information (Required for QR/Giro)</h4>
+                        <h4 className="text-body font-medium">Bank Account Information (Required for QR/Giro)</h4>
 
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="grid gap-2 md:col-span-2">
@@ -411,8 +411,8 @@ export function SAsettings() {
                             <div key={apiKey.id} className="flex items-center justify-between p-4 border rounded-lg">
                                 <div className="flex-1">
                                     <p className="font-medium">{apiKey.name}</p>
-                                    <p className="text-sm text-muted-foreground font-mono">{apiKey.key}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">
+                                    <p className="text-body text-muted-foreground font-mono">{apiKey.key}</p>
+                                    <p className="text-micro text-muted-foreground mt-1">
                                         Created on {new Date(apiKey.createdAt).toLocaleDateString()}
                                     </p>
                                 </div>
@@ -455,7 +455,7 @@ export function SAsettings() {
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <Label>Maintenance Mode</Label>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-body text-muted-foreground">
                                 Temporarily disable access to the platform
                             </p>
                         </div>
@@ -467,7 +467,7 @@ export function SAsettings() {
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <Label>Allow New Signups</Label>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-body text-muted-foreground">
                                 Enable or disable new user registrations
                             </p>
                         </div>
@@ -479,7 +479,7 @@ export function SAsettings() {
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <Label>Email Notifications</Label>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-body text-muted-foreground">
                                 Send email notifications for important events
                             </p>
                         </div>
@@ -491,7 +491,7 @@ export function SAsettings() {
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <Label>Theme Preference</Label>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-body text-muted-foreground">
                                 Current theme: {theme}
                             </p>
                         </div>
@@ -559,7 +559,7 @@ export function SAsettings() {
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <Label>Enable Telegram Notifications</Label>
-                            <p className="text-sm text-muted-foreground">Send messages when tickets are created or updated</p>
+                            <p className="text-body text-muted-foreground">Send messages when tickets are created or updated</p>
                         </div>
                         <Switch
                             checked={telegramEnabled}
@@ -578,7 +578,7 @@ export function SAsettings() {
                             value={telegramToken}
                             onChange={(e) => setTelegramToken(e.target.value)}
                         />
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-micro text-muted-foreground">
                             {settings?.companyProfile?.telegram_bot_token_set
                                 ? 'A token is saved. Leave blank to keep it, or enter a new one to replace it.'
                                 : 'Get a token from @BotFather on Telegram.'}
@@ -593,7 +593,7 @@ export function SAsettings() {
                             value={telegramChatId}
                             onChange={(e) => setTelegramChatId(e.target.value)}
                         />
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-micro text-muted-foreground">
                             Group ID (negative number) or channel username (@name). Add @userinfobot to your group to get the ID.
                         </p>
                     </div>
@@ -637,7 +637,7 @@ export function SAsettings() {
                 </CardHeader>
                 {health && (
                     <CardContent className="space-y-3">
-                        <div className={`text-sm font-semibold px-3 py-1.5 rounded-md inline-flex items-center gap-2 ${
+                        <div className={`text-body font-semibold px-3 py-1.5 rounded-md inline-flex items-center gap-2 ${
                             health.overall === 'ok' ? 'bg-green-50 text-green-700' :
                             health.overall === 'warning' ? 'bg-yellow-50 text-yellow-700' :
                             'bg-red-50 text-red-700'
@@ -650,9 +650,9 @@ export function SAsettings() {
                                 <div key={key} className="flex items-center justify-between px-4 py-2.5">
                                     <div className="flex items-center gap-2">
                                         {healthIcon(check.status)}
-                                        <span className="text-sm font-medium capitalize">{key}</span>
+                                        <span className="text-body font-medium capitalize">{key}</span>
                                     </div>
-                                    <span className="text-xs text-muted-foreground">{check.message}</span>
+                                    <span className="text-micro text-muted-foreground">{check.message}</span>
                                 </div>
                             ))}
                         </div>
@@ -672,8 +672,8 @@ export function SAsettings() {
                 <CardContent className="space-y-4">
                     <div className="flex flex-col sm:flex-row gap-4">
                         <div className="flex-1 space-y-2">
-                            <h4 className="text-sm font-medium">Migrations</h4>
-                            <p className="text-sm text-muted-foreground">
+                            <h4 className="text-body font-medium">Migrations</h4>
+                            <p className="text-body text-muted-foreground">
                                 Update the database schema to the latest version.
                             </p>
                             <Button
@@ -692,8 +692,8 @@ export function SAsettings() {
                         </div>
                         <Separator orientation="vertical" className="hidden sm:block h-24" />
                         <div className="flex-1 space-y-2">
-                            <h4 className="text-sm font-medium">Seeding</h4>
-                            <p className="text-sm text-muted-foreground">
+                            <h4 className="text-body font-medium">Seeding</h4>
+                            <p className="text-body text-muted-foreground">
                                 Reset or populate database with default data.
                             </p>
                             <div className="flex gap-2">

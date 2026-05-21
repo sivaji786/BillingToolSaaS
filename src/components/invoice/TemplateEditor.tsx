@@ -224,7 +224,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
                   <SelectItem value="business_letter">{t('nav.letters') || 'Business Letter'}</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500">
+              <p className="text-micro text-gray-500">
                 {isLetter
                   ? (t('templates.typeLetterDesc') || 'For formal business correspondence')
                   : (t('templates.typeInvoiceDesc') || 'For billing customers with EN 16931 compliance')}
@@ -315,7 +315,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
                   <Upload className="h-4 w-4" />
                   {formData.logoUrl ? t('templates.changeLogo') : t('templates.uploadLogo')}
                 </Button>
-                <p className="text-xs text-gray-500">
+                <p className="text-micro text-gray-500">
                   {t('templates.logoRequirements') || 'PNG, JPG or SVG. Max 2MB. Transparent background recommended.'}
                 </p>
               </div>
@@ -332,7 +332,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
               placeholder="Enter text to appear at the top of invoices (e.g., company slogan, tax info)"
               rows={2}
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-micro text-gray-500">
               {t('templates.headerDesc') || 'This text will appear at the top of your invoices, below the logo.'}
             </p>
           </div>
@@ -347,7 +347,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
               placeholder="Enter text to appear at the bottom of invoices (e.g., legal info, bank details, terms)"
               rows={3}
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-micro text-gray-500">
               {t('templates.footerDesc') || 'This text will appear at the bottom of your invoices. Great for bank details, legal notices, or terms.'}
             </p>
           </div>

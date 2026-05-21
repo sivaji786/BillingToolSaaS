@@ -120,14 +120,14 @@ export function SAbilling() {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                        <CardTitle className="text-body font-medium">Total Revenue</CardTitle>
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">
+                        <div className="text-heading-1 font-bold">
                             €{revenueData?.totalRevenue?.toLocaleString() || '0'}
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-micro text-muted-foreground">
                             <TrendingUp className="inline h-3 w-3 text-green-600 mr-1" />
                             {revenueData?.growth || '+0%'} from last period
                         </p>
@@ -136,23 +136,23 @@ export function SAbilling() {
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Paid Invoices</CardTitle>
+                        <CardTitle className="text-body font-medium">Paid Invoices</CardTitle>
                         <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{revenueData?.paidInvoices || 0}</div>
-                        <p className="text-xs text-muted-foreground">Last 6 months</p>
+                        <div className="text-heading-1 font-bold">{revenueData?.paidInvoices || 0}</div>
+                        <p className="text-micro text-muted-foreground">Last 6 months</p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
+                        <CardTitle className="text-body font-medium">Pending Invoices</CardTitle>
                         <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{revenueData?.pendingInvoices || 0}</div>
-                        <p className="text-xs text-muted-foreground">Awaiting payment</p>
+                        <div className="text-heading-1 font-bold">{revenueData?.pendingInvoices || 0}</div>
+                        <p className="text-micro text-muted-foreground">Awaiting payment</p>
                     </CardContent>
                 </Card>
             </div>
@@ -167,8 +167,8 @@ export function SAbilling() {
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={revenueData?.monthlyData || []}>
                             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                            <XAxis dataKey="month" className="text-xs" />
-                            <YAxis className="text-xs" />
+                            <XAxis dataKey="month" className="text-micro" />
+                            <YAxis className="text-micro" />
                             <Tooltip
                                 contentStyle={{
                                     backgroundColor: 'hsl(var(--card))',
@@ -261,7 +261,7 @@ export function SAbilling() {
                                             <TableCell>
                                                 <div>
                                                     <p className="font-medium">{invoice.userName}</p>
-                                                    <p className="text-sm text-muted-foreground">{invoice.userEmail}</p>
+                                                    <p className="text-body text-muted-foreground">{invoice.userEmail}</p>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
@@ -302,7 +302,7 @@ export function SAbilling() {
                     {/* Pagination */}
                     {invoicesData && invoicesData.pagination.totalPages > 1 && (
                         <div className="flex items-center justify-between mt-4">
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-body text-muted-foreground">
                                 Page {invoicesData.pagination.currentPage} of {invoicesData.pagination.totalPages}
                             </p>
                             <div className="flex gap-2">

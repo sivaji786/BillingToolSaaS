@@ -177,7 +177,7 @@ export function InlineImagePicker({
 
             {/* --- Upload tab --- */}
             <TabsContent value="upload" className="p-4">
-              <p className="mb-3 text-xs text-gray-500">
+              <p className="mb-3 text-micro text-gray-500">
                 Select an image from your device to upload.
               </p>
               <input
@@ -192,7 +192,7 @@ export function InlineImagePicker({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500 transition-colors hover:border-purple-400 hover:text-purple-600 disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-gray-300 px-4 py-6 text-body text-gray-500 transition-colors hover:border-purple-400 hover:text-purple-600 disabled:opacity-60"
               >
                 {isUploading ? (
                   <>
@@ -210,7 +210,7 @@ export function InlineImagePicker({
 
             {/* --- URL tab --- */}
             <TabsContent value="url" className="p-4">
-              <p className="mb-2 text-xs text-gray-500">
+              <p className="mb-2 text-micro text-gray-500">
                 Paste a public image URL and click Apply.
               </p>
               <input
@@ -219,7 +219,7 @@ export function InlineImagePicker({
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="https://example.com/image.png"
                 disabled={isUploading}
-                className="mb-3 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-60"
+                className="mb-3 w-full rounded-md border border-gray-300 px-3 py-2 text-body focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-60"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleApplyUrl();
                 }}
@@ -228,7 +228,7 @@ export function InlineImagePicker({
                 type="button"
                 onClick={handleApplyUrl}
                 disabled={isUploading || !urlInput.trim()}
-                className="w-full rounded-md bg-purple-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-60"
+                className="w-full rounded-md bg-purple-600 px-3 py-2 text-body font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-60"
               >
                 {isUploading ? 'Saving…' : 'Apply'}
               </button>

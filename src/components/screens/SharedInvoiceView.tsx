@@ -69,7 +69,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <Card className="max-w-md w-full p-8 text-center space-y-4">
           <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto" />
-          <h2 className="text-xl font-semibold text-gray-900">Link not found</h2>
+          <h2 className="text-heading-2 font-semibold text-gray-900">Link not found</h2>
           <p className="text-gray-500">{error ?? 'This share link is no longer valid.'}</p>
           <Button variant="outline" onClick={() => window.location.href = '/'}>
             Go to BillingTool
@@ -110,14 +110,14 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8 pb-6 border-b">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-heading-1 font-bold text-gray-900 mb-2">
                 {invoice.invoiceNumber}
               </h1>
               <Badge variant={statusVariant(invoice.status)}>
                 {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
               </Badge>
             </div>
-            <div className="text-sm text-gray-500 sm:text-right space-y-1">
+            <div className="text-body text-gray-500 sm:text-right space-y-1">
               <div><span className="font-medium text-gray-700">Issue date:</span> {formatDate(invoice.issueDate)}</div>
               {invoice.dueDate && (
                 <div><span className="font-medium text-gray-700">Due date:</span> {formatDate(invoice.dueDate)}</div>
@@ -128,33 +128,33 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
           {/* Seller & Buyer */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
             <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">From</h3>
+              <h3 className="text-micro font-semibold text-gray-400 uppercase tracking-wide mb-2">From</h3>
               <div className="text-gray-900 font-semibold">{invoice.seller.name}</div>
-              {invoice.seller.vatId && <div className="text-sm text-gray-500">VAT: {invoice.seller.vatId}</div>}
+              {invoice.seller.vatId && <div className="text-body text-gray-500">VAT: {invoice.seller.vatId}</div>}
               {invoice.seller.address?.street && (
-                <div className="text-sm text-gray-500 mt-1">
+                <div className="text-body text-gray-500 mt-1">
                   <div>{invoice.seller.address.street}</div>
                   <div>{[invoice.seller.address.postalCode, invoice.seller.address.city].filter(Boolean).join(' ')}</div>
                   {invoice.seller.address.country && <div>{invoice.seller.address.country}</div>}
                 </div>
               )}
               {invoice.seller.contactEmail && (
-                <div className="text-sm text-gray-500 mt-1">{invoice.seller.contactEmail}</div>
+                <div className="text-body text-gray-500 mt-1">{invoice.seller.contactEmail}</div>
               )}
             </div>
             <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">To</h3>
+              <h3 className="text-micro font-semibold text-gray-400 uppercase tracking-wide mb-2">To</h3>
               <div className="text-gray-900 font-semibold">{invoice.buyer.name}</div>
-              {invoice.buyer.vatId && <div className="text-sm text-gray-500">VAT: {invoice.buyer.vatId}</div>}
+              {invoice.buyer.vatId && <div className="text-body text-gray-500">VAT: {invoice.buyer.vatId}</div>}
               {invoice.buyer.address?.street && (
-                <div className="text-sm text-gray-500 mt-1">
+                <div className="text-body text-gray-500 mt-1">
                   <div>{invoice.buyer.address.street}</div>
                   <div>{[invoice.buyer.address.postalCode, invoice.buyer.address.city].filter(Boolean).join(' ')}</div>
                   {invoice.buyer.address.country && <div>{invoice.buyer.address.country}</div>}
                 </div>
               )}
               {invoice.buyer.contactEmail && (
-                <div className="text-sm text-gray-500 mt-1">{invoice.buyer.contactEmail}</div>
+                <div className="text-body text-gray-500 mt-1">{invoice.buyer.contactEmail}</div>
               )}
             </div>
           </div>
@@ -162,9 +162,9 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
           {/* Line items */}
           {invoice.lines && invoice.lines.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Items</h3>
+              <h3 className="text-micro font-semibold text-gray-400 uppercase tracking-wide mb-3">Items</h3>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-body">
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className="text-left py-2 pr-4 font-medium text-gray-600">Description</th>
@@ -194,7 +194,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
 
           {/* Totals */}
           <div className="flex justify-end">
-            <div className="w-full sm:w-72 space-y-2 text-sm">
+            <div className="w-full sm:w-72 space-y-2 text-body">
               {subtotal > 0 && (
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
@@ -207,7 +207,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
                   <span>{formatCurrency(tax, invoice.currency)}</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold text-base text-gray-900 border-t pt-2">
+              <div className="flex justify-between font-bold text-heading-2 text-gray-900 border-t pt-2">
                 <span>Total</span>
                 <span>{formatCurrency(invoice.payableAmount, invoice.currency)}</span>
               </div>
@@ -216,14 +216,14 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
 
           {/* Note */}
           {invoice.note && (
-            <div className="mt-8 pt-6 border-t text-sm text-gray-500">
+            <div className="mt-8 pt-6 border-t text-body text-gray-500">
               <span className="font-medium text-gray-700">Note: </span>{invoice.note}
             </div>
           )}
         </Card>
 
         {/* CTA footer */}
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <p className="text-center text-body text-gray-400 mt-6">
           Powered by{' '}
           <a href="/" className="text-purple-600 hover:underline font-medium">
             BillingTool

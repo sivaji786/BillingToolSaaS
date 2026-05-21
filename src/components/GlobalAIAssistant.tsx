@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
+import { useDockSlot } from '../hooks/useDockSlot';
 import { ChatMessage, Invoice, AIPromptRequest } from '../types/invoice';
 import { Sparkles, X, Send, Loader2, MessageSquare, Mic, MicOff } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -321,14 +322,12 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
         toast.success(isLetter ? (t('ai.letterApplied') || 'Letter created! Opening editor...') : (t('ai.invoiceApplied') || 'Invoice data applied!'));
     };
 
-    if (!isOpen) {
-        return (
+    // Register launcher in FloatingDock (order 2 = middle slot)
+    const ping = useDockSlot('ai-assistant', 2, () =>
+        isOpen ? null : (
             <button
                 onClick={() => setIsOpen(true)}
                 style={{
-                    position: 'fixed',
-                    bottom: '100px',
-                    right: '24px',
                     width: '56px',
                     height: '56px',
                     borderRadius: '9999px',
@@ -337,7 +336,6 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    zIndex: 40,
                     border: 'none',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
@@ -353,23 +351,14 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
                 title={isLetter ? (t('ai.assistantLetter') || 'AI Letter Assistant') : (t('ai.assistant') || 'AI Invoice Assistant')}
                 aria-label={isLetter ? (t('ai.assistantLetter') || 'AI Letter Assistant') : (t('ai.assistant') || 'AI Invoice Assistant')}
             >
-                <Sparkles
-                    style={{
-                        width: '24px',
-                        height: '24px',
-                        color: 'white',
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    }}
-                />
-                <style>{`
-                    @keyframes pulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.5; }
-                    }
-                `}</style>
+                <Sparkles style={{ width: '24px', height: '24px', color: 'white', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+                <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
             </button>
-        );
-    }
+        )
+    );
+    useEffect(() => { ping(); }, [isOpen]);
+
+    if (!isOpen) return null;
 
     return (
         <div

@@ -18,7 +18,7 @@ export function TableEmptyState({
         {isLoading ? (
           <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
         ) : (
-          <span className="text-sm text-muted-foreground">{emptyMessage}</span>
+          <span className="text-body text-muted-foreground">{emptyMessage}</span>
         )}
       </TableCell>
     </TableRow>

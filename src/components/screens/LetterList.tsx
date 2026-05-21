@@ -114,8 +114,8 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t('invoiceList.lettersTitle') || 'Business Letters'}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-heading-1 font-bold">{t('invoiceList.lettersTitle') || 'Business Letters'}</h1>
+          <p className="text-body text-muted-foreground mt-1">
             {t('invoiceList.lettersSubtitle') || 'View and manage all your business letters'}
           </p>
         </div>
@@ -172,7 +172,7 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
 
         {isSomeSelected && (
           <div className="flex items-center gap-3 mt-3 pt-3 border-t">
-            <span className="text-sm text-muted-foreground">{selectedLetters.size} selected</span>
+            <span className="text-body text-muted-foreground">{selectedLetters.size} selected</span>
             {hasPermissionSync('invoices.delete') && (
               <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
                 <Trash2 className="h-4 w-4 mr-2" /> Delete Selected
@@ -222,7 +222,7 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
 
         {letters.length > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-body text-muted-foreground">
               <span>{t('invoiceList.showing') || 'Showing'}</span>
               <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span>
               <span>{t('invoiceList.paginationTo') || 'to'}</span>
@@ -233,7 +233,7 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{t('invoiceList.rowsPerPage') || 'Rows per page'}:</span>
+                <span className="text-body text-muted-foreground">{t('invoiceList.rowsPerPage') || 'Rows per page'}:</span>
                 <Select value={itemsPerPage.toString()} onValueChange={v => { setItemsPerPage(Number(v)); setCurrentPage(1); }}>
                   <SelectTrigger className="w-[70px] h-8">
                     <SelectValue />
@@ -243,7 +243,7 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
                   </SelectContent>
                 </Select>
               </div>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-body text-muted-foreground">
                 {t('invoiceList.page') || 'Page'} {currentPage} {t('invoiceList.of') || 'of'} {totalPages}
               </span>
               <div className="flex gap-1">

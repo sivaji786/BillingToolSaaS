@@ -477,7 +477,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
           <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">{t('invoiceList.from')}:</label>
+                <label className="text-body font-medium">{t('invoiceList.from')}:</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
@@ -497,7 +497,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">{t('invoiceList.to')}:</label>
+                <label className="text-body font-medium">{t('invoiceList.to')}:</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
@@ -553,7 +553,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
           {/* Bulk Actions */}
           {selectedInvoices.size > 0 && (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">
+              <span className="text-body text-gray-600">
                 {selectedInvoices.size} {t('invoiceList.selected')}
               </span>
               <Button
@@ -614,7 +614,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
                 <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
                     <RefreshCw className="h-8 w-8 animate-spin text-purple-600" />
-                    <p className="text-sm text-gray-500">{t('common.loading')}</p>
+                    <p className="text-body text-gray-500">{t('common.loading')}</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -626,7 +626,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
                     <h3 className="text-gray-900 dark:text-gray-100">
                       {t(isLetter ? 'invoiceList.noLettersFound' : 'invoiceList.noInvoicesFound')}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-body text-gray-500">
                       {t(isLetter ? 'invoiceList.noLettersFoundDesc' : 'invoiceList.noInvoicesFoundDesc')}
                     </p>
                   </div>
@@ -658,7 +658,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
         {/* Pagination */}
         {invoices.length > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-body text-gray-600">
               <span>{t('invoiceList.showing')}</span>
               <span className="font-medium">
                 {(currentPage - 1) * itemsPerPage + 1}
@@ -675,7 +675,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
             <div className="flex items-center gap-4">
               {/* Items per page */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">{t('invoiceList.rowsPerPage')}:</span>
+                <span className="text-body text-gray-600">{t('invoiceList.rowsPerPage')}:</span>
                 <Select
                   value={itemsPerPage.toString()}
                   onValueChange={(value: string) => {
@@ -705,7 +705,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm text-gray-600">
+                <span className="text-body text-gray-600">
                   {t('invoiceList.page')} {currentPage} {t('invoiceList.of')} {totalPages}
                 </span>
                 <Button
@@ -735,7 +735,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
           <div className="space-y-4 py-4">
             {/* File Upload */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">{t('invoiceList.selectFile')}</label>
+              <label className="text-body font-medium">{t('invoiceList.selectFile')}</label>
               <div className="flex items-center gap-2">
                 <Input
                   type="file"
@@ -754,10 +754,10 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
             {/* Format Info */}
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md space-y-2">
-              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              <p className="text-body font-medium text-blue-900 dark:text-blue-100">
                 {t('invoiceList.supportedFormats')}:
               </p>
-              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 ml-4 list-disc">
+              <ul className="text-body text-blue-800 dark:text-blue-200 space-y-1 ml-4 list-disc">
                 <li><strong>JSON</strong> - Single invoice object or array of invoices</li>
                 <li><strong>CSV</strong> - Invoice line items with metadata (headers required)</li>
                 <li><strong>UBL XML</strong> - EN 16931 compliant XML format</li>
@@ -766,8 +766,8 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
             {/* Instructions */}
             <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-md space-y-2">
-              <p className="text-sm font-medium">{t('invoiceList.importInstructions')}:</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-body font-medium">{t('invoiceList.importInstructions')}:</p>
+              <p className="text-body text-gray-600 dark:text-gray-400">
                 {t('invoiceList.importInstructionsText')}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -801,7 +801,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
             {/* Progress Indicator */}
             {isImporting && (
               <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-md">
-                <p className="text-sm text-purple-800 dark:text-purple-200 flex items-center gap-2">
+                <p className="text-body text-purple-800 dark:text-purple-200 flex items-center gap-2">
                   <div className="animate-spin h-4 w-4 border-2 border-purple-600 border-t-transparent rounded-full" />
                   {t('invoiceList.processingFile')}
                 </p>
@@ -853,7 +853,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Export Format</label>
+              <label className="text-body font-medium">Export Format</label>
               <Select value={exportFormat} onValueChange={(value: any) => setExportFormat(value)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -867,7 +867,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
               </Select>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md text-sm">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md text-body">
               <p className="text-blue-800 dark:text-blue-200">
                 <strong>Note:</strong> Each invoice will be downloaded as a separate file.
                 Please allow multiple downloads in your browser.
@@ -911,7 +911,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">{t('invoiceList.newStatus') || 'New Status'}</label>
+              <label className="text-body font-medium">{t('invoiceList.newStatus') || 'New Status'}</label>
               <Select value={newStatus} onValueChange={(value: any) => setNewStatus(value)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -927,7 +927,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
               </Select>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md text-sm">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md text-body">
               <p className="text-blue-800 dark:text-blue-200">
                 <strong>{t('common.note') || 'Note'}:</strong> {t('invoiceList.statusChangeNote') || 'This will update the status of all selected invoices. This action can be reverted by changing the status again.'}
               </p>

@@ -261,7 +261,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
     <div className="space-y-6">
       {/* Locked banner */}
       {isLocked && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-body">
           <span className="font-semibold">Read-only:</span>
           <span>This invoice has status <span className="font-medium capitalize">{invoice.status}</span> and cannot be edited. Change the status first to unlock editing.</span>
         </div>
@@ -281,7 +281,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                   ? (t('editor.letterEditor') || 'Letter Editor')
                   : (t('editor.title') || 'Invoice Editor')}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-body text-muted-foreground mt-1">
               {isTemplateMode
                 ? (invoice.invoiceNumber || t('templates.newTemplate') || 'New Template')
                 : (invoice.invoiceNumber || (isBusinessLetter ? (t('editor.newLetter') || 'New Letter') : (t('editor.newInvoice') || 'New Invoice')))
@@ -313,7 +313,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                       <span className="font-medium">{template.name}</span>
                     </div>
                     {template.description && (
-                      <span className="text-xs text-muted-foreground pl-6">{template.description}</span>
+                      <span className="text-micro text-muted-foreground pl-6">{template.description}</span>
                     )}
                   </DropdownMenuItem>
                 ))}
@@ -327,7 +327,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
           )}
           {!isTemplateMode && (
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">{t('editor.status') || 'Status'}:</label>
+              <label className="text-body font-medium">{t('editor.status') || 'Status'}:</label>
               <Select
                 value={invoice.status || 'draft'}
                 onValueChange={(value: any) => {
@@ -391,7 +391,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                 }
               </Button>
               {!hasUnsavedChanges && !String(invoice.id ?? '').includes('_') && (
-                <span className="text-xs text-muted-foreground italic px-2 bg-gray-50 dark:bg-gray-900 py-1 rounded border">
+                <span className="text-micro text-muted-foreground italic px-2 bg-gray-50 dark:bg-gray-900 py-1 rounded border">
                   {t('editor.allChangesSaved') || 'All changes saved'}
                 </span>
               )}
@@ -417,13 +417,13 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
               </>
             )}
           </div>
-          <div className="text-sm text-muted-foreground">
-            <kbd className="px-2 py-1 bg-muted rounded text-xs">Ctrl+S</kbd> {t('common.save')} •{' '}
-            <kbd className="px-2 py-1 bg-muted rounded text-xs">Ctrl+Alt+N</kbd> {t('editor.addLine')}
+          <div className="text-body text-muted-foreground">
+            <kbd className="px-2 py-1 bg-muted rounded text-micro">Ctrl+S</kbd> {t('common.save')} •{' '}
+            <kbd className="px-2 py-1 bg-muted rounded text-micro">Ctrl+Alt+N</kbd> {t('editor.addLine')}
             {!isTemplateMode && (
               <>
                 {' '}•{' '}
-                <kbd className="px-2 py-1 bg-muted rounded text-xs">P</kbd> {t('editor.preview')}
+                <kbd className="px-2 py-1 bg-muted rounded text-micro">P</kbd> {t('editor.preview')}
               </>
             )}
           </div>
@@ -460,7 +460,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                   placeholder={isTemplateMode ? t('templates.templateNamePlaceholder') || "My Template Name" : (isBusinessLetter ? "LTR-2026-001" : "INV-2025-00123")}
                   className="mt-1"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-micro text-muted-foreground mt-1">
                   {isTemplateMode
                     ? (t('templates.templateNameDesc') || 'A descriptive name for this template')
                     : isBusinessLetter
@@ -487,7 +487,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                       <SelectItem value="CHF">CHF - Swiss Franc</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-micro text-muted-foreground mt-1">
                     UBL: Invoice/DocumentCurrencyCode
                   </p>
                 </div>
@@ -531,7 +531,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                         onChange={(e) => handleUpdateInvoice({ dueDate: e.target.value })}
                         className="mt-1"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-micro text-muted-foreground mt-1">
                         UBL: Invoice/DueDate
                       </p>
                     </div>
@@ -569,7 +569,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
             {isTemplateMode && (
               <Card className="p-6">
                 <h3 className="mb-4">{t('templates.templateInfo') || 'Template Information'}</h3>
-                <div className="space-y-3 text-sm">
+                <div className="space-y-3 text-body">
                   <p className="text-muted-foreground">
                     {t('templates.templateInfoDesc') || 'Configure default seller information, currency, and tax settings for this template. Buyer information will be added when creating invoices from this template.'}
                   </p>
@@ -646,7 +646,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                 </Button>
               </div>
               {isTemplateMode && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-body text-muted-foreground">
                   {t('templates.lineItemsDesc') || 'You can add default line items that will be pre-filled when using this template, or leave empty to start with a blank invoice.'}
                 </p>
               )}
@@ -655,7 +655,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                 <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
                   <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>{t('editor.noLineItems') || 'No line items yet'}</p>
-                  <p className="text-sm mt-2">{t('editor.noLineItemsDesc') || 'Add items or services to the invoice'}</p>
+                  <p className="text-body mt-2">{t('editor.noLineItemsDesc') || 'Add items or services to the invoice'}</p>
                   <Button onClick={handleAddLine} className="mt-4">
                     <Plus className="h-4 w-4 mr-2" />
                     {t('editor.addFirstLine') || 'Add First Line'}
@@ -697,8 +697,8 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
           {/* Letter quick-info card */}
           {isBusinessLetter && (
             <Card className="p-6 space-y-3">
-              <h3 className="text-sm font-semibold">{t('editor.letterDetails') || 'Letter Details'}</h3>
-              <div className="text-xs text-muted-foreground space-y-2">
+              <h3 className="text-body font-semibold">{t('editor.letterDetails') || 'Letter Details'}</h3>
+              <div className="text-micro text-muted-foreground space-y-2">
                 <div className="flex justify-between">
                   <span>{t('editor.letterNumber') || 'Reference'}</span>
                   <span className="font-mono font-medium text-foreground">{invoice.invoiceNumber || '—'}</span>
@@ -724,7 +724,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
       {/* Bottom Actions */}
       <div className="flex justify-end items-center gap-4">
         {!hasUnsavedChanges && !invoice.id?.includes('_') && (
-          <span className="text-sm text-muted-foreground italic mr-2">
+          <span className="text-body text-muted-foreground italic mr-2">
             {t('editor.allChangesSaved') || 'All changes saved'}
           </span>
         )}
