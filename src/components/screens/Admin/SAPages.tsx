@@ -615,7 +615,7 @@ export function SAPages() {
                                                 >
                                                     <Plus className="h-8 w-8 text-slate-400 mb-2" />
                                                     <span className="text-micro text-slate-500 font-medium">Click to upload image</span>
-                                                    <span className="text-[10px] text-slate-400 mt-1">Recommended: 800x600px</span>
+                                                    <span className="text-body text-slate-400 mt-1">Recommended: 800x600px</span>
                                                 </div>
                                             )}
                                             <input id="about-image-upload" type="file" className="hidden" accept="image/*" onChange={(e) => {

@@ -327,7 +327,7 @@ export function LetterPreview({
         )}
         <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white/80 rounded px-1.5 py-0.5 shadow-sm border border-purple-200">
           <Edit2 className="h-3 w-3 text-purple-500" />
-          <span className="text-[10px] text-purple-500 font-medium">Double-click to edit</span>
+          <span className="text-body text-purple-500 font-medium">Double-click to edit</span>
         </div>
       </div>
     );
@@ -360,7 +360,7 @@ export function LetterPreview({
                       <span className="flex items-center gap-2">
                         {tmpl.name}
                         {tmpl.templateType === 'business_letter' && (
-                          <span className="text-[10px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-medium">Letter</span>
+                          <span className="text-body bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-medium">Letter</span>
                         )}
                       </span>
                     </SelectItem>
@@ -432,7 +432,7 @@ export function LetterPreview({
                       </div>
                       {isVisible('dates') && (
                         <div className="text-right space-y-1 shrink-0 ml-6">
-                          <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">
+                          <p className="text-body text-gray-400 uppercase font-bold tracking-widest">
                             {t('previewModal.issueDate') || 'ISSUE DATE'}
                           </p>
                           <div className="text-heading-2 text-gray-900">
@@ -449,7 +449,7 @@ export function LetterPreview({
                   if (type === 'sender') return (
                     <div key="sender" className="flex justify-end py-2">
                       <div className="w-64">
-                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-3 border-b border-gray-100 pb-2">
+                        <p className="text-body text-gray-400 uppercase font-bold tracking-widest mb-3 border-b border-gray-100 pb-2">
                           {t('previewModal.from') || 'FROM'}
                         </p>
                         <div className="text-body space-y-1">
@@ -477,12 +477,12 @@ export function LetterPreview({
                   if (type === 'to') return (
                     <div key="to" className="py-4">
                       <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">
+                        <p className="text-body text-gray-400 uppercase font-bold tracking-widest">
                           {t('editor.recipient') || 'TO'}
                         </p>
                         {buyers.length > 0 && (
                           <Select onValueChange={handleBuyerSelect}>
-                            <SelectTrigger className="h-7 w-auto border-none bg-purple-50 text-purple-700 text-[10px] font-bold uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-purple-100 transition-colors">
+                            <SelectTrigger className="h-7 w-auto border-none bg-purple-50 text-purple-700 text-body font-bold uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-purple-100 transition-colors">
                               <Users className="h-3 w-3" />
                               <SelectValue placeholder={t('previewModal.selectFromDirectory') || 'Select from directory'} />
                             </SelectTrigger>
@@ -543,7 +543,7 @@ export function LetterPreview({
                   );
 
                   if (type === 'footer') return effectiveFooter ? (
-                    <div key="footer" className="mt-12 pt-8 border-t border-gray-100 text-[10px] text-gray-400 text-center leading-relaxed">
+                    <div key="footer" className="mt-12 pt-8 border-t border-gray-100 text-body text-gray-400 text-center leading-relaxed">
                       <div dangerouslySetInnerHTML={{ __html: effectiveFooter }} />
                     </div>
                   ) : null;

@@ -147,11 +147,11 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                             <h2 className="text-heading-3 font-black uppercase tracking-tight text-slate-900 leading-none">
                                 {template.name || t('designLayout.newTemplate')}
                             </h2>
-                            <Badge variant="outline" className="h-5 px-2 text-[8px] font-black tracking-widest border-indigo-200 bg-indigo-50 text-indigo-600 border-none shadow-sm uppercase">
+                            <Badge variant="outline" className="h-5 px-2 text-micro font-black tracking-widest border-indigo-200 bg-indigo-50 text-indigo-600 border-none shadow-sm uppercase">
                                 {t('designLayout.designMode') || 'Design Mode'}
                             </Badge>
                         </div>
-                        <p className="text-[10px] text-slate-400 mt-1.5 font-bold uppercase tracking-widest flex items-center gap-2">
+                        <p className="text-body text-slate-400 mt-1.5 font-bold uppercase tracking-widest flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             {t('designLayout.editingLayout') || 'Pixel-Perfect Coordinate Editor'}
                         </p>
@@ -162,13 +162,13 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                     <Button
                         variant="ghost"
                         onClick={onCancel}
-                        className="h-11 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
+                        className="h-11 px-6 text-body font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
                     >
                         {t('common.cancel')}
                     </Button>
                     <Button
                         onClick={onSave}
-                        className="h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 hover:-translate-y-0.5"
+                        className="h-11 px-8 bg-indigo-600 hover:bg-indigo-700 text-white text-body font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-indigo-600/30 transition-all hover:shadow-indigo-600/40 hover:-translate-y-0.5"
                     >
                         {t('common.save')}
                     </Button>
@@ -181,13 +181,13 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                 {/* Left Sidebar: Element Library */}
                 <div className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-[20px_0_50px_-20px_rgba(0,0,0,0.05)] z-0">
                     <div className="p-7 border-b border-slate-100 bg-slate-50/50 space-y-2">
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
+                        <h3 className="text-body-lg font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
                             <div className="h-6 w-6 rounded-lg bg-indigo-50 flex items-center justify-center">
                                 <LayoutIcon className="h-3.5 w-3.5 text-indigo-600" />
                             </div>
                             {t('designLayout.elementLibrary')}
                         </h3>
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-body font-black uppercase tracking-widest ${
                             isLetterTemplate
                                 ? 'bg-purple-50 text-purple-600 border border-purple-200'
                                 : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
@@ -216,7 +216,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                 return (
                                     <div key={group.label} className="space-y-2">
                                         <div className="px-1 pt-3 pb-1">
-                                            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-300">
+                                            <span className="text-caption font-black uppercase tracking-[0.3em] text-slate-300">
                                                 {group.label} Elements
                                             </span>
                                         </div>
@@ -236,7 +236,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3.5">
                                                         <div className={`h-2.5 w-2.5 rounded-full transition-all duration-500 ${el.visible ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]' : 'bg-slate-200'}`} />
-                                                        <span className={`text-[12px] font-black uppercase tracking-widest transition-colors ${selectedId === el.id ? 'text-indigo-900' : 'text-slate-500 group-hover:text-slate-900'}`}>
+                                                        <span className={`text-heading-3 font-black uppercase tracking-widest transition-colors ${selectedId === el.id ? 'text-indigo-900' : 'text-slate-500 group-hover:text-slate-900'}`}>
                                                             {t(`designLayout.elements.${el.type}`)}
                                                         </span>
                                                     </div>
@@ -250,11 +250,11 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                     </Button>
                                                 </div>
                                                 <div className="flex items-center justify-between mt-1 px-1">
-                                                    <span className="text-[10px] text-slate-400 font-mono font-black italic tracking-tighter">
+                                                    <span className="text-body text-slate-400 font-mono font-black italic tracking-tighter">
                                                         POS: {el.x}, {el.y}
                                                     </span>
                                                     {selectedId === el.id && (
-                                                        <Badge className="h-5 px-2 text-[9px] bg-indigo-600 text-white font-black tracking-[0.2em] shadow-lg shadow-indigo-600/20 border-none animate-in zoom-in-75">SELECTED</Badge>
+                                                        <Badge className="h-5 px-2 text-caption bg-indigo-600 text-white font-black tracking-[0.2em] shadow-lg shadow-indigo-600/20 border-none animate-in zoom-in-75">SELECTED</Badge>
                                                     )}
                                                 </div>
                                             </div>
@@ -268,7 +268,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                     <div className="p-7 border-t border-slate-100 bg-slate-50/50 space-y-4">
                         <Button
                             variant="outline"
-                            className="w-full h-12 gap-3 text-[11px] font-black uppercase tracking-[0.25em] bg-white border-slate-200 hover:bg-indigo-600 hover:border-indigo-600 text-slate-500 hover:text-white transition-all duration-300 rounded-2xl shadow-sm hover:shadow-xl group"
+                            className="w-full h-12 gap-3 text-body-lg font-black uppercase tracking-[0.25em] bg-white border-slate-200 hover:bg-indigo-600 hover:border-indigo-600 text-slate-500 hover:text-white transition-all duration-300 rounded-2xl shadow-sm hover:shadow-xl group"
                             onClick={resetLayout}
                         >
                             <RotateCcw className="h-4 w-4 group-hover:rotate-[-90deg] transition-transform duration-500" />
@@ -289,7 +289,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                     style={{ left: `${val}px` }}
                                 >
                                     {val % 100 === 0 && (
-                                        <span className="absolute -top-1 left-2 text-[8px] font-black text-slate-400/60 font-mono tracking-tighter italic">
+                                        <span className="absolute -top-1 left-2 text-micro font-black text-slate-400/60 font-mono tracking-tighter italic">
                                             {val}
                                         </span>
                                     )}
@@ -363,10 +363,10 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                 >
                                     {/* Selection Badge Overlay */}
                                     {selectedId === el.id && (
-                                        <div className="absolute -top-9 left-0 bg-indigo-600 text-white text-[10px] font-black px-3.5 py-1.5 rounded-xl shadow-2xl flex items-center gap-2.5 whitespace-nowrap z-[110] animate-in slide-in-from-bottom-2 duration-300">
+                                        <div className="absolute -top-9 left-0 bg-indigo-600 text-white text-body font-black px-3.5 py-1.5 rounded-xl shadow-2xl flex items-center gap-2.5 whitespace-nowrap z-[110] animate-in slide-in-from-bottom-2 duration-300">
                                             <div className="h-2 w-2 bg-white rounded-full animate-pulse shadow-[0_0_8px_white]" />
                                             {t(`designLayout.elements.${el.type}`)}
-                                            <span className="opacity-70 font-mono ml-1 text-[9px]">{el.x},{el.y}</span>
+                                            <span className="opacity-70 font-mono ml-1 text-caption">{el.x},{el.y}</span>
                                         </div>
                                     )}
 
@@ -375,7 +375,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
 
                                         {/* Background Subtle Label (only when not selected) */}
                                         {!selectedId && (
-                                            <span className="text-[8px] font-black uppercase tracking-[0.2em] absolute top-2 left-2.5 text-slate-400/60 pointer-events-none group-hover:text-indigo-400 transition-colors">
+                                            <span className="text-micro font-black uppercase tracking-[0.2em] absolute top-2 left-2.5 text-slate-400/60 pointer-events-none group-hover:text-indigo-400 transition-colors">
                                                 {t(`designLayout.elements.${el.type}`)}
                                             </span>
                                         )}
@@ -568,14 +568,14 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                 {/* Right Sidebar: Property Inspector */}
                 <div className="w-80 bg-white border-l border-slate-200 flex flex-col shadow-[-20px_0_50px_-20px_rgba(0,0,0,0.05)] z-0">
                     <div className="p-7 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
+                        <h3 className="text-body-lg font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
                             <div className="h-6 w-6 rounded-lg bg-indigo-50 flex items-center justify-center">
                                 <SettingsIcon className="h-3.5 w-3.5 text-indigo-600" />
                             </div>
                             {t('designLayout.inspector')}
                         </h3>
                         {selectedId && (
-                            <Badge className="h-5 px-2 text-[9px] bg-slate-900 shadow-lg text-white border-none uppercase tracking-widest font-black">
+                            <Badge className="h-5 px-2 text-caption bg-slate-900 shadow-lg text-white border-none uppercase tracking-widest font-black">
                                 {selectedElement?.type}
                             </Badge>
                         )}
@@ -587,7 +587,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                 <div className="space-y-7">
                                     <div className="flex items-center gap-3.5 pb-4 border-b border-slate-100">
                                         <div className="h-5 w-1.5 bg-indigo-600 rounded-full shadow-[0_0_12px_rgba(79,70,229,0.4)]" />
-                                        <Label className="text-[11px] text-slate-900 uppercase font-black tracking-widest">
+                                        <Label className="text-body-lg text-slate-900 uppercase font-black tracking-widest">
                                             {t('designLayout.positionAndSize')}
                                         </Label>
                                     </div>
@@ -598,8 +598,8 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                         ].map(field => (
                                             <div key={field.label} className="space-y-3.5 group/field">
                                                 <div className="flex items-center justify-between px-1">
-                                                    <Label className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] transition-colors group-hover/field:text-indigo-600">{field.label}</Label>
-                                                    <span className="text-[11px] text-slate-200 font-black pointer-events-none">{field.icon}</span>
+                                                    <Label className="text-body text-slate-500 font-black uppercase tracking-[0.2em] transition-colors group-hover/field:text-indigo-600">{field.label}</Label>
+                                                    <span className="text-body-lg text-slate-200 font-black pointer-events-none">{field.icon}</span>
                                                 </div>
                                                 <div className="relative">
                                                     <Input
@@ -611,7 +611,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                         }}
                                                         className="h-12 bg-white border-slate-200 text-slate-900 text-body font-bold transition-all focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 rounded-2xl pl-5 shadow-sm"
                                                     />
-                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-300 pointer-events-none group-hover/field:text-indigo-300">PX</div>
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-black text-slate-300 pointer-events-none group-hover/field:text-indigo-300">PX</div>
                                                 </div>
                                             </div>
                                         ))}
@@ -620,14 +620,14 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                     <div className="pt-6 border-t border-slate-100 space-y-4">
                                         <div className="flex items-center gap-3.5 pb-2">
                                             <div className="h-4 w-1.5 bg-indigo-600 rounded-full shadow-[0_0_12px_rgba(79,70,229,0.4)]" />
-                                            <Label className="text-[11px] text-slate-900 uppercase font-black tracking-widest">
+                                            <Label className="text-body-lg text-slate-900 uppercase font-black tracking-widest">
                                                 {t('designLayout.typography') || 'Typography'}
                                             </Label>
                                         </div>
                                         <div className="space-y-3.5 group/field">
                                             <div className="flex items-center justify-between px-1">
-                                                <Label className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] transition-colors group-hover/field:text-indigo-600">{t('designLayout.fontSize') || 'Font Size'}</Label>
-                                                <span className="text-[11px] text-slate-200 font-black pointer-events-none">AT</span>
+                                                <Label className="text-body text-slate-500 font-black uppercase tracking-[0.2em] transition-colors group-hover/field:text-indigo-600">{t('designLayout.fontSize') || 'Font Size'}</Label>
+                                                <span className="text-body-lg text-slate-200 font-black pointer-events-none">AT</span>
                                             </div>
                                             <div className="relative">
                                                 <Input
@@ -640,7 +640,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                     className="h-12 bg-white border-slate-200 text-slate-900 text-body font-bold transition-all focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 rounded-2xl pl-5 shadow-sm"
                                                     min="6" max="72"
                                                 />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-300 pointer-events-none group-hover/field:text-indigo-300">PX</div>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-black text-slate-300 pointer-events-none group-hover/field:text-indigo-300">PX</div>
                                             </div>
                                         </div>
                                     </div>
@@ -650,13 +650,13 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                         <div className="pt-6 border-t border-slate-100 space-y-4">
                                             <div className="flex items-center gap-3.5 pb-2">
                                                 <div className="h-4 w-1.5 bg-indigo-600 rounded-full shadow-[0_0_12px_rgba(79,70,229,0.4)]" />
-                                                <Label className="text-[11px] text-slate-900 uppercase font-black tracking-widest">
+                                                <Label className="text-body-lg text-slate-900 uppercase font-black tracking-widest">
                                                     {t('designLayout.content') || 'Element Content'}
                                                 </Label>
                                             </div>
                                             <div className="space-y-3.5 group/field">
                                                 <div className="flex items-center justify-between px-1">
-                                                    <Label className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] transition-colors group-hover/field:text-indigo-600">{t('designLayout.textContent') || 'Text / Value'}</Label>
+                                                    <Label className="text-body text-slate-500 font-black uppercase tracking-[0.2em] transition-colors group-hover/field:text-indigo-600">{t('designLayout.textContent') || 'Text / Value'}</Label>
                                                 </div>
                                                 <Textarea
                                                     value={selectedElement.content || ''}
@@ -664,7 +664,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                     placeholder={t('designLayout.contentPlaceholder') || "Enter custom text for this element..."}
                                                     className="min-h-[100px] bg-white border-slate-200 text-slate-900 text-body font-medium transition-all focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 rounded-2xl p-4 shadow-sm"
                                                 />
-                                                <p className="text-[10px] text-slate-400 font-semibold italic px-1">
+                                                <p className="text-body text-slate-400 font-semibold italic px-1">
                                                     Overwrites the default value for this element.
                                                 </p>
                                             </div>
@@ -678,15 +678,15 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                     <Grid3X3 className="h-4.5 w-4.5" />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[11px] text-slate-900 font-black tracking-widest uppercase block cursor-pointer" onClick={() => setSnapToGrid(!snapToGrid)}>
+                                                    <Label className="text-body-lg text-slate-900 font-black tracking-widest uppercase block cursor-pointer" onClick={() => setSnapToGrid(!snapToGrid)}>
                                                         {t('designLayout.gridSnapping')}
                                                     </Label>
                                                     <div className="flex items-center gap-2">
-                                                        <span className={`text-[8px] font-black uppercase tracking-widest ${snapToGrid ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                                        <span className={`text-micro font-black uppercase tracking-widest ${snapToGrid ? 'text-indigo-600' : 'text-slate-400'}`}>
                                                             {snapToGrid ? 'Active' : 'Disabled'}
                                                         </span>
                                                         <div className="h-1 w-1 rounded-full bg-slate-300" />
-                                                        <span className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">10PX GRID</span>
+                                                        <span className="text-micro text-slate-400 font-bold uppercase tracking-widest">10PX GRID</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -703,10 +703,10 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                     <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
                                                         <ZoomIn className="h-4 w-4 text-slate-500" />
                                                     </div>
-                                                    <Label className="text-[11px] text-slate-900 font-black tracking-widest uppercase italic">{t('designLayout.zoom')}</Label>
+                                                    <Label className="text-body-lg text-slate-900 font-black tracking-widest uppercase italic">{t('designLayout.zoom')}</Label>
                                                 </div>
-                                                <div className="text-[11px] text-slate-900 font-black font-mono tracking-tighter bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-inner">
-                                                    {Math.round(zoom * 100)}<span className="opacity-40 text-[9px] ml-0.5">%</span>
+                                                <div className="text-body-lg text-slate-900 font-black font-mono tracking-tighter bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-inner">
+                                                    {Math.round(zoom * 100)}<span className="opacity-40 text-caption ml-0.5">%</span>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -717,7 +717,7 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                     className="flex-1 h-10 bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-600 hover:bg-indigo-50 rounded-xl transition-all shadow-sm"
                                                 >
                                                     <Minus className="h-3.5 w-3.5 mr-2" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">Out</span>
+                                                    <span className="text-body font-black uppercase tracking-widest">Out</span>
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
@@ -735,15 +735,15 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                                     className="flex-1 h-10 bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-600 hover:bg-indigo-50 rounded-xl transition-all shadow-sm"
                                                 >
                                                     <Plus className="h-3.5 w-3.5 mr-2" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">In</span>
+                                                    <span className="text-body font-black uppercase tracking-widest">In</span>
                                                 </Button>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-700">Pro Tip</h4>
-                                        <p className="text-[11px] text-slate-500 leading-relaxed font-semibold italic">
+                                        <h4 className="text-body font-black uppercase tracking-[0.25em] text-indigo-700">Pro Tip</h4>
+                                        <p className="text-body-lg text-slate-500 leading-relaxed font-semibold italic">
                                             Manual precision is enabled. Each unit corresponds to roughly 0.26mm in the final A4 output.
                                         </p>
                                     </div>
@@ -754,9 +754,9 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                                 <div className="p-8 rounded-[2.5rem] bg-slate-50 mb-8 border border-slate-100 shadow-inner">
                                     <SettingsIcon className="h-16 w-16 text-slate-300 stroke-[1.5]" />
                                 </div>
-                                <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.5em] leading-relaxed">
+                                <p className="text-body-lg text-slate-400 font-black uppercase tracking-[0.5em] leading-relaxed">
                                     Ready for Selection<br />
-                                    <span className="text-[8px] font-bold tracking-[0.2em] opacity-60">CHOOSE AN ELEMENT TO BEGIN EDITING</span>
+                                    <span className="text-micro font-bold tracking-[0.2em] opacity-60">CHOOSE AN ELEMENT TO BEGIN EDITING</span>
                                 </p>
                             </div>
                         )}

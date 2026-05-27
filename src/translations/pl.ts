@@ -1399,4 +1399,15 @@ export const pl = {
             },
         },
     },
+
+    // Help Chat Bot
+    helpBot: {
+        placeholder: 'Wpisz pytanie…',
+        noMatch: 'Nie znalazłem odpowiedzi. Wybierz kategorię lub przeformułuj pytanie.',
+        mainMenu: '🔙 Menu główne',
+        commonQuestionsLabel: '— popularne pytania:',
+        restart: 'Zacznij od nowa',
+        close: 'Zamknij',
+        sendAria: 'Wyślij',
+    },
 };

@@ -69,7 +69,7 @@ export function UserList({ onCreate, onEdit, companyTypeId }: UserListProps) {
                                             .map((r: any) => (
                                                 <span key={r.id} className="text-micro bg-muted px-2 py-1 rounded">
                                                     {r.name}
-                                                    <span className="text-[10px] text-muted-foreground ml-1">
+                                                    <span className="text-body text-muted-foreground ml-1">
                                                         ({getCompanyName(r.company_type_id)})
                                                     </span>
                                                 </span>

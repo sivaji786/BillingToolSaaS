@@ -160,7 +160,7 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
                   readOnly
                   className="bg-muted font-mono text-micro"
                 />
-                <p className="text-[10px] text-muted-foreground">{t('editor.lineItem.ublId')}</p>
+                <p className="text-body text-muted-foreground">{t('editor.lineItem.ublId')}</p>
               </div>
             </div>
 
@@ -179,7 +179,7 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-[10px] text-muted-foreground">{t('editor.lineItem.ublUnit')}</p>
+                <p className="text-body text-muted-foreground">{t('editor.lineItem.ublUnit')}</p>
               </div>
             </div>
 
@@ -198,7 +198,7 @@ export const LineItemRow = memo(function LineItemRow({ line, currency, index, on
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-[10px] text-muted-foreground">{t('editor.lineItem.ublCategory')}</p>
+                <p className="text-body text-muted-foreground">{t('editor.lineItem.ublCategory')}</p>
               </div>
             </div>
 

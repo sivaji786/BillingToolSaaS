@@ -1,4 +1,11 @@
 import { useState } from 'react';
+
+const CHART_TOOLTIP_STYLE = {
+    backgroundColor: 'hsl(var(--card))',
+    border: '1px solid hsl(var(--border))',
+    borderRadius: '8px',
+    fontSize: '12px', // text-heading-3
+} as const;
 import { useQuery } from '@tanstack/react-query';
 import { adminAnalyticsService } from '../../../services/adminApi';
 import { StatsCard } from '../../admin/StatsCard';
@@ -193,12 +200,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
                                             tickFormatter={(value) => value > 1000 ? `${(value/1000).toFixed(1)}k` : value}
                                         />
                                         <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: 'hsl(var(--card))',
-                                                border: '1px solid hsl(var(--border))',
-                                                borderRadius: '8px',
-                                                fontSize: '12px'
-                                            }}
+                                            contentStyle={CHART_TOOLTIP_STYLE}
                                         />
                                         <Area 
                                             type="monotone" 
@@ -246,12 +248,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
                                             axisLine={false}
                                         />
                                         <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: 'hsl(var(--card))',
-                                                border: '1px solid hsl(var(--border))',
-                                                borderRadius: '8px',
-                                                fontSize: '12px'
-                                            }}
+                                            contentStyle={CHART_TOOLTIP_STYLE}
                                             cursor={{ fill: 'hsl(var(--muted))' }}
                                         />
                                         <Bar 

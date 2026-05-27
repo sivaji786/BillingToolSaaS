@@ -1399,4 +1399,15 @@ export const ar = {
             },
         },
     },
+
+    // Help Chat Bot
+    helpBot: {
+        placeholder: 'اكتب سؤالك هنا…',
+        noMatch: 'لم أتمكن من العثور على إجابة. جرب اختيار فئة أو إعادة صياغة سؤالك.',
+        mainMenu: '🔙 القائمة الرئيسية',
+        commonQuestionsLabel: '— أسئلة شائعة:',
+        restart: 'إعادة البدء',
+        close: 'إغلاق',
+        sendAria: 'إرسال',
+    },
 };

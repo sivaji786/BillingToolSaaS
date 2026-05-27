@@ -285,7 +285,7 @@ export function TemplateLibrary({
                     </>
                   ) : (
                     <div className="flex-1 text-right">
-                      <Badge variant="outline" className="text-[10px] text-muted-foreground uppercase tracking-wider border-none">ReadOnly</Badge>
+                      <Badge variant="outline" className="text-body text-muted-foreground uppercase tracking-wider border-none">ReadOnly</Badge>
                     </div>
                   )}
                 </div>

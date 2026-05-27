@@ -140,9 +140,9 @@ function InlineField({
                 {display || placeholder}
             </H>
             {hovered && (
-                <span aria-hidden style={{ position: 'absolute', top: '-1.2em', right: 0, fontSize: 10, background: '#7c3aed', color: '#fff', borderRadius: 3, padding: '1px 4px', pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 10 }}>✎</span>
+                <span aria-hidden className="text-body" style={{ position: 'absolute', top: '-1.2em', right: 0, background: '#7c3aed', color: '#fff', borderRadius: 3, padding: '1px 4px', pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 10 }}>✎</span>
             )}
-            {saving && <span style={{ marginLeft: 4, fontSize: 10, color: '#f59e0b', verticalAlign: 'middle' }}>●</span>}
+            {saving && <span className="text-body" style={{ marginLeft: 4, color: '#f59e0b', verticalAlign: 'middle' }}>●</span>}
         </span>
     );
 }

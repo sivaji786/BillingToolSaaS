@@ -366,7 +366,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                                     <TableCell className="py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                                         <div className="flex flex-col">
                                             <span className="font-semibold">{service.name}</span>
-                                            <span className="text-[10px] text-muted-foreground uppercase">{service.type}</span>
+                                            <span className="text-body text-muted-foreground uppercase">{service.type}</span>
                                         </div>
                                     </TableCell>
                                     {filteredPackages.map((pkg) => {

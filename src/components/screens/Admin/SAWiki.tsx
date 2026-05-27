@@ -4,7 +4,7 @@ import { adminWikiService } from '../../../services/adminApi';
 import { Card, CardContent } from '../../ui/card';
 import { ScrollArea } from '../../ui/scroll-area';
 import { Input } from '../../ui/input';
-import { Search, ChevronRight, ChevronDown, FileText, Folder, BookOpen, Clock, Download, Pencil, X, Save } from 'lucide-react';
+import { Search, ChevronRight, ChevronDown, FileText, Folder, BookOpen, Clock, Download, Pencil, X, Save, FilePlus, Bold, Italic, Heading1, Heading2, Heading3, List, ListOrdered, Code, Link2, Table, Minus, Quote, HelpCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '../../../lib/utils';
@@ -128,7 +128,47 @@ export function SAWiki() {
     const [editMode, setEditMode] = useState(false);
     const [editContent, setEditContent] = useState('');
     const [saving, setSaving] = useState(false);
+    const [showNewDocForm, setShowNewDocForm] = useState(false);
+    const [newDocName, setNewDocName] = useState('');
+    const [newDocFolder, setNewDocFolder] = useState('');
+    const [creating, setCreating] = useState(false);
+    const [showCheatsheet, setShowCheatsheet] = useState(false);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const prevLanguage = useRef(language);
+
+    const insertMarkdown = (prefix: string, suffix = '', placeholder = 'text') => {
+        const el = textareaRef.current;
+        if (!el) return;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const selected = editContent.substring(start, end) || placeholder;
+        const newContent = editContent.substring(0, start) + prefix + selected + suffix + editContent.substring(end);
+        setEditContent(newContent);
+        setTimeout(() => {
+            el.focus();
+            el.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
+        }, 0);
+    };
+
+    const insertHeading = (level: number) => {
+        const el = textareaRef.current;
+        if (!el) return;
+        const lineStart = editContent.lastIndexOf('\n', el.selectionStart - 1) + 1;
+        const prefix = '#'.repeat(level) + ' ';
+        setEditContent(editContent.substring(0, lineStart) + prefix + editContent.substring(lineStart));
+        setTimeout(() => { el.focus(); el.setSelectionRange(lineStart + prefix.length, lineStart + prefix.length); }, 0);
+    };
+
+    const insertBlock = (template: string) => {
+        const el = textareaRef.current;
+        if (!el) return;
+        const pos = el.selectionStart;
+        const before = editContent.substring(0, pos);
+        const after = editContent.substring(pos);
+        const gap = before.length && !before.endsWith('\n') ? '\n' : '';
+        setEditContent(before + gap + template + '\n' + after);
+        setTimeout(() => { el.focus(); }, 0);
+    };
 
     const getPageTitle = () => {
         if (!selectedPath) return 'Wiki';
@@ -305,6 +345,29 @@ export function SAWiki() {
         }
     };
 
+    const handleCreateDocument = async () => {
+        const name = newDocName.trim();
+        if (!name) return;
+        const slug = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_\-]/g, '');
+        const path = newDocFolder.trim() ? `${newDocFolder.trim()}/${slug}` : slug;
+        setCreating(true);
+        try {
+            const result = await adminWikiService.createDocument(path, language);
+            await loadTree();
+            setSelectedPath(result.path);
+            const folder = result.path.split('/')[0];
+            if (folder) setExpandedFolders(prev => new Set([...prev, folder]));
+            setShowNewDocForm(false);
+            setNewDocName('');
+            setNewDocFolder('');
+            toast.success(`Document "${name}" created`);
+        } catch {
+            toast.error('Failed to create document');
+        } finally {
+            setCreating(false);
+        }
+    };
+
     const toggleFolder = (name: string) => {
         const next = new Set(expandedFolders);
         if (next.has(name)) {
@@ -331,15 +394,15 @@ export function SAWiki() {
                         <div key={item.name} className="flex flex-col">
                             <button
                                 onClick={() => toggleFolder(item.name)}
-                                className="flex items-center gap-2 px-2 py-1.5 hover:bg-accent rounded-md text-body font-medium text-muted-foreground w-full text-left transition-colors"
+                                className="flex items-center gap-2 px-2 py-1.5 hover:bg-accent rounded-md text-xs font-semibold text-slate-700 w-full text-left transition-colors"
                                 style={{ paddingLeft: `${depth * 1.5 + 0.5}rem` }}
                             >
-                                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                                <Folder className="h-4 w-4 text-purple-600" />
-                                <span>{item.name.replace(/_/g, ' ')}</span>
+                                {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-purple-500" /> : <ChevronRight className="h-3.5 w-3.5 text-purple-500" />}
+                                <Folder className="h-3.5 w-3.5 text-purple-600 shrink-0" />
+                                <span className="truncate capitalize">{item.name.replace(/_/g, ' ')}</span>
                             </button>
                             {isExpanded && item.children && (
-                                <div className="mt-1">
+                                <div className="mt-0.5 mb-1">
                                     {renderTree(item.children, depth + 1)}
                                 </div>
                             )}
@@ -352,14 +415,14 @@ export function SAWiki() {
                         key={item.path}
                         onClick={() => item.path && setSelectedPath(item.path)}
                         className={cn(
-                            "flex items-center gap-2 px-2 py-1.5 rounded-md text-body w-full text-left transition-all mb-0.5",
+                            "flex items-center gap-2 px-2 py-1 rounded-md text-xs w-full text-left transition-all mb-0.5",
                             isSelected
-                                ? "bg-purple-100 text-purple-700 font-semibold border-l-2 border-purple-600"
-                                : "hover:bg-accent text-muted-foreground"
+                                ? "bg-purple-100 text-purple-700 font-medium border-l-2 border-purple-500"
+                                : "hover:bg-accent text-slate-500"
                         )}
                         style={{ paddingLeft: `${depth * 1.5 + 1.5}rem` }}
                     >
-                        <FileText className={cn("h-4 w-4 shrink-0", isSelected ? "text-purple-600" : "text-muted-foreground")} />
+                        <FileText className={cn("h-3.5 w-3.5 shrink-0", isSelected ? "text-purple-500" : "text-slate-400")} />
                         <span className="truncate">{item.name.replace('.md', '').replace(/_/g, ' ')}</span>
                     </button>
                 );
@@ -490,15 +553,61 @@ export function SAWiki() {
         <div className="flex h-[calc(100vh-8rem)] gap-6 overflow-hidden">
             {/* Sidebar Navigation */}
             <div className="w-80 flex flex-col gap-4 border-r pr-6 shrink-0 h-full overflow-hidden">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search docs..."
-                        className="pl-9"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                <div className="flex gap-2">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search docs..."
+                            className="pl-9"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        onClick={() => { setShowNewDocForm(v => !v); setNewDocName(''); setNewDocFolder(''); }}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-micro font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors shrink-0"
+                        title="New document"
+                    >
+                        <FilePlus className="h-3.5 w-3.5" />
+                        New
+                    </button>
                 </div>
+
+                {showNewDocForm && (
+                    <div className="flex flex-col gap-2 p-3 rounded-lg border border-purple-200 bg-purple-50">
+                        <p className="text-micro font-semibold text-purple-800 uppercase tracking-wide">New Document</p>
+                        <Input
+                            placeholder="Document name"
+                            className="h-7 text-body"
+                            value={newDocName}
+                            onChange={(e) => setNewDocName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleCreateDocument()}
+                            autoFocus
+                        />
+                        <Input
+                            placeholder="Folder (optional)"
+                            className="h-7 text-body"
+                            value={newDocFolder}
+                            onChange={(e) => setNewDocFolder(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleCreateDocument()}
+                        />
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleCreateDocument}
+                                disabled={creating || !newDocName.trim()}
+                                className="flex-1 py-1 text-micro font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                            >
+                                {creating ? 'Creating…' : 'Create'}
+                            </button>
+                            <button
+                                onClick={() => setShowNewDocForm(false)}
+                                className="px-3 py-1 text-micro font-medium rounded-md bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <ScrollArea className="flex-1 min-h-0 -mr-6 pr-6">
                     <div className="space-y-1">
@@ -515,7 +624,7 @@ export function SAWiki() {
                 <div className="p-4 bg-muted/30 rounded-lg border border-dashed text-micro text-muted-foreground flex flex-col gap-2">
                     <div className="flex items-center gap-2">
                         <BookOpen className="h-3 w-3" />
-                        <span className="font-semibold uppercase tracking-wider text-[10px]">Platform Wiki v1.0</span>
+                        <span className="font-semibold uppercase tracking-wider text-body">Platform Wiki v1.0</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <Clock className="h-3 w-3" />
@@ -577,15 +686,102 @@ export function SAWiki() {
                 <Card className="flex-1 flex flex-col bg-slate-50 shadow-sm border-slate-200 overflow-hidden">
                     <CardContent className="p-0 h-full">
                         {editMode ? (
-                            <textarea
-                                className="w-full h-full p-6 font-mono text-body bg-white resize-none focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
-                                value={editContent}
-                                onChange={(e) => setEditContent(e.target.value)}
-                                spellCheck={false}
-                            />
+                            <div className="flex flex-col h-full">
+                                {/* Formatting toolbar */}
+                                <div className="flex items-center gap-0.5 px-3 py-1.5 border-b border-slate-200 bg-slate-50 flex-wrap shrink-0">
+                                    {[
+                                        { icon: <Bold className="h-3.5 w-3.5" />, title: 'Bold', action: () => insertMarkdown('**', '**', 'bold text') },
+                                        { icon: <Italic className="h-3.5 w-3.5" />, title: 'Italic', action: () => insertMarkdown('_', '_', 'italic text') },
+                                    ].map(btn => (
+                                        <button key={btn.title} title={btn.title} onClick={btn.action}
+                                            className="p-1.5 rounded hover:bg-slate-200 text-slate-600 transition-colors">
+                                            {btn.icon}
+                                        </button>
+                                    ))}
+                                    <span className="w-px h-4 bg-slate-300 mx-1" />
+                                    {[1, 2, 3].map(level => (
+                                        <button key={level} title={`Heading ${level}`} onClick={() => insertHeading(level)}
+                                            className="px-1.5 py-1 rounded hover:bg-slate-200 text-slate-600 text-micro font-bold transition-colors">
+                                            H{level}
+                                        </button>
+                                    ))}
+                                    <span className="w-px h-4 bg-slate-300 mx-1" />
+                                    {[
+                                        { icon: <List className="h-3.5 w-3.5" />, title: 'Bullet list', action: () => insertBlock('- Item 1\n- Item 2\n- Item 3') },
+                                        { icon: <ListOrdered className="h-3.5 w-3.5" />, title: 'Numbered list', action: () => insertBlock('1. Item 1\n2. Item 2\n3. Item 3') },
+                                        { icon: <Quote className="h-3.5 w-3.5" />, title: 'Blockquote', action: () => insertMarkdown('> ', '', 'quote text') },
+                                    ].map(btn => (
+                                        <button key={btn.title} title={btn.title} onClick={btn.action}
+                                            className="p-1.5 rounded hover:bg-slate-200 text-slate-600 transition-colors">
+                                            {btn.icon}
+                                        </button>
+                                    ))}
+                                    <span className="w-px h-4 bg-slate-300 mx-1" />
+                                    {[
+                                        { icon: <Code className="h-3.5 w-3.5" />, title: 'Inline code', action: () => insertMarkdown('`', '`', 'code') },
+                                        { icon: <Link2 className="h-3.5 w-3.5" />, title: 'Link', action: () => insertMarkdown('[', '](url)', 'link text') },
+                                        { icon: <Table className="h-3.5 w-3.5" />, title: 'Table', action: () => insertBlock('| Column 1 | Column 2 | Column 3 |\n|---|---|---|\n| Cell | Cell | Cell |') },
+                                        { icon: <Minus className="h-3.5 w-3.5" />, title: 'Horizontal rule', action: () => insertBlock('---') },
+                                    ].map(btn => (
+                                        <button key={btn.title} title={btn.title} onClick={btn.action}
+                                            className="p-1.5 rounded hover:bg-slate-200 text-slate-600 transition-colors">
+                                            {btn.icon}
+                                        </button>
+                                    ))}
+                                    <span className="w-px h-4 bg-slate-300 mx-1" />
+                                    <button title="Insert Mermaid diagram" onClick={() => insertBlock('```mermaid\nflowchart LR\n    A[Start] --> B[End]\n```')}
+                                        className="px-1.5 py-1 rounded hover:bg-slate-200 text-slate-600 text-micro font-semibold transition-colors">
+                                        ◈ Diagram
+                                    </button>
+                                    <div className="ml-auto">
+                                        <button title="Markdown cheatsheet" onClick={() => setShowCheatsheet(v => !v)}
+                                            className={cn("flex items-center gap-1 px-2 py-1 rounded text-micro font-medium transition-colors",
+                                                showCheatsheet ? "bg-purple-100 text-purple-700" : "hover:bg-slate-200 text-slate-500")}>
+                                            <HelpCircle className="h-3.5 w-3.5" />
+                                            Guide
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Editor + optional cheatsheet */}
+                                <div className="flex flex-1 min-h-0">
+                                    <textarea
+                                        ref={textareaRef}
+                                        className="flex-1 p-5 font-mono text-body bg-white resize-none focus:outline-none"
+                                        value={editContent}
+                                        onChange={(e) => setEditContent(e.target.value)}
+                                        spellCheck={false}
+                                    />
+                                    {showCheatsheet && (
+                                        <div className="w-56 shrink-0 border-l border-slate-200 bg-slate-50 overflow-y-auto p-3 text-micro text-slate-600 space-y-3">
+                                            <p className="text-micro font-bold text-purple-800 uppercase tracking-wide">Markdown Guide</p>
+                                            {[
+                                                { label: 'Headings', rows: ['# H1', '## H2', '### H3'] },
+                                                { label: 'Emphasis', rows: ['**bold**', '_italic_', '~~strikethrough~~'] },
+                                                { label: 'Lists', rows: ['- bullet item', '1. numbered item'] },
+                                                { label: 'Links & Images', rows: ['[label](url)', '![alt](image-url)'] },
+                                                { label: 'Code', rows: ['`inline code`', '```js\ncode block\n```'] },
+                                                { label: 'Table', rows: ['| A | B |', '|---|---|', '| 1 | 2 |'] },
+                                                { label: 'Blockquote', rows: ['> quoted text'] },
+                                                { label: 'Divider', rows: ['---'] },
+                                                { label: 'Mermaid diagram', rows: ['```mermaid', 'flowchart LR', '  A --> B', '```'] },
+                                            ].map(section => (
+                                                <div key={section.label}>
+                                                    <p className="font-semibold text-slate-700 mb-1">{section.label}</p>
+                                                    <div className="bg-white rounded border border-slate-200 px-2 py-1.5 space-y-0.5">
+                                                        {section.rows.map((row, i) => (
+                                                            <p key={i} className="font-mono text-body text-slate-500 leading-snug">{row}</p>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         ) : (
                         <ScrollArea className="h-full">
-                            <div id="wiki-print-content" className="prose prose-slate max-w-4xl mx-auto p-8 lg:p-12 prose-headings:text-purple-900 prose-a:text-purple-600 prose-pre:bg-transparent prose-pre:p-0 prose-table:w-full">
+                            <div id="wiki-print-content" className="max-w-4xl mx-auto p-8 lg:p-12">
                                 {contentLoading ? (
                                     <div className="flex flex-col items-center justify-center h-64 gap-3">
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -597,6 +793,40 @@ export function SAWiki() {
                                         components={{
                                             code: CodeBlock,
                                             a: WikiLink,
+                                            h1: ({ children }) => (
+                                                <h1 className="text-display font-bold text-purple-900 mt-0 mb-4 pb-2 border-b border-purple-100">{children}</h1>
+                                            ),
+                                            h2: ({ children }) => (
+                                                <h2 className="text-heading-1 font-semibold text-purple-800 mt-8 mb-3 pb-1 border-b border-purple-50">{children}</h2>
+                                            ),
+                                            h3: ({ children }) => (
+                                                <h3 className="text-heading-2 font-semibold text-slate-700 mt-5 mb-2">{children}</h3>
+                                            ),
+                                            h4: ({ children }) => (
+                                                <h4 className="text-heading-3 font-medium text-slate-700 mt-4 mb-1">{children}</h4>
+                                            ),
+                                            p: ({ children }) => (
+                                                <p className="text-body text-slate-700 leading-relaxed mb-3">{children}</p>
+                                            ),
+                                            ul: ({ children }) => (
+                                                <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>
+                                            ),
+                                            ol: ({ children }) => (
+                                                <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>
+                                            ),
+                                            li: ({ children }) => (
+                                                <li className="text-body text-slate-700">{children}</li>
+                                            ),
+                                            blockquote: ({ children }) => (
+                                                <blockquote className="border-l-4 border-purple-300 pl-4 my-4 text-body text-slate-500 italic">{children}</blockquote>
+                                            ),
+                                            hr: () => <hr className="my-6 border-slate-200" />,
+                                            strong: ({ children }) => (
+                                                <strong className="font-semibold text-slate-800">{children}</strong>
+                                            ),
+                                            em: ({ children }) => (
+                                                <em className="italic text-slate-600">{children}</em>
+                                            ),
                                             table: ({ children }) => (
                                                 <div className="overflow-x-auto my-6">
                                                     <table className="min-w-full border-collapse border border-slate-300 text-body">
@@ -608,10 +838,10 @@ export function SAWiki() {
                                                 <thead className="bg-purple-50">{children}</thead>
                                             ),
                                             th: ({ children }) => (
-                                                <th className="border border-slate-300 px-4 py-2 text-left font-semibold text-purple-800">{children}</th>
+                                                <th className="border border-slate-300 px-4 py-2 text-left text-body font-semibold text-purple-800">{children}</th>
                                             ),
                                             td: ({ children }) => (
-                                                <td className="border border-slate-300 px-4 py-2">{children}</td>
+                                                <td className="border border-slate-300 px-4 py-2 text-body">{children}</td>
                                             ),
                                             tr: ({ children }) => (
                                                 <tr className="even:bg-slate-50">{children}</tr>

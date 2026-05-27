@@ -392,7 +392,7 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Sparkles style={{ width: '20px', height: '20px' }} />
-                    <h3 style={{ fontWeight: 600, margin: 0, fontSize: '16px' }}>
+                    <h3 className="text-heading-1 font-semibold m-0">
                         {isLetter ? (t('ai.assistantLetter') || 'AI Letter Assistant') : (t('ai.assistant') || 'AI Invoice Assistant')}
                     </h3>
                 </div>
@@ -440,8 +440,8 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
                         color: '#6b7280',
                     }}>
                         <MessageSquare style={{ width: '48px', height: '48px', marginBottom: '16px', opacity: 0.5 }} />
-                        <p style={{ fontSize: '14px', margin: 0 }}>{t('ai.noMessages') || 'No messages yet'}</p>
-                        <p style={{ fontSize: '12px', marginTop: '8px' }}>
+                        <p className="text-heading-2 m-0">{t('ai.noMessages') || 'No messages yet'}</p>
+                        <p className="text-heading-3 mt-2">
                             {isLetter
                                 ? (t('ai.startLetterConversation') || 'Start a conversation to compose or edit business letters')
                                 : (t('ai.startConversation') || 'Start a conversation to create or edit invoices')}
@@ -468,7 +468,7 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
                                     gap: '8px',
                                 }}>
                                     <Loader2 style={{ width: '16px', height: '16px', color: '#9333ea', animation: 'spin 1s linear infinite' }} />
-                                    <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                                    <span className="text-heading-2" style={{ color: '#6b7280' }}>
                                         {t('ai.thinking') || 'Thinking...'}
                                     </span>
                                 </div>
@@ -507,12 +507,12 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
                         placeholder={isLetter ? (t('ai.typeLetterMessage') || 'Describe your letter...') : (t('ai.typeMessage') || 'Type your invoice request...')}
                         disabled={isLoading}
                         rows={1}
+                        className="text-heading-2"
                         style={{
                             flex: 1,
                             padding: '8px 12px',
                             border: '1px solid #d1d5db',
                             borderRadius: '8px',
-                            fontSize: '14px',
                             outline: 'none',
                             resize: 'none',
                             minHeight: '38px',
@@ -564,7 +564,7 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
                         )}
                     </button>
                 </div>
-                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px', marginBottom: 0 }}>
+                <p className="text-heading-3 mt-2 mb-0" style={{ color: '#6b7280' }}>
                     {isLetter ? (t('ai.letterHint') || 'Describe your business letter in natural language') : (t('ai.hint') || 'Describe your invoice in natural language')}
                 </p>
             </form>

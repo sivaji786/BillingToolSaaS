@@ -56,6 +56,64 @@ const SAPages = lazy(() => import('./components/screens/Admin/SAPages').then(mod
 
 const TicketingWidget = lazy(() => import('./components/TicketingWidget').then(m => ({ default: m.TicketingWidget })));
 const GlobalAIAssistant = lazy(() => import('./components/GlobalAIAssistant').then(m => ({ default: m.GlobalAIAssistant })));
+const HelpChatBot = lazy(() => import('./components/HelpChatBot').then(m => ({ default: m.HelpChatBot })));
+
+// ── Help bot configs ──────────────────────────────────────────────────────────
+import { FAQ, CATEGORIES, SCREEN_CATEGORY_MAP } from './data/helpFaq';
+import { ADMIN_FAQ, ADMIN_CATEGORIES, ADMIN_SCREEN_MAP } from './data/adminFaq';
+import { GUEST_FAQ, GUEST_CATEGORIES } from './data/guestFaq';
+import { TENANT_LOCALIZED } from './data/helpFaq.i18n';
+import { ADMIN_LOCALIZED } from './data/adminFaq.i18n';
+import { GUEST_LOCALIZED } from './data/guestFaq.i18n';
+import type { HelpChatBotConfig } from './components/HelpChatBot';
+
+const TENANT_HELP_CONFIG: HelpChatBotConfig = {
+    faq: FAQ,
+    categories: CATEGORIES,
+    screenCategoryMap: SCREEN_CATEGORY_MAP,
+    botName: 'Help Centre',
+    accentGradient: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
+    accentBorder: '#c7d2fe',
+    accentText: '#4f46e5',
+    accentHover: '#eef2ff',
+    userBubbleColor: '#6366f1',
+    dockId: 'help-bot',
+    dockOrder: 4,
+    welcomeText: 'Hi! I can answer questions about how to use this application.\nPick a topic or type your question below.',
+    localizedContent: TENANT_LOCALIZED,
+};
+
+const ADMIN_HELP_CONFIG: HelpChatBotConfig = {
+    faq: ADMIN_FAQ,
+    categories: ADMIN_CATEGORIES,
+    screenCategoryMap: ADMIN_SCREEN_MAP,
+    botName: 'Admin Help',
+    accentGradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+    accentBorder: '#fde68a',
+    accentText: '#b45309',
+    accentHover: '#fef3c7',
+    userBubbleColor: '#f59e0b',
+    dockId: 'admin-help-bot',
+    dockOrder: 1,
+    welcomeText: 'Hi! I can help you navigate the Admin Portal.\nPick a section or type your question.',
+    localizedContent: ADMIN_LOCALIZED,
+};
+
+const GUEST_HELP_CONFIG: HelpChatBotConfig = {
+    faq: GUEST_FAQ,
+    categories: GUEST_CATEGORIES,
+    screenCategoryMap: {},
+    botName: 'Questions? Ask us!',
+    accentGradient: 'linear-gradient(135deg, #10b981 0%, #0ea5e9 100%)',
+    accentBorder: '#a7f3d0',
+    accentText: '#065f46',
+    accentHover: '#d1fae5',
+    userBubbleColor: '#10b981',
+    dockId: 'guest-help-bot',
+    dockOrder: 2,
+    welcomeText: 'Hi! Have questions about BillingTool?\nI can help with pricing, features, sign-up and more.',
+    localizedContent: GUEST_LOCALIZED,
+};
 import { SidebarProvider, SidebarInset, SidebarTrigger } from './components/ui/sidebar';
 import { AppSidebar } from './components/layout/AppSidebar';
 import { Separator } from './components/ui/separator';
@@ -886,6 +944,7 @@ function AppContent() {
           />
         )}
         <EditModeBar />
+        <HelpChatBot config={GUEST_HELP_CONFIG} />
         <Toaster />
       </Suspense>
     );
@@ -1121,6 +1180,7 @@ function AppContent() {
             apiBaseUrl={getApiBaseUrl()}
             userId={user?.id}
           />
+          <HelpChatBot config={TENANT_HELP_CONFIG} currentScreen={currentScreen} />
         </Suspense>
         <Toaster />
       </SidebarInset>
@@ -1246,6 +1306,7 @@ function AdminPortalRouter() {
           {currentScreen === 'SAWiki' && <SAWiki />}
           {currentScreen === 'SAPages' && <SAPages />}
         </AdminLayoutWrapper>
+        <HelpChatBot config={ADMIN_HELP_CONFIG} currentScreen={currentScreen} />
         <Toaster />
       </Suspense>
     );

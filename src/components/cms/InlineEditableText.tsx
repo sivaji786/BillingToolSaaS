@@ -241,11 +241,11 @@ export function InlineEditableText({
         {isHovered && (
           <span
             aria-hidden="true"
+            className="text-body"
             style={{
               position: 'absolute',
               top: '-1.1em',
               right: 0,
-              fontSize: '10px',
               background: '#7c3aed',
               color: '#fff',
               borderRadius: '3px',

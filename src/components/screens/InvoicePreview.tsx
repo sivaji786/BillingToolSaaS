@@ -646,17 +646,17 @@ export function InvoicePreview({
                 <div className="grid gap-3">
                   {effectivePaymentMeans.accountName && (
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.accountOwner')}</span>
+                      <span className="text-body text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.accountOwner')}</span>
                       <span className="text-body font-medium text-purple-900">{effectivePaymentMeans.accountName}</span>
                     </div>
                   )}
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.iban')}</span>
+                    <span className="text-body text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.iban')}</span>
                     <span className="text-body font-mono font-medium text-purple-900 break-all">{effectivePaymentMeans.iban}</span>
                   </div>
                   {effectivePaymentMeans.bic && (
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.bic')}</span>
+                      <span className="text-body text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.bic')}</span>
                       <span className="text-body font-mono font-medium text-purple-900">{effectivePaymentMeans.bic}</span>
                     </div>
                   )}
@@ -670,7 +670,7 @@ export function InvoicePreview({
                 </div>
                 <div className={`mt-4 text-center ${isRtl ? 'md:text-left' : 'md:text-right'}`}>
                   <p className="text-body font-bold text-purple-900">{t('qrCode.giroTitle')}</p>
-                  <p className="text-[11px] text-purple-700/60 leading-relaxed max-w-[200px]">
+                  <p className="text-body-lg text-purple-700/60 leading-relaxed max-w-[200px]">
                     {t('qrCode.giroNote')}
                   </p>
                 </div>
@@ -683,7 +683,7 @@ export function InvoicePreview({
       if (el.type === 'footer') {
         if (!effectiveFooterHtml) return null;
         return (
-          <div key={key} className="mt-12 pt-8 border-t border-gray-100 text-[10px] text-gray-400 text-center leading-relaxed w-full">
+          <div key={key} className="mt-12 pt-8 border-t border-gray-100 text-body text-gray-400 text-center leading-relaxed w-full">
             <div dangerouslySetInnerHTML={{ __html: effectiveFooterHtml }} />
           </div>
         );
@@ -693,7 +693,7 @@ export function InvoicePreview({
         return (
           <div key={key} className="mt-12 flex justify-end w-full">
             <div className="text-center w-48 border-t-2 border-purple-100 pt-2">
-              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-1">Signature</p>
+              <p className="text-body text-gray-400 uppercase font-bold tracking-widest mb-1">Signature</p>
               <div className="h-8"></div>
             </div>
           </div>
@@ -704,7 +704,7 @@ export function InvoicePreview({
         const buyer = editedInvoice.buyer;
         return (
           <div key={key} className="w-full mb-8">
-            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-3 border-b border-gray-100 pb-2">{t('editor.buyer')}</p>
+            <p className="text-body text-gray-400 uppercase font-bold tracking-widest mb-3 border-b border-gray-100 pb-2">{t('editor.buyer')}</p>
             <div className="text-body space-y-1">
               <div className="text-heading-3 font-bold text-gray-900">
                 {renderEditableField('buyer.name', buyer.name || '', (val) => handleFieldChange('buyer.name', val), 'font-bold', false, t('previewModal.placeholderBuyerName'), !isInteractive)}
@@ -776,13 +776,13 @@ export function InvoicePreview({
             </div>
             {hasDatesEl && (
               <div className="text-right space-y-1 shrink-0 ml-6">
-                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{t('previewModal.issueDate')}</p>
+                <p className="text-body text-gray-400 uppercase font-bold tracking-widest">{t('previewModal.issueDate')}</p>
                 <div className="text-heading-2 text-gray-900">
                   {renderEditableField('issueDate', editedInvoice.issueDate || '', (val) => handleFieldChange('issueDate', val), '', false, t('previewModal.placeholderIssueDate'), !isInteractive)}
                 </div>
                 {editedInvoice.dueDate && (
                   <>
-                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-3">{t('previewModal.dueDate')}</p>
+                    <p className="text-body text-gray-400 uppercase font-bold tracking-widest mt-3">{t('previewModal.dueDate')}</p>
                     <div className="text-heading-2 text-gray-900">
                       {renderEditableField('dueDate', editedInvoice.dueDate || '', (val) => handleFieldChange('dueDate', val), '', false, t('previewModal.placeholderDueDate'), !isInteractive)}
                     </div>
@@ -806,10 +806,10 @@ export function InvoicePreview({
             {hasBuyerEl && (
               <div>
                 <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-                  <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{isBusinessLetter ? (t('editor.recipient') || 'TO') : t('previewModal.billTo')}</p>
+                  <p className="text-body text-gray-400 uppercase font-bold tracking-widest">{isBusinessLetter ? (t('editor.recipient') || 'TO') : t('previewModal.billTo')}</p>
                   {isInteractive && buyers.length > 0 && (
                     <Select onValueChange={handleBuyerSelect}>
-                      <SelectTrigger className="h-7 w-auto border-none bg-purple-50 text-purple-700 text-[10px] font-bold uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-purple-100 transition-colors">
+                      <SelectTrigger className="h-7 w-auto border-none bg-purple-50 text-purple-700 text-body font-bold uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-purple-100 transition-colors">
                         <Users className="h-3 w-3" />
                         <SelectValue placeholder={t('previewModal.selectFromDirectory') || 'Select Buyer'} />
                       </SelectTrigger>
@@ -841,7 +841,7 @@ export function InvoicePreview({
             )}
             {hasSellerEl && (
               <div>
-                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-3">{t('previewModal.from')}</p>
+                <p className="text-body text-gray-400 uppercase font-bold tracking-widest mb-3">{t('previewModal.from')}</p>
                 <div className="space-y-1 text-body">
                   <div className="font-bold text-heading-2 text-gray-900">
                     {renderEditableField('seller.name2', effectiveSeller.name || '', (val) => handleFieldChange('seller.name', val), '', false, t('previewModal.placeholderSellerName'), !isInteractive)}
@@ -965,14 +965,14 @@ export function InvoicePreview({
                   <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 h-10">
                     <button
                       onClick={() => setPreviewMode('web')}
-                      className={`px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${previewMode === 'web' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                      className={`px-4 rounded-md text-body font-black uppercase tracking-widest transition-all ${previewMode === 'web' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                     >
                       <Layout className="h-3 w-3 inline mr-2" />
                       {t('previewModal.webView') || 'Web View'}
                     </button>
                     <button
                       onClick={() => setPreviewMode('print')}
-                      className={`px-4 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${previewMode === 'print' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                      className={`px-4 rounded-md text-body font-black uppercase tracking-widest transition-all ${previewMode === 'print' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                     >
                       <Printer className="h-3 w-3 inline mr-2" />
                       {t('previewModal.printView') || 'Print View'}

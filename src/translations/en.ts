@@ -1401,4 +1401,15 @@ export const en = {
             },
         },
     },
+
+    // Help Chat Bot
+    helpBot: {
+        placeholder: 'Type your question…',
+        noMatch: "I couldn't find an answer for that. Try picking a category or rephrasing your question.",
+        mainMenu: '🔙 Main menu',
+        commonQuestionsLabel: '— common questions:',
+        restart: 'Restart',
+        close: 'Close',
+        sendAria: 'Send',
+    },
 };

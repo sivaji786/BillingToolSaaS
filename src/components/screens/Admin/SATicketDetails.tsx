@@ -135,7 +135,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                     <h2 className="text-heading-1 font-extrabold tracking-tight text-slate-900">
                                         {t('tickets.ticketId', { id: ticket.id.toString() })}
                                     </h2>
-                                    <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-widest bg-slate-200/50 text-slate-600 border-none px-2 py-0">
+                                    <Badge variant="secondary" className="font-mono text-body uppercase tracking-widest bg-slate-200/50 text-slate-600 border-none px-2 py-0">
                                         ID: {ticket.id}
                                     </Badge>
                                 </div>
@@ -164,7 +164,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 {/* Status + Priority row */}
                                 <div className="flex items-center gap-2">
                                     <div className="flex flex-col flex-1 px-2">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t('tickets.status.label')}</span>
+                                        <span className="text-body font-bold text-slate-400 uppercase tracking-widest mb-1">{t('tickets.status.label')}</span>
                                         <Select value={status} onValueChange={setStatus}>
                                             <SelectTrigger className="w-full h-9 border-none bg-transparent hover:bg-slate-50 transition-colors font-semibold p-0 shadow-none focus:ring-0">
                                                 <SelectValue />
@@ -179,7 +179,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                     </div>
                                     <div className="w-px h-10 bg-slate-100" />
                                     <div className="flex flex-col flex-1 px-2">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t('tickets.priority.label')}</span>
+                                        <span className="text-body font-bold text-slate-400 uppercase tracking-widest mb-1">{t('tickets.priority.label')}</span>
                                         <Select value={priority} onValueChange={setPriority}>
                                             <SelectTrigger className="w-full h-9 border-none bg-transparent hover:bg-slate-50 transition-colors font-semibold p-0 shadow-none focus:ring-0">
                                                 <SelectValue />
@@ -196,7 +196,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
 
                                 {/* Assignee row — S4-08 */}
                                 <div className="border-t border-slate-100 pt-3 px-2">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">{t('tickets.assignee')}</span>
+                                    <span className="text-body font-bold text-slate-400 uppercase tracking-widest mb-1 block">{t('tickets.assignee')}</span>
                                     <Select value={assignedTo} onValueChange={setAssignedTo}>
                                         <SelectTrigger className="w-full h-9 border border-slate-200 rounded-xl bg-white text-body font-medium focus:ring-2 focus:ring-primary/20">
                                             <UserCheck className="h-3.5 w-3.5 mr-2 text-slate-400" />
@@ -223,7 +223,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                             value={comment}
                                             onChange={(e) => setComment(e.target.value)}
                                         />
-                                        <div className="absolute bottom-2 right-3 flex items-center gap-1 text-[9px] text-slate-400 font-medium bg-slate-50 px-1.5 py-0.5 rounded border">
+                                        <div className="absolute bottom-2 right-3 flex items-center gap-1 text-caption text-slate-400 font-medium bg-slate-50 px-1.5 py-0.5 rounded border">
                                             <kbd className="opacity-70">Ctrl + Enter</kbd> to save
                                         </div>
                                     </div>
@@ -251,7 +251,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                     <MessageSquare className="h-3.5 w-3.5" />
                                     {t('tickets.columns.description')}
                                 </h3>
-                                <div className="bg-slate-50 p-7 rounded-[2rem] border border-slate-100 whitespace-pre-wrap text-[15px] leading-relaxed text-slate-700 shadow-inner min-h-[200px]">
+                                <div className="bg-slate-50 p-7 rounded-[2rem] border border-slate-100 whitespace-pre-wrap text-sm leading-relaxed text-slate-700 shadow-inner min-h-[200px]">
                                     {ticket.description}
                                 </div>
                             </div>
@@ -264,7 +264,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100">
-                                        <span className="block text-[10px] uppercase tracking-wider text-indigo-400 font-bold mb-1">
+                                        <span className="block text-body uppercase tracking-wider text-indigo-400 font-bold mb-1">
                                             {t('tickets.sla.firstResponse')}
                                         </span>
                                         <span className="text-body font-semibold text-slate-800">
@@ -274,7 +274,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                         </span>
                                     </div>
                                     <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
-                                        <span className="block text-[10px] uppercase tracking-wider text-emerald-400 font-bold mb-1">
+                                        <span className="block text-body uppercase tracking-wider text-emerald-400 font-bold mb-1">
                                             {t('tickets.sla.resolution')}
                                         </span>
                                         <span className="text-body font-semibold text-slate-800">
@@ -296,15 +296,15 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="p-3 rounded-xl bg-muted/10 border border-slate-100 transition-all hover:bg-muted/20">
-                                        <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.columns.ip')}</span>
+                                        <span className="block text-body uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.columns.ip')}</span>
                                         <span className="text-body font-medium font-mono">{ticket.client_ip || t('tickets.notAvailable')}</span>
                                     </div>
                                     <div className="p-3 rounded-xl bg-muted/10 border border-slate-100 transition-all hover:bg-muted/20">
-                                        <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.projectId')}</span>
+                                        <span className="block text-body uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.projectId')}</span>
                                         <span className="text-body font-medium font-mono">{ticket.project_id || t('tickets.notAvailable')}</span>
                                     </div>
                                     <div className="p-3 rounded-xl bg-muted/10 border border-slate-100 col-span-2 transition-all hover:bg-muted/20">
-                                        <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.assignee')}</span>
+                                        <span className="block text-body uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.assignee')}</span>
                                         <span className="text-body font-medium">
                                             {ticket.assigned_to
                                                 ? (adminStaff.find(a => a.id === ticket.assigned_to)?.name ?? t('tickets.notAvailable'))
@@ -431,7 +431,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                                     </time>
                                                 </div>
                                                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm transition-all hover:shadow-md hover:border-slate-300">
-                                                    <div className="text-[15px] prose-sm">
+                                                    <div className="text-sm prose-sm">
                                                         {item.old_value && (
                                                             <div className="flex items-center gap-3 text-slate-600 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
                                                                 <span className="text-micro font-bold uppercase tracking-widest opacity-60">{t('tickets.tracking.changedFrom')}:</span>

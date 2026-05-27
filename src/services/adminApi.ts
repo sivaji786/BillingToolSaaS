@@ -342,6 +342,10 @@ export const adminWikiService = {
     saveContent: async (path: string, content: string, lang = 'en'): Promise<void> => {
         await adminApi.put('/wiki/write', { path, content, lang });
     },
+    createDocument: async (path: string, lang = 'en'): Promise<{ path: string }> => {
+        const response = await adminApi.post<{ path: string }>('/wiki/create', { path, lang });
+        return response.data;
+    },
 };
 
 // CMS Services

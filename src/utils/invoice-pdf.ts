@@ -78,13 +78,13 @@ export async function generateInvoicePDF(
           if (el.y > itemsPos.y) {
             adjustedY += tableShift;
           }
-          return { x: el.x, y: adjustedY, w: defaultW, h: defaultH, visible: true, fromLayout: true };
+          return { x: el.x, y: adjustedY, w: defaultW, h: defaultH, visible: true, fromLayout: true, fontSize: el.fontSize };
         } else {
-          return { x: 0, y: 0, w: defaultW, h: defaultH, visible: false, fromLayout: true };
+          return { x: 0, y: 0, w: defaultW, h: defaultH, visible: false, fromLayout: true, fontSize: el.fontSize };
         }
       }
     }
-    return { x: defaultX, y: defaultY, w: defaultW, h: defaultH, visible: true, fromLayout: false };
+    return { x: defaultX, y: defaultY, w: defaultW, h: defaultH, visible: true, fromLayout: false, fontSize: undefined };
   };
 
   let tableShift = 0;
@@ -136,12 +136,14 @@ export async function generateInvoicePDF(
   // Title & Number (Grouped like UI)
   const titlePos = getPos('title', margin, 120, 300, 60);
   if (titlePos.visible) {
-    doc.setFontSize(26);
+    const titleFs = titlePos.fontSize || 26;
+    const titleSubFs = Math.max(9, Math.round(titleFs * 0.46));
+    doc.setFontSize(titleFs);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...colors.primary);
     doc.text(isBusinessLetter ? (invoice.title || 'Business Letter') : (effectiveSeller.name || 'INVOICE'), titlePos.x, titlePos.y + 25);
-    
-    doc.setFontSize(12);
+
+    doc.setFontSize(titleSubFs);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...colors.textMuted);
     doc.text(isBusinessLetter ? `Ref: ${invoice.invoiceNumber || 'N/A'}` : String(invoice.invoiceNumber || 'N/A'), titlePos.x, titlePos.y + 45);
@@ -150,27 +152,29 @@ export async function generateInvoicePDF(
   // Dates
   const datesPos = getPos('dates', pageWidth - margin - 150, 120, 150, 60);
   if (datesPos.visible) {
+    const dateValFs = datesPos.fontSize || 11;
+    const dateLblFs = Math.max(7, Math.round(dateValFs * 0.82));
     let curY = datesPos.y + 15;
-    doc.setFontSize(9);
+    doc.setFontSize(dateLblFs);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...colors.textMuted);
     doc.text('ISSUE DATE', pageWidth - margin, curY, { align: 'right' });
-    
+
     curY += 15;
-    doc.setFontSize(11);
+    doc.setFontSize(dateValFs);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...colors.text);
     doc.text(formatDate(invoice.issueDate), pageWidth - margin, curY, { align: 'right' });
 
     if (invoice.dueDate) {
       curY += 20;
-      doc.setFontSize(9);
+      doc.setFontSize(dateLblFs);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...colors.textMuted);
       doc.text('DUE DATE', pageWidth - margin, curY, { align: 'right' });
-      
+
       curY += 15;
-      doc.setFontSize(11);
+      doc.setFontSize(dateValFs);
       doc.setTextColor(...colors.text);
       doc.text(formatDate(invoice.dueDate), pageWidth - margin, curY, { align: 'right' });
     }
@@ -180,22 +184,25 @@ export async function generateInvoicePDF(
   const sellerPos = getPos('seller', pageWidth / 2 + 20, 210, 250, 100);
   const buyerPos = getPos('buyer', margin, 210, 250, 100);
 
-  const renderParty = (title: string, data: any, x: number, y: number) => {
+  const renderParty = (title: string, data: any, x: number, y: number, baseFontSize?: number) => {
+    const nameFs = baseFontSize || 11;
+    const detailFs = Math.max(7, Math.round(nameFs * 0.82));
+    const labelFs = Math.max(6, Math.round(nameFs * 0.73));
     let curY = y + 10;
-    doc.setFontSize(8);
+    doc.setFontSize(labelFs);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...colors.textMuted);
     doc.text(title.toUpperCase(), x, curY);
     curY += 15;
 
-    doc.setFontSize(11);
+    doc.setFontSize(nameFs);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...colors.text);
     doc.text(String(data.name || ''), x, curY);
     curY += 14;
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(detailFs);
     doc.setTextColor(...colors.textMuted);
     if (data.vatId) {
       doc.text(`VAT: ${String(data.vatId)}`, x, curY);
@@ -218,8 +225,8 @@ export async function generateInvoicePDF(
     }
   };
 
-  if (buyerPos.visible) renderParty(isBusinessLetter ? 'To' : 'Bill To', invoice.buyer, buyerPos.x, buyerPos.y);
-  if (sellerPos.visible) renderParty('From', effectiveSeller, sellerPos.x, sellerPos.y);
+  if (buyerPos.visible) renderParty(isBusinessLetter ? 'To' : 'Bill To', invoice.buyer, buyerPos.x, buyerPos.y, buyerPos.fontSize);
+  if (sellerPos.visible) renderParty('From', effectiveSeller, sellerPos.x, sellerPos.y, sellerPos.fontSize);
 
   // Initialize currentY — letters don't have an items section so ignore itemsPos.y
   let currentY = isBusinessLetter
@@ -242,7 +249,7 @@ export async function generateInvoicePDF(
       head: [['#', 'Description', 'Qty', 'Unit Price', 'Tax', 'Amount']],
       body: tableData,
       theme: 'grid',
-      styles: { font: 'helvetica', fontSize: 9, cellPadding: 8, lineColor: colors.border, lineWidth: 0.1, textColor: colors.text },
+      styles: { font: 'helvetica', fontSize: itemsPos.fontSize || 9, cellPadding: 8, lineColor: colors.border, lineWidth: 0.1, textColor: colors.text },
       headStyles: { fillColor: colors.lightBg, textColor: colors.textMuted, fontStyle: 'bold' },
       columnStyles: { 0: { cellWidth: 30, halign: 'center' }, 1: { cellWidth: 'auto' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right', fontStyle: 'bold', textColor: colors.text } },
       margin: { left: margin, right: margin },
@@ -344,10 +351,12 @@ export async function generateInvoicePDF(
       checkPageOverflow(120);
       
       const totalsPos = getPos('totals', pageWidth - margin - 200, currentY, 200, 100);
-      let curY = currentY; 
+      const totalsValFs = totalsPos.fontSize || 11;
+      const totalsLblFs = Math.max(7, Math.round(totalsValFs * 0.82));
+      let curY = currentY;
       const drawRow = (lbl: string, val: string, bold = false) => {
         doc.setFont('helvetica', bold ? 'bold' : 'normal');
-        doc.setFontSize(bold ? 11 : 9);
+        doc.setFontSize(bold ? totalsValFs : totalsLblFs);
         if (bold) {
           doc.setTextColor(...colors.accent);
         } else {
@@ -371,12 +380,13 @@ export async function generateInvoicePDF(
     }
 
     if (el.type === 'tax_summary' && invoice.taxTotals.length > 0) {
+      const taxFs = el.fontSize || 8;
       checkPageOverflow(80 + (invoice.taxTotals.length * 25));
-      doc.setFontSize(9);
+      doc.setFontSize(Math.round(taxFs * 1.125));
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...colors.textMuted);
       doc.text('TAX SUMMARY', margin, currentY);
-      
+
       const taxData = invoice.taxTotals.map(t => [
         t.taxType,
         `${t.taxPercent}%`,
@@ -389,7 +399,7 @@ export async function generateInvoicePDF(
         head: [['Tax Type', '%', 'Taxable Amount', 'Amount']],
         body: taxData,
         theme: 'grid',
-        styles: { font: 'helvetica', fontSize: 8, cellPadding: 6, lineColor: colors.border, lineWidth: 0.1, textColor: colors.text },
+        styles: { font: 'helvetica', fontSize: taxFs, cellPadding: 6, lineColor: colors.border, lineWidth: 0.1, textColor: colors.text },
         headStyles: { fillColor: colors.lightBg, textColor: colors.textMuted, fontStyle: 'bold' },
         columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right', fontStyle: 'bold' } },
         margin: { left: margin, right: margin },
@@ -398,19 +408,20 @@ export async function generateInvoicePDF(
     }
 
     if (el.type === 'notes' && effectiveNote) {
+      const notesFs = el.fontSize || 9;
       const notesWidth = 400;
       const lines = doc.splitTextToSize(effectiveNote, notesWidth);
-      const notesHeight = (lines.length * 12) + 40;
+      const notesHeight = (lines.length * (notesFs + 3)) + 40;
       checkPageOverflow(notesHeight);
-      
-      doc.setFontSize(9);
+
+      doc.setFontSize(notesFs);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...colors.textMuted);
       doc.text('NOTES', margin, currentY);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...colors.text);
       doc.text(lines, margin, currentY + 15);
-      currentY += (lines.length * 12) + 30;
+      currentY += (lines.length * (notesFs + 3)) + 30;
     }
 
     if (el.type === 'signature') {
@@ -420,7 +431,7 @@ export async function generateInvoicePDF(
       doc.setDrawColor(...colors.border);
       doc.setLineWidth(0.5);
       doc.line(signaturePos.x, sigY + 35, signaturePos.x + signaturePos.w, sigY + 35);
-      doc.setFontSize(8);
+      doc.setFontSize(signaturePos.fontSize || 8);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...colors.textMuted);
       doc.text('SIGNATURE', signaturePos.x + signaturePos.w / 2, sigY + 48, { align: 'center' });
@@ -435,20 +446,23 @@ export async function generateInvoicePDF(
       
       // 1. Render Textual Payment Details on the Left
       let payY = qrSectionY;
+      const qrFs = el.fontSize || 9;
+      const qrValFs = Math.round(qrFs * 1.11);
+      const qrLblFs = Math.max(6, Math.round(qrFs * 0.78));
       const drawPayRow = (lbl: string, val: string) => {
-        doc.setFontSize(7);
+        doc.setFontSize(qrLblFs);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(...colors.textMuted);
         doc.text(lbl.toUpperCase(), margin, payY);
         payY += 10;
-        doc.setFontSize(10);
+        doc.setFontSize(qrValFs);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(...colors.text);
         doc.text(val, margin, payY);
         payY += 15;
       };
 
-      doc.setFontSize(9);
+      doc.setFontSize(qrFs);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...colors.primary);
       doc.text('PAYMENT DETAILS', margin, payY);
@@ -463,11 +477,11 @@ export async function generateInvoicePDF(
         const qrCodeDataURL = await getQRCodeDataURL({ ...invoice, paymentMeans: effectivePaymentMeans }, undefined, 400);
         if (qrCodeDataURL) {
           doc.addImage(qrCodeDataURL, 'PNG', qrX, qrSectionY, qrSize, qrSize);
-          doc.setFontSize(8);
+          doc.setFontSize(qrFs);
           doc.setFont('helvetica', 'bold');
           doc.setTextColor(...colors.primary);
           doc.text('GiroCode / QR Pay', qrX + qrSize/2, qrSectionY + qrSize + 12, { align: 'center' });
-          doc.setFontSize(7);
+          doc.setFontSize(qrLblFs);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(...colors.textMuted);
           doc.text('Scan with your banking app', qrX + qrSize/2, qrSectionY + qrSize + 22, { align: 'center' });

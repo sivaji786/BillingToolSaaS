@@ -1,4 +1,6 @@
 import { useState } from 'react';
+
+const CHART_TICK_FONT_SIZE = 12; // text-heading-3
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { adminUserService } from '../../../services/adminApi';
@@ -448,8 +450,8 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground))" opacity={0.1} />
-                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: CHART_TICK_FONT_SIZE, fill: 'hsl(var(--muted-foreground))' }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: CHART_TICK_FONT_SIZE, fill: 'hsl(var(--muted-foreground))' }} />
                                     <Tooltip 
                                         contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
                                         itemStyle={{ color: 'hsl(var(--primary))' }}
@@ -471,8 +473,8 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={usage?.historicalData || []}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground))" opacity={0.1} />
-                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: CHART_TICK_FONT_SIZE, fill: 'hsl(var(--muted-foreground))' }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: CHART_TICK_FONT_SIZE, fill: 'hsl(var(--muted-foreground))' }} />
                                     <Tooltip 
                                         contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
                                         formatter={(value: number) => [`${value} GB`, 'Bandwidth']}

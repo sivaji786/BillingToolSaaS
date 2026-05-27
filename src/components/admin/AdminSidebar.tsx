@@ -69,9 +69,9 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                         {!sidebarCollapsed && (
                             <div className="flex items-center gap-2">
                                 <div className="h-8 w-8 rounded-lg bg-purple-600 flex items-center justify-center">
-                                    <span className="text-white font-bold text-body">{t('admin.sa')}</span>
+                                    <span className="text-white font-bold text-xs">{t('admin.sa')}</span>
                                 </div>
-                                <span className="font-semibold text-heading-3">{t('admin.adminPortal')}</span>
+                                <span className="font-semibold text-xs">{t('admin.adminPortal')}</span>
                             </div>
                         )}
                         <Button
@@ -101,7 +101,7 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                                             }
                                         }}
                                         className={cn(
-                                            'w-full flex items-start gap-3 px-3 py-2 rounded-lg text-body font-medium transition-colors',
+                                            'w-full flex items-start gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors',
                                             isActive
                                                 ? 'bg-purple-600 text-white'
                                                 : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
@@ -130,8 +130,8 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-body font-medium truncate">{adminUser.name}</p>
-                                        <p className="text-micro text-muted-foreground truncate">{adminUser.email}</p>
+                                        <p className="text-xs font-medium truncate">{adminUser.name}</p>
+                                        <p className="text-[10px] text-muted-foreground truncate">{adminUser.email}</p>
                                     </div>
                                 </div>
                                 <Separator />

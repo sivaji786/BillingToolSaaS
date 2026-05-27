@@ -52,6 +52,46 @@ class AdminWiki extends ResourceController
         return $this->respond($tree);
     }
 
+    public function create(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        $body = $this->request->getJSON(true);
+        $path = trim($body['path'] ?? '', '/');
+        $lang = $body['lang'] ?? 'en';
+
+        if (empty($path)) {
+            return $this->fail('Path is required.');
+        }
+
+        if (!str_ends_with($path, '.md')) {
+            $path .= '.md';
+        }
+
+        // Reject traversal segments without relying on realpath() (file does not exist yet)
+        $segments = explode('/', str_replace('\\', '/', $path));
+        foreach ($segments as $seg) {
+            if ($seg === '..' || $seg === '.') {
+                return $this->failForbidden('Invalid path.');
+            }
+        }
+
+        $docsPath = $this->resolveDocsPath($lang);
+        $fullPath = $docsPath . implode(DIRECTORY_SEPARATOR, $segments);
+
+        if (file_exists($fullPath)) {
+            return $this->fail('Document already exists.');
+        }
+
+        $dir = dirname($fullPath);
+        if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
+            return $this->failServerError('Could not create directory.');
+        }
+
+        $title = ucwords(str_replace(['-', '_'], ' ', pathinfo($path, PATHINFO_FILENAME)));
+        file_put_contents($fullPath, "# {$title}\n\n");
+
+        return $this->respond(['success' => true, 'path' => implode('/', $segments)]);
+    }
+
     public function write(): \CodeIgniter\HTTP\ResponseInterface
     {
         $body    = $this->request->getJSON(true);

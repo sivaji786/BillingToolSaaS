@@ -285,6 +285,7 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     $routes->get('wiki', '\App\Controllers\AdminWiki::index');
     $routes->get('wiki/read', '\App\Controllers\AdminWiki::read');
     $routes->put('wiki/write', '\App\Controllers\AdminWiki::write');
+    $routes->post('wiki/create', '\App\Controllers\AdminWiki::create');
 
     // Admin CMS
     $routes->get('cms', '\App\Controllers\CmsController::listPages');

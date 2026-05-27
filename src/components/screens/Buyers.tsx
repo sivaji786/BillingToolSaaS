@@ -679,8 +679,8 @@ export function Buyers() {
                                     <tr key={i} className={row.status !== 'new' ? 'opacity-60 bg-amber-50/40' : ''}>
                                         <td className="py-2 pr-3">
                                             {row.status === 'new'
-                                                ? <Badge className="bg-green-100 text-green-800 border-green-200 text-[10px]">New</Badge>
-                                                : <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px]" title={row.reason}>
+                                                ? <Badge className="bg-green-100 text-green-800 border-green-200 text-body">New</Badge>
+                                                : <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-body" title={row.reason}>
                                                     {row.status === 'dup-email' ? 'Dup. email' : row.status === 'dup-vat' ? 'Dup. VAT' : 'Error'}
                                                   </Badge>
                                             }
