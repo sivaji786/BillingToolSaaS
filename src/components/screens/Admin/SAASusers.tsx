@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Badge } from '../../ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
-import { Search, Download, UserCheck, UserX, Eye, Key } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../ui/dialog';
+import { Search, Download, UserCheck, UserX, Eye, Key, Briefcase, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '../../ui/skeleton';
 import { format } from 'date-fns';
@@ -23,6 +24,7 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
     const [searchInput, setSearchInput] = useState('');
     const debouncedSearch = useDebounce(searchInput, 400);
     const queryClient = useQueryClient();
+    const [samlModalUser, setSamlModalUser] = useState<any | null>(null);
 
     // Reset to page 1 when debounced search changes
     useEffect(() => {
@@ -60,6 +62,15 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
         onError: () => {
             toast.error('Failed to reset password');
         }
+    });
+
+    const toggleWorkhubMutation = useMutation({
+        mutationFn: (userId: string) => adminUserService.toggleWorkhub(userId),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            toast.success(`WorkHub ${data.workhub_enabled ? 'enabled' : 'disabled'} for tenant`);
+        },
+        onError: () => toast.error('Failed to toggle WorkHub'),
     });
 
     const handleExportCsv = async () => {
@@ -158,6 +169,8 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                     <TableHead>Status</TableHead>
                                     <TableHead>Joined</TableHead>
                                     <TableHead>Last Login</TableHead>
+                                    <TableHead className="text-center">WorkHub</TableHead>
+                                    <TableHead className="text-center">SSO</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -181,6 +194,40 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                         </TableCell>
                                         <TableCell>{format(new Date(user.joinedDate), 'MMM dd, yyyy')}</TableCell>
                                         <TableCell>{user.lastLogin ? format(new Date(user.lastLogin), 'MMM dd, yyyy') : 'Never'}</TableCell>
+                                        <TableCell className="text-center">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                title={`WorkHub: ${(user as any).workhub_enabled ? 'enabled — click to disable' : 'disabled — click to enable'}`}
+                                                disabled={toggleWorkhubMutation.isPending}
+                                                onClick={() => toggleWorkhubMutation.mutate(user.id)}
+                                                className="gap-1.5"
+                                            >
+                                                <Briefcase className={`h-4 w-4 shrink-0 ${(user as any).workhub_enabled ? 'text-purple-600' : 'text-muted-foreground'}`} />
+                                                <span className={`text-xs font-medium ${(user as any).workhub_enabled ? 'text-purple-600' : 'text-muted-foreground'}`}>
+                                                    {(user as any).workhub_enabled ? 'On' : 'Off'}
+                                                </span>
+                                            </Button>
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            {(user as any).saml_enabled ? (
+                                                <button
+                                                    className="flex flex-col items-center gap-1 cursor-pointer group"
+                                                    title="Click to view SSO config summary"
+                                                    onClick={() => setSamlModalUser(user)}
+                                                >
+                                                    <Badge variant="outline" className="text-xs border-purple-300 text-purple-700 bg-purple-50 gap-1 group-hover:bg-purple-100 transition-colors">
+                                                        <Shield className="h-3 w-3" />
+                                                        {((user as any).saml_provider || 'saml').toUpperCase()}
+                                                    </Badge>
+                                                    {(user as any).sso_only && (
+                                                        <span className="text-[10px] text-amber-600 font-medium">SSO Only</span>
+                                                    )}
+                                                </button>
+                                            ) : (
+                                                <span className="text-xs text-muted-foreground">—</span>
+                                            )}
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
                                                 <Button
@@ -253,6 +300,50 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                     </Button>
                 </div>
             )}
-        </div>
+        {/* SSO-018: SAML config summary modal */}
+        <Dialog open={!!samlModalUser} onOpenChange={(open) => { if (!open) setSamlModalUser(null); }}>
+            <DialogContent className="max-w-lg">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5 text-purple-600" />
+                        SSO Configuration — {samlModalUser?.name}
+                    </DialogTitle>
+                </DialogHeader>
+                {samlModalUser && (
+                    <div className="space-y-4 text-sm">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide">Protocol</p>
+                                <p className="font-medium mt-0.5">{(samlModalUser.saml_provider || 'saml').toUpperCase()}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide">Status</p>
+                                <Badge variant="outline" className="mt-0.5 border-green-300 text-green-700 bg-green-50">Enabled</Badge>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide">SSO Only</p>
+                                <p className="font-medium mt-0.5">{samlModalUser.sso_only ? 'Yes — password login blocked' : 'No — password login allowed'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide">Last Login via SSO</p>
+                                <p className="font-medium mt-0.5">
+                                    {samlModalUser.lastLogin
+                                        ? format(new Date(samlModalUser.lastLogin), 'MMM dd, yyyy HH:mm')
+                                        : 'Never'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide">Tenant</p>
+                                <p className="font-mono text-xs mt-0.5">{samlModalUser.subdomain}</p>
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground border-t pt-3">
+                            IdP details are managed by the tenant admin in Settings → SSO &amp; SAML.
+                        </p>
+                    </div>
+                )}
+            </DialogContent>
+        </Dialog>
+    </div>
     );
 }

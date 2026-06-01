@@ -103,9 +103,57 @@ trait UsageEnforcement
             'invoices'          => 'invoices',
             'projects'          => 'projects',
             'workspace_files'   => 'storage_gb',
-            'aiquery_history'   => 'api_calls'
+            'aiquery_history'   => 'api_calls',
+            // WorkHub tables (WH-011) — limits checked by PlanLimitTrait WorkHub helpers
+            // beforeInsert enforcement for worker/task count ceilings
+            'workhub_workers'   => 'workhub_workers',
+            'workhub_tasks'     => 'workhub_tasks_per_month',
         ];
 
         return isset($map[$table]) ? $map[$table] : null;
+    }
+
+    // -------------------------------------------------------------------------
+    // WH-069 — WorkHub monthly usage counter increments
+    // Call these AFTER successfully persisting the resource.
+    // -------------------------------------------------------------------------
+
+    protected function incrementWorkhubTaskCount(int $tenantId): void
+    {
+        $this->incrementWorkhubUsage($tenantId, 'tasks_created');
+    }
+
+    protected function incrementWorkhubAiCallCount(int $tenantId): void
+    {
+        $this->incrementWorkhubUsage($tenantId, 'ai_calls_used');
+    }
+
+    protected function incrementWorkhubPdfCount(int $tenantId): void
+    {
+        $this->incrementWorkhubUsage($tenantId, 'pdf_exports');
+    }
+
+    protected function incrementWorkhubStorage(int $tenantId, int $bytes): void
+    {
+        $this->incrementWorkhubUsage($tenantId, 'storage_bytes_used', $bytes);
+    }
+
+    protected function getWorkhubUsage(int $tenantId): array
+    {
+        try {
+            return (new \App\Models\WorkHub\WorkHubUsageModel())->currentMonth($tenantId);
+        } catch (\Throwable $e) {
+            log_message('warning', '[UsageEnforcement] getWorkhubUsage failed: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function incrementWorkhubUsage(int $tenantId, string $field, int $by = 1): void
+    {
+        try {
+            (new \App\Models\WorkHub\WorkHubUsageModel())->incrementField($tenantId, $field, $by);
+        } catch (\Throwable $e) {
+            log_message('warning', "[UsageEnforcement] increment {$field} failed: " . $e->getMessage());
+        }
     }
 }

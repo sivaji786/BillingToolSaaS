@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { CompanyProfile, CompanyType } from '../../types/invoice';
-import { companyTypeService } from '../../services/api';
+import { companyTypeService, authService, ssoSettingsService } from '../../services/api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
@@ -8,9 +8,13 @@ import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Separator } from '../ui/separator';
-import { Building2, CreditCard, FileText, Upload, X } from 'lucide-react';
+import { Building2, CreditCard, FileText, Upload, X, Link2, Shield, CheckCircle2, Loader2, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { RichTextEditor } from '../ui/RichTextEditor';
+import { useAuthStore } from '../../stores/authStore';
+import { Switch } from '../ui/switch';
+import { Badge } from '../ui/badge';
+import { toast } from 'sonner';
 
 
 interface ImageUploadFieldProps {
@@ -80,11 +84,28 @@ function formatNumberPreview(format: string, seq: number): string {
 export function Settings({ profile, onUpdateProfile }: SettingsProps) {
   const { t } = useLanguage();
 
+  const user = useAuthStore((s) => s.user);
+
   const [editedProfile, setEditedProfile] = useState<CompanyProfile>(profile);
   const [isSaving, setIsSaving] = useState(false);
   const [companyTypes, setCompanyTypes] = useState<CompanyType[]>([]);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const signatureInputRef = useRef<HTMLInputElement>(null);
+
+  // SSO-007: Connected Accounts
+  const [ssoIdentities, setSsoIdentities] = useState<Array<{ id: number; provider: string; email: string; name: string; last_login_at: string }>>([]);
+  const [ssoLinking, setSsoLinking] = useState<string | null>(null);
+  const [ssoUnlinking, setSsoUnlinking] = useState<string | null>(null);
+
+  // SSO-017: SSO/SAML config (admin only)
+  const [ssoConfig, setSsoConfig] = useState<{
+    provider: string; enabled: boolean; sso_only: boolean;
+    config: Record<string, string | boolean | Record<string, string>>; sp_metadata_url?: string;
+  } | null>(null);
+  const [ssoConfigSaving, setSsoConfigSaving] = useState(false);
+  const [oidcTesting, setOidcTesting] = useState(false);
+
+  const isAdmin = (user as any)?.role === 'admin' || (user as any)?.role === 'owner';
 
   useEffect(() => {
     const fetchTypes = async () => {
@@ -96,7 +117,26 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
       }
     };
     fetchTypes();
-  }, []);
+
+    // Load SSO identities (SSO-007)
+    authService.getSsoIdentities().then(setSsoIdentities).catch(() => {});
+
+    // Load SSO config if admin (SSO-017)
+    if (isAdmin) {
+      ssoSettingsService.get().then(setSsoConfig).catch(() => {});
+    }
+
+    // Handle ?linked= param (after OAuth link callback)
+    const urlParams = new URLSearchParams(window.location.search);
+    const linked = urlParams.get('linked');
+    if (linked) {
+      toast.success(`${linked.charAt(0).toUpperCase() + linked.slice(1)} account connected successfully.`);
+      // Reload identities and strip param
+      authService.getSsoIdentities().then(setSsoIdentities).catch(() => {});
+      const newUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [isAdmin]);
 
   // Sync state with prop if profile changes (e.g. after save or re-fetch)
   useEffect(() => {
@@ -181,6 +221,16 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
             <CreditCard className="h-4 w-4 mr-2" />
             {t('settings.paymentInfo') || 'Payment Info'}
           </TabsTrigger>
+          <TabsTrigger value="accounts">
+            <Link2 className="h-4 w-4 mr-2" />
+            {t('settings.connectedAccounts') || 'Connected Accounts'}
+          </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="sso">
+              <Shield className="h-4 w-4 mr-2" />
+              {t('settings.ssoSaml') || 'SSO & SAML'}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Company Profile */}
@@ -548,6 +598,275 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
             </div>
           </Card>
         </TabsContent>
+
+        {/* SSO-007: Connected Accounts */}
+        <TabsContent value="accounts">
+          <Card className="p-6 space-y-6">
+            <div>
+              <h2>{t('settings.connectedAccounts') || 'Connected Accounts'}</h2>
+              <p className="text-body text-muted-foreground mt-1">
+                {t('settings.connectedAccountsDesc') || 'Link your social accounts for one-click login. You can connect multiple providers.'}
+              </p>
+            </div>
+            <Separator />
+            {(['google', 'microsoft', 'github'] as const).map((provider) => {
+              const linked = ssoIdentities.find((i) => i.provider === provider);
+              const providerLabels: Record<string, string> = { google: 'Google', microsoft: 'Microsoft', github: 'GitHub' };
+              return (
+                <div key={provider} className="flex items-center justify-between py-3 border-b last:border-0">
+                  <div className="flex items-center gap-3">
+                    {linked
+                      ? <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      : <div className="h-5 w-5 rounded-full border-2 border-gray-300" />}
+                    <div>
+                      <p className="font-medium">{providerLabels[provider]}</p>
+                      {linked && <p className="text-micro text-muted-foreground">{linked.email}</p>}
+                    </div>
+                  </div>
+                  {linked ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-500 hover:text-red-600"
+                      disabled={ssoUnlinking === provider}
+                      onClick={async () => {
+                        setSsoUnlinking(provider);
+                        try {
+                          await authService.unlinkSso(provider);
+                          setSsoIdentities((prev) => prev.filter((i) => i.provider !== provider));
+                          toast.success(`${providerLabels[provider]} account disconnected.`);
+                        } catch {
+                          toast.error(`Failed to disconnect ${providerLabels[provider]}.`);
+                        } finally {
+                          setSsoUnlinking(null);
+                        }
+                      }}
+                    >
+                      {ssoUnlinking === provider ? <Loader2 className="h-4 w-4 animate-spin" /> : (t('settings.disconnect') || 'Disconnect')}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={ssoLinking === provider}
+                      onClick={() => {
+                        setSsoLinking(provider);
+                        const base = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080').replace(/\/api\/?$/, '');
+                        const token = useAuthStore.getState().token ?? '';
+                        window.location.href = `${base}/auth/sso/${provider}/redirect?action=link&token=${encodeURIComponent(token)}`;
+                      }}
+                    >
+                      {ssoLinking === provider
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : (t('settings.connect') || `Connect ${providerLabels[provider]}`)}
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </Card>
+        </TabsContent>
+
+        {/* SSO-017: SSO & SAML (admin only) */}
+        {isAdmin && (
+          <TabsContent value="sso">
+            <Card className="p-6 space-y-6">
+              <div>
+                <h2>{t('settings.ssoSaml') || 'SSO & SAML'}</h2>
+                <p className="text-body text-muted-foreground mt-1">
+                  {t('settings.ssoSamlDesc') || 'Configure enterprise SSO for your organisation. Users can log in via your identity provider.'}
+                </p>
+              </div>
+              <Separator />
+
+              {ssoConfig === null ? (
+                <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading…</div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Provider select */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>{t('settings.ssoProvider') || 'SSO Protocol'}</Label>
+                      <Select
+                        value={ssoConfig.provider}
+                        onValueChange={(v) => setSsoConfig({ ...ssoConfig, provider: v })}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="saml">SAML 2.0 (Okta, Azure AD, ADFS)</SelectItem>
+                          <SelectItem value="oidc">OpenID Connect (Okta, Auth0, Keycloak)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-end gap-3 pb-1">
+                      <Switch
+                        id="sso-enabled"
+                        checked={ssoConfig.enabled}
+                        onCheckedChange={(v) => setSsoConfig({ ...ssoConfig, enabled: v })}
+                      />
+                      <Label htmlFor="sso-enabled">{ssoConfig.enabled ? (t('settings.ssoEnabled') || 'SSO Enabled') : (t('settings.ssoDisabled') || 'SSO Disabled')}</Label>
+                    </div>
+                  </div>
+
+                  {/* SSO-only toggle */}
+                  <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                    <Switch
+                      id="sso-only"
+                      checked={ssoConfig.sso_only}
+                      onCheckedChange={(v) => setSsoConfig({ ...ssoConfig, sso_only: v })}
+                    />
+                    <div>
+                      <Label htmlFor="sso-only" className="font-medium">{t('settings.ssoOnly') || 'SSO Only Mode'}</Label>
+                      <p className="text-micro text-muted-foreground">{t('settings.ssoOnlyDesc') || 'Block password login for all users — they must authenticate via SSO.'}</p>
+                    </div>
+                  </div>
+
+                  {/* SAML fields */}
+                  {ssoConfig.provider === 'saml' && (
+                    <div className="space-y-4">
+                      <h3 className="font-medium">IdP Configuration</h3>
+                      {([
+                        { key: 'idp_entity_id', label: 'IdP Entity ID', placeholder: 'https://idp.example.com/metadata' },
+                        { key: 'idp_sso_url',   label: 'IdP SSO URL',   placeholder: 'https://idp.example.com/sso/saml' },
+                        { key: 'idp_slo_url',   label: 'IdP SLO URL (optional)', placeholder: 'https://idp.example.com/slo' },
+                      ] as const).map(({ key, label, placeholder }) => (
+                        <div key={key}>
+                          <Label>{label}</Label>
+                          <Input
+                            className="mt-1 font-mono text-sm"
+                            placeholder={placeholder}
+                            value={(ssoConfig.config[key] as string) || ''}
+                            onChange={(e) => setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, [key]: e.target.value } })}
+                          />
+                        </div>
+                      ))}
+                      <div>
+                        <Label>IdP X.509 Certificate</Label>
+                        <textarea
+                          rows={6}
+                          className="mt-1 w-full font-mono text-xs border rounded-md p-3 bg-background resize-y"
+                          placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"
+                          value={(ssoConfig.config.idp_cert as string) || ''}
+                          onChange={(e) => setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, idp_cert: e.target.value } })}
+                        />
+                      </div>
+                      <div>
+                        <Label>{t('settings.samlRoleMapping') || 'Role Mapping (JSON)'}</Label>
+                        <textarea
+                          rows={4}
+                          className="mt-1 w-full font-mono text-xs border rounded-md p-3 bg-background resize-y"
+                          placeholder='{"BillingTool-Admin": "admin", "BillingTool-Member": "member"}'
+                          value={typeof ssoConfig.config.role_mapping === 'object'
+                            ? JSON.stringify(ssoConfig.config.role_mapping, null, 2)
+                            : (ssoConfig.config.role_mapping as string) || ''}
+                          onChange={(e) => {
+                            try {
+                              const parsed = JSON.parse(e.target.value);
+                              setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, role_mapping: parsed } });
+                            } catch {
+                              setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, role_mapping: e.target.value } });
+                            }
+                          }}
+                        />
+                      </div>
+                      {/* SP Metadata download */}
+                      {ssoConfig.sp_metadata_url && (
+                        <div className="flex items-center gap-2 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                          <ExternalLink className="h-4 w-4 text-purple-600 shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{t('settings.spMetadata') || 'SP Metadata URL'}</p>
+                            <p className="text-micro text-muted-foreground font-mono">{ssoConfig.sp_metadata_url}</p>
+                          </div>
+                          <Button variant="outline" size="sm" onClick={() => window.open(ssoConfig.sp_metadata_url, '_blank')}>
+                            {t('settings.downloadMetadata') || 'Open'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* OIDC fields */}
+                  {ssoConfig.provider === 'oidc' && (
+                    <div className="space-y-4">
+                      <h3 className="font-medium">OIDC Configuration</h3>
+                      <div>
+                        <Label>Issuer URL</Label>
+                        <div className="flex gap-2 mt-1">
+                          <Input
+                            className="font-mono text-sm flex-1"
+                            placeholder="https://accounts.example.com"
+                            value={(ssoConfig.config.issuer_url as string) || ''}
+                            onChange={(e) => setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, issuer_url: e.target.value } })}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={oidcTesting}
+                            onClick={async () => {
+                              setOidcTesting(true);
+                              try {
+                                const res = await ssoSettingsService.testDiscovery((ssoConfig.config.issuer_url as string) || '');
+                                if (res.success) toast.success('Discovery successful — OIDC endpoints found.');
+                                else toast.error('Discovery failed.');
+                              } catch {
+                                toast.error('Discovery failed. Check the issuer URL.');
+                              } finally {
+                                setOidcTesting(false);
+                              }
+                            }}
+                          >
+                            {oidcTesting ? <Loader2 className="h-4 w-4 animate-spin" /> : (t('settings.testConnection') || 'Test')}
+                          </Button>
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Client ID</Label>
+                        <Input
+                          className="mt-1 font-mono text-sm"
+                          placeholder="your-client-id"
+                          value={(ssoConfig.config.client_id as string) || ''}
+                          onChange={(e) => setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, client_id: e.target.value } })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Client Secret</Label>
+                        <Input
+                          className="mt-1 font-mono text-sm"
+                          type="password"
+                          placeholder="••••••••"
+                          value={(ssoConfig.config.client_secret as string) || ''}
+                          onChange={(e) => setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, client_secret: e.target.value } })}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      disabled={ssoConfigSaving}
+                      onClick={async () => {
+                        setSsoConfigSaving(true);
+                        try {
+                          await ssoSettingsService.update(ssoConfig);
+                          toast.success(t('settings.ssoSaved') || 'SSO configuration saved.');
+                        } catch {
+                          toast.error(t('settings.ssoSaveFailed') || 'Failed to save SSO configuration.');
+                        } finally {
+                          setSsoConfigSaving(false);
+                        }
+                      }}
+                    >
+                      {ssoConfigSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      {t('settings.saveChanges') || 'Save SSO Settings'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+        )}
 
       </Tabs>
 

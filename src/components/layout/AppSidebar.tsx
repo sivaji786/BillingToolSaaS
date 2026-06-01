@@ -11,8 +11,10 @@ import {
     ChevronsUpDown,
     GalleryVerticalEnd,
     Users,
-    Folder
+    Folder,
+    Briefcase
 } from "lucide-react"
+import { useAuthStore } from "../../stores/authStore"
 
 import {
     Sidebar,
@@ -52,6 +54,8 @@ import { hasPermissionSync } from "../../hooks/usePermission"
 
 export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile, ...props }: AppSidebarProps) {
     const { t } = useLanguage();
+    const tenant = useAuthStore((s) => s.tenant);
+    const workhubEnabled = Boolean((tenant as any)?.plan_features?.workhub_enabled);
 
     const navPlatform = [
         {
@@ -105,6 +109,13 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
             icon: Activity,
             isActive: currentScreen === "activity",
             permission: 'audit_logs.read'
+        },
+        {
+            title: "WorkHub",
+            url: "workhub",
+            icon: Briefcase,
+            isActive: currentScreen === "workhub",
+            workhub: true,
         },
     ].filter(item => !item.permission || hasPermissionSync(item.permission));
 
@@ -164,18 +175,27 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                             <div className="px-4 py-2 text-micro font-semibold text-muted-foreground/70 uppercase tracking-wider">
                                 {group.title}
                             </div>
-                            {group.items.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton
-                                        tooltip={item.title}
-                                        onClick={() => onNavigate(item.url)}
-                                        isActive={item.isActive}
-                                    >
-                                        {item.icon && <item.icon />}
-                                        <span>{item.title}</span>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
+                            {group.items.map((item) => {
+                                const isWorkhubLocked = (item as any).workhub && !workhubEnabled;
+                                return (
+                                    <SidebarMenuItem key={item.title}>
+                                        <SidebarMenuButton
+                                            tooltip={isWorkhubLocked ? "WorkHub — upgrade to unlock" : item.title}
+                                            onClick={() => onNavigate(item.url)}
+                                            isActive={item.isActive}
+                                            className={isWorkhubLocked ? "opacity-60" : undefined}
+                                        >
+                                            {item.icon && <item.icon className={isWorkhubLocked ? "text-muted-foreground" : undefined} />}
+                                            <span>{item.title}</span>
+                                            {isWorkhubLocked && (
+                                                <span className="ml-auto text-[10px] font-medium text-muted-foreground border border-muted-foreground/30 rounded px-1 leading-4">
+                                                    Pro
+                                                </span>
+                                            )}
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                );
+                            })}
                         </SidebarMenu>
                         <SidebarSeparator className="my-2" />
                     </React.Fragment>

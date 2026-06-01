@@ -9,6 +9,7 @@ interface User {
     email: string;
     name: string;
     role: string;
+    is_super_admin?: boolean;
 }
 
 interface Tenant {
@@ -60,6 +61,8 @@ export const useAuthStore = create<AuthState>()(
                     tenant: null,
                 });
                 queryClient.clear();
+                // Remove the persisted key so stale user data can't survive into the next login.
+                localStorage.removeItem('auth-storage');
                 redirectToMainDomain('?logout=true');
             },
 
@@ -71,6 +74,7 @@ export const useAuthStore = create<AuthState>()(
                     tenant: null,
                 });
                 queryClient.clear();
+                localStorage.removeItem('auth-storage');
             },
 
             updateUser: (user) => {

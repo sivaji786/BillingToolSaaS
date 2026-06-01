@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WorkHub — Developer Integration Guide</title>
+<style>
+:root{
+  --navy:#0D1B2A;--navy2:#162236;--navy3:#1E3352;
+  --amber:#F59E0B;--amberL:#FEF3C7;--amberD:#B45309;
+  --green:#10B981;--greenL:#D1FAE5;
+  --blue:#3B82F6;--blueL:#EFF6FF;--blueD:#1D4ED8;
+  --red:#EF4444;--redL:#FEF2F2;
+  --purple:#8B5CF6;--purpleL:#EDE9FE;
+  --gray0:#F9FAFB;--gray1:#F3F4F6;--gray2:#E5E7EB;--gray3:#D1D5DB;
+  --text:#111827;--text2:#374151;--text3:#6B7280;--text4:#9CA3AF;
+  --sans:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Fira Mono','Cascadia Code',monospace;
+  --r6:6px;--r8:8px;--r12:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);color:var(--text);background:#0A1628;
+  font-size:15px;line-height:1.6;}
+
+/* ── LAYOUT ── */
+.shell{display:grid;grid-template-columns:280px 1fr;min-height:100vh;}
+nav{background:var(--navy);border-right:1px solid rgba(255,255,255,.06);
+  position:sticky;top:0;height:100vh;overflow-y:auto;padding-bottom:40px;}
+main{background:#F8FAFC;min-height:100vh;}
+
+/* ── NAV ── */
+.nav-brand{padding:20px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:6px;}
+.nav-brand-title{font-size:15px;font-weight:700;color:white;}
+.nav-brand-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;line-height:1.4;}
+.nav-badge{display:inline-block;background:var(--amber);color:var(--navy);
+  font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:4px;
+  vertical-align:middle;letter-spacing:.04em;}
+.nav-group{padding:6px 12px 2px;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:rgba(255,255,255,.2);margin-top:10px;}
+nav a{display:flex;align-items:center;gap:8px;padding:7px 20px;
+  font-size:12.5px;color:rgba(255,255,255,.45);text-decoration:none;
+  border-left:2px solid transparent;transition:.1s;line-height:1.3;}
+nav a:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.04);}
+nav a.active{color:white;border-left-color:var(--amber);background:rgba(245,158,11,.07);}
+nav a .nav-icon{font-size:13px;flex-shrink:0;width:16px;text-align:center;}
+
+/* ── CONTENT ── */
+.content{max-width:900px;padding:48px 52px 80px;margin:0 auto;}
+.page-hero{background:var(--navy);padding:36px 52px;border-bottom:1px solid rgba(255,255,255,.06);}
+.page-hero h1{font-size:28px;font-weight:700;color:white;letter-spacing:-.02em;}
+.page-hero .lead{font-size:15px;color:rgba(255,255,255,.45);margin-top:6px;max-width:600px;line-height:1.6;}
+.meta-bar{background:var(--navy2);padding:10px 52px;display:flex;gap:20px;
+  border-bottom:1px solid rgba(255,255,255,.06);flex-wrap:wrap;}
+.meta-item{font-size:11px;color:rgba(255,255,255,.35);}
+.meta-item strong{color:rgba(255,255,255,.6);}
+
+h2{font-size:20px;font-weight:700;margin:44px 0 16px;padding-top:44px;
+  border-top:1px solid var(--gray2);letter-spacing:-.01em;}
+h2:first-of-type{border-top:none;padding-top:0;margin-top:0;}
+h3{font-size:15px;font-weight:600;margin:28px 0 10px;color:var(--navy);}
+h4{font-size:13px;font-weight:600;margin:20px 0 6px;color:var(--text2);
+  text-transform:uppercase;letter-spacing:.06em;}
+p{margin-bottom:14px;color:var(--text2);line-height:1.7;}
+ul,ol{padding-left:20px;margin-bottom:14px;color:var(--text2);}
+li{margin-bottom:5px;line-height:1.6;}
+strong{color:var(--text);font-weight:600;}
+a{color:var(--blue);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* ── CODE ── */
+code{font-family:var(--mono);font-size:12.5px;background:var(--gray1);
+  padding:1px 5px;border-radius:4px;color:#B45309;border:1px solid var(--gray2);}
+pre{background:var(--navy);border-radius:var(--r12);padding:20px 24px;
+  margin:14px 0 20px;overflow-x:auto;border:1px solid rgba(255,255,255,.08);}
+pre code{background:none;color:#E2E8F0;font-size:13px;padding:0;border:none;line-height:1.7;}
+.code-lang{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--amber);margin-bottom:8px;display:block;}
+.hl-key{color:#7DD3FC;}    /* keywords */
+.hl-str{color:#86EFAC;}    /* strings */
+.hl-cmt{color:#64748B;}    /* comments */
+.hl-fn{color:#F8B4D9;}     /* functions */
+.hl-num{color:#FCA5A5;}    /* numbers */
+.hl-cls{color:#FDE68A;}    /* class/type */
+
+/* ── CALLOUTS ── */
+.callout{border-radius:var(--r12);padding:16px 20px;margin:18px 0;
+  border-left:4px solid;}
+.callout-warn{background:#FFFBEB;border-color:var(--amber);}
+.callout-warn .ct{color:#92400E;}
+.callout-info{background:var(--blueL);border-color:var(--blue);}
+.callout-info .ct{color:var(--blueD);}
+.callout-danger{background:var(--redL);border-color:var(--red);}
+.callout-danger .ct{color:#991B1B;}
+.callout-success{background:var(--greenL);border-color:var(--green);}
+.callout-success .ct{color:#065F46;}
+.callout-purple{background:var(--purpleL);border-color:var(--purple);}
+.callout-purple .ct{color:#5B21B6;}
+.ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.callout p:last-child{margin-bottom:0;}
+
+/* ── TABLES ── */
+table{width:100%;border-collapse:collapse;margin:14px 0 20px;font-size:13.5px;}
+th{text-align:left;padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--text4);border-bottom:2px solid var(--gray2);
+  background:var(--gray0);}
+td{padding:9px 12px;border-bottom:1px solid var(--gray2);vertical-align:top;color:var(--text2);}
+tr:hover td{background:var(--gray0);}
+
+/* ── ENDPOINT ── */
+.endpoint{background:var(--navy);border-radius:var(--r12);padding:14px 18px;
+  margin:12px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.method{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 9px;
+  border-radius:99px;flex-shrink:0;}
+.m-get{background:#064E3B;color:#6EE7B7;}
+.m-post{background:#1E3A5F;color:#93C5FD;}
+.m-put{background:#4C1D95;color:#C4B5FD;}
+.m-patch{background:#78350F;color:#FDE68A;}
+.m-delete{background:#7F1D1D;color:#FCA5A5;}
+.endpoint-path{font-family:var(--mono);font-size:13px;color:white;flex:1;}
+.endpoint-desc{font-size:12px;color:rgba(255,255,255,.4);width:100%;margin-top:2px;}
+
+/* ── SCHEMA FIELD ── */
+.schema-block{background:var(--navy);border-radius:var(--r12);padding:16px 20px;
+  margin:12px 0;border:1px solid rgba(255,255,255,.07);}
+.sf{display:grid;grid-template-columns:160px 90px 1fr;gap:8px 12px;
+  padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);align-items:baseline;}
+.sf:last-child{border-bottom:none;}
+.sf-name{font-family:var(--mono);font-size:12px;color:#93C5FD;}
+.sf-type{font-family:var(--mono);font-size:11px;color:#FDE68A;}
+.sf-desc{font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;}
+.sf-req{font-size:9px;background:#7F1D1D;color:#FCA5A5;padding:1px 5px;
+  border-radius:99px;font-weight:700;margin-left:4px;}
+.sf-opt{font-size:9px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.35);
+  padding:1px 5px;border-radius:99px;margin-left:4px;}
+
+/* ── STATE MACHINE ── */
+.sm-states{display:flex;align-items:center;gap:0;margin:16px 0;flex-wrap:wrap;}
+.sm-state{background:var(--navy);border:1.5px solid rgba(255,255,255,.15);
+  border-radius:var(--r8);padding:8px 14px;font-size:13px;font-weight:600;color:white;}
+.sm-state.open{border-color:var(--blue);color:#93C5FD;}
+.sm-state.prog{border-color:var(--amber);color:#FDE68A;}
+.sm-state.done{border-color:var(--green);color:#6EE7B7;}
+.sm-arrow{color:rgba(255,255,255,.3);font-size:18px;padding:0 8px;}
+.sm-label{font-size:10px;color:rgba(255,255,255,.3);text-align:center;margin-top:4px;}
+
+/* ── STEP FLOW ── */
+.steps{counter-reset:step;margin:16px 0;}
+.step{display:flex;gap:14px;margin-bottom:16px;}
+.step::before{counter-increment:step;content:counter(step);
+  min-width:28px;height:28px;background:var(--amber);color:var(--navy);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.step-body h4{margin:0 0 4px;font-size:13px;color:var(--text);}
+.step-body p{margin-bottom:0;font-size:13.5px;}
+
+/* ── ARCH DIAGRAM ── */
+.arch-box{background:var(--navy);border-radius:var(--r12);padding:20px;margin:16px 0;
+  display:grid;gap:12px;}
+.arch-layer{background:var(--navy2);border-radius:var(--r8);padding:12px 16px;
+  border-left:3px solid;}
+.arch-layer-title{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:6px;}
+.arch-layer-items{display:flex;flex-wrap:wrap;gap:6px;}
+.arch-chip{background:rgba(255,255,255,.07);border-radius:4px;padding:3px 9px;
+  font-size:11px;color:rgba(255,255,255,.6);font-family:var(--mono);}
+
+/* ── PERMISSION MATRIX ── */
+.perm-table td:not(:first-child){text-align:center;}
+.perm-y{color:var(--green);font-weight:700;}
+.perm-n{color:var(--red);}
+.perm-r{color:var(--amber);}
+
+/* ── VERSION BADGE ── */
+.version-strip{background:var(--navy2);padding:8px 52px;font-size:11px;
+  color:rgba(255,255,255,.25);display:flex;gap:20px;border-bottom:1px solid rgba(255,255,255,.04);}
+.version-strip strong{color:rgba(255,255,255,.45);}
+
+@media print{
+  .shell{display:block;}
+  nav{display:none;}
+  main{background:white;}
+  .page-hero,.meta-bar,.version-strip{background:#0D1B2A;}
+  pre{border:1px solid #ccc;}
+  h2{page-break-before:always;}
+}
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr;}
+  nav{display:none;}
+  .content{padding:24px 16px;}
+  .page-hero,.meta-bar,.version-strip{padding-left:16px;padding-right:16px;}
+  .sf{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<nav>
+  <div class="nav-brand">
+    <div class="nav-brand-title">WorkHub Dev Guide</div>
+    <div class="nav-brand-sub">SCLAN M-08 Integration<br>[mn]medianet · Confidential NDA 5.0</div>
+  </div>
+  <div class="nav-group">Architecture</div>
+  <a href="#overview"><span class="nav-icon">🗺</span>Overview</a>
+  <a href="#architecture"><span class="nav-icon">🏗</span>System architecture</a>
+  <a href="#tech-stack"><span class="nav-icon">⚙️</span>Tech stack</a>
+  <div class="nav-group">API</div>
+  <a href="#api-design"><span class="nav-icon">🔌</span>API design principles</a>
+  <a href="#endpoints"><span class="nav-icon">📡</span>REST endpoints</a>
+  <a href="#auth"><span class="nav-icon">🔐</span>Authentication</a>
+  <a href="#realtime"><span class="nav-icon">⚡</span>Real-time sync</a>
+  <div class="nav-group">Data</div>
+  <a href="#schema"><span class="nav-icon">🗄</span>Database schema</a>
+  <a href="#state-machine"><span class="nav-icon">🔄</span>State machine</a>
+  <a href="#permissions"><span class="nav-icon">🛡</span>Permission matrix</a>
+  <div class="nav-group">Features</div>
+  <a href="#translation"><span class="nav-icon">🌐</span>Translation engine</a>
+  <a href="#timekeeping"><span class="nav-icon">⏱</span>Timekeeping</a>
+  <a href="#signatures"><span class="nav-icon">✍</span>Signatures &amp; identity</a>
+  <a href="#email"><span class="nav-icon">📱</span>Multi-channel delivery</a>
+  <a href="#files"><span class="nav-icon">📎</span>File storage</a>
+  <a href="#notifications"><span class="nav-icon">🔔</span>Notifications</a>
+  <a href="#email"><span class="nav-icon">📧</span>Email copy service</a>
+  <div class="nav-group">Integration</div>
+  <a href="#saas-integration"><span class="nav-icon">🔗</span>SCLAN SaaS integration</a>
+  <a href="#pfe-integration"><span class="nav-icon">🎛</span>PFE integration</a>
+  <a href="#migration"><span class="nav-icon">📦</span>Frontend migration</a>
+  <a href="#offline"><span class="nav-icon">📵</span>Offline &amp; sync</a>
+  <a href="#testing"><span class="nav-icon">🧪</span>Testing strategy</a>
+  <div class="nav-group">Reference</div>
+  <a href="#error-codes"><span class="nav-icon">❌</span>Error codes</a>
+  <a href="#compliance"><span class="nav-icon">⚖</span>Compliance checklist</a>
+  <a href="#changelog"><span class="nav-icon">📝</span>Changelog</a>
+  <div class="nav-group">Platform vision</div>
+  <a href="#platform-spine"><span class="nav-icon">🧬</span>PFE as platform spine</a>
+  <a href="#ppt"><span class="nav-icon">📐</span>PPT project planning tool</a>
+  <a href="#module-map"><span class="nav-icon">🗺</span>Module integration map</a>
+</nav>
+
+<main>
+<div class="page-hero">
+  <h1>WorkHub — Developer Integration Guide</h1>
+  <p class="lead">Complete specification for integrating SCLAN M-08 WorkHub into the [mn]medianet SaaS platform. Covers API design, database schema, real-time sync, translation engine, legal compliance endpoints, and frontend migration from the prototype.</p>
+</div>
+<div class="meta-bar">
+  <span class="meta-item"><strong>Module</strong> SCLAN M-08</span>
+  <span class="meta-item"><strong>Platform</strong> [mn]medianet SaaS</span>
+  <span class="meta-item"><strong>Version</strong> 1.0-rc1</span>
+  <span class="meta-item"><strong>Status</strong> <span class="nav-badge">PRE-RELEASE</span></span>
+  <span class="meta-item"><strong>Classification</strong> Confidential — NDA 5.0</span>
+</div>
+<div class="version-strip">
+  <span><strong>API version</strong> v1</span>
+  <span><strong>Prototype</strong> WorkHub_Application.html</span>
+  <span><strong>Help doc</strong> WorkHub_Help.html</span>
+  <span><strong>Last updated</strong> May 2026</span>
+</div>
+
+<div class="content">
+
+<!-- ── OVERVIEW ── -->
+<h2 id="overview">Overview</h2>
+<p>WorkHub is the field work management module of SCLAN 5.0. The current deliverable is a self-contained HTML prototype (<code>WorkHub_Application.html</code>) that implements the complete frontend in vanilla JS. This document specifies how to extract that prototype into a production SaaS application backed by the existing [mn]medianet infrastructure.</p>
+
+<p>The prototype contains: all UI components, a complete in-memory data model, the translation engine (calling Anthropic API directly from the browser), AI text correction, timer logic, print/PDF generation, a test avatar with 35 browser tests, and tooltip/help system. <strong>All of these work today.</strong> The integration task is to replace the in-memory data with persistent API calls, add authentication, and wire real-time sync.</p>
+
+<div class="callout callout-warn">
+  <div class="ct">⚠ Scope boundary</div>
+  <p>This document covers WorkHub (M-08) only. It does not cover the broader SCLAN M-02 Energy Intelligence, PC-13 Quota Anomaly Detection, or PFE integration — those are covered in their own modules. WorkHub reads task and project data only; it does not write to Domain Node configuration.</p>
+</div>
+
+<!-- ── ARCHITECTURE ── -->
+<h2 id="architecture">System architecture</h2>
+
+<div class="arch-box">
+  <div class="arch-layer" style="border-color:#F59E0B;">
+    <div class="arch-layer-title" style="color:#F59E0B;">Frontend — WorkHub SPA</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">React / Next.js</span>
+      <span class="arch-chip">Translation engine</span>
+      <span class="arch-chip">Timer (local state)</span>
+      <span class="arch-chip">Signature canvas</span>
+      <span class="arch-chip">Print / PDF</span>
+      <span class="arch-chip">Offline queue</span>
+      <span class="arch-chip">Test avatar</span>
+    </div>
+  </div>
+  <div class="arch-layer" style="border-color:#3B82F6;">
+    <div class="arch-layer-title" style="color:#3B82F6;">API Gateway — SCLAN SaaS</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">REST v1 /workhub/*</span>
+      <span class="arch-chip">WebSocket /ws/workhub</span>
+      <span class="arch-chip">JWT auth</span>
+      <span class="arch-chip">Rate limiting</span>
+      <span class="arch-chip">Audit log</span>
+    </div>
+  </div>
+  <div class="arch-layer" style="border-color:#10B981;">
+    <div class="arch-layer-title" style="color:#10B981;">Services</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">Tasks service</span>
+      <span class="arch-chip">Time entries service</span>
+      <span class="arch-chip">Translation proxy</span>
+      <span class="arch-chip">File storage (S3)</span>
+      <span class="arch-chip">Email service</span>
+      <span class="arch-chip">Notification service</span>
+    </div>
+  </div>
+  <div class="arch-layer" style="border-color:#8B5CF6;">
+    <div class="arch-layer-title" style="color:#8B5CF6;">Data layer</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">PostgreSQL (primary)</span>
+      <span class="arch-chip">Redis (trans cache)</span>
+      <span class="arch-chip">S3 / R2 (files)</span>
+      <span class="arch-chip">TimescaleDB (time series)</span>
+    </div>
+  </div>
+  <div class="arch-layer" style="border-color:#EF4444;">
+    <div class="arch-layer-title" style="color:#EF4444;">External</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">Anthropic API (translation + correction)</span>
+      <span class="arch-chip">SCLAN Domain Node (read only)</span>
+      <span class="arch-chip">SMTP / SES (email copy)</span>
+    </div>
+  </div>
+</div>
+
+<h3>Key architectural decisions</h3>
+<ul>
+  <li><strong>Translation proxy</strong> — the Anthropic API key must never be exposed in the browser. The frontend calls <code>/api/v1/translate</code> and <code>/api/v1/correct</code> which proxy to Anthropic server-side. The translation cache in Redis is shared across all users — if user A translates "Zone B installieren" to Polish, user B gets it from cache instantly.</li>
+  <li><strong>Timer is local-first</strong> — timer state lives in the browser. When the worker taps Stop, the completed entry is written to the API. If the network is down, entries queue locally (IndexedDB) and sync on reconnect. This prevents data loss on poor site connectivity.</li>
+  <li><strong>Signatures and photos</strong> — stored as binary blobs in S3/R2. The API returns signed URLs. The completion record stores the URL, not the base64. The frontend currently stores base64 — this must be migrated.</li>
+  <li><strong>WebSocket for real-time</strong> — planner assigns a task → worker's today list updates live. Worker completes task → manager kanban updates live. Use a single <code>/ws/workhub?token=JWT</code> connection per session.</li>
+</ul>
+
+<!-- ── TECH STACK ── -->
+<h2 id="tech-stack">Tech stack</h2>
+<table>
+  <thead><tr><th>Layer</th><th>Technology</th><th>Rationale</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend</td><td>React 18 + Next.js 14 App Router</td><td>SSR for initial load, client-side for interactivity. Matches existing SCLAN SaaS frontend.</td></tr>
+    <tr><td>Styling</td><td>Tailwind CSS + CSS variables</td><td>Prototype uses CSS variables — trivial to port. Tailwind for layout.</td></tr>
+    <tr><td>State management</td><td>Zustand + React Query</td><td>Zustand for app state (timer, UI), React Query for server state with cache.</td></tr>
+    <tr><td>API</td><td>REST + WebSocket</td><td>REST for CRUD, WebSocket for live updates.</td></tr>
+    <tr><td>Backend</td><td>Existing SCLAN SaaS (Node.js / Go)</td><td>New <code>/workhub</code> route group added to existing API.</td></tr>
+    <tr><td>Database</td><td>PostgreSQL + TimescaleDB</td><td>TimescaleDB for time_entries (hypertable by start time).</td></tr>
+    <tr><td>Cache</td><td>Redis</td><td>Translation cache, session store, WebSocket pub/sub.</td></tr>
+    <tr><td>Files</td><td>S3 / Cloudflare R2</td><td>Photos, signatures, ID images. R2 preferred (no egress fees).</td></tr>
+    <tr><td>Email</td><td>AWS SES or Postmark</td><td>Customer copy emails. Transactional only, not marketing.</td></tr>
+    <tr><td>Auth</td><td>Existing SCLAN JWT</td><td>WorkHub uses same JWT tokens. Role claim added to token.</td></tr>
+  </tbody>
+</table>
+
+<!-- ── API DESIGN ── -->
+<h2 id="api-design">API design principles</h2>
+
+<h3>Base URL</h3>
+<pre><code><span class="hl-str">https://api.sclan.io/v1/workhub</span></code></pre>
+
+<h3>Conventions</h3>
+<ul>
+  <li>All timestamps in ISO 8601 UTC: <code>2026-05-24T14:30:00.000Z</code></li>
+  <li>All monetary values in cents (integer) to avoid floating-point issues: <code>unitPriceCents: 2490</code></li>
+  <li>Pagination via cursor: <code>?cursor=&lt;id&gt;&amp;limit=50</code></li>
+  <li>Language passed as header: <code>Accept-Language: de</code></li>
+  <li>Content language stored on record, not inferred</li>
+  <li>Soft deletes — records are never hard-deleted (legal retention)</li>
+  <li>All writes return the updated resource</li>
+  <li>Errors follow RFC 7807 Problem Details</li>
+</ul>
+
+<h3>Request / response envelope</h3>
+<pre><code><span class="hl-cmt">// Success</span>
+{
+  <span class="hl-str">"data"</span>: { ... },
+  <span class="hl-str">"meta"</span>: { <span class="hl-str">"requestId"</span>: <span class="hl-str">"req_01J..."</span>, <span class="hl-str">"ts"</span>: <span class="hl-str">"2026-05-24T..."</span> }
+}
+
+<span class="hl-cmt">// Error (RFC 7807)</span>
+{
+  <span class="hl-str">"type"</span>: <span class="hl-str">"https://errors.sclan.io/workhub/TASK_NOT_FOUND"</span>,
+  <span class="hl-str">"title"</span>: <span class="hl-str">"Task not found"</span>,
+  <span class="hl-str">"status"</span>: <span class="hl-num">404</span>,
+  <span class="hl-str">"detail"</span>: <span class="hl-str">"Task with id=42 does not exist in installation abc123"</span>,
+  <span class="hl-str">"instance"</span>: <span class="hl-str">"/v1/workhub/tasks/42"</span>
+}</code></pre>
+
+<!-- ── ENDPOINTS ── -->
+<h2 id="endpoints">REST endpoints</h2>
+
+<h3>Tasks</h3>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/tasks</span><span class="endpoint-desc">List tasks. Params: ?assignee=TK&amp;status=open&amp;project=p1&amp;due_before=2026-06-01</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/tasks</span><span class="endpoint-desc">Create task. Returns created task with generated id.</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/tasks/:id</span><span class="endpoint-desc">Get single task with full detail.</span></div>
+<div class="endpoint"><span class="method m-patch">PATCH</span><span class="endpoint-path">/tasks/:id</span><span class="endpoint-desc">Update task fields. Partial update — send only changed fields.</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/tasks/:id/complete</span><span class="endpoint-desc">Mark task done. Body: completion note, materials, photos, signature. Atomically sets status=done.</span></div>
+
+<h3>Time entries</h3>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/time-entries</span><span class="endpoint-desc">List entries. Params: ?worker=TK&amp;from=2026-05-01&amp;to=2026-05-31&amp;task_id=1</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/time-entries</span><span class="endpoint-desc">Create entry (called on timer Stop). Body: taskId, start, end, type, note.</span></div>
+<div class="endpoint"><span class="method m-patch">PATCH</span><span class="endpoint-path">/time-entries/:id</span><span class="endpoint-desc">Correct an entry (e.g. fix wrong end time). Audit-logged.</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/timesheet</span><span class="endpoint-desc">Aggregated timesheet view. Params: ?worker=TK&amp;date=2026-05-24. Returns daily totals + entries.</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/timesheet/signoff</span><span class="endpoint-desc">Worker signs off daily timesheet. Immutable after this point.</span></div>
+
+<h3>Projects &amp; customers</h3>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/projects</span><span class="endpoint-desc">List projects. Includes task counts and status summary.</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/projects</span><span class="endpoint-desc">Create project. Requires customerId or inline customer creation.</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/projects/:id/status</span><span class="endpoint-desc">Project status report data (used for print/PDF).</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/customers</span><span class="endpoint-desc">List customers for current installation.</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/customers</span><span class="endpoint-desc">Create customer.</span></div>
+
+<h3>Workers &amp; capacity</h3>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/workers</span><span class="endpoint-desc">List workers for installation with current capacity metrics.</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/workers/:id/capacity</span><span class="endpoint-desc">Detailed capacity: this week, month, next 30 days, queue depth, free-from date.</span></div>
+
+<h3>Completion records</h3>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/completions/:taskId</span><span class="endpoint-desc">Get completion record for a task. Includes note, original, materials, photo URLs, signature URL.</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/completions/:taskId/certificate</span><span class="endpoint-desc">Generate completion certificate PDF. Returns PDF binary or signed S3 URL.</span></div>
+
+<h3>Translation &amp; correction</h3>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/translate</span><span class="endpoint-desc">Translate text. Body: {text, targetLang}. Checks Redis cache first. Returns {translated, cached: bool}.</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/correct</span><span class="endpoint-desc">AI-correct text. Body: {text, uiLang}. Returns {corrected, changed: bool, original: text}.</span></div>
+
+<h3>Files</h3>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/files/upload-url</span><span class="endpoint-desc">Request presigned S3 upload URL. Body: {type: 'photo'|'signature'|'id-photo', contentType, taskId}.</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/files/confirm</span><span class="endpoint-desc">Confirm upload complete. Body: {key, taskId, fileType}. Returns permanent URL.</span></div>
+
+<h3>Print &amp; export</h3>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/print/workorder/:taskId</span><span class="endpoint-desc">Work order PDF. Query: ?lang=de</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/print/completion/:taskId</span><span class="endpoint-desc">Completion certificate PDF. Query: ?lang=de</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/print/timesheet/:workerId</span><span class="endpoint-desc">Timesheet PDF. Query: ?from=2026-05-01&amp;to=2026-05-31&amp;lang=de</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/print/invoice/:projectId</span><span class="endpoint-desc">Invoice PDF. Query: ?lang=de</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/print/project-status/:projectId</span><span class="endpoint-desc">Project status PDF. Query: ?lang=de</span></div>
+
+<div class="callout callout-info">
+  <div class="ct">PDF generation</div>
+  <p>Server-side PDF generation is preferred over browser <code>window.print()</code> for production. Use Puppeteer or WeasyPrint. The existing print HTML templates in the prototype can be used as the rendering source — serve them at a private route, render headless, return binary PDF. This gives consistent output across all devices and allows PDF to be attached to the customer email copy.</p>
+</div>
+
+<!-- ── AUTH ── -->
+<h2 id="auth">Authentication</h2>
+
+<h3>JWT token structure</h3>
+<p>WorkHub uses the existing SCLAN SaaS JWT. Add a <code>workhub</code> claim to the payload:</p>
+<pre><code>{
+  <span class="hl-str">"sub"</span>: <span class="hl-str">"user_01J..."</span>,
+  <span class="hl-str">"installationId"</span>: <span class="hl-str">"inst_abc123"</span>,
+  <span class="hl-str">"workhub"</span>: {
+    <span class="hl-str">"role"</span>: <span class="hl-str">"worker"</span>,          <span class="hl-cmt">// worker | planner | manager | client | finance</span>
+    <span class="hl-str">"workerId"</span>: <span class="hl-str">"TK"</span>,         <span class="hl-cmt">// links to workers table</span>
+    <span class="hl-str">"permissions"</span>: [<span class="hl-str">"tasks:read"</span>, <span class="hl-str">"tasks:complete"</span>, <span class="hl-str">"time:write"</span>]
+  },
+  <span class="hl-str">"iat"</span>: <span class="hl-num">1748000000</span>,
+  <span class="hl-str">"exp"</span>: <span class="hl-num">1748086400</span>
+}</code></pre>
+
+<h3>Role-based access</h3>
+<p>All API routes check the <code>workhub.role</code> claim. The middleware rejects requests where the role does not have the required permission. See the Permission Matrix section for the full breakdown.</p>
+
+<div class="callout callout-danger">
+  <div class="ct">🔑 Critical — never expose API keys</div>
+  <p>The Anthropic API key must live server-side only. The prototype calls the Anthropic API directly from the browser — this is acceptable for prototype development but must be changed before production. The <code>/translate</code> and <code>/correct</code> endpoints act as a proxy that adds the API key server-side and applies rate limiting and caching.</p>
+</div>
+
+<!-- ── REAL-TIME ── -->
+<h2 id="realtime">Real-time sync</h2>
+
+<h3>WebSocket connection</h3>
+<pre><code><span class="hl-key">const</span> ws = <span class="hl-key">new</span> <span class="hl-cls">WebSocket</span>(
+  <span class="hl-str">`wss://api.sclan.io/v1/workhub/ws?token=</span><span class="hl-str">${jwt}</span><span class="hl-str">`</span>
+);
+
+ws.onmessage = (event) => {
+  <span class="hl-key">const</span> msg = <span class="hl-cls">JSON</span>.parse(event.data);
+  <span class="hl-key">switch</span>(msg.type) {
+    <span class="hl-key">case</span> <span class="hl-str">'task.updated'</span>:    <span class="hl-fn">handleTaskUpdate</span>(msg.data); <span class="hl-key">break</span>;
+    <span class="hl-key">case</span> <span class="hl-str">'task.completed'</span>:  <span class="hl-fn">handleTaskComplete</span>(msg.data); <span class="hl-key">break</span>;
+    <span class="hl-key">case</span> <span class="hl-str">'task.assigned'</span>:   <span class="hl-fn">handleNewAssignment</span>(msg.data); <span class="hl-key">break</span>;
+    <span class="hl-key">case</span> <span class="hl-str">'timer.started'</span>:   <span class="hl-fn">handleTimerStarted</span>(msg.data); <span class="hl-key">break</span>;
+    <span class="hl-key">case</span> <span class="hl-str">'translation.ready'</span>:<span class="hl-fn">handleTranslation</span>(msg.data); <span class="hl-key">break</span>;
+  }
+};</code></pre>
+
+<h3>Event types</h3>
+<table>
+  <thead><tr><th>Event</th><th>Payload</th><th>Who receives</th></tr></thead>
+  <tbody>
+    <tr><td><code>task.updated</code></td><td>Full task object</td><td>All roles in installation</td></tr>
+    <tr><td><code>task.assigned</code></td><td>Task + assignee</td><td>Assigned worker, planner, manager</td></tr>
+    <tr><td><code>task.completed</code></td><td>Task + completion summary</td><td>Planner, manager, finance, client</td></tr>
+    <tr><td><code>timer.started</code></td><td>taskId, workerId, startTime</td><td>Manager, planner</td></tr>
+    <tr><td><code>timer.stopped</code></td><td>Time entry object</td><td>Manager, planner, finance</td></tr>
+    <tr><td><code>translation.ready</code></td><td>hash, targetLang, translated</td><td>All sessions requesting same text</td></tr>
+    <tr><td><code>inbox.message</code></td><td>Notification object</td><td>Target worker</td></tr>
+  </tbody>
+</table>
+
+<h3>Translation push</h3>
+<p>When a translation completes server-side, push <code>translation.ready</code> to all connected clients who have requested the same text in the same language. This allows the translation cache to be shared across sessions — user A's translation immediately updates user B's screen without a new API call.</p>
+
+<!-- ── SCHEMA ── -->
+<h2 id="schema">Database schema</h2>
+
+<h3>tasks</h3>
+<div class="schema-block">
+  <div class="sf"><span class="sf-name">id</span><span class="sf-type">uuid</span><span class="sf-desc">Primary key. Generated server-side.</span></div>
+  <div class="sf"><span class="sf-name">installation_id</span><span class="sf-type">uuid</span><span class="sf-desc">Foreign key → installations. All queries scoped by this. <span class="sf-req">required</span></span></div>
+  <div class="sf"><span class="sf-name">title</span><span class="sf-type">text</span><span class="sf-desc">Task title as entered. Language stored in <code>content_lang</code>. <span class="sf-req">required</span></span></div>
+  <div class="sf"><span class="sf-name">content_lang</span><span class="sf-type">char(2)</span><span class="sf-desc">ISO 639-1 language code of the original content. Used as translation cache seed.</span></div>
+  <div class="sf"><span class="sf-name">description</span><span class="sf-type">text</span><span class="sf-desc">Optional long description.</span></div>
+  <div class="sf"><span class="sf-name">project_id</span><span class="sf-type">uuid</span><span class="sf-desc">Foreign key → projects.</span></div>
+  <div class="sf"><span class="sf-name">customer_id</span><span class="sf-type">uuid</span><span class="sf-desc">Foreign key → customers. Denormalised from project for query performance.</span></div>
+  <div class="sf"><span class="sf-name">status</span><span class="sf-type">enum</span><span class="sf-desc">'open' | 'in_progress' | 'done'. Managed by state machine — never write directly. <span class="sf-req">required</span></span></div>
+  <div class="sf"><span class="sf-name">priority</span><span class="sf-type">enum</span><span class="sf-desc">'high' | 'medium' | 'low'.</span></div>
+  <div class="sf"><span class="sf-name">due_at</span><span class="sf-type">timestamptz</span><span class="sf-desc">Due date/time. Nullable = no deadline.</span></div>
+  <div class="sf"><span class="sf-name">est_hours</span><span class="sf-type">numeric(6,2)</span><span class="sf-desc">Estimated hours. Used for capacity calculations.</span></div>
+  <div class="sf"><span class="sf-name">logged_hours</span><span class="sf-type">numeric(6,2)</span><span class="sf-desc">Computed from time_entries. Updated by trigger on time_entries insert/update.</span></div>
+  <div class="sf"><span class="sf-name">assignee_id</span><span class="sf-type">uuid</span><span class="sf-desc">Foreign key → workers.</span></div>
+  <div class="sf"><span class="sf-name">step_index</span><span class="sf-type">integer</span><span class="sf-desc">Current checklist step (0-based).</span></div>
+  <div class="sf"><span class="sf-name">steps</span><span class="sf-type">text[]</span><span class="sf-desc">Checklist step labels.</span></div>
+  <div class="sf"><span class="sf-name">created_at</span><span class="sf-type">timestamptz</span><span class="sf-desc">Auto-set on insert.</span></div>
+  <div class="sf"><span class="sf-name">updated_at</span><span class="sf-type">timestamptz</span><span class="sf-desc">Auto-updated by trigger.</span></div>
+  <div class="sf"><span class="sf-name">deleted_at</span><span class="sf-type">timestamptz</span><span class="sf-desc">Soft delete. Null = active.</span></div>
+</div>
+
+<h3>time_entries</h3>
+<div class="schema-block">
+  <div class="sf"><span class="sf-name">id</span><span class="sf-type">uuid</span><span class="sf-desc">Primary key.</span></div>
+  <div class="sf"><span class="sf-name">task_id</span><span class="sf-type">uuid</span><span class="sf-desc">Foreign key → tasks. <span class="sf-req">required</span></span></div>
+  <div class="sf"><span class="sf-name">worker_id</span><span class="sf-type">uuid</span><span class="sf-desc">Foreign key → workers. <span class="sf-req">required</span></span></div>
+  <div class="sf"><span class="sf-name">started_at</span><span class="sf-type">timestamptz</span><span class="sf-desc">Session start. <span class="sf-req">required</span></span></div>
+  <div class="sf"><span class="sf-name">ended_at</span><span class="sf-type">timestamptz</span><span class="sf-desc">Session end. <span class="sf-req">required</span></span></div>
+  <div class="sf"><span class="sf-name">duration_sec</span><span class="sf-type">integer</span><span class="sf-desc">Computed from ended_at - started_at. Stored for query performance.</span></div>
+  <div class="sf"><span class="sf-name">entry_type</span><span class="sf-type">enum</span><span class="sf-desc">'work' | 'break'. <span class="sf-req">required</span></span></div>
+  <div class="sf"><span class="sf-name">note</span><span class="sf-type">text</span><span class="sf-desc">Optional note for this session.</span></div>
+  <div class="sf"><span class="sf-name">signoff_at</span><span class="sf-type">timestamptz</span><span class="sf-desc">Set when worker signs off daily timesheet. Immutable after this.</span></div>
+</div>
+<p><strong>TimescaleDB:</strong> Partition <code>time_entries</code> as a hypertable on <code>started_at</code> with 1-month chunks. This gives O(1) range queries for timesheet views and legal audit exports.</p>
+
+<h3>completion_records</h3>
+<div class="schema-block">
+  <div class="sf"><span class="sf-name">id</span><span class="sf-type">uuid</span><span class="sf-desc">Primary key.</span></div>
+  <div class="sf"><span class="sf-name">task_id</span><span class="sf-type">uuid</span><span class="sf-desc">Unique FK → tasks. One completion record per task. <span class="sf-req">required</span></span></div>
+  <div class="sf"><span class="sf-name">completion_note</span><span class="sf-type">text</span><span class="sf-desc">AI-corrected final note.</span></div>
+  <div class="sf"><span class="sf-name">completion_note_original</span><span class="sf-type">text</span><span class="sf-desc">Exactly what the worker typed. Never altered. Null if no correction was made.</span></div>
+  <div class="sf"><span class="sf-name">ai_corrected</span><span class="sf-type">boolean</span><span class="sf-desc">True if AI changed the text and worker accepted the correction.</span></div>
+  <div class="sf"><span class="sf-name">content_lang</span><span class="sf-type">char(2)</span><span class="sf-desc">Language of the completion note.</span></div>
+  <div class="sf"><span class="sf-name">delay_reason</span><span class="sf-type">text</span><span class="sf-desc">Overrun reason if logged > estimated.</span></div>
+  <div class="sf"><span class="sf-name">delay_reason_original</span><span class="sf-type">text</span><span class="sf-desc">Original unedited overrun reason.</span></div>
+  <div class="sf"><span class="sf-name">bill_comment</span><span class="sf-type">text</span><span class="sf-desc">Invoice line comment for labour.</span></div>
+  <div class="sf"><span class="sf-name">signature_url</span><span class="sf-type">text</span><span class="sf-desc">S3/R2 URL to signature PNG. Immutable once set.</span></div>
+  <div class="sf"><span class="sf-name">signature_name</span><span class="sf-type">text</span><span class="sf-desc">Customer printed name.</span></div>
+  <div class="sf"><span class="sf-name">signature_role</span><span class="sf-type">text</span><span class="sf-desc">Customer role / company.</span></div>
+  <div class="sf"><span class="sf-name">signed_at</span><span class="sf-type">timestamptz</span><span class="sf-desc">Exact timestamp of signing.</span></div>
+  <div class="sf"><span class="sf-name">copy_channel</span><span class="sf-type">enum</span><span class="sf-desc">'email' | 'sms' | 'whatsapp' | 'telegram'. Null if no copy requested.</span></div>
+  <div class="sf"><span class="sf-name">copy_email</span><span class="sf-type">text</span><span class="sf-desc">Customer email. Populated when copy_channel='email'.</span></div>
+  <div class="sf"><span class="sf-name">copy_phone</span><span class="sf-type">text</span><span class="sf-desc">Customer phone/username. Populated when copy_channel is sms/whatsapp/telegram.</span></div>
+  <div class="sf"><span class="sf-name">copy_sent_at</span><span class="sf-type">timestamptz</span><span class="sf-desc">When the copy was delivered. Null = pending or not requested.</span></div>
+  <div class="sf"><span class="sf-name">paper_signature_url</span><span class="sf-type">text</span><span class="sf-desc">S3/R2 URL to photo of the physically signed paper consent form. Used when customer refuses digital signing.</span></div>
+  <div class="sf"><span class="sf-name">worker_id</span><span class="sf-type">uuid</span><span class="sf-desc">FK → workers. Who submitted the completion.</span></div>
+  <div class="sf"><span class="sf-name">created_at</span><span class="sf-type">timestamptz</span><span class="sf-desc">Auto-set. Immutable record.</span></div>
+</div>
+
+<h3>Supplementary tables</h3>
+<table>
+  <thead><tr><th>Table</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>material_entries</code></td><td>task_id, name, qty, unit, unit_price_cents, bill_comment, worker_id, created_at</td></tr>
+    <tr><td><code>task_photos</code></td><td>task_id, s3_key, content_type, file_size_bytes, uploaded_by, created_at</td></tr>
+    <tr><td><code>identity_photos</code></td><td>completion_record_id, s3_key, content_type, uploaded_by, created_at</td></tr>
+    <tr><td><code>projects</code></td><td>installation_id, name, customer_id, color_hex, created_by, created_at, deleted_at</td></tr>
+    <tr><td><code>customers</code></td><td>installation_id, name, contact, email, phone, created_at</td></tr>
+    <tr><td><code>workers</code></td><td>installation_id, user_id, name, role, capacity_hours_per_week, active</td></tr>
+    <tr><td><code>translation_cache</code></td><td>Redis preferred. Fallback table: text_hash (char 16), target_lang (char 2), translated_text, created_at, hit_count</td></tr>
+    <tr><td><code>audit_log</code></td><td>installation_id, user_id, action, resource_type, resource_id, diff_json, ip, user_agent, created_at</td></tr>
+  </tbody>
+</table>
+
+<!-- ── STATE MACHINE ── -->
+<h2 id="state-machine">Task state machine</h2>
+<p>Task status transitions are enforced server-side. Direct status writes via PATCH are rejected — use the dedicated action endpoints.</p>
+
+<div class="sm-states">
+  <div>
+    <div class="sm-state open">open</div>
+    <div class="sm-label">Initial state</div>
+  </div>
+  <div class="sm-arrow">→</div>
+  <div>
+    <div class="sm-state prog">in_progress</div>
+    <div class="sm-label">Timer started</div>
+  </div>
+  <div class="sm-arrow">→</div>
+  <div>
+    <div class="sm-state done">done</div>
+    <div class="sm-label">Completion submitted</div>
+  </div>
+</div>
+
+<table>
+  <thead><tr><th>Transition</th><th>Trigger</th><th>Side effects</th></tr></thead>
+  <tbody>
+    <tr><td><code>open → in_progress</code></td><td>First <code>POST /time-entries</code> with type=work</td><td>Publishes <code>task.updated</code> WS event</td></tr>
+    <tr><td><code>in_progress → open</code></td><td>All time entries for task are deleted (admin only)</td><td>Audit log entry</td></tr>
+    <tr><td><code>in_progress → done</code></td><td><code>POST /tasks/:id/complete</code></td><td>Creates completion_record, publishes <code>task.completed</code>, triggers email copy if requested</td></tr>
+    <tr><td><code>done → in_progress</code></td><td><code>POST /tasks/:id/reopen</code> (planner/manager only)</td><td>Nullifies completion_record, audit log, publishes event</td></tr>
+  </tbody>
+</table>
+
+<div class="callout callout-warn">
+  <div class="ct">⚠ Completion is nearly immutable</div>
+  <p>Once <code>done</code> and a completion record exists with a customer signature, reopening the task does not delete the completion record — it archives it. A new completion record is created on the next completion. This preserves the signed document for legal retention.</p>
+</div>
+
+<!-- ── PERMISSIONS ── -->
+<h2 id="permissions">Permission matrix</h2>
+<table class="perm-table">
+  <thead>
+    <tr><th>Action</th><th>Worker</th><th>Planner</th><th>Manager</th><th>Client</th><th>Finance</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Read own tasks</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+    <tr><td>Read all tasks</td><td class="perm-n">—</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-r">own project</td><td class="perm-y">✓</td></tr>
+    <tr><td>Create task</td><td class="perm-n">—</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+    <tr><td>Edit task</td><td class="perm-r">own only</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+    <tr><td>Complete task</td><td class="perm-r">assigned</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+    <tr><td>Reopen task</td><td class="perm-n">—</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+    <tr><td>Write time entries</td><td class="perm-r">own only</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+    <tr><td>Read all timesheets</td><td class="perm-n">—</td><td class="perm-n">—</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-y">✓</td></tr>
+    <tr><td>Correct time entry</td><td class="perm-n">—</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+    <tr><td>Add materials</td><td class="perm-r">own tasks</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+    <tr><td>View invoice data</td><td class="perm-n">—</td><td class="perm-n">—</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-y">✓</td></tr>
+    <tr><td>Create project</td><td class="perm-n">—</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+    <tr><td>Create customer</td><td class="perm-n">—</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+    <tr><td>View completion cert</td><td class="perm-r">own tasks</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-r">own project</td><td class="perm-y">✓</td></tr>
+    <tr><td>Print / export PDF</td><td class="perm-r">own tasks</td><td class="perm-y">✓</td><td class="perm-y">✓</td><td class="perm-r">own project</td><td class="perm-y">✓</td></tr>
+    <tr><td>Delete (soft)</td><td class="perm-n">—</td><td class="perm-n">—</td><td class="perm-y">✓</td><td class="perm-n">—</td><td class="perm-n">—</td></tr>
+  </tbody>
+</table>
+
+<!-- ── TRANSLATION ── -->
+<h2 id="translation">Translation engine</h2>
+
+<h3>Architecture</h3>
+<p>The prototype calls Anthropic directly from the browser with the API key in the request. <strong>This must become a server-side proxy for production.</strong></p>
+
+<pre><code><span class="hl-cmt">// Frontend calls</span>
+<span class="hl-key">async</span> <span class="hl-key">function</span> <span class="hl-fn">translateText</span>(text, targetLang) {
+  <span class="hl-key">const</span> key = <span class="hl-fn">hashStr</span>(text) + <span class="hl-str">'::'</span> + targetLang;
+  <span class="hl-key">if</span> (TRANS_CACHE[key]) <span class="hl-key">return</span> TRANS_CACHE[key];  <span class="hl-cmt">// local session cache</span>
+
+  <span class="hl-key">const</span> res = <span class="hl-key">await</span> <span class="hl-fn">fetch</span>(<span class="hl-str">'/api/v1/workhub/translate'</span>, {
+    method: <span class="hl-str">'POST'</span>,
+    headers: { <span class="hl-str">'Authorization'</span>: <span class="hl-str">`Bearer </span><span class="hl-str">${jwt}</span><span class="hl-str">`</span> },
+    body: <span class="hl-cls">JSON</span>.stringify({ text, targetLang })
+  });
+  <span class="hl-key">const</span> { translated, cached } = <span class="hl-key">await</span> res.json();
+  TRANS_CACHE[key] = translated;
+  <span class="hl-key">return</span> translated;
+}</code></pre>
+
+<pre><code><span class="hl-cmt">// Server-side translate endpoint (Node.js / Express)</span>
+<span class="hl-fn">router</span>.post(<span class="hl-str">'/translate'</span>, <span class="hl-fn">requireWorkhubAuth</span>, <span class="hl-key">async</span> (req, res) => {
+  <span class="hl-key">const</span> { text, targetLang } = req.body;
+
+  <span class="hl-cmt">// Check Redis first</span>
+  <span class="hl-key">const</span> cacheKey = <span class="hl-str">`wh:trans:</span><span class="hl-str">${hash(text)}</span><span class="hl-str">:</span><span class="hl-str">${targetLang}</span><span class="hl-str">`</span>;
+  <span class="hl-key">const</span> cached = <span class="hl-key">await</span> redis.<span class="hl-fn">get</span>(cacheKey);
+  <span class="hl-key">if</span> (cached) <span class="hl-key">return</span> res.json({ translated: cached, cached: <span class="hl-key">true</span> });
+
+  <span class="hl-cmt">// Proxy to Anthropic</span>
+  <span class="hl-key">const</span> result = <span class="hl-key">await</span> anthropic.messages.<span class="hl-fn">create</span>({
+    model: <span class="hl-str">'claude-sonnet-4-20250514'</span>,
+    max_tokens: <span class="hl-num">400</span>,
+    messages: [{ role: <span class="hl-str">'user'</span>, content: <span class="hl-fn">buildTranslatePrompt</span>(text, targetLang) }]
+  });
+  <span class="hl-key">const</span> translated = result.content[<span class="hl-num">0</span>].text.trim();
+
+  <span class="hl-cmt">// Store in Redis with 30-day TTL</span>
+  <span class="hl-key">await</span> redis.<span class="hl-fn">setex</span>(cacheKey, <span class="hl-num">2592000</span>, translated);
+
+  <span class="hl-cmt">// Broadcast to other connected sessions (optional)</span>
+  <span class="hl-key">await</span> pubsub.<span class="hl-fn">publish</span>(<span class="hl-str">'translation.ready'</span>, { hash: <span class="hl-fn">hash</span>(text), targetLang, translated });
+
+  res.json({ translated, cached: <span class="hl-key">false</span> });
+});</code></pre>
+
+<h3>Caching strategy</h3>
+<ul>
+  <li><strong>L1 — Browser session</strong>: JS object, lives for session duration. Fast, no network.</li>
+  <li><strong>L2 — Redis</strong>: 30-day TTL. Shared across all users and sessions. Hash key = SHA-256 of source text truncated to 16 chars + <code>::</code> + lang code.</li>
+  <li><strong>L3 — PostgreSQL</strong> (optional): Long-term persistent cache for high-frequency translations (task titles that appear 1000x per day). Populated from Redis on first hit above threshold.</li>
+</ul>
+
+<h3>Rate limiting</h3>
+<p>Apply per-installation rate limiting to the <code>/translate</code> and <code>/correct</code> endpoints. Suggested limits: 200 translation calls/min per installation, 50 correction calls/min. Cache hits do not count toward limits.</p>
+
+<!-- ── TIMEKEEPING ── -->
+<h2 id="timekeeping">Timekeeping</h2>
+
+<h3>Local-first timer</h3>
+<p>The timer runs entirely in the browser. No server call is made while the timer is running. Only on Stop does the frontend POST to <code>/time-entries</code>. This means:</p>
+<ul>
+  <li>Timer works with no network connection</li>
+  <li>If the browser crashes, the entry may be lost — mitigate with <code>localStorage</code> heartbeat (see Offline section)</li>
+  <li>Start time is trusted from the client — the server validates that <code>started_at &lt; ended_at</code> and <code>ended_at &lt;= now() + 60s</code></li>
+</ul>
+
+<h3>Timer heartbeat (crash recovery)</h3>
+<pre><code><span class="hl-cmt">// Write to localStorage every 30s while timer is running</span>
+<span class="hl-fn">setInterval</span>(() => {
+  <span class="hl-key">if</span> (TIMER.taskId && TIMER.startTime) {
+    localStorage.<span class="hl-fn">setItem</span>(<span class="hl-str">'wh_timer'</span>, <span class="hl-cls">JSON</span>.<span class="hl-fn">stringify</span>({
+      taskId: TIMER.taskId,
+      startTime: TIMER.startTime.toISOString(),
+      elapsedSec: <span class="hl-fn">getTimerElapsed</span>(TIMER.taskId)
+    }));
+  }
+}, <span class="hl-num">30000</span>);
+
+<span class="hl-cmt">// On app load, check for interrupted session</span>
+<span class="hl-key">const</span> saved = localStorage.<span class="hl-fn">getItem</span>(<span class="hl-str">'wh_timer'</span>);
+<span class="hl-key">if</span> (saved) {
+  <span class="hl-key">const</span> t = <span class="hl-cls">JSON</span>.<span class="hl-fn">parse</span>(saved);
+  <span class="hl-fn">showRecoveryDialog</span>(t); <span class="hl-cmt">// ask: "Continue timer for Task X or discard?"</span>
+}</code></pre>
+
+<h3>Legal retention</h3>
+<p>Time entries must be retained for 2 years (§ 16 ArbZG). Implement this as a database-level constraint: no DELETE on <code>time_entries</code> is allowed — only soft archive via <code>archived_at</code>. The API endpoint <code>DELETE /time-entries/:id</code> should return 405 Method Not Allowed with a message referencing the retention law.</p>
+
+<!-- ── SIGNATURES ── -->
+<h2 id="signatures">Signatures &amp; identity</h2>
+
+<h3>Upload flow</h3>
+<div class="steps">
+  <div class="step"><div class="step-body"><h4>Request presigned URL</h4><p>Frontend calls <code>POST /files/upload-url</code> with <code>{type: 'signature', contentType: 'image/png', taskId}</code>. Server returns <code>{uploadUrl, key, expiresAt}</code>.</p></div></div>
+  <div class="step"><div class="step-body"><h4>Upload directly to S3</h4><p>Frontend PUTs the PNG blob to the presigned URL. No server involvement — the upload goes directly to S3/R2.</p></div></div>
+  <div class="step"><div class="step-body"><h4>Confirm upload</h4><p>Frontend calls <code>POST /files/confirm</code> with <code>{key, taskId, fileType: 'signature'}</code>. Server verifies the object exists in S3, stores the URL in <code>completion_records.signature_url</code>, returns permanent URL.</p></div></div>
+  <div class="step"><div class="step-body"><h4>Reference in completion</h4><p>The completion record stores the S3 key (not base64). All subsequent reads use <code>GET /files/:key</code> which returns a short-lived signed read URL (15-min TTL).</p></div></div>
+</div>
+
+<h3>Paper signature fallback</h3>
+<p>When a customer refuses to sign on screen, the worker prints the consent form (see <code>GET /print/consent/:taskId</code>), the customer signs with a pen, and the worker photographs the signed document. This photo is uploaded to S3 under the <code>paper-signatures/</code> prefix and stored as <code>paper_signature_url</code> in the completion record.</p>
+<p>The paper signature photo has the same legal weight as the digital signature for the purposes of service delivery confirmation under eIDAS Art. 3(10) — it is a reproduction of a handwritten signature with a documented chain of custody (worker photographed it, timestamped, reference number on the printed form).</p>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/files/upload-url</span><span class="endpoint-desc">Use type: 'paper-signature' to get a presigned URL for the paper form photo.</span></div>
+
+<h3>Paper signature fallback</h3>
+<p>When a customer refuses to sign on screen, the worker prints the consent form (see <code>GET /print/consent/:taskId</code>), the customer signs with a pen, and the worker photographs the signed document. This photo is uploaded to S3 under the <code>paper-signatures/</code> prefix and stored as <code>paper_signature_url</code> in the completion record.</p>
+<p>The paper signature photo has the same legal weight as the digital signature for the purposes of service delivery confirmation under eIDAS Art. 3(10) — it is a reproduction of a handwritten signature with a documented chain of custody (worker photographed it, timestamped, reference number on the printed form).</p>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/files/upload-url</span><span class="endpoint-desc">Use type: 'paper-signature' to get a presigned URL for the paper form photo.</span></div>
+
+<h3>Immutability</h3>
+<p>Signatures are immutable once uploaded. The S3 bucket should have <strong>Object Lock</strong> enabled for signature and identity-photo prefixes. This prevents accidental or malicious deletion and supports the legal retention requirements under eIDAS.</p>
+
+<h3>Data protection</h3>
+<p>Signature images and identity photos contain personal biometric data (GDPR Art. 9 special category for biometric data used to uniquely identify a natural person). Mitigations:</p>
+<ul>
+  <li>Store under a separate S3 prefix with restricted IAM policy</li>
+  <li>Access only via short-lived signed URLs — never direct public URLs</li>
+  <li>Log all access in <code>audit_log</code></li>
+  <li>Deletion path: on GDPR erasure request, replace with a tombstone file and update <code>signature_url</code> to null after retention period expires</li>
+</ul>
+
+<!-- ── FILES ── -->
+<h2 id="files">File storage</h2>
+<table>
+  <thead><tr><th>File type</th><th>S3 prefix</th><th>Max size</th><th>Retention</th><th>Access</th></tr></thead>
+  <tbody>
+    <tr><td>Task photo</td><td><code>photos/{instId}/{taskId}/</code></td><td>10 MB</td><td>10 years</td><td>Signed URL, 1h TTL</td></tr>
+    <tr><td>Signature</td><td><code>signatures/{instId}/{completionId}/</code></td><td>500 KB</td><td>10 years, Object Lock</td><td>Signed URL, 15min TTL</td></tr>
+    <tr><td>Identity photo</td><td><code>idphotos/{instId}/{completionId}/</code></td><td>10 MB</td><td>10 years, Object Lock</td><td>Signed URL, 15min TTL</td></tr>
+    <tr><td>Generated PDF</td><td><code>pdfs/{instId}/{type}/{date}/</code></td><td>50 MB</td><td>10 years</td><td>Signed URL, 24h TTL</td></tr>
+    <tr><td>Paper sig photo</td><td><code>paper-signatures/{instId}/{completionId}/</code></td><td>10 MB</td><td>10 years, Object Lock</td><td>Signed URL, 15min TTL</td></tr>
+  </tbody>
+</table>
+
+<!-- ── NOTIFICATIONS ── -->
+<h2 id="notifications">Notifications</h2>
+<p>Inbox messages are shown in the mobile Inbox tab. They are created server-side on these triggers:</p>
+<table>
+  <thead><tr><th>Trigger</th><th>Recipient</th><th>Message</th></tr></thead>
+  <tbody>
+    <tr><td>Task assigned</td><td>Assigned worker</td><td>"New task: [title]" from planner name</td></tr>
+    <tr><td>Task overdue</td><td>Assigned worker + planner</td><td>"[title] is overdue"</td></tr>
+    <tr><td>Task completed</td><td>Planner, manager</td><td>"[worker] completed [title]"</td></tr>
+    <tr><td>Timesheet signed</td><td>Manager</td><td>"[worker] signed off timesheet for [date]"</td></tr>
+    <tr><td>Material cost threshold</td><td>Finance</td><td>"Materials on [project] exceed €[amount]"</td></tr>
+  </tbody>
+</table>
+<p>Deliver notifications via WebSocket (<code>inbox.message</code> event) for connected sessions, and via push notification (FCM/APNs) for the native mobile app when it is built.</p>
+
+<!-- ── EMAIL ── -->
+<h2 id="email">Multi-channel delivery — Email, SMS, WhatsApp, Telegram</h2>
+<p>When the customer requests a copy at sign-off, they choose their preferred channel. The channel, contact address, and sent status are stored in <code>completion_records</code>. A background job handles delivery for all channels.</p>
+
+<h3>Channel implementations</h3>
+<table>
+  <thead><tr><th>Channel</th><th>API</th><th>Payload</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Email</td><td>AWS SES / Postmark</td><td>HTML email + PDF attachment</td><td>Full completion certificate PDF attached</td></tr>
+    <tr><td>SMS</td><td>Twilio / AWS SNS</td><td>Text message + short URL</td><td>PDF stored at signed URL, link in SMS. 160 char limit.</td></tr>
+    <tr><td>WhatsApp</td><td>WhatsApp Business API (Meta)</td><td>Template message + document</td><td>Requires approved message template. PDF sent as document.</td></tr>
+    <tr><td>Telegram</td><td>Telegram Bot API</td><td>Message + PDF document</td><td>Requires customer to have started the bot or provided @username.</td></tr>
+  </tbody>
+</table>
+
+<pre><code><span class="hl-cmt">// Background job — runs every 5 minutes</span>
+<span class="hl-key">async</span> <span class="hl-key">function</span> <span class="hl-fn">sendPendingEmailCopies</span>() {
+  <span class="hl-key">const</span> pending = <span class="hl-key">await</span> db.<span class="hl-fn">query</span>(<span class="hl-str">`
+    SELECT cr.*, t.title, t.project_id, p.name AS project_name,
+           p.customer_id, c.name AS customer_name
+    FROM completion_records cr
+    JOIN tasks t ON t.id = cr.task_id
+    JOIN projects p ON p.id = t.project_id
+    JOIN customers c ON c.id = p.customer_id
+    WHERE cr.copy_email IS NOT NULL
+      AND cr.copy_sent_at IS NULL
+    LIMIT 50
+  `</span>);
+
+  <span class="hl-key">for</span> (<span class="hl-key">const</span> record <span class="hl-key">of</span> pending.rows) {
+    <span class="hl-key">const</span> pdfUrl = <span class="hl-key">await</span> <span class="hl-fn">generateCompletionPDF</span>(record);
+    <span class="hl-key">await</span> email.<span class="hl-fn">send</span>({
+      to: record.copy_email,
+      subject: <span class="hl-str">`Work order completion — </span><span class="hl-str">${record.title}</span><span class="hl-str">`</span>,
+      template: <span class="hl-str">'completion-copy'</span>,
+      data: { record, pdfUrl }
+    });
+    <span class="hl-key">await</span> db.<span class="hl-fn">query</span>(
+      <span class="hl-str">'UPDATE completion_records SET copy_sent_at = NOW() WHERE id = $1'</span>,
+      [record.id]
+    );
+  }
+}</code></pre>
+
+<p>The email body should include: task title, completion note, materials summary, and an attached PDF of the completion certificate generated in the export language of the installation (default DE).</p>
+
+<!-- ── SAAS INTEGRATION ── -->
+<h2 id="saas-integration">SCLAN SaaS integration</h2>
+
+<h3>Existing modules that WorkHub reads from</h3>
+<table>
+  <thead><tr><th>Module</th><th>Data consumed</th><th>Direction</th></tr></thead>
+  <tbody>
+    <tr><td>PFE</td><td>Domain Node IDs, segment names, module inventory, commissioning steps, fault alerts, avatar assignments, Live Monitor presence</td><td>Read + Write</td></tr>
+    <tr><td>PC-13 Quota Anomaly Detection</td><td>Fault alerts → auto task creation, fault resolution confirmation</td><td>Read + Write</td></tr>
+    <tr><td>M-02 Energy Intelligence</td><td>Installation metadata (name, address, timezone)</td><td>Read only</td></tr>
+    <tr><td>PFE</td><td>Domain Node IDs, segment names (for task descriptions)</td><td>Read only</td></tr>
+    <tr><td>User management</td><td>Workers = users with workhub role claim</td><td>Read only</td></tr>
+    <tr><td>Installation registry</td><td>installation_id scopes all WorkHub data</td><td>Read only</td></tr>
+  </tbody>
+</table>
+
+<h3>Existing modules that WorkHub writes to</h3>
+<table>
+  <thead><tr><th>Module</th><th>Data written</th><th>Trigger</th></tr></thead>
+  <tbody>
+    <tr><td>Audit log</td><td>All task state changes, time entry corrections, completion records</td><td>Every write operation</td></tr>
+    <tr><td>Billing / M-09</td><td>Completed task + material line items for invoice generation</td><td>Task completion</td></tr>
+    <tr><td>Notification service</td><td>Inbox messages (see Notifications section)</td><td>Trigger events</td></tr>
+  </tbody>
+</table>
+
+<h3>Installation scoping</h3>
+<p>Every WorkHub record belongs to an installation. This is enforced at the database level via <code>installation_id</code> foreign keys and at the API level via JWT claim. No cross-installation data access is possible.</p>
+
+<!-- ── MIGRATION ── -->
+<h2 id="pfe-integration">PFE integration</h2>
+
+<p>PFE (SCLAN Programming and Field Environment) is the live editor and viewer for SCLAN installations. It is not a data store — it reads and edits the state of hardware modules (Domain Nodes, SCLAN devices) directly over the bus, and surfaces SaaS module state for human inspection. WorkHub does not go through PFE — it communicates with modules directly via API and webhooks. PFE is a parallel tool that humans use alongside WorkHub.</p>
+
+<div class="callout callout-purple">
+  <div class="ct">🎛 What PFE actually is</div>
+  <p>PFE is a <strong>live editor and viewer</strong> — not a backbone, not a data store. When a technician opens PFE for an installation, they see the live state of every Domain Node, every module, every segment, every avatar — read directly from the hardware over the bus. When they edit a scene, that change is written directly to the module's own SME (State Machine Engine) stored in the module's firmware. PFE is the tool through which this editing happens. The module owns its state — PFE is just the interface.</p>
+  <p style="margin-top:8px;">WorkHub tasks that reference PFE objects (e.g. <code>pfe_ref_type: 'fault'</code>) are triggering WorkHub to call the relevant module's API directly — the PFE reference is a semantic label identifying which hardware/software module object the task relates to.</p>
+</div>
+
+<h3>Integration directions</h3>
+
+<div class="arch-box">
+  <div class="arch-layer" style="border-color:#8B5CF6;">
+    <div class="arch-layer-title" style="color:#8B5CF6;">PFE → WorkHub (reads)</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">Installation topology</span>
+      <span class="arch-chip">Domain Node inventory</span>
+      <span class="arch-chip">Segment names &amp; IDs</span>
+      <span class="arch-chip">Module PnP discoveries</span>
+      <span class="arch-chip">Fault alerts (PC-13)</span>
+      <span class="arch-chip">Client details</span>
+      <span class="arch-chip">Commissioning checklists</span>
+    </div>
+  </div>
+  <div class="arch-layer" style="border-color:#F59E0B;">
+    <div class="arch-layer-title" style="color:#F59E0B;">WorkHub → PFE (writes)</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">Task completion → commissioning step</span>
+      <span class="arch-chip">Worker on-site status</span>
+      <span class="arch-chip">Hardware inventory updates</span>
+      <span class="arch-chip">Field notes → installation docs</span>
+      <span class="arch-chip">Time entries → project timeline</span>
+      <span class="arch-chip">Materials → hardware log</span>
+    </div>
+  </div>
+</div>
+
+<h3>PFE → WorkHub: data consumed</h3>
+
+<table>
+  <thead><tr><th>PFE object</th><th>WorkHub usage</th><th>API source</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Installation</strong></td>
+      <td>Top-level scope for all WorkHub data. Installation name/address pre-fills customer record.</td>
+      <td><code>GET /pfe/installation/:id</code></td>
+    </tr>
+    <tr>
+      <td><strong>Domain Node</strong></td>
+      <td>Node ID, location (building/floor/zone), firmware version, fault history. Used in task descriptions when a technician must service a specific node.</td>
+      <td><code>GET /pfe/nodes</code></td>
+    </tr>
+    <tr>
+      <td><strong>Bus segment</strong></td>
+      <td>Segment name, parent node, cable length, connected modules. A task like "Commission Zone B lighting" links directly to a segment ID.</td>
+      <td><code>GET /pfe/segments</code></td>
+    </tr>
+    <tr>
+      <td><strong>Module (PnP discovery)</strong></td>
+      <td>When PFE discovers a new module via Plug &amp; Play (BOPT protocol), it can auto-create a WorkHub task: "Configure module 0x0042 — assign contexts and filter matrix."</td>
+      <td>Webhook push from PFE on PnP event</td>
+    </tr>
+    <tr>
+      <td><strong>PC-13 fault alert</strong></td>
+      <td>Quota anomaly detection or overcurrent event on a segment triggers a WorkHub task with full fault context: segment ID, fault type, timestamp, historical fault rate.</td>
+      <td>Webhook push from PC-13</td>
+    </tr>
+    <tr>
+      <td><strong>Commissioning checklist</strong></td>
+      <td>PFE maintains a commissioning state machine per installation. Each checklist item (cable survey done, Domain Nodes mounted, bus verified, scenes programmed, client sign-off) can be a WorkHub task. Task completion advances the PFE commissioning step.</td>
+      <td><code>GET /pfe/commissioning/:installationId</code></td>
+    </tr>
+    <tr>
+      <td><strong>Avatar assignment</strong></td>
+      <td>When PFE assigns an avatar (e.g. Night Watchman, Home Nanny) to a Domain Node, it may generate a WorkHub configuration task: "Assign Night Watchman avatar to Node 0x0014 — verify escalation chain."</td>
+      <td>Webhook push on avatar assignment</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>WorkHub → PFE: data written</h3>
+
+<table>
+  <thead><tr><th>WorkHub event</th><th>PFE effect</th><th>API target</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Task completed (commissioning type)</td>
+      <td>Advances PFE commissioning checklist step. PFE Live Monitor shows the step as done with timestamp and worker name.</td>
+      <td><code>POST /pfe/commissioning/:stepId/complete</code></td>
+    </tr>
+    <tr>
+      <td>Timer started on site</td>
+      <td>PFE Live Monitor shows worker as on-site for the installation. Useful for the manager to see in real time that work is in progress.</td>
+      <td><code>PATCH /pfe/installation/:id/presence</code></td>
+    </tr>
+    <tr>
+      <td>Timer stopped / task done</td>
+      <td>Removes worker from on-site presence indicator.</td>
+      <td><code>DELETE /pfe/installation/:id/presence/:workerId</code></td>
+    </tr>
+    <tr>
+      <td>Material logged: Domain Node, cable, module</td>
+      <td>Updates PFE hardware inventory for the installation. Node serial numbers and cable lengths stored against segment IDs.</td>
+      <td><code>POST /pfe/inventory/:installationId</code></td>
+    </tr>
+    <tr>
+      <td>Completion note submitted</td>
+      <td>Field note appended to PFE installation documentation log. Visible to future technicians who open PFE for the same installation.</td>
+      <td><code>POST /pfe/installation/:id/notes</code></td>
+    </tr>
+    <tr>
+      <td>Fault task completed (PC-13 triggered)</td>
+      <td>PC-13 anomaly record closed. Domain Node ML fault counter updated with resolution. Bus speed and termination parameters optionally updated if the fix involved bus configuration changes.</td>
+      <td><code>PATCH /pfe/faults/:faultId/resolve</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Task types linked to PFE objects</h3>
+
+<p>WorkHub tasks have an optional <code>pfe_ref</code> field that links the task to a specific PFE object. This enables the two-way sync described above.</p>
+
+<div class="schema-block">
+  <div class="sf"><span class="sf-name">pfe_ref_type</span><span class="sf-type">enum</span><span class="sf-desc">'node' | 'segment' | 'module' | 'commissioning_step' | 'fault' | 'avatar' | null</span></div>
+  <div class="sf"><span class="sf-name">pfe_ref_id</span><span class="sf-type">text</span><span class="sf-desc">ID of the PFE object (node ID, segment ID, step ID, fault ID, etc.)</span></div>
+  <div class="sf"><span class="sf-name">pfe_installation_id</span><span class="sf-type">uuid</span><span class="sf-desc">Must match the WorkHub installation_id. Validated on write.</span></div>
+  <div class="sf"><span class="sf-name">pfe_completion_action</span><span class="sf-type">jsonb</span><span class="sf-desc">What to do in PFE on task completion. E.g. <code>{"action":"advance_step","stepId":"s3"}</code></span></div>
+</div>
+
+<h3>Webhook events from PFE</h3>
+
+<p>PFE pushes events to WorkHub via webhooks. The WorkHub backend subscribes to the PFE event bus for the following event types:</p>
+
+<pre><code><span class="hl-cmt">// PFE webhook payload structure</span>
+{
+  <span class="hl-str">"event"</span>: <span class="hl-str">"pfe.module.discovered"</span>,
+  <span class="hl-str">"installationId"</span>: <span class="hl-str">"inst_abc123"</span>,
+  <span class="hl-str">"timestamp"</span>: <span class="hl-str">"2026-05-24T14:30:00Z"</span>,
+  <span class="hl-str">"data"</span>: {
+    <span class="hl-str">"moduleId"</span>: <span class="hl-str">"0x0042"</span>,
+    <span class="hl-str">"nodeId"</span>: <span class="hl-str">"DN-14"</span>,
+    <span class="hl-str">"segmentId"</span>: <span class="hl-str">"seg_b2"</span>,
+    <span class="hl-str">"moduleType"</span>: <span class="hl-str">"dimmer"</span>,
+    <span class="hl-str">"firmwareVersion"</span>: <span class="hl-str">"2.1.4"</span>
+  }
+}</code></pre>
+
+<table>
+  <thead><tr><th>PFE event</th><th>WorkHub action</th><th>Auto-creates task?</th></tr></thead>
+  <tbody>
+    <tr><td><code>pfe.module.discovered</code></td><td>Create task: "Configure [moduleType] module [moduleId] on [segmentName]"</td><td>✓ if auto-task enabled in installation settings</td></tr>
+    <tr><td><code>pfe.fault.detected</code></td><td>Create task: "Investigate fault on segment [segId] — [faultType]" with PC-13 context</td><td>✓ always (safety-critical)</td></tr>
+    <tr><td><code>pfe.commissioning.step_ready</code></td><td>Create task linked to that commissioning step</td><td>✓ if in active commissioning project</td></tr>
+    <tr><td><code>pfe.avatar.assigned</code></td><td>Create task: "Verify [avatarName] configuration on [nodeName]"</td><td>✓ configurable</td></tr>
+    <tr><td><code>pfe.node.offline</code></td><td>Create urgent task: "Domain Node [nodeId] offline — investigate"</td><td>✓ always (high priority)</td></tr>
+    <tr><td><code>pfe.bopt.degraded</code></td><td>Create task: "Bus speed degraded on [segmentId] — BOPT re-optimisation required"</td><td>✓ always</td></tr>
+  </tbody>
+</table>
+
+<h3>PFE Live Monitor — worker presence</h3>
+
+<p>The PFE Live Monitor view shows the real-time state of a SCLAN installation — bus speeds, energy readings, active avatars, fault states. When WorkHub timer events are pushed to PFE, the Live Monitor adds a worker presence layer:</p>
+
+<ul>
+  <li>When a worker starts a timer → their name and task appear on the relevant segment/node in the Live Monitor</li>
+  <li>While timer is running → a live elapsed time counter shows next to their name</li>
+  <li>When timer stops → presence indicator clears</li>
+  <li>Multiple workers on same installation → all shown simultaneously</li>
+</ul>
+
+<p>This allows the manager or planner watching PFE Live Monitor to see exactly which technician is working on which part of the bus, in real time, without switching to WorkHub.</p>
+
+<h3>Commissioning workflow — end-to-end</h3>
+
+<p>The most important PFE–WorkHub interaction is the commissioning workflow. When a new SCLAN installation is being set up, PFE maintains a commissioning state machine. WorkHub tasks map directly to commissioning steps:</p>
+
+<div class="steps">
+  <div class="step"><div class="step-body">
+    <h4>PFE creates commissioning project</h4>
+    <p>Planner opens PFE for new installation. Creates commissioning project with standard steps: cable survey, Domain Node mounting, bus termination, PnP discovery, context assignment, scene programming, energy quota setup, client walkthrough, sign-off.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>PFE pushes commissioning tasks to WorkHub</h4>
+    <p>Each commissioning step becomes a WorkHub task via <code>pfe.commissioning.step_ready</code> webhook. Tasks appear in the planner's WorkHub with <code>pfe_ref_type: 'commissioning_step'</code>. Planner assigns to field technicians.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Technician works on site</h4>
+    <p>Worker sees task in WorkHub Today list. Starts timer. Completes physical work. Fills in completion note (AI-corrected). Logs materials (cable lengths, hardware serial numbers). Takes photos.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Task completion advances PFE step</h4>
+    <p>Worker submits completion. WorkHub calls <code>POST /pfe/commissioning/:stepId/complete</code> with the completion note and worker ID. PFE advances its commissioning state machine. The next step becomes available.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Materials update PFE inventory</h4>
+    <p>Any hardware materials logged (Domain Nodes, cables, modules) are pushed to <code>POST /pfe/inventory/:installationId</code>. PFE now knows exactly what hardware is installed where, with the installation date from the WorkHub time entry.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Client sign-off in WorkHub closes PFE commissioning</h4>
+    <p>When the final commissioning task (client walkthrough + sign-off) is completed in WorkHub with a customer signature, WorkHub calls <code>POST /pfe/commissioning/:id/close</code> with the signature reference. PFE marks the installation as commissioned. The completion certificate becomes the handover document.</p>
+  </div></div>
+</div>
+
+<h3>Fault resolution workflow</h3>
+
+<p>PC-13 (Quota Anomaly Detection) and the Domain Node ML fault detection system push fault alerts to WorkHub when they detect anomalies:</p>
+
+<pre><code><span class="hl-cmt">// PC-13 fault alert → WorkHub task auto-created</span>
+POST /workhub/tasks  {
+  <span class="hl-str">"title"</span>: <span class="hl-str">"Overcurrent fault — Segment 3 Zone B (Node DN-07)"</span>,
+  <span class="hl-str">"priority"</span>: <span class="hl-str">"high"</span>,
+  <span class="hl-str">"pfe_ref_type"</span>: <span class="hl-str">"fault"</span>,
+  <span class="hl-str">"pfe_ref_id"</span>: <span class="hl-str">"fault_9f3a"</span>,
+  <span class="hl-str">"description"</span>: <span class="hl-str">"Current spike 4.2A at 14:23:07. Segment isolated by Domain Node fault isolation algorithm. Historical fault rate at V3 speed: 0.043/h (elevated). Bus speed reverted to V1."</span>,
+  <span class="hl-str">"pfe_completion_action"</span>: {
+    <span class="hl-str">"action"</span>: <span class="hl-str">"resolve_fault"</span>,
+    <span class="hl-str">"faultId"</span>: <span class="hl-str">"fault_9f3a"</span>,
+    <span class="hl-str">"nodeId"</span>: <span class="hl-str">"DN-07"</span>,
+    <span class="hl-str">"segmentId"</span>: <span class="hl-str">"seg_3b"</span>
+  }
+}</code></pre>
+
+<p>When the technician completes the fault task in WorkHub, the completion flow additionally:</p>
+<ol>
+  <li>Calls <code>PATCH /pfe/faults/:id/resolve</code> — closes the fault record in PC-13</li>
+  <li>Updates the Domain Node ML fault counter (<code>errors_at_speed[V3]</code>) with the resolution context</li>
+  <li>If the fix involved cable replacement or segment reconfiguration — optionally triggers BOPT re-optimisation via <code>POST /pfe/bopt/:segmentId/reoptimise</code></li>
+</ol>
+
+<h3>API endpoints — PFE bridge</h3>
+
+<p>These endpoints are on the PFE side, called by WorkHub backend:</p>
+
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/pfe/installation/:id</span><span class="endpoint-desc">Installation metadata: name, address, timezone, topology summary, commissioning status.</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/pfe/nodes?installation=:id</span><span class="endpoint-desc">All Domain Nodes: ID, location, firmware, fault history, active avatar, bus speed.</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/pfe/segments?node=:id</span><span class="endpoint-desc">Bus segments for a node: ID, name, length, connected modules, current fault state.</span></div>
+<div class="endpoint"><span class="method m-get">GET</span><span class="endpoint-path">/pfe/commissioning/:installationId</span><span class="endpoint-desc">Commissioning state machine: all steps, status, dependencies, assigned worker IDs.</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/pfe/commissioning/:stepId/complete</span><span class="endpoint-desc">Mark commissioning step done. Body: workerId, completionNote, timestamp, workhubTaskId.</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/pfe/commissioning/:id/close</span><span class="endpoint-desc">Close commissioning project. Body: signatureRef, workhubCompletionId, clientName.</span></div>
+<div class="endpoint"><span class="method m-patch">PATCH</span><span class="endpoint-path">/pfe/installation/:id/presence</span><span class="endpoint-desc">Set worker on-site. Body: workerId, workerName, taskId, taskTitle, startedAt.</span></div>
+<div class="endpoint"><span class="method m-delete">DELETE</span><span class="endpoint-path">/pfe/installation/:id/presence/:workerId</span><span class="endpoint-desc">Remove worker on-site indicator (on timer stop or session end).</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/pfe/inventory/:installationId</span><span class="endpoint-desc">Add/update hardware inventory entry. Body: itemType, quantity, serialNumbers[], segmentId, workhubTaskId.</span></div>
+<div class="endpoint"><span class="method m-post">POST</span><span class="endpoint-path">/pfe/installation/:id/notes</span><span class="endpoint-desc">Append field note to installation documentation. Body: note, workerId, timestamp, workhubTaskId.</span></div>
+<div class="endpoint"><span class="method m-patch">PATCH</span><span class="endpoint-path">/pfe/faults/:faultId/resolve</span><span class="endpoint-desc">Close a PC-13 fault alert. Body: resolution, workerId, workhubCompletionId.</span></div>
+
+<h3>WorkHub task creation from PFE — implementation</h3>
+
+<pre><code><span class="hl-cmt">// PFE webhook handler in WorkHub backend</span>
+<span class="hl-fn">router</span>.post(<span class="hl-str">'/webhooks/pfe'</span>, <span class="hl-fn">verifyPfeSignature</span>, <span class="hl-key">async</span> (req, res) => {
+  <span class="hl-key">const</span> { event, installationId, data } = req.body;
+
+  <span class="hl-key">switch</span> (event) {
+
+    <span class="hl-key">case</span> <span class="hl-str">'pfe.module.discovered'</span>: {
+      <span class="hl-key">const</span> settings = <span class="hl-key">await</span> <span class="hl-fn">getInstallationSettings</span>(installationId);
+      <span class="hl-key">if</span> (!settings.autoCreateTasksOnPnP) <span class="hl-key">break</span>;
+      <span class="hl-key">await</span> <span class="hl-fn">createTask</span>({
+        installationId,
+        title: <span class="hl-str">`Configure </span><span class="hl-str">${data.moduleType}</span><span class="hl-str"> module </span><span class="hl-str">${data.moduleId}</span><span class="hl-str"> on segment </span><span class="hl-str">${data.segmentId}</span><span class="hl-str">`</span>,
+        description: <span class="hl-str">`Module discovered via PnP on Node </span><span class="hl-str">${data.nodeId}</span><span class="hl-str">. Assign contexts, configure filter matrix, verify in PFE scene editor. Firmware: </span><span class="hl-str">${data.firmwareVersion}</span><span class="hl-str">.`</span>,
+        priority: <span class="hl-str">'medium'</span>,
+        pfe_ref_type: <span class="hl-str">'module'</span>,
+        pfe_ref_id: data.moduleId,
+        pfe_installation_id: installationId,
+        pfe_completion_action: {
+          action: <span class="hl-str">'mark_module_configured'</span>,
+          moduleId: data.moduleId,
+          nodeId: data.nodeId
+        }
+      });
+      <span class="hl-key">break</span>;
+    }
+
+    <span class="hl-key">case</span> <span class="hl-str">'pfe.fault.detected'</span>: {
+      <span class="hl-cmt">// Always create — safety critical</span>
+      <span class="hl-key">await</span> <span class="hl-fn">createTask</span>({
+        installationId,
+        title: <span class="hl-str">`Fault: </span><span class="hl-str">${data.faultType}</span><span class="hl-str"> on </span><span class="hl-str">${data.segmentName}</span><span class="hl-str"> (Node </span><span class="hl-str">${data.nodeId}</span><span class="hl-str">)`</span>,
+        description: <span class="hl-fn">buildFaultDescription</span>(data),
+        priority: <span class="hl-str">'high'</span>,
+        pfe_ref_type: <span class="hl-str">'fault'</span>,
+        pfe_ref_id: data.faultId,
+        pfe_installation_id: installationId,
+        pfe_completion_action: {
+          action: <span class="hl-str">'resolve_fault'</span>,
+          faultId: data.faultId,
+          nodeId: data.nodeId,
+          segmentId: data.segmentId
+        }
+      });
+      <span class="hl-cmt">// Also push to worker inbox immediately</span>
+      <span class="hl-key">await</span> <span class="hl-fn">notifyAssignedWorker</span>(installationId, <span class="hl-str">'Urgent fault alert'</span>);
+      <span class="hl-key">break</span>;
+    }
+
+    <span class="hl-key">case</span> <span class="hl-str">'pfe.node.offline'</span>: {
+      <span class="hl-key">await</span> <span class="hl-fn">createTask</span>({
+        installationId,
+        title: <span class="hl-str">`Domain Node </span><span class="hl-str">${data.nodeId}</span><span class="hl-str"> offline — investigate`</span>,
+        priority: <span class="hl-str">'high'</span>,
+        pfe_ref_type: <span class="hl-str">'node'</span>,
+        pfe_ref_id: data.nodeId,
+        pfe_installation_id: installationId
+      });
+      <span class="hl-key">break</span>;
+    }
+  }
+  res.sendStatus(<span class="hl-num">200</span>);
+});</code></pre>
+
+<h3>Security — PFE bridge</h3>
+<ul>
+  <li>All PFE webhook calls are signed with HMAC-SHA256 using a shared secret per installation. Verify the <code>X-PFE-Signature</code> header before processing.</li>
+  <li>All WorkHub → PFE API calls use a service account JWT scoped to the installation, not user JWTs.</li>
+  <li>PFE bridge calls are rate-limited separately from user API calls. Default: 1000 events/hour per installation.</li>
+  <li>PFE bridge is disabled if the installation has no active WorkHub subscription — PFE events are queued for 24h then dropped.</li>
+</ul>
+
+<div class="callout callout-info">
+  <div class="ct">📋 Implementation priority</div>
+  <p>For the initial WorkHub production release, implement PFE integration in this order:</p>
+  <ol style="margin:8px 0 0;padding-left:18px;">
+    <li style="margin-bottom:4px;"><strong>Read installation + node/segment names</strong> — populates task descriptions with real location context</li>
+    <li style="margin-bottom:4px;"><strong>Fault webhook → auto task creation</strong> — highest operational value, safety-critical</li>
+    <li style="margin-bottom:4px;"><strong>Timer → worker presence in Live Monitor</strong> — real-time visibility for managers</li>
+    <li style="margin-bottom:4px;"><strong>Commissioning step sync</strong> — needed for new installations</li>
+    <li style="margin-bottom:4px;"><strong>Materials → inventory</strong> — hardware tracking</li>
+    <li><strong>Field notes → installation docs</strong> — documentation quality</li>
+  </ol>
+</div>
+
+<h2 id="migration">Frontend migration from prototype</h2>
+
+<p>The prototype (<code>WorkHub_Application.html</code>) is a single HTML file with all logic in vanilla JS. Migration to the production SaaS frontend should be incremental:</p>
+
+<div class="steps">
+  <div class="step"><div class="step-body">
+    <h4>Extract and componentise</h4>
+    <p>Extract each render function (<code>taskCard()</code>, <code>renderMobToday()</code>, etc.) into React components. The HTML structure is clean — each function returns a template literal that maps 1:1 to JSX.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Replace in-memory data with React Query</h4>
+    <p>Replace <code>const TASKS = [...]</code> with <code>useQuery(['tasks'], fetchTasks)</code>. The mutation pattern for timer stop, task completion, and new task creation maps cleanly to <code>useMutation</code>.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Wire WebSocket</h4>
+    <p>Add a <code>useWorkhubSocket()</code> hook that opens the WS connection and calls React Query's <code>queryClient.invalidateQueries()</code> on relevant events. This replaces the manual <code>renderMobToday()</code> calls.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Migrate translation engine</h4>
+    <p>Replace the <code>translateText()</code> function's <code>fetch</code> call from the Anthropic endpoint to <code>/api/v1/workhub/translate</code>. The cache and deduplication logic is identical — only the endpoint URL changes.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Migrate file uploads</h4>
+    <p>Replace base64 storage in <code>_photos</code> and <code>_sigData</code> with the presigned URL upload flow. The canvas <code>toDataURL()</code> call becomes <code>toBlob()</code> → PUT to presigned URL → confirm.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Migrate print/PDF</h4>
+    <p>Either keep the browser <code>window.print()</code> approach (simplest) or replace with server-side PDF generation via <code>GET /print/...</code> endpoints. Server-side is preferred for consistent output and email attachment support.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Port test avatar</h4>
+    <p>The 35 browser tests in the test avatar can be ported to Playwright or Cypress. The test logic is nearly identical — replace DOM queries with Playwright selectors. Keep the in-app test avatar for field debugging.</p>
+  </div></div>
+</div>
+
+<div class="callout callout-success">
+  <div class="ct">✓ What you get for free from the prototype</div>
+  <p>The prototype already contains: complete UI components, all CSS variables and design tokens, the print stylesheet, tooltip system, language switching logic, AI correction flow with review panel, signature canvas (touch + mouse), identity photo upload, capacity calculation algorithm, timer logic (start/stop/break/recover), and 35 passing browser tests. None of this needs to be redesigned — only the data layer needs to be replaced.</p>
+</div>
+
+<!-- ── OFFLINE ── -->
+<h2 id="offline">Offline &amp; sync</h2>
+
+<p>Field workers often have poor connectivity on site. WorkHub must handle offline gracefully:</p>
+
+<table>
+  <thead><tr><th>Operation</th><th>Offline behaviour</th><th>Sync on reconnect</th></tr></thead>
+  <tbody>
+    <tr><td>Start timer</td><td>Works fully — timer is local state</td><td>N/A</td></tr>
+    <tr><td>Stop timer</td><td>Entry stored in IndexedDB offline queue</td><td>POST /time-entries when online</td></tr>
+    <tr><td>Add material</td><td>Stored in IndexedDB</td><td>POST /material-entries when online</td></tr>
+    <tr><td>Submit completion</td><td>Stored in IndexedDB. File uploads queued.</td><td>POST /tasks/:id/complete, then file uploads</td></tr>
+    <tr><td>Read tasks</td><td>Served from React Query cache (stale-while-revalidate)</td><td>Revalidate on focus</td></tr>
+    <tr><td>Translation</td><td>Returns original text if offline, retries when online</td><td>Auto-retried by React Query</td></tr>
+  </tbody>
+</table>
+
+<h3>Conflict resolution</h3>
+<p>If a task is reassigned while a worker is offline with it in their today list: on reconnect, the task detail shows a banner: <em>"This task was reassigned while you were offline."</em> Any time entries the worker logged are preserved — they are valid regardless of assignee change.</p>
+
+<!-- ── TESTING ── -->
+<h2 id="testing">Testing strategy</h2>
+
+<h3>Three test layers</h3>
+<table>
+  <thead><tr><th>Layer</th><th>Tool</th><th>What it covers</th><th>When to run</th></tr></thead>
+  <tbody>
+    <tr><td>Static syntax</td><td><code>node test_workhub.js</code></td><td>JS syntax, data declarations, function presence, translation system</td><td>Every change, pre-commit</td></tr>
+    <tr><td>Browser integration</td><td>In-app test avatar (⚡ TEST)</td><td>Full user flow in real DOM — timer, reports, signature, language, capacity, on-site</td><td>Every change, pre-deploy</td></tr>
+    <tr><td>E2E</td><td>Playwright</td><td>Multi-user flows — planner assigns, worker completes, manager sees update</td><td>Pre-release, CI pipeline</td></tr>
+  </tbody>
+</table>
+
+<h3>Key E2E scenarios to implement</h3>
+<ul>
+  <li>Worker starts timer → goes offline → reconnects → entry syncs → correct duration stored</li>
+  <li>Planner creates task in German → Polish worker sees it in Polish → completes in Polish → German planner reads completion note in German</li>
+  <li>Worker submits broken German → AI correction shown → worker accepts → original preserved → finance sees corrected note in invoice</li>
+  <li>Customer signs → email copy requested → background job sends → email contains PDF with signature</li>
+  <li>Two workers assigned to same client → both see on-site section → both start timers → entries recorded independently</li>
+</ul>
+
+<!-- ── ERROR CODES ── -->
+<h2 id="error-codes">Error codes</h2>
+<table>
+  <thead><tr><th>Code</th><th>HTTP</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>TASK_NOT_FOUND</code></td><td>404</td><td>Task does not exist or is deleted</td></tr>
+    <tr><td><code>TASK_ALREADY_DONE</code></td><td>409</td><td>Attempt to complete an already-done task</td></tr>
+    <tr><td><code>INVALID_TRANSITION</code></td><td>422</td><td>State machine transition not allowed</td></tr>
+    <tr><td><code>TIMEENTRY_IMMUTABLE</code></td><td>405</td><td>Attempt to delete a time entry (legal retention)</td></tr>
+    <tr><td><code>TIMESHEET_SIGNED</code></td><td>409</td><td>Attempt to add/modify entry after daily sign-off</td></tr>
+    <tr><td><code>FILE_NOT_CONFIRMED</code></td><td>400</td><td>Completion submitted with unconfirmed file upload</td></tr>
+    <tr><td><code>TRANSLATE_RATE_LIMIT</code></td><td>429</td><td>Translation rate limit exceeded for installation</td></tr>
+    <tr><td><code>INSUFFICIENT_ROLE</code></td><td>403</td><td>Role does not have required permission</td></tr>
+    <tr><td><code>INSTALLATION_MISMATCH</code></td><td>403</td><td>Resource belongs to different installation</td></tr>
+    <tr><td><code>SIGNATURE_IMMUTABLE</code></td><td>409</td><td>Attempt to overwrite existing signature</td></tr>
+  </tbody>
+</table>
+
+<!-- ── COMPLIANCE ── -->
+<h2 id="compliance">Compliance checklist</h2>
+
+<table>
+  <thead><tr><th>Requirement</th><th>Standard</th><th>Implementation</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>Working time recording</td><td>§ 16 ArbZG / EuGH C-55/18</td><td>time_entries hypertable, 2-year retention, no DELETE</td><td>✅ Spec complete</td></tr>
+    <tr><td>Break tracking</td><td>§ 4 ArbZG</td><td>entry_type='break' entries, 8h warning</td><td>✅ Spec complete</td></tr>
+    <tr><td>Digital sign-off</td><td>§ 127 BGB</td><td>POST /timesheet/signoff, immutable after</td><td>✅ Spec complete</td></tr>
+    <tr><td>GDPR lawful basis</td><td>GDPR Art. 6(1)(b)</td><td>Contractual necessity, notice shown at signature</td><td>✅ Spec complete</td></tr>
+    <tr><td>GDPR customer rights</td><td>GDPR Art. 15–22</td><td>GET /customer-data/:email, DELETE with retention check</td><td>⚠ Endpoint to build</td></tr>
+    <tr><td>Data minimisation</td><td>GDPR Art. 5(1)(c)</td><td>Signature/ID photos only collected when customer signs</td><td>✅ Spec complete</td></tr>
+    <tr><td>Record retention</td><td>§ 257 HGB / § 147 AO</td><td>Soft deletes, 10-year archive, Object Lock on S3</td><td>✅ Spec complete</td></tr>
+    <tr><td>Electronic signature validity</td><td>eIDAS (EU) 910/2014</td><td>Simple e-sig: drawn + name + timestamp + context</td><td>✅ Spec complete</td></tr>
+    <tr><td>Paper signature fallback</td><td>eIDAS (EU) 910/2014 Art. 3(10)</td><td>Photo of signed paper form with reference number, uploaded to S3 Object Lock</td><td>✅ Spec complete</td></tr>
+    <tr><td>Biometric data protection</td><td>GDPR Art. 9</td><td>Separate S3 prefix, Object Lock, signed URL access only</td><td>⚠ IAM policy to configure</td></tr>
+    <tr><td>Audit trail</td><td>BSI IT-Grundschutz</td><td>audit_log on all writes, immutable entries</td><td>✅ Spec complete</td></tr>
+    <tr><td>Data processing agreement</td><td>GDPR Art. 28</td><td>DPA required with Anthropic for translation processing</td><td>⚠ Legal to action</td></tr>
+  </tbody>
+</table>
+
+<div class="callout callout-warn">
+  <div class="ct">⚠ Anthropic DPA required</div>
+  <p>WorkHub sends user-entered text (task titles, completion notes, customer names) to the Anthropic API for translation and correction. This constitutes data processing under GDPR. A Data Processing Agreement (DPA) with Anthropic is required before production launch. Anthropic offers a standard DPA — contact legal to execute it. Until the DPA is in place, do not send any personal data (names, addresses, identifying information) in translation or correction requests.</p>
+</div>
+
+<!-- ── CHANGELOG ── -->
+<h2 id="platform-spine">PFE as platform spine — WorkHub in context</h2>
+
+<p>WorkHub is not a standalone work management tool. It is the <strong>field execution layer</strong> of the SCLAN SaaS platform — one of several modules that each own their own data and communicate directly with each other. PFE is not the connective tissue between them — it is a separate tool that humans use to view and edit module state. The modules interoperate directly.</p>
+
+<div class="callout callout-purple">
+  <div class="ct">🧬 Corrected architectural principle</div>
+  <p><strong>Each module owns its own truth. PFE is the live editor and viewer — not a data store.</strong></p>
+  <p>PFE is a tool — a unified interface through which a technician or planner can view and edit the state of any SCLAN hardware or software module. It does not store that state. The truth lives in the modules themselves:</p>
+  <ul style="margin:8px 0 0;padding-left:18px;color:var(--text2);">
+    <li style="margin-bottom:4px;"><strong>Domain Nodes</strong> own their SME (State Machine Engine), BOPT results, ML fault counters, energy measurements — stored in their own firmware flash. PFE reads and edits these live over the bus.</li>
+    <li style="margin-bottom:4px;"><strong>Each SCLAN hardware module</strong> owns its own filter matrix, context assignments, bus parameters — stored locally on the device. PFE surfaces them for editing.</li>
+    <li style="margin-bottom:4px;"><strong>Each SaaS module</strong> (WorkHub, M-02, PC-13, Billing, PPT) owns its own database. PFE does not mediate between them — they communicate directly with each other via API and webhooks.</li>
+  </ul>
+  <p style="margin-top:8px;">Removing PFE does not affect any module's data. The Domain Nodes keep running. WorkHub keeps recording time. PC-13 keeps detecting anomalies. PFE is a lens — not the backbone.</p>
+</div>
+
+<h3>What each module is</h3>
+<table>
+  <thead><tr><th>Module</th><th>Layer</th><th>Relationship to PFE</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>PFE</strong></td>
+      <td>Live editor &amp; viewer — not a data store</td>
+      <td>PFE is a tool. It reads and edits the SME (State Machine Engine) of hardware modules live over the bus, and surfaces SaaS module state for human inspection and editing. It does not own or store data. Each module it connects to owns its own state.</td>
+    </tr>
+    <tr>
+      <td><strong>WorkHub M-08</strong></td>
+      <td>Field execution</td>
+      <td>Executes tasks that PFE generates (faults, commissioning steps, PnP discoveries). Writes completion, materials, and field notes back to PFE. Worker presence pushed to PFE Live Monitor.</td>
+    </tr>
+    <tr>
+      <td><strong>PPT (future)</strong></td>
+      <td>Project planning</td>
+      <td>Reads installation topology and commissioning state from PFE to generate realistic project plans. Creates WorkHub tasks. Updates PFE timeline. Provides Scrum/CPM/Gantt views onto the same task data that WorkHub executes.</td>
+    </tr>
+    <tr>
+      <td><strong>M-02 Energy Intelligence</strong></td>
+      <td>Energy monitoring &amp; analytics</td>
+      <td>Reads Domain Node energy measurements from PFE (5-point: V, I, P, Leistung, kWh). Writes anomaly flags back to PC-13. Quota thresholds stored in PFE per segment.</td>
+    </tr>
+    <tr>
+      <td><strong>PC-13 Quota Anomaly Detection</strong></td>
+      <td>Fault &amp; anomaly detection</td>
+      <td>Reads M-02 energy data and Domain Node ML fault counters from PFE. Writes fault alerts to PFE fault state machine. Triggers WorkHub tasks on threshold crossing.</td>
+    </tr>
+    <tr>
+      <td><strong>Billing M-09</strong></td>
+      <td>Financial</td>
+      <td>Reads WorkHub task completions, time entries, and material entries. Reads project and customer data from PFE installation registry. Writes invoice records. No direct PFE write access.</td>
+    </tr>
+    <tr>
+      <td><strong>Avatar system (PC-22)</strong></td>
+      <td>Security &amp; behavioural profiles</td>
+      <td>Lives entirely in PFE. Defines behaviour rules for each Domain Node. WorkHub creates tasks when avatar changes are requested. PPT can schedule avatar transitions as project milestones.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>The data flow principle</h3>
+<p>Every piece of data has one canonical home. Modules never duplicate data — they reference it.</p>
+
+<pre><code><span class="hl-cmt">// What lives where — canonical data ownership</span>
+
+PFE owns:
+  nothing — PFE is a live editor/viewer, not a data store.
+  PFE reads and edits the state of other modules directly.
+
+Domain Node hardware owns (stored in firmware/flash):
+  sme_state, bopt_config, ml_fault_counters[V0..V4],
+  energy_accumulated_nvram, bus_speed_confirmed,
+  filter_matrix, segment_topology
+
+SCLAN hardware modules own (stored on-device):
+  context_assignments, scene_channels,
+  filter_config, module_firmware_version
+
+WorkHub owns:
+  tasks, time_entries, completion_records,
+  material_entries, worker_capacity, customer_signatures
+
+PPT owns:
+  project_plans, sprints, milestones, dependencies,
+  resource_allocations, critical_paths, burndown_data
+
+M-02 owns:
+  energy_readings_timeseries, quota_compliance_history
+
+Billing M-09 owns:
+  invoice_lines, payment_records, contract_terms
+
+<span class="hl-cmt">// Every module references other modules' data by ID
+// No module stores a copy of data it does not own</span></code></pre>
+
+<h2 id="ppt">PPT — Project Planning Tool (future module)</h2>
+
+<p>PPT is the planning layer above WorkHub. Where WorkHub asks <em>"what is being done today?"</em>, PPT asks <em>"what needs to be done, in what order, by when, with what resources, and what is the critical path?"</em></p>
+
+<p>The key architectural insight is that <strong>PPT and WorkHub share the same task objects</strong>. A task created in PPT (as a Scrum story, a CPM activity, a Gantt bar) is the same entity that a worker sees in WorkHub and executes on site. The planning view and the execution view are different representations of the same truth.</p>
+
+<h3>Planning views on one truth</h3>
+
+<div class="arch-box">
+  <div class="arch-layer" style="border-color:#F59E0B;">
+    <div class="arch-layer-title" style="color:#F59E0B;">One planning truth — shared task objects</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">tasks table (WorkHub)</span>
+      <span class="arch-chip">dependencies table (PPT)</span>
+      <span class="arch-chip">resource_allocations (PPT)</span>
+      <span class="arch-chip">sprints (PPT)</span>
+      <span class="arch-chip">milestones (PPT)</span>
+      <span class="arch-chip">pfe_commissioning_steps (PFE)</span>
+    </div>
+  </div>
+  <div class="arch-layer" style="border-color:#3B82F6;">
+    <div class="arch-layer-title" style="color:#3B82F6;">Planning views (PPT renders)</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">Scrum board (sprints + stories)</span>
+      <span class="arch-chip">Sprint burndown chart</span>
+      <span class="arch-chip">CPM network diagram</span>
+      <span class="arch-chip">Gantt chart</span>
+      <span class="arch-chip">Resource loading histogram</span>
+      <span class="arch-chip">Kanban pipeline</span>
+      <span class="arch-chip">Critical path highlight</span>
+      <span class="arch-chip">Milestone roadmap</span>
+    </div>
+  </div>
+  <div class="arch-layer" style="border-color:#10B981;">
+    <div class="arch-layer-title" style="color:#10B981;">Execution view (WorkHub renders)</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">Worker today list</span>
+      <span class="arch-chip">Timer + timesheet</span>
+      <span class="arch-chip">On-site context</span>
+      <span class="arch-chip">Done report + signature</span>
+      <span class="arch-chip">Capacity cards</span>
+    </div>
+  </div>
+  <div class="arch-layer" style="border-color:#8B5CF6;">
+    <div class="arch-layer-title" style="color:#8B5CF6;">Validation layer (PFE confirms)</div>
+    <div class="arch-layer-items">
+      <span class="arch-chip">Commissioning step advanced</span>
+      <span class="arch-chip">Module configured in PFE</span>
+      <span class="arch-chip">Fault closed in PC-13</span>
+      <span class="arch-chip">Avatar verified active</span>
+      <span class="arch-chip">Bus speed confirmed</span>
+    </div>
+  </div>
+</div>
+
+<h3>PPT task extension fields</h3>
+<p>PPT extends the WorkHub <code>tasks</code> table with additional planning fields. The core task is unchanged — WorkHub reads it the same way. PPT adds:</p>
+
+<div class="schema-block">
+  <div class="sf"><span class="sf-name">sprint_id</span><span class="sf-type">uuid</span><span class="sf-desc">Which Scrum sprint this task belongs to. Null = backlog.</span></div>
+  <div class="sf"><span class="sf-name">story_points</span><span class="sf-type">integer</span><span class="sf-desc">Scrum estimation unit. Mapped from est_hours by velocity factor per team.</span></div>
+  <div class="sf"><span class="sf-name">depends_on</span><span class="sf-type">uuid[]</span><span class="sf-desc">Task IDs that must complete before this task can start. Used by CPM engine.</span></div>
+  <div class="sf"><span class="sf-name">float_hours</span><span class="sf-type">numeric</span><span class="sf-desc">CPM float (slack). Computed field. Zero = on critical path.</span></div>
+  <div class="sf"><span class="sf-name">earliest_start</span><span class="sf-type">timestamptz</span><span class="sf-desc">CPM earliest start date. Computed from dependency chain.</span></div>
+  <div class="sf"><span class="sf-name">latest_start</span><span class="sf-type">timestamptz</span><span class="sf-desc">CPM latest start without delaying project. latest_start - earliest_start = float.</span></div>
+  <div class="sf"><span class="sf-name">milestone_id</span><span class="sf-type">uuid</span><span class="sf-desc">If this task triggers a project milestone on completion.</span></div>
+  <div class="sf"><span class="sf-name">ppt_lane</span><span class="sf-type">text</span><span class="sf-desc">Kanban lane label. Maps to WorkHub status: 'backlog' | 'planned' | 'in_progress' | 'done'.</span></div>
+  <div class="sf"><span class="sf-name">baseline_est_hours</span><span class="sf-type">numeric</span><span class="sf-desc">Original estimate at sprint planning. Used for burndown vs actual.</span></div>
+</div>
+
+<h3>CPM — Critical Path Method integration with PFE</h3>
+<p>For SCLAN commissioning projects, task dependencies are not arbitrary — they are physically constrained by the installation topology. PFE knows the commissioning state machine. PPT reads those constraints and builds the dependency graph automatically:</p>
+
+<pre><code><span class="hl-cmt">// PPT reads PFE commissioning state machine to build CPM graph</span>
+GET /pfe/commissioning/:installationId/dependency-graph
+
+<span class="hl-cmt">// Returns constraint graph — PPT uses this to compute critical path</span>
+{
+  nodes: [
+    { id: "cable_survey",    est_hours: 4,  prerequisites: [] },
+    { id: "node_mounting",   est_hours: 8,  prerequisites: ["cable_survey"] },
+    { id: "bus_termination", est_hours: 3,  prerequisites: ["node_mounting"] },
+    { id: "pnp_discovery",   est_hours: 1,  prerequisites: ["bus_termination"] },
+    { id: "context_assign",  est_hours: 4,  prerequisites: ["pnp_discovery"] },
+    { id: "scene_program",   est_hours: 6,  prerequisites: ["context_assign"] },
+    { id: "energy_quota",    est_hours: 2,  prerequisites: ["pnp_discovery"] },
+    { id: "client_walkthrough", est_hours: 2, prerequisites: ["scene_program","energy_quota"] }
+  ]
+}
+
+<span class="hl-cmt">// Critical path: cable_survey → node_mounting → bus_termination
+//   → pnp_discovery → context_assign → scene_program → client_walkthrough
+// Total: 28h. energy_quota has 4h float (parallel with scene_program).</span></code></pre>
+
+<h3>Scrum for SCLAN field teams</h3>
+<p>Scrum sprint planning maps naturally to SCLAN project structure. A sprint is typically one installation week. Stories are WorkHub tasks. The sprint board is a PPT view — the execution is WorkHub. Velocity is measured in actual hours logged (WorkHub time entries) vs story points planned (PPT).</p>
+
+<table>
+  <thead><tr><th>Scrum concept</th><th>PPT / WorkHub mapping</th><th>Data source</th></tr></thead>
+  <tbody>
+    <tr><td>Product backlog</td><td>All open tasks not yet in a sprint</td><td>WorkHub tasks where sprint_id IS NULL</td></tr>
+    <tr><td>Sprint backlog</td><td>Tasks assigned to current sprint</td><td>WorkHub tasks where sprint_id = current</td></tr>
+    <tr><td>Sprint board</td><td>Kanban view: To Do / In Progress / Done</td><td>WorkHub task status, live via WebSocket</td></tr>
+    <tr><td>Story points</td><td>Estimated hours × velocity factor</td><td>PPT story_points field</td></tr>
+    <tr><td>Burndown chart</td><td>Remaining story points vs sprint days</td><td>PPT baseline_est_hours minus WorkHub logged_hours</td></tr>
+    <tr><td>Velocity</td><td>Story points completed per sprint</td><td>Computed from WorkHub completed tasks per sprint</td></tr>
+    <tr><td>Sprint review</td><td>PFE commissioning steps advanced this sprint</td><td>PFE commissioning state + WorkHub completions</td></tr>
+    <tr><td>Definition of Done</td><td>WorkHub task done + PFE step advanced + customer signature (if applicable)</td><td>WorkHub completion_records + PFE state</td></tr>
+  </tbody>
+</table>
+
+<h3>PPT → WorkHub → PFE: the full loop</h3>
+
+<div class="steps">
+  <div class="step"><div class="step-body">
+    <h4>Planner creates sprint in PPT</h4>
+    <p>Selects tasks from backlog (generated by PFE commissioning steps + PC-13 fault tasks + manual).
+    Assigns story points, sets dependencies, computes critical path.
+    Sprint capacity checked against WorkHub worker availability (reads <code>GET /workhub/workers/:id/capacity</code>).</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>PPT pushes tasks to WorkHub with sprint metadata</h4>
+    <p>Each task in the sprint appears in the assigned worker's WorkHub today list on the sprint start date.
+    Task carries: sprint_id, story_points, dependencies, milestone links.
+    Worker sees none of the planning metadata — just the task title, description, estimate, and priority.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Worker executes in WorkHub</h4>
+    <p>Timer, completion note, materials, signature — all the standard WorkHub flow.
+    WorkHub pushes completion event to PPT via WebSocket (<code>task.completed</code>).
+    PPT updates burndown chart in real time. If task is on critical path, PPT recalculates float for remaining tasks.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>WorkHub completion triggers PFE validation</h4>
+    <p>If the task has a <code>pfe_completion_action</code>, PFE is updated: commissioning step advanced,
+    fault closed, module marked configured. PFE state is the ground truth — PPT marks the task truly done
+    only after PFE confirms the step.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>PPT sprint review: PFE as acceptance criterion</h4>
+    <p>At sprint review, PPT shows two things: WorkHub says task is done (completion note + signature),
+    AND PFE confirms the physical reality changed (commissioning step advanced, bus verified, module active).
+    A task cannot be "Done" in the Scrum sense until both layers agree.</p>
+  </div></div>
+  <div class="step"><div class="step-body">
+    <h4>Billing M-09 closes the loop</h4>
+    <p>Sprint completion triggers M-09 to assemble the sprint invoice:
+    all completed tasks' labour and materials, grouped by project.
+    Milestone completions can trigger contract payment stages automatically.</p>
+  </div></div>
+</div>
+
+<h2 id="module-map">Module integration map — all connections</h2>
+
+<p>Every arrow in the diagram below represents a real data flow with a defined API endpoint or webhook. No module is an island.</p>
+
+<div class="arch-box">
+  <div style="text-align:center;padding:4px 0 12px;">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+      color:rgba(255,255,255,.3);margin-bottom:16px;">Data flow — all SCLAN SaaS modules</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div style="background:rgba(245,158,11,.1);border:1.5px solid var(--amber);border-radius:var(--r8);
+        padding:10px;text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:var(--amber);">📐 PPT</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Project planning</div>
+      </div>
+      <div style="background:rgba(139,92,246,.15);border:2px solid var(--purple);border-radius:var(--r8);
+        padding:10px;text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:var(--purple);">🎛 PFE</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Installation truth store</div>
+      </div>
+      <div style="background:rgba(59,130,246,.1);border:1.5px solid var(--blue);border-radius:var(--r8);
+        padding:10px;text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:#93C5FD;">📋 WorkHub M-08</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Field execution</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+      <div style="background:rgba(16,185,129,.1);border:1.5px solid var(--green);border-radius:var(--r8);
+        padding:10px;text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:#6EE7B7;">🌱 M-02</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Energy intelligence</div>
+      </div>
+      <div style="background:rgba(239,68,68,.1);border:1.5px solid var(--red);border-radius:var(--r8);
+        padding:10px;text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:#FCA5A5;">⚡ PC-13</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Anomaly detection</div>
+      </div>
+      <div style="background:rgba(13,148,136,.1);border:1.5px solid var(--teal);border-radius:var(--r8);
+        padding:10px;text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:#5EEAD4;">🧾 Billing M-09</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Financial layer</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.9;padding:4px 0;">
+    <div style="margin-bottom:4px;"><span style="color:var(--amber);">PPT →</span> <span style="color:#93C5FD;">WorkHub</span>: creates tasks with sprint/milestone/dependency metadata</div>
+    <div style="margin-bottom:4px;"><span style="color:#93C5FD;">WorkHub →</span> <span style="color:var(--amber);">PPT</span>: task.completed events → burndown update, critical path recalc</div>
+    <div style="margin-bottom:4px;"><span style="color:var(--amber);">PPT →</span> <span style="color:var(--purple);">PFE</span>: reads commissioning dependency graph for CPM calculation</div>
+    <div style="margin-bottom:4px;"><span style="color:var(--purple);">PFE →</span> <span style="color:#93C5FD;">WorkHub</span>: fault/PnP/commissioning/avatar webhooks → auto task creation</div>
+    <div style="margin-bottom:4px;"><span style="color:#93C5FD;">WorkHub →</span> <span style="color:var(--purple);">PFE</span>: completion → commissioning step advance, fault close, presence, inventory</div>
+    <div style="margin-bottom:4px;"><span style="color:var(--purple);">PFE →</span> <span style="color:var(--amber);">PPT</span>: commissioning step confirmed → PPT marks task truly Done (dual confirmation)</div>
+    <div style="margin-bottom:4px;"><span style="color:#6EE7B7;">M-02 →</span> <span style="color:var(--red);">PC-13</span>: segment energy time-series → anomaly scoring</div>
+    <div style="margin-bottom:4px;"><span style="color:var(--red);">PC-13 →</span> <span style="color:var(--purple);">PFE</span>: fault state machine transitions, ML fault counter updates</div>
+    <div style="margin-bottom:4px;"><span style="color:var(--red);">PC-13 →</span> <span style="color:#93C5FD;">WorkHub</span>: fault threshold crossed → high-priority task webhook</div>
+    <div style="margin-bottom:4px;"><span style="color:#93C5FD;">WorkHub →</span> <span style="color:#5EEAD4;">Billing M-09</span>: task completion → labour + material invoice lines</div>
+    <div style="margin-bottom:4px;"><span style="color:var(--amber);">PPT →</span> <span style="color:#5EEAD4;">Billing M-09</span>: milestone completion → contract payment stage trigger</div>
+    <div><span style="color:var(--purple);">PFE</span> <span style="color:rgba(255,255,255,.3);">(PFE is a live editor/viewer — technicians use it to inspect and edit module state directly. It does not mediate data between modules. Modules talk to each other via direct API/webhooks.)</span></div>
+  </div>
+</div>
+
+<div class="callout callout-warn" style="margin-top:20px;">
+  <div class="ct">📐 PPT implementation note</div>
+  <p>PPT does not yet exist as a built module. The WorkHub data model is designed to accommodate it from day one — the <code>sprint_id</code>, <code>story_points</code>, <code>depends_on</code>, and <code>milestone_id</code> fields are defined in the schema now, even though PPT has not written them yet. When PPT is built, it writes into an existing schema. WorkHub workers never see these fields — they are planning-layer metadata only.</p>
+</div>
+
+<h2 id="changelog">Changelog</h2>
+<table>
+  <thead><tr><th>Version</th><th>Date</th><th>Changes</th></tr></thead>
+  <tbody>
+    <tr><td>1.0-rc1</td><td>May 2026</td><td>Initial integration spec. Complete prototype delivered as WorkHub_Application.html.</td></tr>
+    <tr><td>—</td><td>—</td><td>PDF generation endpoints, native mobile app, GDPR data subject request endpoint, notification push (FCM/APNs) — planned next phase.</td></tr>
+  </tbody>
+</table>
+
+<br/><hr style="border-color:var(--gray2);margin:32px 0;"/>
+<p style="font-size:12px;color:var(--text4);">WorkHub SCLAN M-08 Developer Integration Guide · [mn]medianet · Bernhard Hnida · Confidential — NDA 5.0 · Version 1.0-rc1 · May 2026</p>
+
+</div><!-- /content -->
+</main>
+</div><!-- /shell -->
+
+<script>
+const headings = document.querySelectorAll('h2[id]');
+const navLinks  = document.querySelectorAll('nav a[href^="#"]');
+const observer  = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      navLinks.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector('nav a[href="#'+e.target.id+'"]');
+      if(link){ link.classList.add('active'); link.scrollIntoView({block:'nearest'}); }
+    }
+  });
+},{rootMargin:'-5% 0px -88% 0px'});
+headings.forEach(h => observer.observe(h));
+</script>
+</body>
+</html>

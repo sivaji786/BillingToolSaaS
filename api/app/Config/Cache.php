@@ -112,6 +112,9 @@ class Cache extends BaseConfig
      * Your Redis server can be specified below, if you are using
      * the Redis or Predis drivers.
      *
+     * Values are overridden by env vars: REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DATABASE.
+     * When REDIS_HOST is set, the primary handler automatically switches to 'redis'.
+     *
      * @var array{host?: string, password?: string|null, port?: int, timeout?: int, database?: int}
      */
     public array $redis = [
@@ -121,6 +124,25 @@ class Cache extends BaseConfig
         'timeout'  => 0,
         'database' => 0,
     ];
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $redisHost = env('REDIS_HOST', '');
+        if ($redisHost) {
+            $this->redis = [
+                'host'     => $redisHost,
+                'password' => env('REDIS_PASSWORD', null) ?: null,
+                'port'     => (int) env('REDIS_PORT', 6379),
+                'timeout'  => (int) env('REDIS_TIMEOUT', 0),
+                'database' => (int) env('REDIS_DATABASE', 0),
+            ];
+            // Switch primary handler to redis when a host is configured
+            $this->handler       = 'redis';
+            $this->backupHandler = 'file';
+        }
+    }
 
     /**
      * --------------------------------------------------------------------------

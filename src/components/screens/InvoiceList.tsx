@@ -91,6 +91,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 400);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'workhub' | 'manual'>('all');
   const [dateFilter, setDateFilter] = useState<DateFilter>('anyDate');
   const [sortBy, setSortBy] = useState<SortOption>('dateDesc');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -116,6 +117,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
         ...(dateFilter === 'customRange' && customDateTo   && { customDateTo:   customDateTo.toISOString().split('T')[0] }),
         sort: sortBy,
         templateType: templateType,
+        ...(sourceFilter !== 'all' && { source: sourceFilter }),
       });
       setInvoices(data);
     } catch (error) {
@@ -129,7 +131,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
   useEffect(() => {
     fetchInvoices();
-  }, [debouncedSearch, statusFilter, dateFilter, customDateFrom, customDateTo, sortBy, templateType]);
+  }, [debouncedSearch, statusFilter, sourceFilter, dateFilter, customDateFrom, customDateTo, sortBy, templateType]);
 
   const { currentPage, setCurrentPage, totalPages, paginatedData: paginatedInvoices, pageSize: itemsPerPage, setPageSize: setItemsPerPage } = usePagination(invoices);
   const paginatedIds = paginatedInvoices.map(inv => inv.id!).filter(Boolean);
@@ -435,6 +437,20 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
               className="w-full"
             />
           </div>
+
+          {/* Source Filter — WH-060 */}
+          {!isLetter && (
+            <Select value={sourceFilter} onValueChange={(v) => setSourceFilter(v as 'all' | 'workhub' | 'manual')}>
+              <SelectTrigger>
+                <SelectValue placeholder="All sources" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All sources</SelectItem>
+                <SelectItem value="workhub">WorkHub</SelectItem>
+                <SelectItem value="manual">Manual</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -990,12 +1006,19 @@ const InvoiceRow = memo(({
         />
       </TableCell>
       <TableCell>
-        <button
-          onClick={invoice.templateType === 'business_letter' ? onEdit : onView}
-          className="font-medium text-purple-600 hover:text-purple-700 hover:underline text-left"
-        >
-          {invoice.invoiceNumber || <span className="text-muted-foreground italic font-normal">No number</span>}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={invoice.templateType === 'business_letter' ? onEdit : onView}
+            className="font-medium text-purple-600 hover:text-purple-700 hover:underline text-left"
+          >
+            {invoice.invoiceNumber || <span className="text-muted-foreground italic font-normal">No number</span>}
+          </button>
+          {(invoice as any).source === 'workhub' && (
+            <Badge className="bg-purple-100 text-purple-700 border-purple-300 text-caption px-1.5 py-0">
+              WorkHub
+            </Badge>
+          )}
+        </div>
       </TableCell>
       <TableCell>{invoice.buyer.name}</TableCell>
       <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>

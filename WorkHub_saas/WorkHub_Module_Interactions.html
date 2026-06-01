@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WorkHub — Module Interaction Samples</title>
+<style>
+:root{
+  --navy:#0D1B2A;--navy2:#162236;--navy3:#1E3352;
+  --amber:#F59E0B;--amberL:#FEF3C7;--amberD:#92400E;
+  --green:#10B981;--greenL:#D1FAE5;--greenD:#065F46;
+  --blue:#3B82F6;--blueL:#EFF6FF;--blueD:#1D4ED8;
+  --red:#EF4444;--redL:#FEF2F2;
+  --purple:#8B5CF6;--purpleL:#EDE9FE;--purpleD:#5B21B6;
+  --teal:#0D9488;--tealL:#CCFBF1;
+  --orange:#F97316;--orangeL:#FFF7ED;
+  --gray0:#F9FAFB;--gray1:#F3F4F6;--gray2:#E5E7EB;
+  --text:#111827;--text2:#374151;--text3:#6B7280;--text4:#9CA3AF;
+  --sans:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Fira Mono',monospace;
+  --r8:8px;--r12:12px;--r16:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);color:var(--text);background:#F0F4F8;
+  font-size:15px;line-height:1.6;}
+
+/* ── HEADER ── */
+.site-header{background:var(--navy);padding:0;}
+.header-top{padding:24px 48px 20px;display:flex;align-items:flex-start;
+  justify-content:space-between;gap:20px;}
+.header-logo{font-size:14px;font-weight:700;color:white;letter-spacing:-.01em;}
+.header-logo span{color:var(--amber);}
+.header-logo-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:2px;}
+.header-title{font-size:26px;font-weight:700;color:white;letter-spacing:-.02em;
+  margin-top:4px;}
+.header-lead{font-size:14px;color:rgba(255,255,255,.45);margin-top:6px;
+  max-width:560px;line-height:1.6;}
+.header-tabs{display:flex;gap:0;border-top:1px solid rgba(255,255,255,.08);
+  padding:0 48px;overflow-x:auto;}
+.tab{padding:12px 20px;font-size:13px;font-weight:500;color:rgba(255,255,255,.4);
+  cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;
+  transition:.12s;-webkit-tap-highlight-color:transparent;}
+.tab:hover{color:rgba(255,255,255,.7);}
+.tab.active{color:white;border-bottom-color:var(--amber);}
+
+/* ── LAYOUT ── */
+.page{max-width:1100px;margin:0 auto;padding:32px 24px 80px;}
+
+/* ── SAMPLE CARD ── */
+.sample{background:white;border-radius:var(--r16);overflow:hidden;
+  margin-bottom:32px;box-shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.04);}
+.sample-header{padding:20px 28px;display:flex;align-items:flex-start;gap:16px;
+  border-bottom:1px solid var(--gray2);}
+.sample-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.sample-header-text{flex:1;}
+.sample-title{font-size:18px;font-weight:700;letter-spacing:-.01em;}
+.sample-subtitle{font-size:13px;color:var(--text3);margin-top:3px;}
+.sample-modules{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.mod-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;
+  display:inline-flex;align-items:center;gap:4px;}
+
+/* ── CUSTOMER JOURNEY BOX ── */
+.journey-box{margin:20px 28px 0;padding:16px 20px;border-radius:var(--r12);
+  background:linear-gradient(135deg,#0D1B2A 0%,#1E3352 100%);
+  border:1px solid rgba(245,158,11,.2);}
+.journey-label{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--amber);margin-bottom:8px;display:flex;
+  align-items:center;gap:6px;}
+.journey-label::after{content:'';flex:1;height:1px;background:rgba(245,158,11,.2);}
+.journey-text{font-size:13px;color:rgba(255,255,255,.75);line-height:1.7;}
+.journey-highlight{color:var(--amber);font-weight:600;}
+
+/* ── FLOW TIMELINE ── */
+.flow-section{padding:20px 28px;}
+.flow-title{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--text4);margin-bottom:16px;display:flex;
+  align-items:center;gap:8px;}
+.flow-title::after{content:'';flex:1;height:1px;background:var(--gray2);}
+.timeline{position:relative;padding-left:32px;}
+.timeline::before{content:'';position:absolute;left:11px;top:8px;bottom:8px;
+  width:2px;background:var(--gray2);}
+.tl-step{position:relative;margin-bottom:16px;}
+.tl-step:last-child{margin-bottom:0;}
+.tl-dot{position:absolute;left:-32px;top:4px;width:22px;height:22px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;border:2px solid white;
+  box-shadow:0 0 0 2px var(--gray2);}
+.tl-step.done .tl-dot{background:var(--green);color:white;box-shadow:0 0 0 2px var(--greenL);}
+.tl-step.active .tl-dot{background:var(--amber);color:var(--navy);
+  box-shadow:0 0 0 2px var(--amberL);}
+.tl-step.info .tl-dot{background:var(--blue);color:white;box-shadow:0 0 0 2px var(--blueL);}
+.tl-step.warn .tl-dot{background:var(--red);color:white;box-shadow:0 0 0 2px var(--redL);}
+.tl-step.purple .tl-dot{background:var(--purple);color:white;box-shadow:0 0 0 2px var(--purpleL);}
+.tl-step.teal .tl-dot{background:var(--teal);color:white;box-shadow:0 0 0 2px var(--tealL);}
+.tl-body{padding:0 0 0 8px;}
+.tl-module{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  display:inline-flex;align-items:center;gap:4px;margin-bottom:3px;}
+.tl-action{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.tl-detail{font-size:12.5px;color:var(--text3);line-height:1.6;}
+.tl-code{background:var(--gray1);border:1px solid var(--gray2);border-radius:5px;
+  padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--navy);
+  margin-top:6px;line-height:1.6;overflow-x:auto;}
+.tl-cj{background:var(--amberL);border-left:3px solid var(--amber);border-radius:0 6px 6px 0;
+  padding:6px 10px;margin-top:6px;font-size:12px;color:var(--amberD);line-height:1.5;}
+.tl-cj::before{content:'👤 ';font-size:11px;}
+
+/* ── DATA FLOW DIAGRAM ── */
+.data-flow{margin:0 28px 20px;padding:16px;background:var(--gray0);
+  border-radius:var(--r12);border:1px solid var(--gray2);overflow-x:auto;}
+.df-row{display:flex;align-items:center;gap:0;min-width:500px;}
+.df-module{background:white;border:1.5px solid var(--gray2);border-radius:var(--r8);
+  padding:8px 12px;text-align:center;font-size:11px;font-weight:600;
+  white-space:nowrap;flex-shrink:0;}
+.df-arrow{color:var(--text4);font-size:18px;padding:0 8px;flex-shrink:0;}
+.df-arrow.amber{color:var(--amber);}
+.df-arrow.green{color:var(--green);}
+.df-arrow.purple{color:var(--purple);}
+.df-label{font-size:10px;color:var(--text3);text-align:center;margin-top:2px;
+  font-family:var(--mono);}
+.df-col{display:flex;flex-direction:column;align-items:center;}
+
+/* ── OUTCOME BOX ── */
+.outcome-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  padding:0 28px 20px;}
+.outcome-box{border-radius:var(--r12);padding:14px 16px;font-size:13px;}
+.outcome-tech{background:var(--blueL);border:1px solid #BFDBFE;}
+.outcome-tech .outcome-title{font-weight:700;color:var(--blueD);margin-bottom:6px;font-size:11px;
+  text-transform:uppercase;letter-spacing:.06em;}
+.outcome-cust{background:var(--greenL);border:1px solid #A7F3D0;}
+.outcome-cust .outcome-title{font-weight:700;color:var(--greenD);margin-bottom:6px;font-size:11px;
+  text-transform:uppercase;letter-spacing:.06em;}
+.outcome-box ul{padding-left:16px;color:var(--text2);}
+.outcome-box li{margin-bottom:3px;}
+
+@media(max-width:700px){
+  .header-top{padding:16px;}
+  .header-tabs{padding:0 16px;}
+  .page{padding:16px 12px 60px;}
+  .sample-header{padding:16px;}
+  .flow-section{padding:16px;}
+  .journey-box{margin:16px 16px 0;}
+  .data-flow{margin:0 16px 16px;}
+  .outcome-row{grid-template-columns:1fr;padding:0 16px 16px;}
+  .timeline{padding-left:28px;}
+}
+</style>
+</head>
+<body>
+
+<div class="site-header">
+  <div class="header-top">
+    <div>
+      <div class="header-logo">[mn]<span>media</span>net · SCLAN 5.0</div>
+      <div class="header-title">WorkHub — Module Interaction Samples</div>
+      <div class="header-lead">Five end-to-end interaction flows showing how WorkHub, PFE, Billing, PC-13, Domain Node state machine, and the customer journey work together.</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0;">
+      <div style="font-size:11px;color:rgba(255,255,255,.25);">SCLAN M-08</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.25);">Confidential — NDA 5.0</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.25);">May 2026</div>
+    </div>
+  </div>
+  <div class="header-tabs">
+    <div class="tab active" onclick="showSample('all')">All samples</div>
+    <div class="tab" onclick="showSample(1)">1 · Fault → Invoice</div>
+    <div class="tab" onclick="showSample(2)">2 · Commissioning</div>
+    <div class="tab" onclick="showSample(3)">3 · PnP → Billing</div>
+    <div class="tab" onclick="showSample(4)">4 · Avatar change</div>
+    <div class="tab" onclick="showSample(5)">5 · Energy anomaly</div>
+    <div class="tab" onclick="showSample('arch')">Platform architecture</div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- SCLAN ADVANTAGE NOTE -->
+<div style="background:var(--navy);border-radius:var(--r16);padding:24px 28px;
+  margin-bottom:32px;border:1px solid rgba(245,158,11,.25);">
+  <div style="display:flex;align-items:flex-start;gap:16px;">
+    <div style="font-size:28px;flex-shrink:0;">⚡</div>
+    <div>
+      <div style="font-size:16px;font-weight:700;color:var(--amber);margin-bottom:8px;
+        letter-spacing:-.01em;">
+        The SCLAN silent guarantee — applicable to all five samples
+      </div>
+      <div style="font-size:14px;color:rgba(255,255,255,.65);line-height:1.8;">
+        Every interaction in these samples begins with an automated detection event —
+        a fault threshold, a PnP discovery, a commissioning step becoming ready, an avatar change,
+        an energy anomaly. In each case, <strong style="color:white;">no human noticed the problem first.
+        The system noticed it, classified it, and acted on it.</strong>
+        <br><br>
+        This is the core value proposition of a SCLAN installation over any conventional
+        building automation system: <strong style="color:white;">the building manages itself.</strong>
+        Domain Nodes measure continuously (5×/second per segment).
+        PC-13 builds fault profiles before faults become visible.
+        The PFE avatar state machine watches security levels 24 hours a day.
+        M-02 tracks energy at segment level, not building level.
+        <br><br>
+        In a conventional system, every one of these five workflows
+        would have started with a <strong style="color:var(--red);">human complaint</strong>
+        — after a delay of hours, days, or weeks.
+        In SCLAN, they start with a <strong style="color:var(--green);">machine threshold</strong>
+        — within seconds of the first measurable anomaly.
+        <br><br>
+        <span style="color:var(--amber);">WorkHub is the interface that makes this machine intelligence
+        actionable by field technicians — and transparent to customers.</span>
+        The technician gets a task with full context already written.
+        The customer gets a completion certificate, a signature, and a delivery copy
+        before they have finished explaining the problem they were about to report.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SAMPLE 1: PC-13 Fault → WorkHub → Resolution → Billing
+     ══════════════════════════════════════════════════════════ -->
+<div class="sample" id="sample-1">
+  <div class="sample-header">
+    <div class="sample-num" style="background:var(--redL);color:var(--red);">1</div>
+    <div class="sample-header-text">
+      <div class="sample-title">Fault detected → field resolution → automatic invoice line</div>
+      <div class="sample-subtitle">PC-13 Quota Anomaly Detection · Domain Node state machine · WorkHub · Billing M-09</div>
+      <div class="sample-modules">
+        <span class="mod-badge" style="background:var(--redL);color:#991B1B;">⚡ PC-13</span>
+        <span class="mod-badge" style="background:var(--purpleL);color:var(--purpleD);">🎛 PFE / Domain Node</span>
+        <span class="mod-badge" style="background:var(--blueL);color:var(--blueD);">📋 WorkHub M-08</span>
+        <span class="mod-badge" style="background:var(--greenL);color:var(--greenD);">🧾 Billing M-09</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="journey-box">
+    <div class="journey-label">Customer journey</div>
+    <div class="journey-text">
+      Hotel Mitte GmbH's smart lighting has been intermittently flickering in the conference wing for two days.
+      Nobody has reported it formally — the hotel manager just noticed it looks unprofessional during client meetings.
+      <span class="journey-highlight">She does not know why it is happening, she does not know who to call, and she is not sure if it is covered by the service contract.</span>
+      <br><br>
+      <span style="color:var(--amber);font-weight:700;">⚡ This is where SCLAN changes everything.</span>
+      In a conventional building — or with any non-SCLAN smart lighting system — this is where
+      the story stays. The light flickers for days or weeks until someone complains loudly enough,
+      a support ticket is filed, a technician is booked, and the cause is guessed at on-site.
+      <br><br>
+      In a SCLAN installation, the flickering was never a symptom waiting to be noticed by a human.
+      The Domain Node registered the first abnormal current reading at the moment of the first flicker —
+      before the hotel manager saw it. PC-13 Quota Anomaly Detection had been tracking the rising
+      fault rate on that segment for 18 hours. The system had already diagnosed the root cause,
+      classified the fault type, and was waiting only for the threshold that justified dispatching
+      a technician. That threshold crossed at 14:23 — <span class="journey-highlight">2 minutes later a WorkHub task existed,
+      assigned to the nearest available technician, with the full technical context already written.</span>
+      <br><br>
+      What she experiences: a technician arrives the same morning she first considers mentioning it,
+      fixes the problem in 90 minutes, hands her a phone to sign, and she receives a PDF by WhatsApp
+      before the technician has left the car park. The invoice line is pre-prepared, approved by her
+      automatically via the signature, and submitted to M-09 before end of day.
+      <span class="journey-highlight">She never had to call anyone. She never had to explain the problem.
+      She signed once. And by the time she noticed the flickering, the repair was already in motion.</span>
+    </div>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-title">Technical flow</div>
+    <div class="timeline">
+
+      <div class="tl-step" style="margin-bottom:20px;">
+        <div class="tl-dot" style="background:var(--amber);color:var(--navy);box-shadow:0 0 0 2px var(--amberL);">★</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--amber);">⚡ SCLAN vs conventional — the invisible difference</div>
+          <div class="tl-action">18 hours before the technician call: Domain Node already tracking the fault</div>
+          <div class="tl-detail" style="background:var(--navy);color:rgba(255,255,255,.75);
+            border-radius:var(--r8);padding:12px 14px;line-height:1.7;margin-top:6px;">
+            <strong style="color:var(--amber);">Conventional building automation:</strong>
+            Light flickers. Staff notice. Manager complains. Support ticket filed (possibly days later).
+            Technician booked (1–5 business days). Technician arrives. Fault guessed at, maybe diagnosed.
+            Possibly second visit needed. Mean time to repair: <strong style="color:var(--red);">4–7 days.</strong>
+            <br><br>
+            <strong style="color:var(--amber);">SCLAN installation:</strong>
+            Domain Node measures current 5×/second. At first flicker: current instability logged,
+            ML Ebene 1 fault counter starts incrementing, error rate tracked against bus speed.
+            PC-13 builds fault profile over 18 hours. Threshold crossed → WorkHub task auto-created
+            → technician dispatched. Mean time to repair: <strong style="color:var(--green);">under 2 hours from threshold.</strong>
+            <br><br>
+            The hotel manager never knew the system had been watching the problem for 18 hours before she noticed it.
+            From her perspective, the technician arrived <em>before</em> she called.
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-step warn">
+        <div class="tl-dot">!</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--red);">⚡ PC-13 — Quota Anomaly Detection</div>
+          <div class="tl-action">Overcurrent spike detected on Segment Zone-B</div>
+          <div class="tl-detail">
+            The flickering the hotel manager sees at the light fitting level is, at the SCLAN bus level,
+            a current instability on Segment Zone-B. The Domain Node has been measuring this 5 times per second
+            (voltage, current, power, Leistung, accumulated energy in NVRAM).
+            <br><br>
+            <strong>This is the core SCLAN advantage over conventional building automation:</strong>
+            a conventional system would have no record of the fault until a human reported it.
+            SCLAN's Domain Node registered the first anomaly 18 hours before the technician was called —
+            and had been building an ML fault profile ever since.
+            <br><br>
+            At 14:23:07 UTC: current spike 4.2A. ML Ebene 1 fault counter increments: errors_at_speed[V3].
+            Normalised fault rate crosses intervention threshold (0.043/h — elevated vs 18-hour baseline).
+            PC-13 flags segment. Domain Node fault isolation algorithm activates:
+            priority-weighted binary search isolates sub-segment in 3 switching acts (best case 1, max log₂N+1).
+            Bus speed reverts V3→V1 (125kbps) as safety measure. The wider lighting remains on.
+          </div>
+          <div class="tl-code">pfe.fault.detected → {
+  faultId: "fault_9f3a",  nodeId: "DN-07",
+  segmentId: "seg_b2",    faultType: "overcurrent",
+  currentAmps: 4.2,       speedReverted: "V3→V1",
+  mlFaultRate: 0.043,     isolationActs: 3
+}</div>
+          <div class="tl-cj">The conference wing lighting dims slightly as the Domain Node isolates the affected sub-segment. The hotel manager barely notices — no full outage. <strong>The fault that caused the flickering was logged 18 hours ago. She never knew.</strong></div>
+        </div>
+      </div>
+
+      <div class="tl-step purple">
+        <div class="tl-dot">🎛</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--purple);">🎛 PFE — state machine</div>
+          <div class="tl-action">Commissioning state: fault_open → under_investigation</div>
+          <div class="tl-detail">PFE fault state machine transitions. Installation status in PFE Live Monitor
+            changes to amber ⚠. Night Watchman avatar on DN-07 escalates to Body Guard mode —
+            increased bus polling rate (500ms → 100ms), live current readings streamed.</div>
+          <div class="tl-cj">Nothing visible to the customer yet. System is already acting.</div>
+        </div>
+      </div>
+
+      <div class="tl-step info">
+        <div class="tl-dot">📋</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--blue);">📋 WorkHub M-08 — auto task creation</div>
+          <div class="tl-action">High-priority task auto-created and assigned to on-call technician</div>
+          <div class="tl-detail">WorkHub webhook handler creates task from fault event. Priority: high.
+            Due: today. Description pre-filled with full technical context from PFE.
+            Assigned to nearest available technician (Konrad K.) based on capacity queue.
+            Push notification sent to Konrad's phone immediately.</div>
+          <div class="tl-code">POST /workhub/tasks {
+  title: "⚠ Fault: overcurrent Zone-B (DN-07)",
+  pfe_ref_type: "fault",  pfe_ref_id: "fault_9f3a",
+  assignee: "KK",         priority: "high",
+  est_hours: 1.5,         due_at: "today"
+}</div>
+          <div class="tl-cj">Konrad receives a push notification at 14:25 — 2 minutes after the fault. He is 20 minutes away.</div>
+        </div>
+      </div>
+
+      <div class="tl-step active">
+        <div class="tl-dot">▶</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--amber);">📋 WorkHub — on site</div>
+          <div class="tl-action">Konrad arrives, starts timer, opens task detail</div>
+          <div class="tl-detail">WorkHub timer start event pushes worker presence to PFE Live Monitor.
+            Task detail shows full PFE context: segment diagram, fault history,
+            ML fault rate at each bus speed, Domain Node isolation log.
+            On-site context shows 2 other open tasks for Hotel Mitte — Konrad can batch them.
+            He inspects the cable connector at the segment tap (pre-identified in fault description)
+            and finds a loose crimp. Replaces connector. Logs material: "IDC connector 8-pin · 1 pcs · €2.40".</div>
+          <div class="tl-cj">Hotel manager sees a technician in the building within 45 minutes of the lighting issue. No prior call needed. The system sent him.</div>
+        </div>
+      </div>
+
+      <div class="tl-step done">
+        <div class="tl-dot">✓</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--green);">📋 WorkHub — completion</div>
+          <div class="tl-action">Completion submitted: note AI-corrected, customer signs</div>
+          <div class="tl-detail">Konrad writes completion note in his native Polish. AI detects Polish,
+            corrects and translates to German (hotel's language). Review panel shown.
+            Konrad accepts. Note stored in German with Polish original preserved.
+            Customer signs on screen. Requests WhatsApp copy.</div>
+          <div class="tl-code">completion_note: "Locker Crimpverbinder an Segment-Abzweig ersetzt.
+  Verbindung überprüft. Bus läuft stabil auf V3."
+original_note: "Wymieniono luźne złącze IDC na odgałęzieniu segmentu..."
+copy_channel: "whatsapp",  copy_phone: "+49 30 1234567"</div>
+          <div class="tl-cj">Hotel manager signs on screen in 30 seconds. Receives WhatsApp message with PDF before Konrad leaves. She can forward it to accounts immediately.</div>
+        </div>
+      </div>
+
+      <div class="tl-step purple">
+        <div class="tl-dot">🎛</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--purple);">🎛 PFE — fault resolved</div>
+          <div class="tl-action">Fault record closed · Domain Node ML updated · BOPT re-optimisation triggered</div>
+          <div class="tl-detail">WorkHub calls POST /pfe/faults/fault_9f3a/resolve.
+            PC-13 fault record closed with resolution note.
+            ML Ebene 1 resolution context logged: connector fault at V3, resolved by replacement.
+            Domain Node CFG updated: errors_at_speed[V3] normalised.
+            BOPT protocol re-runs on seg_b2: iterative speed negotiation from V0 upward.
+            Confirmed stable at V3 (1Mbps). Bus speed restored. Night Watchman avatar resumes normal mode.</div>
+          <div class="tl-cj">Lights return to full brightness in the conference wing. Hotel manager notices immediately — without being told anything was fixed.</div>
+        </div>
+      </div>
+
+      <div class="tl-step teal">
+        <div class="tl-dot">🧾</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--teal);">🧾 Billing M-09 — automatic invoice line</div>
+          <div class="tl-action">Labour + material lines pushed to M-09, invoice pre-drafted</div>
+          <div class="tl-detail">WorkHub task completion event triggers M-09 webhook.
+            Labour line: 1.5h × €85/h = €127.50. Bill comment: "Emergency response — fault_9f3a, Segment Zone-B".
+            Material line: IDC connector 8-pin × 1 × €2.40.
+            Completion certificate PDF attached to invoice record.
+            Customer signature stored as invoice authorisation.
+            Invoice status: draft → awaiting_approval in M-09.</div>
+          <div class="tl-code">POST /billing/invoice-lines {
+  projectId: "p1",  type: "labour",
+  amount_cents: 12750,
+  description: "Fault response — Zone-B overcurrent",
+  completion_ref: "CC-2026-0001",
+  signature_authorised: true
+}</div>
+          <div class="tl-cj">Hotel manager already has the PDF. The invoice arrives by end of day — no follow-up call, no dispute about what was done or how long it took. She signed for it on site.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="outcome-row">
+    <div class="outcome-box outcome-tech">
+      <div class="outcome-title">Technical outcome</div>
+      <ul>
+        <li>Fault tracked for 18h before threshold — ML profile built automatically</li>
+        <li>Technician dispatched within 2 minutes of threshold crossing</li>
+        <li>Bus restored to V3 with BOPT re-optimisation — no manual speed setting</li>
+        <li>Domain Node ML fault learning updated with resolution context</li>
+        <li>Full audit trail: PC-13 → PFE → WorkHub → Billing — zero manual entry</li>
+        <li>Next similar fault on this segment: ML predicts it earlier, threshold crossed sooner</li>
+      </ul>
+    </div>
+    <div class="outcome-box outcome-cust">
+      <div class="outcome-title">Customer experience</div>
+      <ul>
+        <li><strong>Technician arrived before she called</strong> — the system had been acting for 18 hours already</li>
+        <li>In a conventional system: 4–7 days to repair. In SCLAN: under 2 hours from threshold</li>
+        <li>One signature: delivery confirmation, data consent, and invoice authorisation</li>
+        <li>PDF via WhatsApp — before the technician left the car park</li>
+        <li>Invoice matched what she signed — zero disputes</li>
+        <li>This is the SCLAN value proposition made tangible: invisible, proactive, zero-friction</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SAMPLE 2: New installation commissioning end-to-end
+     ══════════════════════════════════════════════════════════ -->
+<div class="sample" id="sample-2">
+  <div class="sample-header">
+    <div class="sample-num" style="background:var(--purpleL);color:var(--purpleD);">2</div>
+    <div class="sample-header-text">
+      <div class="sample-title">New installation commissioning — PFE state machine drives WorkHub tasks</div>
+      <div class="sample-subtitle">PFE commissioning state machine · WorkHub · Domain Node · Billing · Customer sign-off</div>
+      <div class="sample-modules">
+        <span class="mod-badge" style="background:var(--purpleL);color:var(--purpleD);">🎛 PFE commissioning</span>
+        <span class="mod-badge" style="background:var(--blueL);color:var(--blueD);">📋 WorkHub M-08</span>
+        <span class="mod-badge" style="background:rgba(13,148,136,.1);color:var(--teal);">🔧 Domain Node</span>
+        <span class="mod-badge" style="background:var(--greenL);color:var(--greenD);">🧾 Billing M-09</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="journey-box">
+    <div class="journey-label">Customer journey</div>
+    <div class="journey-text">
+      Villa Rosenberg is a new installation. The client, Herr Rosenberg, has signed a contract but
+      has never dealt with a SCLAN installation before.
+      <span class="journey-highlight">He is nervous about technology, unsure what to expect, and worried about disruption during the multi-day commissioning.</span>
+      <br><br>
+      What he experiences: a shared project view in WorkHub (Client role) shows him exactly which
+      steps are done and which are next — in German, with no technical jargon. He receives a
+      WhatsApp update at each milestone. On handover day, he does a 30-minute walkthrough with
+      the technician, signs a single document on a phone screen, and the system is live.
+      <span class="journey-highlight">He understood every step. He felt in control throughout. The handover document is the same as the invoice — one signature covered everything.</span>
+    </div>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-title">Technical flow</div>
+    <div class="timeline">
+
+      <div class="tl-step purple">
+        <div class="tl-dot">🎛</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--purple);">🎛 PFE — commissioning project created</div>
+          <div class="tl-action">Planner creates commissioning project in PFE for Villa Rosenberg</div>
+          <div class="tl-detail">PFE commissioning state machine initialised with 8 standard steps:
+            cable survey → Domain Node mounting → bus termination and BOPT → PnP discovery →
+            context assignment → scene programming → energy quota setup → client walkthrough + sign-off.
+            Each step has defined prerequisites, acceptance criteria, and estimated hours.
+            Step 1 (cable survey) immediately becomes ready.</div>
+          <div class="tl-code">pfe.commissioning.step_ready → {
+  installationId: "villa_rosenberg",
+  stepId: "step_cable_survey",
+  stepName: "Cable survey and route planning",
+  est_hours: 4,  prerequisites: []
+}</div>
+          <div class="tl-cj">Herr Rosenberg logs into the WorkHub client view and sees: "Step 1 of 8 — Cable survey: Scheduled for tomorrow." Clear, no jargon.</div>
+        </div>
+      </div>
+
+      <div class="tl-step info">
+        <div class="tl-dot">📋</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--blue);">📋 WorkHub — tasks created from PFE steps</div>
+          <div class="tl-action">8 commissioning tasks auto-created and assigned to team</div>
+          <div class="tl-detail">Each PFE commissioning step becomes a WorkHub task with pfe_ref_type: 'commissioning_step'.
+            Tasks are assigned to Konrad K. (senior) and Maria R. (junior) based on capacity.
+            Client (Herr Rosenberg) has read-only access to project status view.
+            All task descriptions auto-translated to German for client view.</div>
+          <div class="tl-cj">Herr Rosenberg sees the full project plan in his language on his phone. He knows who is coming and when. Anxiety drops — he is informed.</div>
+        </div>
+      </div>
+
+      <div class="tl-step active">
+        <div class="tl-dot">▶</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--amber);">🔧 Domain Node · 📋 WorkHub — on-site days 1–3</div>
+          <div class="tl-action">Cable survey → mounting → BOPT bus optimisation</div>
+          <div class="tl-detail">Day 1: Konrad surveys and logs 340m cable, 4 Domain Nodes, 12 segments.
+            Materials logged in WorkHub → pushed to PFE inventory.
+            Day 2: Nodes mounted. PFE PnP discovers all 4 nodes automatically. BOPT protocol runs:
+            speeds negotiated per segment (V1–V4 based on cable length). Each node settled at
+            optimal speed with adaptive termination (digital pot 80–150Ω). SNP records confirmed stable speed.
+            Day 3: Context assignment. All modules assigned. Scene programming in PFE scene editor.</div>
+          <div class="tl-code">// BOPT result pushed to WorkHub material log
+POST /workhub/material-entries {
+  taskId: "step_bopt",  name: "Domain Node v2",
+  qty: 4,  unit: "pcs",  unitPriceCents: 28000,
+  billComment: "4× DN installed, BOPT V3 confirmed"
+}</div>
+          <div class="tl-cj">Each completed step triggers a WhatsApp update to Herr Rosenberg: "Step 3 complete: all bus segments verified ✓. Next: lighting scenes — tomorrow 9:00." He feels the project moving.</div>
+        </div>
+      </div>
+
+      <div class="tl-step done">
+        <div class="tl-dot">✓</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--green);">🎛 PFE · 📋 WorkHub — final step: client walkthrough</div>
+          <div class="tl-action">Commissioning step 8: client walkthrough + sign-off</div>
+          <div class="tl-detail">Konrad walks Herr Rosenberg through the completed installation.
+            Demos each avatar: Night Watchman activates at sunset, Home Nanny adjusts scenes for family areas,
+            Eco Manager applies energy quotas. Herr Rosenberg is satisfied.
+            WorkHub completion flow opened on Konrad's phone.
+            Completion note written in German (no AI correction needed — native speaker).
+            Herr Rosenberg reads the data protection notice, signs, enters his email.
+            Signature triggers: WorkHub → PFE commissioning close → Installation status: commissioned.</div>
+          <div class="tl-code">POST /pfe/commissioning/villa_rosenberg/close {
+  workhubCompletionId: "CC-2026-0042",
+  signatureRef: "sig_url_...",
+  clientName: "Herr Rosenberg",
+  signedAt: "2026-05-27T16:30:00Z"
+}
+// PFE installation status: commissioned ✓</div>
+          <div class="tl-cj">Herr Rosenberg signs once on screen. He immediately receives an email with the complete handover document: what was installed, where, every step completed, photos, his signature. It is professionally formatted in German. He forwards it to his insurance company that same evening.</div>
+        </div>
+      </div>
+
+      <div class="tl-step teal">
+        <div class="tl-dot">🧾</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--teal);">🧾 Billing M-09 — commissioning invoice</div>
+          <div class="tl-action">Full commissioning invoice auto-assembled from all 8 task completions</div>
+          <div class="tl-detail">M-09 aggregates all WorkHub task completions for the project.
+            Labour: 4 workers × 3 days = 28.5h × €85 = €2,422.50.
+            Materials: 4× Domain Node v2, 340m cable, connectors, DIN rail, tools = €1,340.00.
+            All bill comments from materials log appear as invoice line descriptions.
+            Customer signature from step 8 covers the full invoice — no separate invoice signing needed.
+            Invoice emailed to Herr Rosenberg immediately.</div>
+          <div class="tl-cj">The invoice matches exactly what Herr Rosenberg signed for. He already has the completion document in his inbox. He approves the invoice same day — no back-and-forth, no disputes, no "what is this line for?"</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="outcome-row">
+    <div class="outcome-box outcome-tech">
+      <div class="outcome-title">Technical outcome</div>
+      <ul>
+        <li>PFE commissioning state machine fully driven by WorkHub task completions</li>
+        <li>Hardware inventory auto-populated from WorkHub material entries</li>
+        <li>BOPT optimal speeds recorded per segment in PFE CFG store</li>
+        <li>Installation status: commissioned — visible in all SCLAN modules</li>
+        <li>One customer signature closes PFE commissioning AND authorises invoice</li>
+      </ul>
+    </div>
+    <div class="outcome-box outcome-cust">
+      <div class="outcome-title">Customer experience</div>
+      <ul>
+        <li>Saw every step in real time — no wondering "what are they doing?"</li>
+        <li>WhatsApp updates at each milestone — without asking</li>
+        <li>One signature on handover day covered everything</li>
+        <li>Handover document ready instantly — usable for insurance</li>
+        <li>Invoice matched what he saw and signed — zero friction</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SAMPLE 3: PnP module discovery → WorkHub → Billing
+     ══════════════════════════════════════════════════════════ -->
+<div class="sample" id="sample-3">
+  <div class="sample-header">
+    <div class="sample-num" style="background:var(--amberL);color:var(--amberD);">3</div>
+    <div class="sample-header-text">
+      <div class="sample-title">PnP discovery → configuration task → billable add-on</div>
+      <div class="sample-subtitle">PFE Plug & Play · BOPT protocol · WorkHub · Billing M-09</div>
+      <div class="sample-modules">
+        <span class="mod-badge" style="background:var(--amberL);color:var(--amberD);">🔌 PFE PnP</span>
+        <span class="mod-badge" style="background:var(--purpleL);color:var(--purpleD);">🎛 BOPT protocol</span>
+        <span class="mod-badge" style="background:var(--blueL);color:var(--blueD);">📋 WorkHub M-08</span>
+        <span class="mod-badge" style="background:var(--greenL);color:var(--greenD);">🧾 Billing M-09</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="journey-box">
+    <div class="journey-label">Customer journey</div>
+    <div class="journey-text">
+      Office Park AG has expanded floor 3. The facilities manager, Frau Müller, has purchased
+      6 additional SCLAN dimmer modules and had the electrician wire them in.
+      <span class="journey-highlight">She does not know she needs to call anyone — she assumes the system will just work. When the lights on floor 3 do not respond to scenes, she is frustrated but unsure what to do next.</span>
+      <br><br>
+      What happens: PFE detects the new modules via PnP, creates a WorkHub configuration task
+      automatically, a technician visits the same week, configures the modules, and Frau Müller
+      receives an invoice for exactly the configuration service — with the module IDs listed —
+      plus a note that her floor 3 scenes are now active.
+      <span class="journey-highlight">She did not have to explain what she bought, where it was installed, or what was wrong. The system knew and handled it.</span>
+    </div>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-title">Technical flow</div>
+    <div class="timeline">
+
+      <div class="tl-step purple">
+        <div class="tl-dot">🔌</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--purple);">🔌 PFE — PnP discovery</div>
+          <div class="tl-action">6 dimmer modules discovered on bus via Plug & Play</div>
+          <div class="tl-detail">Domain Node DN-04 (Floor 3) detects new devices during routine bus scan.
+            BOPT protocol runs on affected segments: SNP negotiates speed, adaptive termination adjusted.
+            Floor 3 segments stabilise at V2 (500kbps) due to extended cable runs from expansion.
+            PFE PnP assigns temporary IDs: 0x00A1–0x00A6. Status: unconfigured.</div>
+          <div class="tl-code">pfe.module.discovered × 6 → {
+  moduleIds: ["0x00A1"…"0x00A6"],
+  nodeId: "DN-04",  segmentIds: ["seg_f3a","seg_f3b"],
+  moduleType: "dimmer",  firmwareVersion: "2.3.1",
+  boptResult: { speed: "V2", termination: "110Ω" }
+}</div>
+          <div class="tl-cj">Floor 3 lights are on but do not respond to scenes or schedules. Frau Müller notices the problem on Monday morning.</div>
+        </div>
+      </div>
+
+      <div class="tl-step info">
+        <div class="tl-dot">📋</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--blue);">📋 WorkHub — configuration task auto-created</div>
+          <div class="tl-action">Task: "Configure 6 dimmer modules — Floor 3 expansion (DN-04)"</div>
+          <div class="tl-detail">WorkHub webhook creates task with all 6 module IDs, segment IDs, BOPT results,
+            and the firmware version in the description. Planner assigns to Maria R. (nearest available,
+            2 days queue depth). Estimated 3h. Frau Müller receives an automated email:
+            "We detected 6 new modules on your Floor 3 installation. A technician will visit
+            on Wednesday to complete the configuration."</div>
+          <div class="tl-cj">Frau Müller receives the email Monday afternoon — before she has even formally complained. Problem identified, solution scheduled. She feels taken care of.</div>
+        </div>
+      </div>
+
+      <div class="tl-step active">
+        <div class="tl-dot">▶</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--amber);">🎛 PFE · 📋 WorkHub — configuration visit</div>
+          <div class="tl-action">Maria configures all 6 modules in PFE, verifies scenes</div>
+          <div class="tl-detail">Maria opens task on phone — WorkHub shows module IDs, segment map, BOPT-confirmed speeds.
+            Opens PFE scene editor. Assigns all 6 modules to "Open Office" context on Floor 3.
+            Configures filter matrix: Common Mode Choke active, RC low-pass 1kHz.
+            Tests scenes: Morning (100%), Meeting (60%), End-of-day (30%), Night (0%).
+            All modules respond correctly. Photos taken of each segment.
+            WorkHub timer: 2.5h logged.</div>
+          <div class="tl-cj">Frau Müller watches the floor 3 lights respond to the scene schedule for the first time. She is visibly pleased — this is what she expected when she bought the modules.</div>
+        </div>
+      </div>
+
+      <div class="tl-step done">
+        <div class="tl-dot">✓</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--green);">📋 WorkHub — completion + signature</div>
+          <div class="tl-action">Completion note · Frau Müller signs · PFE modules marked configured</div>
+          <div class="tl-detail">Maria writes completion note. No AI correction (clean German, native speaker).
+            Completion triggers PFE: all 6 modules status → configured. Scene channels active.
+            PFE commissioning step for "Floor 3 expansion" advances to complete.
+            Frau Müller signs on screen. Requests email copy.</div>
+          <div class="tl-code">POST /pfe/modules/configure {
+  moduleIds: ["0x00A1"…"0x00A6"],
+  contextId: "open_office_f3",
+  workhubTaskId: "task_0042",
+  configuredBy: "MR",
+  configuredAt: "2026-05-27T11:45:00Z"
+}</div>
+          <div class="tl-cj">Frau Müller receives the completion email with photos of each segment and all 6 module IDs confirmed configured. She forwards it to the building manager as proof of work.</div>
+        </div>
+      </div>
+
+      <div class="tl-step teal">
+        <div class="tl-dot">🧾</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--teal);">🧾 Billing M-09 — add-on invoice</div>
+          <div class="tl-action">Configuration service invoice: 2.5h labour + module IDs as references</div>
+          <div class="tl-detail">M-09 receives task completion. Labour: 2.5h × €85 = €212.50.
+            Bill comment: "Floor 3 expansion — 6× dimmer modules configured (0x00A1–0x00A6)".
+            Module IDs listed for client's records.
+            No materials charge — modules were client-supplied.
+            Invoice attached to existing maintenance contract for Office Park AG.
+            Auto-submitted for approval in M-09.</div>
+          <div class="tl-cj">Invoice references the exact module IDs Frau Müller purchased. She can verify it against her purchase order. Zero ambiguity — she approves it the same day.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="outcome-row">
+    <div class="outcome-box outcome-tech">
+      <div class="outcome-title">Technical outcome</div>
+      <ul>
+        <li>PnP detection → task creation in under 5 minutes, no human trigger</li>
+        <li>BOPT confirmed V2 for floor 3 expanded cable runs — stored in PFE CFG</li>
+        <li>All 6 modules configured with filter matrix and context — PFE state: active</li>
+        <li>Scene channels operational — Morning/Meeting/End-of-day/Night</li>
+      </ul>
+    </div>
+    <div class="outcome-box outcome-cust">
+      <div class="outcome-title">Customer experience</div>
+      <ul>
+        <li>Proactive notification before she complained — system detected and acted</li>
+        <li>Module IDs on invoice matched her purchase order — no disputes</li>
+        <li>Email copy with photos served as proof-of-work for building manager</li>
+        <li>Floor 3 scenes active same week as modules installed</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SAMPLE 4: Avatar role change → WorkHub → Billing
+     ══════════════════════════════════════════════════════════ -->
+<div class="sample" id="sample-4">
+  <div class="sample-header">
+    <div class="sample-num" style="background:var(--tealL);color:var(--teal);">4</div>
+    <div class="sample-header-text">
+      <div class="sample-title">Avatar role change request → verification task → service record</div>
+      <div class="sample-subtitle">PFE avatar state machine · WorkHub · Billing · Patent candidate PC-22</div>
+      <div class="sample-modules">
+        <span class="mod-badge" style="background:var(--tealL);color:var(--teal);">🌙 Avatar system (PC-22)</span>
+        <span class="mod-badge" style="background:var(--purpleL);color:var(--purpleD);">🎛 PFE state machine</span>
+        <span class="mod-badge" style="background:var(--blueL);color:var(--blueD);">📋 WorkHub M-08</span>
+        <span class="mod-badge" style="background:var(--greenL);color:var(--greenD);">🧾 Billing M-09</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="journey-box">
+    <div class="journey-label">Customer journey</div>
+    <div class="journey-text">
+      Hotel Mitte GmbH is hosting a large conference next week. The events manager calls to request
+      that the Night Watchman security profile be temporarily elevated to Body Guard for the event week —
+      higher security sensitivity, faster escalation to the NSL.
+      <span class="journey-highlight">He knows what he wants but has no idea how to do it — SCLAN configuration is not his job. He just wants to make a request and have it handled professionally.</span>
+      <br><br>
+      What happens: the planner creates a WorkHub task from the avatar change request.
+      The technician makes the PFE configuration change remotely, verifies it, and the events manager
+      receives a confirmation email with the exact security parameters active for his event week.
+      On the Monday after, the avatar reverts automatically.
+      <span class="journey-highlight">He made one phone call. Everything else was handled. He received written confirmation he could show his security team.</span>
+    </div>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-title">Technical flow</div>
+    <div class="timeline">
+
+      <div class="tl-step info">
+        <div class="tl-dot">📋</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--blue);">📋 WorkHub — task created by planner</div>
+          <div class="tl-action">Avatar change request task: Night Watchman → Body Guard, 7 days</div>
+          <div class="tl-detail">Planner creates WorkHub task from phone call. Links task to PFE avatar
+            for Hotel Mitte, Node DN-01 (main entrance domain).
+            pfe_ref_type: 'avatar'. Estimated 0.5h (remote configuration).
+            Task description includes event dates, required escalation chain:
+            Body Guard → Private Security → NSL with 90-second response threshold.</div>
+          <div class="tl-code">POST /workhub/tasks {
+  title: "Avatar upgrade: Night Watchman → Body Guard (event week)",
+  pfe_ref_type: "avatar",  pfe_ref_id: "avatar_dn01",
+  description: "Event: 2–8 June. Elevate to Body Guard profile.
+    Escalation: BodyGuard→PrivateSecurity→NSL. Revert: 9 June 06:00.",
+  est_hours: 0.5,  priority: "medium"
+}</div>
+          <div class="tl-cj">Events manager receives a WorkHub task confirmation email — reference number, what was requested, who is handling it. Professional acknowledgment in under 5 minutes.</div>
+        </div>
+      </div>
+
+      <div class="tl-step purple">
+        <div class="tl-dot">🎛</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--purple);">🎛 PFE — avatar hierarchy state machine</div>
+          <div class="tl-action">Avatar transition: Night Watchman → Body Guard with scheduled revert</div>
+          <div class="tl-detail">Konrad opens PFE avatar assignment panel for Hotel Mitte, DN-01.
+            Changes avatar profile: Night Watchman → Body Guard.
+            PFE avatar state machine (PC-22 patent candidate) activates:
+            bus polling rate increases (500ms → 100ms),
+            minimum bus speed floor raised (V2 → V3),
+            alert threshold lowered (90s response),
+            escalation chain updated: Body Guard → Private Security → NSL.
+            Scheduled revert job created: 2026-06-09 06:00 UTC → Night Watchman.
+            Body Guard avatar active: confirmed in PFE Live Monitor.</div>
+          <div class="tl-code">PATCH /pfe/avatars/avatar_dn01 {
+  profile: "body_guard",
+  scheduledRevert: {
+    profile: "night_watchman",
+    at: "2026-06-09T06:00:00Z"
+  },
+  workhubTaskRef: "task_0077"
+}</div>
+          <div class="tl-cj">Body Guard icon appears in PFE Live Monitor. Bus polling increases immediately — the node is now more vigilant.</div>
+        </div>
+      </div>
+
+      <div class="tl-step active">
+        <div class="tl-dot">▶</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--amber);">📋 WorkHub — verification</div>
+          <div class="tl-action">Konrad verifies avatar active, documents configuration in WorkHub</div>
+          <div class="tl-detail">WorkHub completion note documents: avatar profile changed,
+            bus speed floor V3, escalation chain verified with NSL test ping,
+            scheduled revert confirmed for 09 June 06:00.
+            No materials. No physical site visit — remote configuration.
+            Completion note AI-corrected and translated to German.
+            Events manager email requested — full configuration parameters included in PDF.</div>
+          <div class="tl-cj">Events manager receives a PDF with the exact security parameters: avatar name, escalation chain, response threshold, active dates, scheduled revert. He prints it and gives it to his security coordinator.</div>
+        </div>
+      </div>
+
+      <div class="tl-step teal">
+        <div class="tl-dot">🧾</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--teal);">🧾 Billing M-09 · 🎛 PFE — revert on schedule</div>
+          <div class="tl-action">Service billed at 0.5h · Avatar auto-reverts on 9 June</div>
+          <div class="tl-detail">M-09 receives task completion: 0.5h × €85 = €42.50 configuration service.
+            Bill comment: "Security profile upgrade Body Guard 02–08 June (event week)".
+            On 2026-06-09 06:00: PFE scheduled job triggers automatically.
+            Avatar reverts: Body Guard → Night Watchman. Bus speed floor returns to V1.
+            Polling rate normalises. WorkHub inbox message to planner: "Avatar reverted for Hotel Mitte — no action required."</div>
+          <div class="tl-cj">Events manager's Monday morning starts with the lighting system quietly back to normal. He received no panicked calls, the event ran without incident, and he got a clean invoice for a half-hour service.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="outcome-row">
+    <div class="outcome-box outcome-tech">
+      <div class="outcome-title">Technical outcome</div>
+      <ul>
+        <li>Avatar hierarchy state machine (PC-22) transitioned and reverted without manual intervention</li>
+        <li>Bus speed floor elevated during event, normalised after</li>
+        <li>Escalation chain active and verified with NSL</li>
+        <li>Full audit trail: who changed what, when, why, and when reverted</li>
+      </ul>
+    </div>
+    <div class="outcome-box outcome-cust">
+      <div class="outcome-title">Customer experience</div>
+      <ul>
+        <li>One phone call — everything else was handled automatically</li>
+        <li>Written confirmation with exact security parameters for his security team</li>
+        <li>Auto-revert meant no follow-up call needed after the event</li>
+        <li>Invoice for 30 minutes — transparent, no surprise</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SAMPLE 5: Energy anomaly → quota investigation → invoice
+     ══════════════════════════════════════════════════════════ -->
+<div class="sample" id="sample-5">
+  <div class="sample-header">
+    <div class="sample-num" style="background:var(--greenL);color:var(--greenD);">5</div>
+    <div class="sample-header-text">
+      <div class="sample-title">Energy quota anomaly → investigation task → corrective action → sustainability report</div>
+      <div class="sample-subtitle">M-02 Energy Intelligence · PC-13 · Domain Node Deep Sleep · WorkHub · Billing</div>
+      <div class="sample-modules">
+        <span class="mod-badge" style="background:var(--greenL);color:var(--greenD);">🌱 M-02 Energy Intelligence</span>
+        <span class="mod-badge" style="background:var(--redL);color:#991B1B;">⚡ PC-13 Anomaly</span>
+        <span class="mod-badge" style="background:var(--purpleL);color:var(--purpleD);">🎛 Deep Sleep mode</span>
+        <span class="mod-badge" style="background:var(--blueL);color:var(--blueD);">📋 WorkHub M-08</span>
+        <span class="mod-badge" style="background:var(--greenL);color:var(--greenD);">🧾 Billing M-09</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="journey-box">
+    <div class="journey-label">Customer journey</div>
+    <div class="journey-text">
+      Logistics Hub Nord has a sustainability contract clause: energy consumption in non-operational
+      hours (22:00–06:00) must not exceed 5% of daytime baseline.
+      <span class="journey-highlight">The facility manager, Herr Bauer, noticed the energy bill last month was 12% higher than expected but cannot identify why from the utility bill alone — it is a single number for the whole building.</span>
+      <br><br>
+      What happens: M-02 Energy Intelligence detected the anomaly at segment level 18 days ago
+      and created a WorkHub investigation task. The technician identifies 3 segments where
+      Deep Sleep mode is not activating (legacy relay firmware). Firmware updated remotely.
+      Night-time consumption drops to 3.2%. Herr Bauer receives an energy report showing
+      the before and after — with projected annual savings in euros.
+      <span class="journey-highlight">He never filed a support ticket. He received a proactive report that showed exactly what was wrong, what was fixed, and how much money he will save per year. He forwarded it to the board.</span>
+    </div>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-title">Technical flow</div>
+    <div class="timeline">
+
+      <div class="tl-step warn">
+        <div class="tl-dot">!</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--red);">🌱 M-02 Energy Intelligence · ⚡ PC-13</div>
+          <div class="tl-action">Night-time consumption anomaly: 12% above quota on segments 4, 7, 11</div>
+          <div class="tl-detail">M-02 Energy Intelligence monitors accumulated energy (kWh) per segment
+            via Domain Node 5-point measurement (voltage, current, power, Leistung, NVRAM energy).
+            PC-13 quota anomaly detection flags segments 4, 7, 11: night-time average 18W each (expected: &lt;6W).
+            Root cause hypothesis: Deep Sleep mode not activating — BusV+, BusV−, CANH, CANL
+            should all open at 22:00 (zero standby current). They are not.</div>
+          <div class="tl-code">pfe.fault.detected → {
+  faultType: "quota_anomaly",
+  segments: ["seg_4","seg_7","seg_11"],
+  nightConsumptionW: 18.2,
+  expectedW: 5.8,
+  anomalyDays: 18,
+  hypothesis: "deep_sleep_not_activating"
+}</div>
+          <div class="tl-cj">Herr Bauer is unaware — the lights look off at night. The anomaly is invisible from the outside. Only segment-level monitoring caught it.</div>
+        </div>
+      </div>
+
+      <div class="tl-step info">
+        <div class="tl-dot">📋</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--blue);">📋 WorkHub — investigation task auto-created</div>
+          <div class="tl-action">Task: "Energy anomaly — Deep Sleep investigation, segments 4/7/11"</div>
+          <div class="tl-detail">WorkHub task created with M-02 anomaly data: 18 days of over-consumption,
+            3 segments, hypothesis, expected vs actual power draw, projected annual excess: €340.
+            Assigned to Konrad K. (remote investigation first).
+            Estimated: 1h remote + 2h on-site if firmware update needed.</div>
+          <div class="tl-cj">Herr Bauer receives an automated email: "We detected an energy anomaly on your installation and are investigating." He did not ask. The system proactively flagged it.</div>
+        </div>
+      </div>
+
+      <div class="tl-step active">
+        <div class="tl-dot">▶</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--amber);">🎛 PFE · Domain Node Deep Sleep</div>
+          <div class="tl-action">Remote investigation: Deep Sleep relay state confirmed stuck — firmware bug</div>
+          <div class="tl-detail">Konrad accesses PFE Live Monitor remotely.
+            Checks Domain Node operating mode logs for segments 4, 7, 11.
+            Expected sequence at 22:00: NORMAL → DEEP SLEEP (all relays open, zero standby current).
+            Actual: NORMAL → NORMAL. Deep Sleep transition not occurring.
+            Cross-references firmware version: nodes on segments 4/7/11 running v1.8.2 —
+            known bug: Deep Sleep timer disabled in this version. Fix: firmware v1.9.0.
+            Update can be pushed OTA via PFE bus.</div>
+          <div class="tl-code">// PFE remote diagnostic
+GET /pfe/nodes/DN-04,DN-07,DN-11/mode-logs {
+  from: "2026-05-01",  to: "2026-05-24"
+}
+// Result: deepSleepTransitions: 0 (expected: 18/night × 23 nights = 414)</div>
+          <div class="tl-cj">Konrad can diagnose and fix this without visiting the site. Herr Bauer will not even need to unlock the building.</div>
+        </div>
+      </div>
+
+      <div class="tl-step purple">
+        <div class="tl-dot">🎛</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--purple);">🎛 PFE — OTA firmware update + Deep Sleep verified</div>
+          <div class="tl-action">Firmware v1.9.0 pushed OTA to 3 nodes · Deep Sleep verified at 22:00</div>
+          <div class="tl-detail">PFE initiates OTA firmware update to DN-04, DN-07, DN-11.
+            Update applied over bus at V1 speed (fail-safe mode). Duration: 4 minutes per node.
+            Nodes reboot. Deep Sleep schedule reactivated.
+            That night: PFE monitors mode transitions at 22:00.
+            All 3 nodes: NORMAL → DEEP SLEEP confirmed. BusV+, BusV−, CANH, CANL all open.
+            Standby current: 0mA on all 3 segments (verified by Domain Node energy measurement).
+            M-02 clears anomaly flag. Night-time consumption: 3.2W (within 5% quota).</div>
+          <div class="tl-cj">The anomaly disappears from M-02 silently. No physical visit. No disruption to Herr Bauer's operations. The building just quietly became more efficient.</div>
+        </div>
+      </div>
+
+      <div class="tl-step done">
+        <div class="tl-dot">✓</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--green);">📋 WorkHub · 🌱 M-02 — completion + energy report</div>
+          <div class="tl-action">Completion with energy impact report · sustainability data updated</div>
+          <div class="tl-detail">Konrad completes the WorkHub task. Completion note details: root cause (firmware v1.8.2 bug),
+            fix applied (OTA update to v1.9.0), 3 nodes updated, Deep Sleep verified.
+            M-02 generates comparative energy report:
+            before: 18.2W average × 8h/night × 3 segments × 365 = 159kWh/year excess.
+            after: 3.2W × same = 28kWh/year. Saving: 131kWh/year ≈ €39/year at current rates.
+            Full report generated as PDF and attached to WorkHub completion record.
+            Sent to Herr Bauer by email.</div>
+          <div class="tl-code">// M-02 energy report pushed to completion record
+POST /workhub/completions/task_0099/attachments {
+  type: "energy_report",
+  title: "Deep Sleep restoration — energy impact",
+  data: {
+    excessKwhYear: 131,  savingEurYear: 39,
+    co2KgYear: 52.4,     quotaCompliant: true
+  }
+}</div>
+          <div class="tl-cj">Herr Bauer receives an email with subject: "Energy anomaly resolved — you will save €39/year and 52kg CO₂." He forwards it to the board as evidence of the smart building ROI. His sustainability clause is back in compliance.</div>
+        </div>
+      </div>
+
+      <div class="tl-step teal">
+        <div class="tl-dot">🧾</div>
+        <div class="tl-body">
+          <div class="tl-module" style="color:var(--teal);">🧾 Billing M-09 — remote service invoice</div>
+          <div class="tl-action">1h remote investigation + 0.2h firmware update billed transparently</div>
+          <div class="tl-detail">M-09 receives completion: 1.2h × €85 = €102.00.
+            Bill comment: "Remote energy anomaly investigation + OTA firmware update (3 nodes, v1.8.2→v1.9.0).
+            Deep Sleep restored. Annual saving: €39/year."
+            The bill comment includes the saving figure —
+            the invoice pays for itself in less than 3 years.
+            No site visit charge — remote resolution only.</div>
+          <div class="tl-cj">Herr Bauer receives a €102 invoice with a note that the fix will save him €39/year. The ROI is in the invoice itself. He approves it within the hour.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="outcome-row">
+    <div class="outcome-box outcome-tech">
+      <div class="outcome-title">Technical outcome</div>
+      <ul>
+        <li>Deep Sleep mode restored on 3 nodes — standby current: 0mA</li>
+        <li>Firmware v1.9.0 deployed OTA without site visit</li>
+        <li>M-02 anomaly cleared — quota compliance restored to 3.2%</li>
+        <li>Annual energy saving: 131kWh / €39 / 52kg CO₂ documented</li>
+        <li>PC-13 fault record closed with root cause and resolution</li>
+      </ul>
+    </div>
+    <div class="outcome-box outcome-cust">
+      <div class="outcome-title">Customer experience</div>
+      <ul>
+        <li>Problem detected and fixed without customer involvement</li>
+        <li>Proactive report showed root cause + fix + savings in one document</li>
+        <li>ROI figure on the invoice — the bill justified itself</li>
+        <li>Sustainability clause back in compliance — board-ready evidence</li>
+        <li>No site visit needed — no disruption, no scheduling</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE OVERVIEW -->
+<div class="sample" id="sample-arch" style="display:none;">
+  <div class="sample-header">
+    <div class="sample-num" style="background:var(--purpleL);color:var(--purpleD);
+      font-size:18px;width:40px;height:40px;">🧬</div>
+    <div class="sample-header-text">
+      <div class="sample-title">SCLAN SaaS — one planning truth, one execution reality</div>
+      <div class="sample-subtitle">How WorkHub, PPT, PFE, and all modules form a single coherent system</div>
+    </div>
+  </div>
+
+  <div style="padding:20px 28px;">
+
+    <!-- THE CORE STATEMENT -->
+    <div style="background:var(--navy);border-radius:var(--r12);padding:20px 24px;margin-bottom:24px;
+      border:1px solid rgba(245,158,11,.2);">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+        color:var(--amber);margin-bottom:12px;">The architectural principle</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:white;margin-bottom:6px;">
+            🎛 PFE — the spine
+          </div>
+          <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;">
+            PFE is a <strong style="color:white;">live editor and viewer</strong> —
+            not a data store. Each hardware module (Domain Node, SCLAN device) owns its own
+            SME (State Machine Engine) stored in its own firmware. Each SaaS module owns its
+            own database. PFE is the unified interface through which technicians
+            read and edit that distributed state directly.
+            <strong style="color:white;">Remove PFE and every module keeps running unchanged.</strong>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:white;margin-bottom:6px;">
+            One truth — many views
+          </div>
+          <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;">
+            A task is a task. Whether a planner sees it as a Gantt bar,
+            a Scrum story on a sprint board, a CPM node on the critical path,
+            or a field worker sees it as a timer card on their phone —
+            <strong style="color:white;">it is the same object</strong> in the same database
+            (WorkHub owns the task). PFE is a separate tool a technician uses in parallel
+            to inspect and edit hardware module state — it does not mediate between modules.
+            The view changes. The data ownership does not.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE ROLES -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+      color:var(--text4);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+      Module roles
+      <div style="flex:1;height:1px;background:var(--gray2);"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;">
+      ${[
+        {icon:'🎛',name:'PFE',color:'#8B5CF6',bg:'#EDE9FE',
+         role:'Live editor & viewer — not a data store',
+         desc:'Reads and edits the SME of hardware modules live over the bus. Surfaces SaaS module state for inspection and editing. Owns no data of its own. Modules keep running if PFE is offline.'},
+        {icon:'📐',name:'PPT',color:'#F59E0B',bg:'#FEF3C7',
+         role:'Project planning layer',
+         desc:'Scrum sprints, CPM networks, Gantt charts, resource loading, milestone roadmaps. Reads PFE topology to build realistic plans. Creates WorkHub tasks.'},
+        {icon:'📋',name:'WorkHub M-08',color:'#3B82F6',bg:'#EFF6FF',
+         role:'Field execution layer',
+         desc:'Workers execute tasks on site. Timer, completion notes, materials, customer signature. Reads PFE context, writes completion back to PFE.'},
+        {icon:'🌱',name:'M-02 Energy',color:'#10B981',bg:'#D1FAE5',
+         role:'Energy intelligence',
+         desc:'Segment-level energy monitoring at 5×/second. Quota compliance tracking. Feeds anomaly data to PC-13.'},
+        {icon:'⚡',name:'PC-13',color:'#EF4444',bg:'#FEF2F2',
+         role:'Anomaly detection',
+         desc:'Fault threshold detection, ML fault profiling, quota anomaly scoring. Triggers WorkHub tasks automatically.'},
+        {icon:'🧾',name:'Billing M-09',color:'#0D9488',bg:'#CCFBF1',
+         role:'Financial layer',
+         desc:'Assembles invoices from WorkHub completions. Reads PFE customer data. Milestone completions trigger payment stages.'},
+      ].map(m=>`
+        <div style="background:${m.bg};border:1.5px solid ${m.color}30;border-radius:var(--r12);
+          padding:14px 16px;">
+          <div style="font-size:18px;margin-bottom:4px;">${m.icon}</div>
+          <div style="font-size:13px;font-weight:700;color:${m.color};">${m.name}</div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;
+            color:${m.color}80;margin-bottom:6px;">${m.role}</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6;">${m.desc}</div>
+        </div>`).join('')}
+    </div>
+
+    <!-- PPT VIEWS SECTION -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+      color:var(--text4);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+      PPT — one planning truth, many views
+      <div style="flex:1;height:1px;background:var(--gray2);"></div>
+    </div>
+
+    <div style="background:var(--navy);border-radius:var(--r12);padding:20px 24px;margin-bottom:20px;">
+      <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:16px;">
+        PPT (Project Planning Tool) is the future SCLAN SaaS planning module. All planning views
+        below represent the <strong style="color:white;">same underlying task objects</strong>
+        that WorkHub workers execute. A Scrum story, a CPM activity, a Gantt bar, and a WorkHub
+        task card are all the same database row — rendered differently for different audiences.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        ${[
+          {name:'Scrum board', icon:'📌',
+           desc:'Sprint backlog → In Progress → Done. Story points from est_hours × velocity. Live via WorkHub WebSocket — task status updates in real time as workers complete on site.',
+           audience:'Planner, Manager'},
+          {name:'Sprint burndown', icon:'📉',
+           desc:'Remaining story points vs sprint days elapsed. Actual hours (WorkHub time_entries) vs baseline (PPT story_points). Velocity computed across sprints.',
+           audience:'Manager, Planner'},
+          {name:'CPM network', icon:'🕸',
+           desc:'Critical path computed from PFE commissioning dependency graph. Float calculated per task. Critical path highlighted. Recalculates in real time as tasks complete.',
+           audience:'Planner, Project Manager'},
+          {name:'Gantt chart', icon:'📊',
+           desc:'Time-based view with dependency arrows. Bars coloured by status (WorkHub task status). Baseline vs actual comparison. Resource assignments visible per bar.',
+           audience:'Manager, Client'},
+          {name:'Resource loading', icon:'👥',
+           desc:'Histogram of worker hours committed per week. Reads WorkHub capacity API. Highlights overload (>90%) and free capacity. Drag tasks to rebalance.',
+           audience:'Planner'},
+          {name:'Milestone roadmap', icon:'🏁',
+           desc:'High-level timeline of project milestones. Milestone complete when all child tasks done in WorkHub AND PFE confirms physical reality. Dual-confirmation Definition of Done.',
+           audience:'Client, Manager'},
+        ].map(v=>`
+          <div style="background:rgba(255,255,255,.05);border-radius:var(--r8);padding:12px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+              <span style="font-size:16px;">${v.icon}</span>
+              <span style="font-size:13px;font-weight:600;color:white;">${v.name}</span>
+              <span style="font-size:10px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);
+                padding:1px 6px;border-radius:99px;margin-left:auto;">${v.audience}</span>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.6;">${v.desc}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- DEFINITION OF DONE -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+      color:var(--text4);margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+      SCLAN definition of Done — dual confirmation
+      <div style="flex:1;height:1px;background:var(--gray2);"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
+      <div style="background:var(--blueL);border:1px solid #BFDBFE;border-radius:var(--r12);
+        padding:14px 16px;text-align:center;">
+        <div style="font-size:24px;margin-bottom:6px;">📋</div>
+        <div style="font-size:12px;font-weight:700;color:var(--blueD);margin-bottom:4px;">WorkHub says Done</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6;">
+          Completion note submitted<br/>
+          Materials logged<br/>
+          Customer signature captured<br/>
+          Time entry written
+        </div>
+      </div>
+      <div style="background:var(--purpleL);border:1px solid #C4B5FD;border-radius:var(--r12);
+        padding:14px 16px;text-align:center;display:flex;flex-direction:column;justify-content:center;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+          color:var(--purpleD);margin-bottom:6px;">+ and</div>
+        <div style="font-size:24px;margin-bottom:6px;">🎛</div>
+        <div style="font-size:12px;font-weight:700;color:var(--purpleD);margin-bottom:4px;">PFE confirms Done</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6;">
+          Commissioning step advanced<br/>
+          Module configured in PFE<br/>
+          Fault closed in PC-13<br/>
+          Bus speed confirmed
+        </div>
+      </div>
+      <div style="background:var(--amberL);border:1px solid #FCD34D;border-radius:var(--r12);
+        padding:14px 16px;text-align:center;">
+        <div style="font-size:24px;margin-bottom:6px;">✅</div>
+        <div style="font-size:12px;font-weight:700;color:var(--amberD);margin-bottom:4px;">PPT marks Done</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6;">
+          Burndown updated<br/>
+          Critical path recalculated<br/>
+          Milestone check triggered<br/>
+          Billing M-09 notified
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--gray0);border:1px solid var(--gray2);border-radius:var(--r12);
+      padding:14px 18px;font-size:13px;color:var(--text2);line-height:1.7;">
+      <strong>Why dual confirmation matters:</strong>
+      In a conventional project management tool, "Done" means a human clicked a status button.
+      In SCLAN, "Done" means two independent systems agree:
+      the field worker confirmed the work is finished (WorkHub),
+      and the SCLAN installation confirmed the physical reality changed (PFE).
+      A commissioning step cannot be marked complete in PPT until a Domain Node has actually
+      been discovered via PnP, configured in PFE, and confirmed active on the bus.
+      Planning and physical reality are always in sync.
+    </div>
+
+  </div>
+</div>
+
+<!-- footer -->
+<div style="text-align:center;padding:32px 0 8px;font-size:12px;color:var(--text4);">
+  WorkHub SCLAN M-08 · Module Interaction Samples · [mn]medianet · Confidential NDA 5.0 · May 2026
+</div>
+
+</div><!-- /page -->
+
+<script>
+function showSample(n){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.remove('active'));
+  document.querySelectorAll('.sample').forEach(s=>s.style.display='none');
+  if(n==='all'){
+    document.querySelector('.tab').classList.add('active');
+    document.querySelectorAll('.sample').forEach(s=>s.style.display='block');
+    document.getElementById('sample-arch').style.display='none';
+  } else if(n==='arch'){
+    document.querySelectorAll('.tab')[6].classList.add('active');
+    document.getElementById('sample-arch').style.display='block';
+  } else {
+    document.querySelectorAll('.tab')[n].classList.add('active');
+    document.getElementById('sample-'+n).style.display='block';
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

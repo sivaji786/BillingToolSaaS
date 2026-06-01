@@ -134,14 +134,16 @@ class UnifiedAuthFilter implements FilterInterface
                 $request->userId = $userId;
                 $request->userType = $tokenDataArr['type'] ?? (isset($tokenDataArr['data']) ? ((array)$tokenDataArr['data'])['role'] ?? 'customer' : 'customer');
 
-                // Bridge to session for legacy RBAC
-                if (!$session->get('isLoggedIn')) {
+                // Bridge to session for legacy RBAC.
+                // Always sync when the JWT user differs from the stored session user
+                // (handles account switching without a full session clear).
+                if (!$session->get('isLoggedIn') || (int)$session->get('userId') !== (int)$userId) {
                     try {
                         $session->set([
                             'isLoggedIn' => true,
-                            'userId' => $userId,
-                            'tenantId' => $tenant->id ?? null,
-                            'authMethod' => 'jwt'
+                            'userId'     => $userId,
+                            'tenantId'   => $tenant->id ?? null,
+                            'authMethod' => 'jwt',
                         ]);
                     } catch (\Throwable $e) {}
                 }
@@ -195,7 +197,11 @@ class UnifiedAuthFilter implements FilterInterface
             '/billing/plans',
             '/billing/package-services',
             '/tickets',
-            '/api/public/cms/'
+            '/api/public/cms/',
+            '/ping',               // OfflineBanner health check – no auth, no tenant
+            '/auth/sso/',          // SSO redirect, callback, and providers endpoints
+            '/auth/saml/',         // SAML 2.0 — IdP-initiated and SP-initiated flows
+            '/auth/oidc/',         // Generic OIDC redirect and callback
         ];
         foreach ($publicPatterns as $pattern) {
             if (strpos($uri, $pattern) !== false) return true;

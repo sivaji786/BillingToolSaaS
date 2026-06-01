@@ -1,6 +1,6 @@
 import { en } from '../translations/en';
 
-export type Language = 'en' | 'de' | 'ar' | 'pl';
+export type Language = 'en' | 'de' | 'ar' | 'pl' | 'fr' | 'it';
 
 const translations: Record<string, any> = { en };
 
@@ -8,6 +8,8 @@ const loaders: Record<string, () => Promise<any>> = {
   de: () => import('../translations/de').then(m => m.de),
   ar: () => import('../translations/ar').then(m => m.ar),
   pl: () => import('../translations/pl').then(m => m.pl),
+  fr: () => import('../translations/fr').then(m => m.fr),
+  it: () => import('../translations/it').then(m => m.it),
 };
 
 export async function ensureTranslation(lang: Language): Promise<void> {

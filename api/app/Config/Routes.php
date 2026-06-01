@@ -134,7 +134,37 @@ $routes->group('auth', function($routes) {
     $routes->post('quick-access', '\App\Controllers\QuickAccessAuth::sendOtp');
     $routes->get('quick-access/draft', '\App\Controllers\QuickAccessAuth::getDraft');
     $routes->post('quick-access/verify', '\App\Controllers\QuickAccessAuth::verifyOtp');
+
+    // SSO — OAuth 2.0 social login (public; no auth required)
+    $routes->get('sso/providers', '\App\Controllers\SsoController::providers');
+    $routes->group('sso', ['filter' => 'sso_ratelimit'], function($routes) {
+        $routes->get('(:segment)/redirect',  '\App\Controllers\SsoController::redirect/$1');
+        $routes->get('(:segment)/callback',  '\App\Controllers\SsoController::callback/$1');
+    });
+
 });
+
+// SSO-007: identities list + unlink (authenticated)
+$routes->get('auth/sso/identities',           '\App\Controllers\SsoController::identities',  ['filter' => 'auth']);
+$routes->delete('auth/sso/(:segment)/unlink', '\App\Controllers\SsoController::unlink/$1',   ['filter' => ['auth', 'sso_ratelimit']]);
+
+// SSO link callback (session-validated, NOT JWT — OAuth provider redirect)
+$routes->get('auth/sso/(:segment)/link', '\App\Controllers\SsoController::link/$1');
+
+// SAML 2.0 (public — IdP must be able to reach ACS and metadata)
+$routes->get( 'auth/saml/metadata', '\App\Controllers\SamlController::metadata');
+$routes->get( 'auth/saml/login',    '\App\Controllers\SamlController::login');
+$routes->post('auth/saml/acs',      '\App\Controllers\SamlController::acs');
+$routes->get( 'auth/saml/slo',      '\App\Controllers\SamlController::slo');
+
+// Generic OIDC (public — OIDC callback must not require auth)
+$routes->get('auth/oidc/redirect',  '\App\Controllers\OidcController::redirect');
+$routes->get('auth/oidc/callback',  '\App\Controllers\OidcController::callback');
+$routes->post('auth/oidc/test-discovery', '\App\Controllers\OidcController::testDiscovery', ['filter' => 'auth']);
+
+// SSO Settings — tenant admin (SSO-017)
+$routes->get('settings/sso', '\App\Controllers\SsoSettingsController::show',   ['filter' => 'auth']);
+$routes->put('settings/sso', '\App\Controllers\SsoSettingsController::update', ['filter' => 'auth']);
 
 // Profile Management (requires auth)
 $routes->group('profile', ['filter' => 'auth'], function($routes) {
@@ -212,6 +242,13 @@ $routes->group('workspace', ['filter' => 'auth'], function($routes) {
 
 // CORS preflight - must be BEFORE other routes
 $routes->options('(:any)', 'Cors::options');
+
+// Public health/ping — no auth, no tenant required (used by OfflineBanner)
+$routes->match(['get', 'head'], 'ping', function() {
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => true]);
+    exit;
+});
 
 $routes->post('webhooks/stripe', '\App\Controllers\Webhooks::stripe');
 
@@ -296,4 +333,173 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
 });
 
 
+// =============================================================================
+// WorkHub M-08 — Field Service Work Management
+// Sprint 2: Task CRUD, Timer, Timesheet, Completion, AI (WH-013 to WH-028)
+// =============================================================================
+
+// Read access — tasks, timesheet, completions
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], function ($routes) {
+    // batch-location must come before (:num) to avoid segment conflict
+    $routes->get('tasks/batch-location', '\App\Controllers\WorkHub\TaskController::batchLocation');
+    $routes->get('tasks', '\App\Controllers\WorkHub\TaskController::index');
+    $routes->get('tasks/(:num)', '\App\Controllers\WorkHub\TaskController::show/$1');
+    $routes->get('timesheet', '\App\Controllers\WorkHub\TimesheetController::index');
+    $routes->get('timesheet/export', '\App\Controllers\WorkHub\TimesheetController::export');
+    $routes->get('timesheet/signoff-status', '\App\Controllers\WorkHub\TimesheetController::signoffStatus');
+    $routes->get('completions/(:num)', '\App\Controllers\WorkHub\CompletionController::show/$1');
+});
+
+// Task create — includes plan-limit check inside controller
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.create']], function ($routes) {
+    $routes->post('tasks', '\App\Controllers\WorkHub\TaskController::create');
+});
+
+// Task update
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.edit']], function ($routes) {
+    $routes->put('tasks/(:num)', '\App\Controllers\WorkHub\TaskController::update/$1');
+});
+
+// Task delete — Manager only
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.delete']], function ($routes) {
+    $routes->delete('tasks/(:num)', '\App\Controllers\WorkHub\TaskController::delete/$1');
+});
+
+// Timer — Worker
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.timer.start']], function ($routes) {
+    $routes->post('tasks/(:num)/timer/start', '\App\Controllers\WorkHub\TimerController::start/$1');
+    $routes->post('tasks/(:num)/timer/pause', '\App\Controllers\WorkHub\TimerController::pause/$1');
+    $routes->post('tasks/(:num)/timer/stop',  '\App\Controllers\WorkHub\TimerController::stop/$1');
+});
+
+// Completion records — Worker
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.completion.submit']], function ($routes) {
+    $routes->post('tasks/(:num)/completion',              '\App\Controllers\WorkHub\CompletionController::submit/$1');
+    $routes->post('completions/(:num)/customer-signature', '\App\Controllers\WorkHub\CompletionController::customerSignature/$1');
+    $routes->post('timesheet/signoff',                    '\App\Controllers\WorkHub\TimesheetController::signoff');
+});
+
+// AI services — rate limited (60/min tenant, 10/min user) per WH-080
+$routes->group('workhub/ai', ['filter' => ['auth', 'rbac:workhub.task.view', 'wh_ratelimit']], function ($routes) {
+    $routes->post('correct',   '\App\Controllers\WorkHub\AIController::correct');
+    $routes->post('translate', '\App\Controllers\WorkHub\AIController::translate');
+});
+
+// Epics 6–8: Files, Print, Workers, Projects, Customers, Inbox (WH-029–035)
+
+// File upload — completion.submit so workers can upload
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.completion.submit']], function ($routes) {
+    $routes->post('files/upload', '\App\Controllers\WorkHub\FileController::upload');
+});
+
+// Documents list — read access
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], function ($routes) {
+    $routes->get('tasks/(:num)/documents', '\App\Controllers\WorkHub\FileController::listForTask/$1');
+});
+
+// Local dev file proxy (no S3) — HMAC-signed URL is the auth mechanism (like S3 presign)
+$routes->get('workhub/files/proxy', '\App\Controllers\WorkHub\FileController::proxy');
+
+// Print / PDF generation — reports.export
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.reports.export']], function ($routes) {
+    $routes->get('print/(:any)/(:any)', '\App\Controllers\WorkHub\PrintController::generate/$1/$2');
+});
+
+// Workers — read + management
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], function ($routes) {
+    $routes->get('workers',                '\App\Controllers\WorkHub\WorkerController::index');
+    $routes->get('workers/available',      '\App\Controllers\WorkHub\WorkerController::available');
+    $routes->get('workers/(:num)',         '\App\Controllers\WorkHub\WorkerController::show/$1');
+    $routes->post('workers',               '\App\Controllers\WorkHub\WorkerController::store');
+    $routes->patch('workers/(:num)/role',  '\App\Controllers\WorkHub\WorkerController::setRole/$1');
+    $routes->delete('workers/(:num)',      '\App\Controllers\WorkHub\WorkerController::destroy/$1');
+});
+
+// Worker profile — auth only (no RBAC): bootstraps role for new/existing workers
+$routes->group('workhub', ['filter' => 'auth'], function ($routes) {
+    $routes->get('profile',   '\App\Controllers\WorkHub\WorkerController::profile');
+    $routes->patch('profile', '\App\Controllers\WorkHub\WorkerController::updateProfile');
+});
+
+// Projects — read access
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], function ($routes) {
+    $routes->get('projects',       '\App\Controllers\WorkHub\ProjectController::index');
+    $routes->get('projects/(:num)', '\App\Controllers\WorkHub\ProjectController::show/$1');
+});
+
+// Projects — manage (planner/manager)
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.project.manage']], function ($routes) {
+    $routes->post(  'projects',       '\App\Controllers\WorkHub\ProjectController::create');
+    $routes->put(   'projects/(:num)', '\App\Controllers\WorkHub\ProjectController::update/$1');
+    $routes->delete('projects/(:num)', '\App\Controllers\WorkHub\ProjectController::delete/$1');
+});
+
+// Customers — read access
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], function ($routes) {
+    $routes->get('customers',       '\App\Controllers\WorkHub\CustomerController::index');
+    $routes->get('customers/(:num)', '\App\Controllers\WorkHub\CustomerController::show/$1');
+});
+
+// Customers — manage
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.project.manage']], function ($routes) {
+    $routes->post(  'customers',       '\App\Controllers\WorkHub\CustomerController::create');
+    $routes->put(   'customers/(:num)', '\App\Controllers\WorkHub\CustomerController::update/$1');
+    $routes->delete('customers/(:num)', '\App\Controllers\WorkHub\CustomerController::delete/$1');
+});
+
+// Inbox — all authenticated workhub users
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], function ($routes) {
+    $routes->get( 'inbox/messages',              '\App\Controllers\WorkHub\InboxController::index');
+    $routes->post('inbox/messages',              '\App\Controllers\WorkHub\InboxController::create');
+    // mark-all-read must precede (:num)/read to avoid segment conflict
+    $routes->put( 'inbox/messages/mark-all-read', '\App\Controllers\WorkHub\InboxController::markAllRead');
+    $routes->put( 'inbox/messages/(:num)/read',   '\App\Controllers\WorkHub\InboxController::markRead/$1');
+    $routes->get( 'inbox/unread-count',           '\App\Controllers\WorkHub\InboxController::unreadCount');
+});
+
+// Sprint 4: WorkHub Settings (WH-061)
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], function ($routes) {
+    $routes->get('settings', '\App\Controllers\WorkHub\SettingsController::index');
+    $routes->put('settings', '\App\Controllers\WorkHub\SettingsController::update');
+});
+
+// Sprint 4: SA Admin — WorkHub management (WH-062, WH-063, WH-066)
+$routes->group('admin/workhub', ['filter' => ['auth']], function ($routes) {
+    $routes->get('compliance-report', '\App\Controllers\AdminWorkHub::complianceReport');
+    $routes->put('tenants/(:num)/toggle', '\App\Controllers\AdminWorkHub::toggleTenant/$1');
+    $routes->put('tenants/(:num)/quota',  '\App\Controllers\AdminWorkHub::overrideQuota/$1');
+});
+
+// Sprint D: External module webhooks — HMAC-signed, no session auth (machine-to-machine)
+// Signature verified inside WebhookController::verifySignature() via WORKHUB_WEBHOOK_SECRET.
+$routes->group('workhub/webhooks', function ($routes) {
+    $routes->post('receive',    '\App\Controllers\WorkHub\WebhookController::receive');
+    $routes->post('pc13-fault', '\App\Controllers\WorkHub\WebhookController::pc13Fault');
+    $routes->post('pfe-task',   '\App\Controllers\WorkHub\WebhookController::pfeTask');
+});
+
+// Sprint C: GDPR Art. 15 — data subject access (auth only; no RBAC — available to all roles)
+$routes->group('workhub', ['filter' => 'auth'], function ($routes) {
+    $routes->get('my-data', '\App\Controllers\WorkHub\GdprController::myData');
+});
+
+// Sprint C: Time entries — read + planner/manager correction
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], function ($routes) {
+    $routes->get('time-entries', '\App\Controllers\WorkHub\TimeEntryController::index');
+});
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.edit']], function ($routes) {
+    $routes->put('time-entries/(:num)/correct', '\App\Controllers\WorkHub\TimeEntryController::correct/$1');
+});
+
+// Sprint E: Aggregate endpoints
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], function ($routes) {
+    $routes->get('kanban',          '\App\Controllers\WorkHub\AggregateController::kanban');
+    $routes->get('capacity',        '\App\Controllers\WorkHub\AggregateController::capacity');
+    $routes->get('finance/summary', '\App\Controllers\WorkHub\AggregateController::financeSummary');
+});
+
+// Sprint E: Offline sync — all authenticated workers
+$routes->group('workhub', ['filter' => 'auth'], function ($routes) {
+    $routes->post('sync', '\App\Controllers\WorkHub\SyncController::sync');
+});
 

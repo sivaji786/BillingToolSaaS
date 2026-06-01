@@ -14,7 +14,7 @@ class UserModel extends BaseModel
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['tenant_id', 'email', 'password', 'password_hash', 'name', 'role', 'last_login', 'email_verified'];
+    protected $allowedFields    = ['tenant_id', 'email', 'password', 'password_hash', 'name', 'role', 'last_login', 'email_verified', 'avatar_url', 'sso_only'];
 
     protected bool $allowEmptyInserts = false;
 

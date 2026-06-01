@@ -35,6 +35,7 @@ const LetterEditor = lazy(() => import('./components/screens/LetterEditor').then
 const LetterPreview = lazy(() => import('./components/screens/LetterPreview').then(module => ({ default: module.LetterPreview })));
 const CmsPageView = lazy(() => import('./components/screens/CmsPageView').then(module => ({ default: module.CmsPageView })));
 const SharedInvoiceView = lazy(() => import('./components/screens/SharedInvoiceView').then(module => ({ default: module.SharedInvoiceView })));
+const WorkHubLayout = lazy(() => import('./pages/WorkHub/WorkHubLayout').then(module => ({ default: module.WorkHubLayout })));
 
 // Admin Portal Components
 const SALogin = lazy(() => import('./components/screens/Admin/SALogin').then(module => ({ default: module.SALogin })));
@@ -146,7 +147,7 @@ import { toast } from 'sonner';
 import { authService, invoiceService, letterService } from './services/api';
 import { PLATFORM_TEMPLATES } from './utils/invoice-templates-defaults';
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage' | 'sharedInvoice';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'workhub' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage' | 'sharedInvoice';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -159,7 +160,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace(/^#\/?/, '');
-      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'].includes(hash)) {
+      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'workhub', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'].includes(hash)) {
         return hash as Screen;
       }
       // Handle parameterized routes like designLayout/123 or reset-password/123 or cms/slug
@@ -237,8 +238,9 @@ function AppContent() {
           const hasPersistedUser = !!storeState.user && !!storeState.tenant;
 
           // Skip the /auth/me round-trip when the JWT is still valid and we
-          // already have hydrated user/tenant data from the persisted store.
-          if (hasPersistedUser && isJwtValid(token)) {
+          // already have hydrated user/tenant data (including plan_features) from the persisted store.
+          const hasPlanFeatures = !!(storeState.tenant as any)?.plan_features;
+          if (hasPersistedUser && isJwtValid(token) && hasPlanFeatures) {
             if (currentScreen === 'landing' || currentScreen === 'login') {
               setCurrentScreen('dashboard');
             }
@@ -274,7 +276,7 @@ function AppContent() {
     const handleHashChange = () => {
       const hash = window.location.hash.replace(/^#\/?/, '');
       if (hash && [
-        'landing', 'login', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison', 'SAPages'
+        'landing', 'login', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'workhub', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison', 'SAPages'
       ].includes(hash)) {
         setCurrentScreen(hash as Screen);
       } else if (hash.startsWith('cms/')) {
@@ -330,7 +332,7 @@ function AppContent() {
   useEffect(() => {
     if ([
       'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory', 'packageComparison',
-      'signup', 'login', 'landing', 'billing', 'buyers', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison',
+      'signup', 'login', 'landing', 'billing', 'buyers', 'workhub', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison',
     ].includes(currentScreen)) {
       if (window.location.hash.replace('#', '') !== currentScreen) {
         window.location.hash = currentScreen;
@@ -338,18 +340,22 @@ function AppContent() {
     }
   }, [currentScreen]);
 
+  // Billing access: super-admins (tenant owners) have full RBAC rights.
+  // WorkHub-only workers have no billing permissions and must not trigger these calls.
+  const hasBillingAccess = isAuthenticated && (user?.is_super_admin === true || user?.role === 'admin');
+
   // React Query for data fetching
   const { data: invoices = [], refetch: refetchInvoices } = useQuery({
     queryKey: ['invoices', user?.id],
     queryFn: () => invoiceService.getAll(),
-    enabled: isAuthenticated,
+    enabled: hasBillingAccess,
     staleTime: 2 * 60 * 1000,
   });
 
   const { data: userTemplates = [], refetch: refetchTemplates } = useQuery({
     queryKey: ['templates'],
     queryFn: () => invoiceTemplateService.getAll(),
-    enabled: isAuthenticated,
+    enabled: hasBillingAccess,
     staleTime: 30 * 60 * 1000,
   });
 
@@ -358,14 +364,14 @@ function AppContent() {
   const { data: companyProfiles = [], refetch: refetchProfile } = useQuery({
     queryKey: ['profile'],
     queryFn: () => companyProfileService.getAll(),
-    enabled: isAuthenticated,
+    enabled: hasBillingAccess,
     staleTime: 30 * 60 * 1000,
   });
 
   const { data: logEntries = [] } = useQuery({
     queryKey: ['audit-logs'],
     queryFn: () => auditLogService.getAll(),
-    enabled: isAuthenticated,
+    enabled: hasBillingAccess,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -414,14 +420,11 @@ function AppContent() {
     }
   };
 
-  const handleLogout = () => {
-    authService.logout();
-    useAuthStore.getState().logout();
+  const handleLogout = async () => {
+    await authService.logout();        // destroys server-side session
+    useAuthStore.getState().logout();  // clears Zustand + localStorage + redirects
     setCurrentScreen('dashboard');
     setCurrentInvoice(null);
-    toast.success(t('login.loggedOut'), {
-      description: t('login.loggedOutDesc'),
-    });
   };
 
   const handleNewInvoice = () => {
@@ -1145,6 +1148,10 @@ function AppContent() {
                 )}
 
                 {currentScreen === 'billing' && <Billing />}
+
+                {currentScreen === 'workhub' && (
+                  <WorkHubLayout onNavigate={(screen) => setCurrentScreen(screen as Screen)} />
+                )}
 
                 {currentScreen === 'buyers' && <Buyers />}
                 {currentScreen === 'workspace' && <Workspace />}

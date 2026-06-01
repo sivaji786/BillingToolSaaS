@@ -42,8 +42,7 @@ export const useAdminStore = create<AdminState>()(
 
             logout: () => {
                 set({ isAuthenticated: false, adminUser: null, token: null });
-                // We don't call localStorage.clear() here to avoid logging out the customer portal
-                // admin-storage will be updated by persist middleware
+                localStorage.removeItem('admin-storage');
             },
 
             setTheme: (theme) => {

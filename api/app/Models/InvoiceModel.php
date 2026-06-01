@@ -18,7 +18,8 @@ class InvoiceModel extends BaseModel
         'buyer_name', 'buyer_vat_id', 'buyer_address_json', 'buyer_contact_json',
         'line_extension_amount', 'tax_exclusive_amount', 'tax_inclusive_amount', 'payable_amount',
         'payment_terms_json', 'payment_means_json', 'note', 'body', 'salutation', 'closing',
-        'signed', 'signature_date', 'share_token', 'created_by'
+        'signed', 'signature_date', 'share_token', 'created_by',
+        'source', 'source_ref_id'
     ];
 
     // Dates

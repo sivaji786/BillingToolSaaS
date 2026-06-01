@@ -40,6 +40,8 @@ Each file below is a self-contained backlog for one module. Open the file for fu
 | AI Assistant | [ai-assistant.md](ai-assistant.md) | 🔶 PARTIAL | 9/10 | 1 low |
 | Stripe Webhooks | [stripe-webhooks.md](stripe-webhooks.md) | 🔶 PARTIAL | 4/10 | 1 high |
 | Two-Factor Auth | [two-factor-auth.md](two-factor-auth.md) | ❌ OPEN | 0/10 | 1 high (not started) |
+| SSO / Single Sign-On | [sso.md](sso.md) | ❌ OPEN | 0/10 | 12 high, 10 medium — not started |
+| **WorkHub M-08** | [workhub.md](workhub.md) | ✅ DONE | 10/10 | Sprints 1+2+3+4+5+6+7 done (91/91 items) |
 | Frontend Performance | [frontend-performance.md](frontend-performance.md) | 🔶 PARTIAL | 7/10 | 3 high, 9 medium, 9 low |
 | DB / Backend Performance | [db-backend-performance.md](db-backend-performance.md) | ✅ DONE | 9/10 | 1 medium, 2 low |
 

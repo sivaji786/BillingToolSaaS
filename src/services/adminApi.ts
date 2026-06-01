@@ -186,6 +186,11 @@ export const adminUserService = {
         });
         return response.data;
     },
+
+    toggleWorkhub: async (tenantId: string): Promise<{ workhub_enabled: boolean }> => {
+        const response = await adminApi.put<{ workhub_enabled: boolean }>(`/workhub/tenants/${tenantId}/toggle`);
+        return response.data;
+    },
 };
 
 // Billing Services

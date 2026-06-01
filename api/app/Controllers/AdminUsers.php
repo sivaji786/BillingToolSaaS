@@ -71,16 +71,28 @@ class AdminUsers extends ResourceController
                 // Mock usage stats for now (would come from usage tracking table)
                 $limits = $this->getPlanLimits($tenant['plan_id']);
                 
+                try {
+                    $ssoConfig = \Config\Database::connect()->table('tenant_sso_configs')
+                        ->where('tenant_id', $tenant['id'])
+                        ->get()->getRowArray();
+                } catch (\Throwable $e) {
+                    $ssoConfig = null;
+                }
+
                 return [
                     'id' => (string)$tenant['id'],
                     'name' => $tenant['company_name'],
-                    'email' => $tenant['admin_email'] ?? (null), // Better fallback
+                    'email' => $tenant['admin_email'] ?? (null),
                     'packageName' => $tenant['plan_name'],
                     'packageId' => (string)$tenant['plan_id'],
                     'status' => $tenant['status'],
                     'subdomain' => $tenant['subdomain'],
                     'joinedDate' => $tenant['created_at'],
                     'lastLogin' => $tenant['last_login'] ?? null,
+                    'workhub_enabled' => (bool) ($limits['workhub_enabled'] ?? false),
+                    'saml_enabled'    => $ssoConfig ? (bool) $ssoConfig['enabled'] : false,
+                    'saml_provider'   => $ssoConfig['provider'] ?? null,
+                    'sso_only'        => $ssoConfig ? (bool) $ssoConfig['sso_only'] : false,
                     'usageStats' => [
                         'storageUsed' => round(($this->usageModel->getUsage($tenant['id'], 'storage')['used_amount'] ?? 0) / (1024 * 1024 * 1024), 2),
                         'storageLimit' => $limits['storage_gb'] ?? round(($limits['storage'] ?? 0) / (1024 * 1024 * 1024), 2),

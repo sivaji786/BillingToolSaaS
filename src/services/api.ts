@@ -74,7 +74,14 @@ export const authService = {
 
         return data;
     },
-    logout: () => {
+    logout: async () => {
+        try {
+            // Tell the server to destroy the PHP session.
+            // Fire-and-forget: local state is cleared regardless of network result.
+            await api.post('/auth/logout');
+        } catch {
+            // Ignore errors — local cleanup always proceeds.
+        }
     },
     me: async () => {
         const response = await api.get('/auth/me');
@@ -96,6 +103,46 @@ export const authService = {
     },
     resetPassword: async (token: string, password: string) => {
         const response = await api.post('/auth/reset-password', { token, password });
+        return response.data;
+    },
+    getSsoProviders: async (): Promise<string[]> => {
+        try {
+            const response = await api.get('/auth/sso/providers');
+            return response.data?.providers ?? [];
+        } catch {
+            return [];
+        }
+    },
+    getSsoRedirectUrl: async (provider: string): Promise<string> => {
+        const response = await api.get(`/auth/sso/${provider}/redirect`);
+        return response.data?.redirect_url ?? '';
+    },
+    getSsoIdentities: async (): Promise<Array<{ id: number; provider: string; email: string; name: string; last_login_at: string }>> => {
+        try {
+            const response = await api.get('/auth/sso/identities');
+            return response.data?.identities ?? [];
+        } catch { return []; }
+    },
+    getSsoLinkUrl: async (provider: string): Promise<string> => {
+        const response = await api.get(`/auth/sso/${provider}/redirect`, { params: { action: 'link' } });
+        return response.data?.redirect_url ?? '';
+    },
+    unlinkSso: async (provider: string): Promise<void> => {
+        await api.delete(`/auth/sso/${provider}/unlink`);
+    },
+};
+
+export const ssoSettingsService = {
+    get: async () => {
+        const response = await api.get('/settings/sso');
+        return response.data;
+    },
+    update: async (data: object) => {
+        const response = await api.put('/settings/sso', data);
+        return response.data;
+    },
+    testDiscovery: async (issuerUrl: string) => {
+        const response = await api.post('/auth/oidc/test-discovery', { issuer_url: issuerUrl });
         return response.data;
     },
 };

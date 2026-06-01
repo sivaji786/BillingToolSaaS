@@ -12,9 +12,16 @@
     "require": {
         "php": "^8.1",
         "codeigniter4/framework": "^4.0",
+        "dompdf/dompdf": "^2.0",
         "firebase/php-jwt": "^7.0",
+        "jumbojett/openid-connect-php": "^1.0",
+        "league/oauth2-client": "^2.9",
+        "league/oauth2-github": "^3.1",
+        "league/oauth2-google": "^5.0",
         "nyholm/psr7": "^1.8",
+        "onelogin/php-saml": "^4.3",
         "smalot/pdfparser": "^2.12",
+        "stevenmaguire/oauth2-microsoft": "^2.2",
         "stripe/stripe-php": "^19.2",
         "symfony/http-client": "^7.4"
     },

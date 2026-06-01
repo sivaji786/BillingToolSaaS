@@ -140,7 +140,7 @@ class Auth extends ResourceController
                 'data' => [
                     'token' => $token,
                     'user' => $user,
-                    'tenant' => $tenant,
+                    'tenant' => $this->enrichTenant($tenant),
                 ],
             ]);
 
@@ -168,6 +168,22 @@ class Auth extends ResourceController
 
         if (!$user) {
             return $this->failUnauthorized('Invalid email or password');
+        }
+
+        // SSO-008: Block password login for sso_only accounts
+        if (!empty($user['sso_only'])) {
+            $db = \Config\Database::connect();
+            $ssoRows = $db->table('user_sso_identities')
+                ->where('user_id', $user['id'])
+                ->select('provider')
+                ->get()->getResultArray();
+            $providers = array_column($ssoRows, 'provider') ?: ['sso'];
+            return $this->response->setJSON([
+                'success'   => false,
+                'error'     => 'sso_required',
+                'message'   => 'This account requires SSO login. Please use one of the available identity providers.',
+                'providers' => $providers,
+            ])->setStatusCode(403);
         }
 
         // Get tenant
@@ -209,7 +225,7 @@ class Auth extends ResourceController
             'data' => [
                 'token' => $token,
                 'user' => $user,
-                'tenant' => $tenant,
+                'tenant' => $this->enrichTenant($tenant),
                 'redirect_url' => $redirectUrl,
             ],
         ])->setStatusCode(200);
@@ -244,6 +260,14 @@ class Auth extends ResourceController
 
         unset($user['password_hash']);
 
+        // Add is_super_admin flag so the frontend can gate billing queries.
+        $db = \Config\Database::connect();
+        $user['is_super_admin'] = (bool) $db->table('user_roles')
+            ->join('roles', 'roles.id = user_roles.role_id')
+            ->where('user_roles.user_id', (int) $user['id'])
+            ->where('roles.is_super_admin', 1)
+            ->countAllResults();
+
         // Get tenant
         $tenant = $this->tenantModel->find($user['tenant_id']);
 
@@ -251,7 +275,7 @@ class Auth extends ResourceController
             'success' => true,
             'data' => [
                 'user' => $user,
-                'tenant' => $tenant,
+                'tenant' => $this->enrichTenant($tenant),
             ],
         ])->setStatusCode(200);
     }
@@ -262,9 +286,11 @@ class Auth extends ResourceController
      */
     public function logout()
     {
-        // In a stateless JWT system, logout is handled client-side
-        // by removing the token. Server-side logout would require
-        // a token blacklist, which we can implement later if needed.
+        // Destroy the server-side session so the next login always starts clean.
+        // JWT revocation would require a token blacklist (future improvement).
+        $session = session();
+        $session->remove(['isLoggedIn', 'userId', 'tenantId', 'authMethod']);
+        $session->destroy();
 
         return $this->response->setJSON([
             'success' => true,
@@ -460,5 +486,22 @@ class Auth extends ResourceController
         }
 
         return null;
+    }
+
+    /**
+     * Attach plan_features (limits JSON) to the tenant array so the frontend
+     * WorkHubGate and other plan-gated components can read feature flags
+     * without a separate API call.
+     */
+    private function enrichTenant(array $tenant): array
+    {
+        $db   = \Config\Database::connect();
+        $plan = $db->table('plans')
+                   ->select('limits')
+                   ->where('id', $tenant['plan_id'] ?? 0)
+                   ->get()->getRowArray();
+
+        $tenant['plan_features'] = json_decode($plan['limits'] ?? '{}', true) ?: [];
+        return $tenant;
     }
 }

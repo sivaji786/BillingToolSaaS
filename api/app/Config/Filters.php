@@ -36,6 +36,8 @@ class Filters extends BaseFilters
         'cors'          => \App\Filters\CorsFilter::class,
         'auth'          => \App\Filters\UnifiedAuthFilter::class,
         'rbac'          => \App\Filters\RbacFilter::class,
+        'wh_ratelimit'  => \App\Filters\WorkHubRateLimitFilter::class,
+        'sso_ratelimit' => \App\Filters\SsoRateLimitFilter::class,
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,

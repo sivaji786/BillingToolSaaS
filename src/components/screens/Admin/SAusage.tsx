@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 
 const CHART_TOOLTIP_STYLE = {
     backgroundColor: 'hsl(var(--card))',
@@ -10,15 +11,19 @@ import { useQuery } from '@tanstack/react-query';
 import { adminAnalyticsService } from '../../../services/adminApi';
 import { StatsCard } from '../../admin/StatsCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
-import { 
-    Activity, 
-    Database, 
-    Zap, 
-    Users, 
-    Download, 
+import {
+    Activity,
+    Database,
+    Zap,
+    Users,
+    Download,
     Calendar,
     ArrowUpRight,
-    TrendingUp
+    TrendingUp,
+    Briefcase,
+    CheckCircle2,
+    Clock,
+    FileText,
 } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Skeleton } from '../../ui/skeleton';
@@ -85,6 +90,19 @@ export function SAusage({ onNavigate }: SAusageProps) {
     const { data: tenantUsages, isLoading: isTenantLoading } = useQuery({
         queryKey: ['tenant-usage'],
         queryFn: adminAnalyticsService.getTenantUsage,
+    });
+
+    const { data: whMetrics, isLoading: isWHLoading } = useQuery({
+        queryKey: ['wh-admin-metrics'],
+        queryFn: async () => {
+            try {
+                const r = await axios.get('/api/admin/workhub/usage-summary');
+                return r.data;
+            } catch {
+                return null;
+            }
+        },
+        staleTime: 5 * 60 * 1000,
     });
 
     const formatBytes = (gb: number) => {
@@ -368,6 +386,83 @@ export function SAusage({ onNavigate }: SAusageProps) {
                                 </TableBody>
                             </Table>
                         </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* WH-064 — WorkHub Analytics Section */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-purple-600" />
+                        WorkHub Analytics
+                    </CardTitle>
+                    <CardDescription>
+                        Field-service module usage across all tenants
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isWHLoading ? (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {[1,2,3,4].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+                        </div>
+                    ) : whMetrics ? (
+                        <>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                <div className="rounded-lg border p-4 space-y-1">
+                                    <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                                        Tasks Completed
+                                    </div>
+                                    <p className="text-heading-1 font-bold">{formatNumber(whMetrics.tasks_completed ?? 0)}</p>
+                                    <p className="text-caption text-muted-foreground">this period</p>
+                                </div>
+                                <div className="rounded-lg border p-4 space-y-1">
+                                    <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
+                                        <Clock className="h-3.5 w-3.5 text-blue-500" />
+                                        Completion Rate
+                                    </div>
+                                    <p className="text-heading-1 font-bold">{whMetrics.completion_rate ?? 0}%</p>
+                                    <p className="text-caption text-muted-foreground">dual-signed</p>
+                                </div>
+                                <div className="rounded-lg border p-4 space-y-1">
+                                    <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
+                                        <Zap className="h-3.5 w-3.5 text-amber-500" />
+                                        AI Calls
+                                    </div>
+                                    <p className="text-heading-1 font-bold">{formatNumber(whMetrics.ai_calls ?? 0)}</p>
+                                    <p className="text-caption text-muted-foreground">all tenants</p>
+                                </div>
+                                <div className="rounded-lg border p-4 space-y-1">
+                                    <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
+                                        <FileText className="h-3.5 w-3.5 text-purple-500" />
+                                        PDF Exports
+                                    </div>
+                                    <p className="text-heading-1 font-bold">{formatNumber(whMetrics.pdf_exports ?? 0)}</p>
+                                    <p className="text-caption text-muted-foreground">all tenants</p>
+                                </div>
+                            </div>
+
+                            {/* Tasks per day bar chart */}
+                            {whMetrics.tasks_per_day && whMetrics.tasks_per_day.length > 0 && (
+                                <div className="h-[200px] w-full">
+                                    <p className="text-caption font-medium text-muted-foreground mb-2">Tasks created per day</p>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={whMetrics.tasks_per_day}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted" />
+                                            <XAxis dataKey="date" className="text-micro" tickLine={false} axisLine={false} />
+                                            <YAxis className="text-micro" tickLine={false} axisLine={false} />
+                                            <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                                            <Bar dataKey="count" fill="hsl(267 83% 60%)" radius={[3,3,0,0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <p className="text-body text-muted-foreground py-4 text-center">
+                            WorkHub analytics endpoint not yet available — data will appear after WorkHub is enabled on at least one tenant.
+                        </p>
                     )}
                 </CardContent>
             </Card>
