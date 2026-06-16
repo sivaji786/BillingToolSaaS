@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Invoice, InvoiceTemplate, InvoiceLine, CompanyProfile, Buyer } from '../../types/invoice';
 import { buyerService, companyProfileService } from '../../services/api';
 import { Card } from '../ui/card';
@@ -26,6 +26,7 @@ import {
   Layout,
   Printer,
   Users,
+  Image,
 } from 'lucide-react';
 import { formatCurrency, calculateInvoiceTotals } from '../../utils/invoice-calculations';
 import { generateInvoicePDF } from '../../utils/invoice-pdf';
@@ -55,6 +56,7 @@ export function InvoicePreview({
   profile
 }: InvoicePreviewProps) {
   const { t, isRtl } = useLanguage();
+  const invoiceCaptureRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'pdf' | 'ubl'>('pdf');
   const [previewMode, setPreviewMode] = useState<'web' | 'print'>(() => {
     // Default to 'web' for a professional look unless explicitly designed
@@ -389,6 +391,81 @@ export function InvoicePreview({
       toast.error(t('common.error'), {
         description: t('previewModal.pdfGenerationFailed') || 'Failed to generate PDF',
       });
+    }
+  };
+
+  const handleDownloadPDFPixelPerfect = async () => {
+    if (!invoiceCaptureRef.current) {
+      toast.error('Preview not ready');
+      return;
+    }
+    const toastId = toast.loading(t('common.loading'), {
+      description: 'Rendering pixel-perfect PDF…',
+    });
+    const element = invoiceCaptureRef.current;
+    const wasWebMode = previewMode === 'web';
+    const savedStyle = {
+      width: element.style.width,
+      minHeight: element.style.minHeight,
+      borderRadius: element.style.borderRadius,
+      boxShadow: element.style.boxShadow,
+    };
+    try {
+      // Switch to print view so the captured element has no interactive controls
+      // (no edit buttons, dropdowns, or delete icons)
+      if (wasWebMode) setPreviewMode('print');
+
+      // Pin to A4 width and strip decorative chrome for a clean capture
+      element.style.width = '794px';
+      element.style.minHeight = 'auto';
+      element.style.borderRadius = '0';
+      element.style.boxShadow = 'none';
+
+      // Wait for React to re-render in print mode and the browser to reflow
+      await new Promise(r => setTimeout(r, 150));
+
+      const { default: html2canvas } = await import('html2canvas');
+      const { default: jsPDF } = await import('jspdf');
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: element.offsetWidth,
+        height: element.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const scaledHeight = canvas.height * (pdfWidth / canvas.width);
+
+      let yOffset = 0;
+      let pageIndex = 0;
+      while (yOffset < scaledHeight) {
+        if (pageIndex > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, -yOffset, pdfWidth, scaledHeight);
+        yOffset += pdfHeight;
+        pageIndex++;
+      }
+
+      pdf.save(`${editedInvoice.invoiceNumber}.pdf`);
+      toast.dismiss(toastId);
+      toast.success(t('common.downloaded'), { description: `${editedInvoice.invoiceNumber}.pdf` });
+    } catch (error) {
+      console.error('Pixel-perfect PDF error:', error);
+      toast.dismiss(toastId);
+      toast.error(t('common.error'), { description: 'Failed to generate pixel-perfect PDF' });
+    } finally {
+      // Restore styles first, then mode — so the element resizes before React re-renders
+      element.style.width = savedStyle.width;
+      element.style.minHeight = savedStyle.minHeight;
+      element.style.borderRadius = savedStyle.borderRadius;
+      element.style.boxShadow = savedStyle.boxShadow;
+      if (wasWebMode) setPreviewMode('web');
     }
   };
 
@@ -870,7 +947,7 @@ export function InvoicePreview({
     }
 
     return (
-      <div className="bg-white p-10 md:p-14 shadow-2xl border border-gray-100 rounded-[2.5rem] w-full min-h-[1120px]" dir={isRtl ? 'rtl' : 'ltr'}>
+      <div ref={invoiceCaptureRef} className="bg-white p-10 md:p-14 shadow-2xl border border-gray-100 rounded-[2.5rem] w-full min-h-[1120px]" dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="max-w-4xl mx-auto space-y-8 flex flex-col items-center">
           {sections}
         </div>
@@ -978,9 +1055,13 @@ export function InvoicePreview({
                       {t('previewModal.printView') || 'Print View'}
                     </button>
                   </div>
-                  <Button onClick={handleDownloadPDF}>
+                  <Button onClick={handleDownloadPDF} variant="outline">
                     <Download className="h-4 w-4 mr-2" />
                     {t('previewModal.downloadPdf') || 'Download PDF'}
+                  </Button>
+                  <Button onClick={handleDownloadPDFPixelPerfect} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700">
+                    <Image className="h-4 w-4 mr-2" />
+                    Pixel-Perfect PDF
                   </Button>
                 </>
               ) : (

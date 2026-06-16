@@ -12,6 +12,8 @@ import {
     BookOpen,
     Globe,
     ExternalLink,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import { useAdminStore } from '../../stores/adminStore';
 import { cn } from '../../lib/utils';
@@ -41,7 +43,7 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
         { id: 'SAusage', label: t('nav.reports'), icon: BarChart3 },
         { id: 'SATickets', label: 'Tickets', icon: Ticket },
         { id: 'SAWiki', label: 'Wiki', icon: BookOpen },
-        { id: 'SAPages', label: 'Page Content', icon: Globe },
+        { id: 'SAPages', label: 'CMS & Navigation', icon: Globe },
         { id: 'SAsettings', label: t('nav.settings'), icon: Settings },
     ];
 
@@ -74,6 +76,7 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                                 <span className="font-semibold text-xs">{t('admin.adminPortal')}</span>
                             </div>
                         )}
+                        {/* Mobile close */}
                         <Button
                             variant="ghost"
                             size="icon"
@@ -81,6 +84,18 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                             className="lg:hidden"
                         >
                             <X className="h-5 w-5" />
+                        </Button>
+                        {/* Desktop collapse/expand */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={toggleSidebar}
+                            className="hidden lg:flex h-7 w-7 text-muted-foreground hover:text-foreground"
+                            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                        >
+                            {sidebarCollapsed
+                                ? <ChevronRight className="h-4 w-4" />
+                                : <ChevronLeft className="h-4 w-4" />}
                         </Button>
                     </div>
 

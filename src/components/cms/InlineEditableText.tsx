@@ -18,6 +18,7 @@ interface Props {
   multiline?: boolean;
   className?: string;
   as?: keyof React.JSX.IntrinsicElements;
+  onSave?: (newValue: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -38,6 +39,7 @@ export function InlineEditableText({
   multiline = false,
   className,
   as: Tag = 'span',
+  onSave,
 }: Props) {
   const { editMode, patchField, isSavingField } = useInlineCms();
 
@@ -107,6 +109,7 @@ export function InlineEditableText({
 
       try {
         await patchField(slug, lang, field, newText);
+        onSave?.(newText);
         setSaveState('saved');
         if (savedFlashTimer.current) clearTimeout(savedFlashTimer.current);
         savedFlashTimer.current = setTimeout(() => setSaveState('idle'), 1500);
@@ -116,7 +119,7 @@ export function InlineEditableText({
         setSaveState('idle');
       }
     },
-    [displayValue, field, lang, patchField, slug],
+    [displayValue, field, lang, onSave, patchField, slug],
   );
 
   // Revert

@@ -6,6 +6,8 @@ import { Button } from '../ui/button';
 import { ArrowLeft, FileText, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { EditModeBar } from '../cms/EditModeBar';
+import { InlineEditableText } from '../cms/InlineEditableText';
+import { InlineEditableRich } from '../cms/InlineEditableRich';
 import { useInlineCms } from '../../contexts/InlineCmsContext';
 import { toast } from 'sonner';
 
@@ -40,6 +42,38 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
             .catch(() => setNotFound(true))
             .finally(() => setLoading(false));
     }, [slug, language]);
+
+    // Inject dynamic <title> and meta tags from CMS data
+    useEffect(() => {
+        if (!page) return;
+
+        const title = page.meta_title || page.title || 'BillingTool';
+        const description = page.og_description || page.meta_description || '';
+        const ogImage = page.og_image || '';
+
+        document.title = title;
+
+        const setMeta = (name: string, content: string, isProperty = false) => {
+            const attr = isProperty ? 'property' : 'name';
+            let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
+            if (!el) {
+                el = document.createElement('meta');
+                el.setAttribute(attr, name);
+                document.head.appendChild(el);
+            }
+            el.setAttribute('content', content);
+        };
+
+        if (description) setMeta('description', description);
+        setMeta('og:title', title, true);
+        if (description) setMeta('og:description', description, true);
+        if (ogImage) setMeta('og:image', ogImage, true);
+        setMeta('og:type', 'website', true);
+
+        return () => {
+            document.title = 'BillingTool';
+        };
+    }, [page]);
 
     const handleDelete = async () => {
         setDeleting(true);
@@ -153,16 +187,40 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
             {/* Page Content */}
             <main className="flex-1 container px-4 md:px-6 py-12 max-w-4xl mx-auto">
                 {page?.title && (
-                    <h1 className="text-heading-1 md:text-display font-bold text-foreground mb-6">{page.title}</h1>
+                    <h1 className="text-heading-1 md:text-display font-bold text-foreground mb-6">
+                        <InlineEditableText
+                            slug={slug}
+                            field="title"
+                            lang={language}
+                            value={page.title}
+                            as="span"
+                            className="text-heading-1 md:text-display font-bold text-foreground"
+                            onSave={(v) => setPage((p: any) => ({ ...p, title: v }))}
+                        />
+                    </h1>
                 )}
                 {page?.content ? (
-                    <div
+                    <InlineEditableRich
+                        slug={slug}
+                        field="content"
+                        lang={language}
+                        value={page.content}
                         className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-purple-600 hover:prose-a:text-purple-700"
-                        dangerouslySetInnerHTML={{ __html: page.content }}
+                        onSave={(v) => setPage((p: any) => ({ ...p, content: v }))}
                     />
                 ) : (
                     <div className="text-center py-20 text-muted-foreground">
-                        <p>This page has no content yet.</p>
+                        <p>This page has no content yet.{editMode && ' Double-click anywhere to add content.'}</p>
+                        {editMode && (
+                            <InlineEditableRich
+                                slug={slug}
+                                field="content"
+                                lang={language}
+                                value=""
+                                className="mt-4 min-h-[100px]"
+                                onSave={(v) => setPage((p: any) => ({ ...p, content: v }))}
+                            />
+                        )}
                     </div>
                 )}
             </main>

@@ -53,6 +53,7 @@ const SATickets = lazy(() => import('./components/screens/Admin/SATickets').then
 const SATicketDetails = lazy(() => import('./components/screens/Admin/SATicketDetails').then(module => ({ default: module.SATicketDetails })));
 const SAWiki = lazy(() => import('./components/screens/Admin/SAWiki').then(module => ({ default: module.SAWiki })));
 const SAPages = lazy(() => import('./components/screens/Admin/SAPages').then(module => ({ default: module.SAPages })));
+const SAMenus = lazy(() => import('./components/screens/Admin/SAMenus').then(module => ({ default: module.SAMenus })));
 
 
 const TicketingWidget = lazy(() => import('./components/TicketingWidget').then(m => ({ default: m.TicketingWidget })));
@@ -147,7 +148,7 @@ import { toast } from 'sonner';
 import { authService, invoiceService, letterService } from './services/api';
 import { PLATFORM_TEMPLATES } from './utils/invoice-templates-defaults';
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'workhub' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage' | 'sharedInvoice';
+type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'workhub' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAMenus' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage' | 'sharedInvoice';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -1216,7 +1217,7 @@ function AdminPortalRouter() {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
       // Check if it's an admin route
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages', 'SAMenus'].includes(hash)) {
         return hash as Screen;
       }
     }
@@ -1233,8 +1234,11 @@ function AdminPortalRouter() {
     if (!_hasHydrated) return;
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages', 'SAMenus'].includes(hash)) {
         setCurrentScreen(hash as Screen);
+      } else {
+        // Non-admin hash (e.g. #/ or #landing) — exit admin portal
+        setCurrentScreen('landing');
       }
     };
 
@@ -1249,7 +1253,7 @@ function AdminPortalRouter() {
   };
 
   // Admin Portal Routes
-  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages'].includes(currentScreen);
+  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages', 'SAMenus'].includes(currentScreen);
 
   if (isAdminRoute) {
     // Wait for hydration before checking auth
@@ -1312,6 +1316,7 @@ function AdminPortalRouter() {
           {currentScreen === 'SAsettings' && <SAsettings />}
           {currentScreen === 'SAWiki' && <SAWiki />}
           {currentScreen === 'SAPages' && <SAPages />}
+          {currentScreen === 'SAMenus' && <SAMenus />}
         </AdminLayoutWrapper>
         <HelpChatBot config={ADMIN_HELP_CONFIG} currentScreen={currentScreen} />
         <Toaster />

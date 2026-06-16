@@ -10,9 +10,10 @@ interface Props {
   lang: string;
   value: string;
   className?: string;
+  onSave?: (newValue: string) => void;
 }
 
-export function InlineEditableRich({ slug, field, lang, value, className }: Props) {
+export function InlineEditableRich({ slug, field, lang, value, className, onSave }: Props) {
   const { editMode, patchField } = useInlineCms();
 
   const [displayHtml, setDisplayHtml] = useState(value);
@@ -59,12 +60,13 @@ export function InlineEditableRich({ slug, field, lang, value, className }: Prop
     setIsSaving(true);
     try {
       await patchField(slug, lang, field, html);
+      onSave?.(html);
       setDisplayHtml(html);
       setIsEditing(false);
     } finally {
       setIsSaving(false);
     }
-  }, [editor, field, lang, patchField, slug]);
+  }, [editor, field, lang, onSave, patchField, slug]);
 
   const handleCancel = useCallback(() => {
     setIsEditing(false);

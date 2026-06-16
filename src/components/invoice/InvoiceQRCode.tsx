@@ -113,7 +113,8 @@ export async function getQRCodeDataURL(
   }
 
   try {
-    const dataURL = await QRCode.toDataURL(qrData, {
+    const QRCode = await import('qrcode');
+    const dataURL = await QRCode.default.toDataURL(qrData, {
       width: size,
       margin: 2,
       errorCorrectionLevel: 'M',

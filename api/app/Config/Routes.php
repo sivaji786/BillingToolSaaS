@@ -323,12 +323,27 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     $routes->get('wiki/read', '\App\Controllers\AdminWiki::read');
     $routes->put('wiki/write', '\App\Controllers\AdminWiki::write');
     $routes->post('wiki/create', '\App\Controllers\AdminWiki::create');
+    $routes->get('wiki/mockups', '\App\Controllers\AdminWiki::listMockups');
+    $routes->post('wiki/mockups/folder', '\App\Controllers\AdminWiki::createMockupFolder');
+    $routes->post('wiki/mockups', '\App\Controllers\AdminWiki::uploadMockup');
+    $routes->patch('wiki/mockups', '\App\Controllers\AdminWiki::renameMockup');
+    $routes->delete('wiki/mockups', '\App\Controllers\AdminWiki::deleteMockup');
 
-    // Admin CMS
+    // Admin CMS — pages
     $routes->get('cms', '\App\Controllers\CmsController::listPages');
+    $routes->patch('cms/nav/reorder', '\App\Controllers\CmsController::reorderNav');
+    $routes->post('cms/upload-image', '\App\Controllers\CmsController::uploadImage');
+    // Admin CMS — media library
+    $routes->get('cms/media', '\App\Controllers\CmsController::listMedia');
+    $routes->patch('cms/media/(:num)', '\App\Controllers\CmsController::updateMedia/$1');
+    $routes->delete('cms/media/(:num)', '\App\Controllers\CmsController::deleteMedia/$1');
+    // Admin CMS — versions
+    $routes->get('cms/versions/(:segment)', '\App\Controllers\CmsController::listVersions/$1');
+    $routes->post('cms/versions/restore/(:num)', '\App\Controllers\CmsController::restoreVersion/$1');
+    $routes->post('cms/versions/(:segment)', '\App\Controllers\CmsController::saveVersion/$1');
+    // Admin CMS — page CRUD (must come after specific prefixes)
     $routes->put('cms/(:segment)', '\App\Controllers\CmsController::updatePage/$1');
     $routes->patch('cms/(:segment)', '\App\Controllers\CmsController::patchField/$1');
-    $routes->post('cms/upload-image', '\App\Controllers\CmsController::uploadImage');
     $routes->delete('cms/(:segment)', '\App\Controllers\CmsController::deletePage/$1');
 });
 

@@ -1,6 +1,18 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminCmsService } from '../../../services/adminApi';
+import type { CmsNavItem } from '../../../services/adminApi';
+import { publicCmsService } from '../../../services/api';
+import {
+    DndContext, closestCenter, PointerSensor, KeyboardSensor,
+    useSensor, useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+    SortableContext, sortableKeyboardCoordinates, useSortable,
+    verticalListSortingStrategy, arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
@@ -12,11 +24,14 @@ import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '../../ui/dialog';
 import { ConfirmDeleteDialog } from '../../ui/ConfirmDeleteDialog';
+import { CmsVersionPanel } from '../../cms/CmsVersionPanel';
+import { CmsMediaLibrary } from '../../cms/CmsMediaLibrary';
 import {
     FileText, Home, Shield, Lock, Info, Save, ArrowRight,
     HelpCircle, Plus, Trash2, Quote, AlertCircle, Sparkles,
     LayoutGrid, Footprints, Star, Megaphone, Globe,
-    Eye, EyeOff, ExternalLink,
+    Eye, EyeOff, ExternalLink, Calendar, Images,
+    GripVertical, ChevronDown, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../../../lib/utils';
@@ -45,6 +60,40 @@ function slugify(text: string): string {
     return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
+function NavSortableRow({ item, isSelected, onClick }: { item: CmsNavItem; isSelected: boolean; onClick: () => void }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+        useSortable({ id: String(item.id) });
+    const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+    return (
+        <div ref={setNodeRef} style={style}>
+            <div className={cn(
+                'flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium transition-all',
+                isSelected
+                    ? 'bg-purple-600 text-white shadow shadow-purple-200'
+                    : 'hover:bg-purple-50 dark:hover:bg-purple-900/20 text-muted-foreground hover:text-purple-600',
+            )}>
+                <button
+                    type="button"
+                    {...attributes}
+                    {...listeners}
+                    className="cursor-grab touch-none opacity-40 hover:opacity-80 shrink-0"
+                    onClick={e => e.stopPropagation()}
+                >
+                    <GripVertical className="h-3.5 w-3.5" />
+                </button>
+                <button type="button" className="flex-1 text-left truncate" onClick={onClick}>
+                    {item.nav_label || item.title}
+                </button>
+                {item.nav_position === 'both' && (
+                    <span className={cn('text-xs px-1 rounded shrink-0', isSelected ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500')}>
+                        both
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
+
 export function SAPages() {
     const queryClient = useQueryClient();
     const [selectedSlug, setSelectedSlug] = useState<string>(() => {
@@ -60,13 +109,15 @@ export function SAPages() {
     const [newSlug, setNewSlug] = useState('');
     const [newShowInNav, setNewShowInNav] = useState(false);
     const [newNavLabel, setNewNavLabel] = useState('');
+    const [newNavPosition, setNewNavPosition] = useState<'top' | 'bottom' | 'both'>('top');
+    const [newFooterGroup, setNewFooterGroup] = useState('');
     const [isCreating, setIsCreating] = useState(false);
 
     // Delete confirmation state
     const [slugToDelete, setSlugToDelete] = useState<string | null>(null);
 
-    // show_in_nav, nav_label, nav_order tracked as form state (per-page, not global)
-    const [navOverrides, setNavOverrides] = useState<Record<string, { show_in_nav: boolean; nav_label: string; nav_order: number }>>({});
+    // show_in_nav, nav_label, nav_order, nav_position, footer_group, link_url, link_target tracked as form state (per-page, not global)
+    const [navOverrides, setNavOverrides] = useState<Record<string, { show_in_nav: boolean; nav_label: string; nav_order: number; nav_position: string; footer_group: string; link_url: string; link_target: string }>>({});
     // is_published tracked per page+lang
     const [publishedOverrides, setPublishedOverrides] = useState<Record<string, boolean>>({});
 
@@ -84,6 +135,50 @@ export function SAPages() {
     const [aboutText2, setAboutText2] = useState('');
     const [aboutImage, setAboutImage] = useState('');
     const [initializedKey, setInitializedKey] = useState('');
+    const [heroSubtitle, setHeroSubtitle] = useState('');
+    const [seoOverrides, setSeoOverrides] = useState<Record<string, { meta_title: string; og_description: string; og_image: string }>>({});
+    const [scheduledOverrides, setScheduledOverrides] = useState<Record<string, string | null>>({});
+    const [mediaLibraryOpen, setMediaLibraryOpen] = useState(false);
+    const [navSectionOpen, setNavSectionOpen] = useState(true);
+
+    // Nav tree query (for sidebar)
+    const { data: navData } = useQuery({
+        queryKey: ['public-cms-nav', 'en'],
+        queryFn: () => publicCmsService.getNav('en'),
+    });
+    const topItems: CmsNavItem[] = (navData?.top ?? []) as CmsNavItem[];
+    const bottomItems: CmsNavItem[] = (navData?.bottom ?? []) as CmsNavItem[];
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
+
+    const reorderMutation = useMutation({
+        mutationFn: adminCmsService.reorderNav,
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['public-cms-nav'] }),
+        onError: () => toast.error('Failed to save order'),
+    });
+
+    const handleTopNavDragEnd = useCallback((event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+        const oldIdx = topItems.findIndex(i => String(i.id) === String(active.id));
+        const newIdx = topItems.findIndex(i => String(i.id) === String(over.id));
+        if (oldIdx === -1 || newIdx === -1) return;
+        const reordered = arrayMove([...topItems], oldIdx, newIdx);
+        reorderMutation.mutate(reordered.map((item, idx) => ({ slug: item.slug, nav_order: idx + 1 })));
+    }, [topItems, reorderMutation]);
+
+    const handleBottomNavDragEnd = useCallback((event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+        const oldIdx = bottomItems.findIndex(i => String(i.id) === String(active.id));
+        const newIdx = bottomItems.findIndex(i => String(i.id) === String(over.id));
+        if (oldIdx === -1 || newIdx === -1) return;
+        const reordered = arrayMove([...bottomItems], oldIdx, newIdx);
+        reorderMutation.mutate(reordered.map((item, idx) => ({ slug: item.slug, nav_order: idx + 1 })));
+    }, [bottomItems, reorderMutation]);
 
     const updateMutation = useMutation({
         mutationFn: ({ slug, lang, data }: { slug: string; lang: string; data: any }) =>
@@ -134,6 +229,7 @@ export function SAPages() {
         setAboutText(c.about_text || '');
         setAboutText2(c.about_text2 || '');
         setAboutImage(c.about_image || '');
+        setHeroSubtitle(c.hero_subtitle || '');
         setInitializedKey(homeKey);
     }
 
@@ -146,6 +242,10 @@ export function SAPages() {
                 show_in_nav: !!selectedPage.show_in_nav,
                 nav_label: selectedPage.nav_label || '',
                 nav_order: selectedPage.nav_order ?? 0,
+                nav_position: selectedPage.nav_position || 'none',
+                footer_group: selectedPage.footer_group || '',
+                link_url: selectedPage.link_url || '',
+                link_target: selectedPage.link_target || '_self',
             },
         }));
     }
@@ -153,7 +253,41 @@ export function SAPages() {
         show_in_nav: !!selectedPage?.show_in_nav,
         nav_label: selectedPage?.nav_label || '',
         nav_order: selectedPage?.nav_order ?? 0,
+        nav_position: selectedPage?.nav_position || 'none',
+        footer_group: selectedPage?.footer_group || '',
+        link_url: selectedPage?.link_url || '',
+        link_target: selectedPage?.link_target || '_self',
     };
+
+    // Sync SEO overrides when page changes
+    const seoKey = `${selectedSlug}-${selectedLang}-seo`;
+    if (selectedPage && !(seoKey in seoOverrides)) {
+        setSeoOverrides(prev => ({
+            ...prev,
+            [seoKey]: {
+                meta_title: selectedPage.meta_title || '',
+                og_description: selectedPage.og_description || '',
+                og_image: selectedPage.og_image || '',
+            },
+        }));
+    }
+    const currentSeo = seoOverrides[seoKey] ?? {
+        meta_title: selectedPage?.meta_title || '',
+        og_description: selectedPage?.og_description || '',
+        og_image: selectedPage?.og_image || '',
+    };
+
+    // Sync scheduled publish date when page changes
+    const schedKey = `${selectedSlug}-${selectedLang}-sched`;
+    if (selectedPage && !(schedKey in scheduledOverrides)) {
+        setScheduledOverrides(prev => ({
+            ...prev,
+            [schedKey]: selectedPage.published_at ?? null,
+        }));
+    }
+    const scheduledAt: string | null = scheduledOverrides[schedKey] !== undefined
+        ? scheduledOverrides[schedKey]
+        : selectedPage?.published_at ?? null;
 
     // Sync published state when page changes
     const pubKey = `${selectedSlug}-${selectedLang}`;
@@ -183,7 +317,7 @@ export function SAPages() {
                 hero_title:         formData.get('hero_title'),
                 hero_title_accent:  formData.get('hero_title_accent'),
                 hero_title_suffix:  formData.get('hero_title_suffix'),
-                hero_subtitle:      formData.get('hero_subtitle'),
+                hero_subtitle:      heroSubtitle,
 
                 trusted_by: formData.get('trusted_by'),
 
@@ -241,7 +375,15 @@ export function SAPages() {
                 show_in_nav: currentNavState.show_in_nav,
                 nav_label: currentNavState.nav_label,
                 nav_order: currentNavState.nav_order,
+                nav_position: currentNavState.nav_position,
+                footer_group: currentNavState.footer_group || null,
+                link_url: currentNavState.link_url || null,
+                link_target: currentNavState.link_target as '_self' | '_blank',
                 is_published: isPublished,
+                meta_title: currentSeo.meta_title || null,
+                og_description: currentSeo.og_description || null,
+                og_image: currentSeo.og_image || null,
+                published_at: scheduledAt || null,
                 content
             }
         });
@@ -265,13 +407,21 @@ export function SAPages() {
         }
         setIsCreating(true);
         try {
-            await adminCmsService.createPage(trimmedSlug, 'en', trimmedTitle, newShowInNav, newNavLabel);
+            await adminCmsService.createPage(
+                trimmedSlug, 'en', trimmedTitle,
+                newShowInNav, newNavLabel,
+                newShowInNav ? newNavPosition : 'none',
+                newFooterGroup,
+            );
             queryClient.invalidateQueries({ queryKey: ['admin-cms-pages'] });
+            queryClient.invalidateQueries({ queryKey: ['public-cms-nav'] });
             setShowNewModal(false);
             setNewTitle('');
             setNewSlug('');
             setNewShowInNav(false);
             setNewNavLabel('');
+            setNewNavPosition('top');
+            setNewFooterGroup('');
             handlePageChange(trimmedSlug);
             toast.success('Page created');
         } catch {
@@ -291,6 +441,72 @@ export function SAPages() {
         <div className="flex h-[calc(100vh-10rem)] gap-6">
             {/* Sidebar */}
             <div className="w-64 flex flex-col gap-2 shrink-0 overflow-y-auto">
+
+                {/* ── Navigation section ── */}
+                <div>
+                    <button
+                        type="button"
+                        onClick={() => setNavSectionOpen(o => !o)}
+                        className="flex items-center gap-1.5 w-full px-2 mb-1 text-body font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                    >
+                        {navSectionOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRightIcon className="h-3.5 w-3.5" />}
+                        Navigation
+                    </button>
+
+                    {navSectionOpen && (
+                        <div className="space-y-3 mb-3">
+                            {/* Top menu */}
+                            <div>
+                                <p className="flex items-center gap-1 text-xs text-muted-foreground px-2 mb-1">
+                                    <Globe className="h-3 w-3" /> Top Menu
+                                </p>
+                                {topItems.length === 0
+                                    ? <p className="text-xs text-muted-foreground px-4 py-1 italic">None — enable nav in page editor</p>
+                                    : (
+                                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTopNavDragEnd}>
+                                            <SortableContext items={topItems.map(i => String(i.id))} strategy={verticalListSortingStrategy}>
+                                                {topItems.map(item => (
+                                                    <NavSortableRow
+                                                        key={item.id}
+                                                        item={item}
+                                                        isSelected={selectedSlug === item.slug}
+                                                        onClick={() => handlePageChange(item.slug)}
+                                                    />
+                                                ))}
+                                            </SortableContext>
+                                        </DndContext>
+                                    )
+                                }
+                            </div>
+
+                            {/* Footer menu */}
+                            <div>
+                                <p className="flex items-center gap-1 text-xs text-muted-foreground px-2 mb-1">
+                                    <Footprints className="h-3 w-3" /> Footer
+                                </p>
+                                {bottomItems.length === 0
+                                    ? <p className="text-xs text-muted-foreground px-4 py-1 italic">None — enable nav in page editor</p>
+                                    : (
+                                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleBottomNavDragEnd}>
+                                            <SortableContext items={bottomItems.map(i => String(i.id))} strategy={verticalListSortingStrategy}>
+                                                {bottomItems.map(item => (
+                                                    <NavSortableRow
+                                                        key={item.id}
+                                                        item={item}
+                                                        isSelected={selectedSlug === item.slug}
+                                                        onClick={() => handlePageChange(item.slug)}
+                                                    />
+                                                ))}
+                                            </SortableContext>
+                                        </DndContext>
+                                    )
+                                }
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="border-t pt-2">
                 <h2 className="text-body font-semibold text-muted-foreground px-2 mb-2 uppercase tracking-wider">Built-in Pages</h2>
                 {BUILTIN_PAGES.map((page) => (
                     <button
@@ -334,6 +550,8 @@ export function SAPages() {
                         ))}
                     </>
                 )}
+
+                </div>{/* end border-t pt-2 wrapper */}
 
                 <div className="mt-auto pt-4 border-t">
                     <Button
@@ -461,6 +679,45 @@ export function SAPages() {
                                             />
                                         </div>
                                     </div>
+                                    <div className="flex items-start gap-3">
+                                        <Calendar className="h-4 w-4 text-muted-foreground mt-2 shrink-0" />
+                                        <div className="flex-1 grid gap-1.5">
+                                            <Label htmlFor="published_at" className="text-body font-medium">
+                                                Scheduled Publish Date
+                                            </Label>
+                                            <p className="text-micro text-muted-foreground">
+                                                Leave blank to publish immediately when &quot;Published&quot; is on.
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    id="published_at"
+                                                    type="datetime-local"
+                                                    value={scheduledAt ? scheduledAt.replace(' ', 'T').substring(0, 16) : ''}
+                                                    onChange={e => setScheduledOverrides(prev => ({
+                                                        ...prev,
+                                                        [schedKey]: e.target.value ? e.target.value.replace('T', ' ') + ':00' : null,
+                                                    }))}
+                                                    className="w-fit"
+                                                />
+                                                {scheduledAt && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-xs text-muted-foreground"
+                                                        onClick={() => setScheduledOverrides(prev => ({ ...prev, [schedKey]: null }))}
+                                                    >
+                                                        Clear
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            {scheduledAt && (
+                                                <p className="text-micro text-amber-600">
+                                                    Will go live: {new Date(scheduledAt).toLocaleString()}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <Label className="text-body font-medium">Show in Navigation</Label>
@@ -477,41 +734,193 @@ export function SAPages() {
                                         />
                                     </div>
                                     {currentNavState.show_in_nav && (
-                                        <div className="grid gap-4 md:grid-cols-3">
-                                            <div className="col-span-2 grid gap-2">
-                                                <Label htmlFor="nav_label">Navigation Label</Label>
-                                                <Input
-                                                    id="nav_label"
-                                                    placeholder={selectedPage.title}
-                                                    value={currentNavState.nav_label}
-                                                    onChange={(e) =>
-                                                        setNavOverrides(prev => ({
-                                                            ...prev,
-                                                            [navKey]: { ...currentNavState, nav_label: e.target.value },
-                                                        }))
-                                                    }
-                                                />
-                                                <p className="text-micro text-muted-foreground">Leave blank to use the page title</p>
+                                        <div className="grid gap-4">
+                                            <div className="grid gap-4 md:grid-cols-3">
+                                                <div className="col-span-2 grid gap-2">
+                                                    <Label htmlFor="nav_label">Navigation Label</Label>
+                                                    <Input
+                                                        id="nav_label"
+                                                        placeholder={selectedPage.title}
+                                                        value={currentNavState.nav_label}
+                                                        onChange={(e) =>
+                                                            setNavOverrides(prev => ({
+                                                                ...prev,
+                                                                [navKey]: { ...currentNavState, nav_label: e.target.value },
+                                                            }))
+                                                        }
+                                                    />
+                                                    <p className="text-micro text-muted-foreground">Leave blank to use the page title</p>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="nav_order">Nav Order</Label>
+                                                    <Input
+                                                        id="nav_order"
+                                                        type="number"
+                                                        min={0}
+                                                        value={currentNavState.nav_order}
+                                                        onChange={(e) =>
+                                                            setNavOverrides(prev => ({
+                                                                ...prev,
+                                                                [navKey]: { ...currentNavState, nav_order: parseInt(e.target.value) || 0 },
+                                                            }))
+                                                        }
+                                                    />
+                                                    <p className="text-micro text-muted-foreground">Lower = earlier in nav</p>
+                                                </div>
                                             </div>
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="nav_order">Nav Order</Label>
-                                                <Input
-                                                    id="nav_order"
-                                                    type="number"
-                                                    min={0}
-                                                    value={currentNavState.nav_order}
-                                                    onChange={(e) =>
-                                                        setNavOverrides(prev => ({
-                                                            ...prev,
-                                                            [navKey]: { ...currentNavState, nav_order: parseInt(e.target.value) || 0 },
-                                                        }))
-                                                    }
-                                                />
-                                                <p className="text-micro text-muted-foreground">Lower = earlier in nav</p>
+                                            <div className="grid gap-4 md:grid-cols-2">
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="nav_position">Navigation Position</Label>
+                                                    <select
+                                                        id="nav_position"
+                                                        value={currentNavState.nav_position}
+                                                        onChange={(e) =>
+                                                            setNavOverrides(prev => ({
+                                                                ...prev,
+                                                                [navKey]: { ...currentNavState, nav_position: e.target.value },
+                                                            }))
+                                                        }
+                                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                    >
+                                                        <option value="top">Top (header only)</option>
+                                                        <option value="bottom">Footer only</option>
+                                                        <option value="both">Both header &amp; footer</option>
+                                                        <option value="none">Hidden</option>
+                                                    </select>
+                                                </div>
+                                                {(currentNavState.nav_position === 'bottom' || currentNavState.nav_position === 'both') && (
+                                                    <div className="grid gap-2">
+                                                        <Label htmlFor="footer_group">Footer Column Group</Label>
+                                                        <Input
+                                                            id="footer_group"
+                                                            placeholder="e.g. Legal, Company, Product"
+                                                            value={currentNavState.footer_group}
+                                                            onChange={(e) =>
+                                                                setNavOverrides(prev => ({
+                                                                    ...prev,
+                                                                    [navKey]: { ...currentNavState, footer_group: e.target.value },
+                                                                }))
+                                                            }
+                                                        />
+                                                        <p className="text-micro text-muted-foreground">Groups footer links into columns</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="grid gap-4 md:grid-cols-2">
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="link_url">Override Link URL</Label>
+                                                    <Input
+                                                        id="link_url"
+                                                        placeholder="https://example.com (leave blank for CMS page)"
+                                                        value={currentNavState.link_url}
+                                                        onChange={(e) =>
+                                                            setNavOverrides(prev => ({
+                                                                ...prev,
+                                                                [navKey]: { ...currentNavState, link_url: e.target.value },
+                                                            }))
+                                                        }
+                                                    />
+                                                    <p className="text-micro text-muted-foreground">Optional. Leave blank to link to this CMS page. Use for external URLs only (https://…).</p>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="link_target">Link Target</Label>
+                                                    <select
+                                                        id="link_target"
+                                                        value={currentNavState.link_target}
+                                                        onChange={(e) =>
+                                                            setNavOverrides(prev => ({
+                                                                ...prev,
+                                                                [navKey]: { ...currentNavState, link_target: e.target.value },
+                                                            }))
+                                                        }
+                                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                    >
+                                                        <option value="_self">Same tab (_self)</option>
+                                                        <option value="_blank">New tab (_blank)</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
                                 </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* SEO & Open Graph */}
+                        <Card className="border-none shadow-xl bg-white/60 dark:bg-slate-900/60 backdrop-blur">
+                            <CardHeader>
+                                <CardTitle className="text-heading-3">SEO &amp; Social Sharing</CardTitle>
+                                <CardDescription>Control how this page appears in search results and social media link previews</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="meta_title">Page Title (browser tab / search result)</Label>
+                                    <Input
+                                        id="meta_title"
+                                        placeholder={selectedPage.title}
+                                        value={currentSeo.meta_title}
+                                        onChange={e => setSeoOverrides(prev => ({ ...prev, [seoKey]: { ...currentSeo, meta_title: e.target.value } }))}
+                                    />
+                                    <p className="text-micro text-muted-foreground">Leave blank to use the page title. Recommended: 50–60 characters.</p>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="og_description">Social Description (OG description)</Label>
+                                    <Textarea
+                                        id="og_description"
+                                        rows={2}
+                                        placeholder="Short description for social link previews…"
+                                        value={currentSeo.og_description}
+                                        onChange={e => setSeoOverrides(prev => ({ ...prev, [seoKey]: { ...currentSeo, og_description: e.target.value } }))}
+                                    />
+                                    <p className="text-micro text-muted-foreground">Recommended: 120–160 characters.</p>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Social Image (OG image)</Label>
+                                    {currentSeo.og_image ? (
+                                        <div className="flex items-start gap-3">
+                                            <img src={currentSeo.og_image} alt="OG preview" className="w-32 h-20 object-cover rounded-lg border" />
+                                            <Button type="button" variant="outline" size="sm" onClick={() => setSeoOverrides(prev => ({ ...prev, [seoKey]: { ...currentSeo, og_image: '' } }))}>Remove</Button>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-fit"
+                                            onClick={() => document.getElementById(`og-image-upload-${seoKey}`)?.click()}
+                                        >
+                                            Upload OG Image (1200×630 recommended)
+                                        </Button>
+                                    )}
+                                    <input
+                                        id={`og-image-upload-${seoKey}`}
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            const reader = new FileReader();
+                                            reader.onload = async (ev) => {
+                                                try {
+                                                    const url = await adminCmsService.uploadCmsImage(ev.target?.result as string);
+                                                    setSeoOverrides(prev => ({ ...prev, [seoKey]: { ...currentSeo, og_image: url } }));
+                                                    toast.success('OG image uploaded');
+                                                } catch { toast.error('Upload failed'); }
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }}
+                                    />
+                                </div>
+                                {/* SERP Preview */}
+                                {(currentSeo.meta_title || selectedPage.title || currentSeo.og_description || selectedPage.meta_description) && (
+                                    <div className="rounded-xl border bg-white p-4 space-y-1">
+                                        <p className="text-micro uppercase font-semibold text-muted-foreground mb-2">Search Preview</p>
+                                        <p className="text-sm font-medium text-blue-600 truncate">{currentSeo.meta_title || selectedPage.title}</p>
+                                        <p className="text-xs text-green-700 truncate">https://yourdomain.com/#{selectedSlug}</p>
+                                        <p className="text-xs text-muted-foreground line-clamp-2">{currentSeo.og_description || selectedPage.meta_description || 'No description set.'}</p>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 
@@ -529,8 +938,8 @@ export function SAPages() {
                                         <Field label="Title Suffix" name="hero_title_suffix" defaultValue={homeContent.hero_title_suffix} placeholder="Businesses" />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="hero_subtitle">Subtitle</Label>
-                                        <Textarea id="hero_subtitle" name="hero_subtitle" defaultValue={homeContent.hero_subtitle} rows={3} />
+                                        <Label>Subtitle</Label>
+                                        <RichTextEditor value={heroSubtitle} onChange={setHeroSubtitle} className="min-h-[100px]" />
                                     </div>
                                     <Field label="Trusted By Banner Text" name="trusted_by" defaultValue={homeContent.trusted_by} placeholder="Trusted by innovative companies worldwide" />
                                 </SectionCard>
@@ -743,7 +1152,19 @@ export function SAPages() {
                             </Card>
                         )}
 
-                        <div className="flex items-center justify-end border-t pt-6">
+                        {/* Version History */}
+                        <CmsVersionPanel slug={selectedSlug} lang={selectedLang} />
+
+                        <div className="flex items-center justify-between border-t pt-6">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setMediaLibraryOpen(true)}
+                            >
+                                <Images className="h-4 w-4 mr-2" />
+                                Media Library
+                            </Button>
                             <Button type="submit" disabled={updateMutation.isPending} className="bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-200 dark:shadow-none min-w-[200px]">
                                 <Save className="mr-2 h-4 w-4" />
                                 {updateMutation.isPending ? 'Saving...' : `Save (${selectedLang.toUpperCase()})`}
@@ -758,6 +1179,12 @@ export function SAPages() {
                     </div>
                 )}
             </div>
+
+            {/* Media Library modal — available globally within SAPages */}
+            <CmsMediaLibrary
+                open={mediaLibraryOpen}
+                onClose={() => setMediaLibraryOpen(false)}
+            />
         </div>
 
         {/* New Page Modal */}
@@ -801,14 +1228,40 @@ export function SAPages() {
                         <Switch checked={newShowInNav} onCheckedChange={setNewShowInNav} />
                     </div>
                     {newShowInNav && (
-                        <div className="grid gap-2">
-                            <Label htmlFor="new-nav-label">Navigation Label</Label>
-                            <Input
-                                id="new-nav-label"
-                                placeholder={newTitle || 'e.g. About Us'}
-                                value={newNavLabel}
-                                onChange={(e) => setNewNavLabel(e.target.value)}
-                            />
+                        <div className="space-y-3">
+                            <div className="grid gap-2">
+                                <Label htmlFor="new-nav-label">Navigation Label</Label>
+                                <Input
+                                    id="new-nav-label"
+                                    placeholder={newTitle || 'e.g. About Us'}
+                                    value={newNavLabel}
+                                    onChange={(e) => setNewNavLabel(e.target.value)}
+                                />
+                                <p className="text-micro text-muted-foreground">Leave blank to use the page title</p>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Position</Label>
+                                <select
+                                    value={newNavPosition}
+                                    onChange={e => setNewNavPosition(e.target.value as 'top' | 'bottom' | 'both')}
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                >
+                                    <option value="top">Top (header only)</option>
+                                    <option value="bottom">Footer only</option>
+                                    <option value="both">Both header &amp; footer</option>
+                                </select>
+                            </div>
+                            {(newNavPosition === 'bottom' || newNavPosition === 'both') && (
+                                <div className="grid gap-2">
+                                    <Label>Footer Column Group</Label>
+                                    <Input
+                                        placeholder="e.g. Company, Legal, Product"
+                                        value={newFooterGroup}
+                                        onChange={(e) => setNewFooterGroup(e.target.value)}
+                                    />
+                                    <p className="text-micro text-muted-foreground">Groups footer links into labelled columns</p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

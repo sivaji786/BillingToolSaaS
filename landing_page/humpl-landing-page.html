@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Humpl SaaS — Post-Login Landing Page (Mockup v4, English)</title>
+
+<!--
+  ============================================================
+  HUMPL SaaS — POST-LOGIN LANDING PAGE
+  Mockup v3 — Design handoff for programmers
+  ============================================================
+
+  PURPOSE
+  This is the screen a user sees immediately after logging in or
+  completing registration. It is NOT a marketing page — it is the
+  workspace entry hall. It must answer three questions instantly:
+
+    1. What can I do right now?       (5 launch tiles, center)
+    2. What was I doing last time?    (Continue row)
+    3. Where is everything else?      (Left vertical menu)
+
+  STRUCTURE
+    .app                              — root grid (left menu | main)
+      .sidebar                        — left vertical menu (navy)
+      .main                           — content canvas (pale blue)
+        .header                       — top bar (greeting, search,
+                                        ticket icon, bell, activity,
+                                        +New quick-create button)
+        .body                         — scrollable content
+          .welcome-banner             — 3 pillars: platform, humans,
+                                        ticketing, with tour CTA
+          .tiles                      — 5 launch tiles in one row
+            tile 1: Business letter
+            tile 2: Worksheet / todo
+            tile 3: Billing
+            tile 4: Template editor
+            tile 5: Your custom document  (visually distinct,
+                                           dashed orange border)
+          .continue-row               — 4 recent-document cards
+          .activity-and-tickets       — team activity feed (2/3)
+                                        + tickets panel (1/3)
+
+  BRAND COLORS (Humpl skin tokens)
+    --ink        #1e3a5f   deep navy   (primary text, sidebar)
+    --ink-soft   #3d5a80   lighter navy (secondary text)
+    --paper      #ffffff   white       (cards)
+    --paper-soft #f0f6ff   very pale blue (inputs, previews)
+    --paper-warm #dbe8f7   pale blue   (page background)
+    --accent     #f08a3c   warm orange (primary CTA, "+ New")
+    --accent-soft#ff9d52   lighter orange (hover state)
+    --gold       #2a8fbd   trust blue  (secondary CTA, links)
+    --rule       #1e3a5f33 hairline divider
+    --rule-soft  #1e3a5f1a softer divider
+
+  TYPOGRAPHY
+    Body:   system-ui / -apple-system / "Segoe UI" / Roboto / sans-serif
+    Weight: 400 regular, 500 medium. Never 700 (too heavy on cards).
+    Sizes:  11px hint, 12px body, 13px tile-title, 17px page-heading.
+
+  RESPONSIVE BREAKPOINTS
+    >= 1100px  desktop  5 tiles in one row, sidebar 200px wide
+    768–1099px tablet   3 tiles per row (wraps to 2 rows)
+    < 768px    mobile   tiles stack vertically, sidebar collapses
+
+  ACCESSIBILITY NOTES FOR DEVS
+    - All interactive elements need real <button> / <a> tags with
+      aria-labels where icon-only.
+    - Focus rings must remain visible (do not remove :focus styles).
+    - Color contrast: ink (#1e3a5f) on paper-warm (#dbe8f7) = AA pass.
+    - The orange #f08a3c on white needs care for small text — use it
+      only on filled buttons or as accent borders, never as body text.
+
+  WHAT THIS FILE IS NOT
+    - This is NOT production code. It is a design reference.
+    - No framework. No build step. Open it in a browser.
+    - All "+ New" / "My X" buttons are non-functional stubs.
+    - Real implementation should use the existing Humpl skin engine
+      and component library — these styles are written inline only
+      to keep the handoff document self-contained.
+  ============================================================
+-->
+
+<style>
+  /* -----------------------------------------------------------
+     1. DESIGN TOKENS — Humpl brand skin
+     Implementation note: these match the JSON skin definition
+     already in the production skin engine ("humpl" preset).
+     ----------------------------------------------------------- */
+  :root {
+    --ink:         #1e3a5f;
+    --ink-soft:    #3d5a80;
+    --paper:       #ffffff;
+    --paper-soft:  #f0f6ff;
+    --paper-warm:  #dbe8f7;
+    --accent:      #f08a3c;
+    --accent-soft: #ff9d52;
+    --accent-tint: #fff5ec;   /* very soft orange wash for custom tile */
+    --gold:        #2a8fbd;
+    --rule:        #1e3a5f33;
+    --rule-soft:   #1e3a5f1a;
+    --rule-faint:  #1e3a5f11;
+
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    --shadow-card: 0 1px 2px rgba(30, 58, 95, 0.04);
+
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  }
+
+  /* -----------------------------------------------------------
+     2. RESET / BASE
+     ----------------------------------------------------------- */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: var(--font-sans); }
+  body {
+    background: var(--paper-warm);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* -----------------------------------------------------------
+     3. APP SHELL — sidebar + main canvas
+     ----------------------------------------------------------- */
+  .app {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    min-height: 100vh;
+  }
+
+  /* -----------------------------------------------------------
+     4. SIDEBAR (left vertical menu)
+     ----------------------------------------------------------- */
+  .sidebar {
+    background: var(--ink);
+    color: #ffffff;
+    padding: 18px 0;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  .sidebar__brand {
+    padding: 0 18px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.13);
+  }
+  .sidebar__brand-name {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+  }
+  .sidebar__brand-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 2px;
+  }
+
+  .sidebar__workspace {
+    margin: 10px;
+    padding: 9px 11px;
+    background: rgba(255,255,255,0.07);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .sidebar__workspace:hover { background: rgba(255,255,255,0.12); }
+  .sidebar__workspace-avatar {
+    width: 22px; height: 22px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 500;
+  }
+  .sidebar__workspace-name {
+    flex: 1; font-size: 12px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sidebar__workspace-chevron { font-size: 14px; color: rgba(255,255,255,0.6); }
+
+  .sidebar__nav { padding: 8px 0; flex: 1; }
+  .sidebar__nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 9px 18px;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar__nav-item:hover {
+    background: rgba(255,255,255,0.06);
+    color: #ffffff;
+  }
+  .sidebar__nav-item--active {
+    background: rgba(255,255,255,0.1);
+    border-left: 3px solid var(--accent);
+    padding-left: 15px;   /* 18 - 3 to keep label aligned */
+    color: #ffffff;
+    font-weight: 500;
+  }
+  .sidebar__nav-item--muted { color: rgba(255,255,255,0.65); }
+
+  .sidebar__divider {
+    height: 1px;
+    background: rgba(255,255,255,0.13);
+    margin: 10px 18px;
+  }
+
+  .sidebar__user {
+    padding: 12px 18px;
+    border-top: 1px solid rgba(255,255,255,0.13);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sidebar__user-avatar {
+    width: 28px; height: 28px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 500;
+    position: relative;
+  }
+  .sidebar__user-avatar::after {
+    content: ""; position: absolute;
+    bottom: -1px; right: -1px;
+    width: 9px; height: 9px;
+    background: #4ade80;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+  }
+  .sidebar__user-name { font-size: 12px; }
+  .sidebar__user-role { font-size: 10px; color: rgba(255,255,255,0.6); }
+
+  /* Icon font is faked with simple Unicode glyphs to keep this
+     file dependency-free. Real implementation uses Tabler Icons
+     (https://tabler.io/icons) — replace .icon spans with
+     <i class="ti ti-xxx"></i> elements at handoff time. */
+  .icon {
+    display: inline-block;
+    width: 1em; text-align: center;
+    font-style: normal;
+  }
+
+  /* -----------------------------------------------------------
+     5. MAIN CANVAS
+     ----------------------------------------------------------- */
+  .main {
+    background: var(--paper-warm);
+    display: flex; flex-direction: column;
+    min-width: 0;
+  }
+
+  /* -----------------------------------------------------------
+     6. HEADER BAR (top of canvas)
+     ----------------------------------------------------------- */
+  .header {
+    background: var(--paper);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--rule-soft);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .header__greeting {
+    font-size: 13px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .header__greeting-name { color: var(--ink); font-weight: 500; }
+
+  .header__search {
+    flex: 1;
+    max-width: 360px;
+    margin: 0 auto;
+    background: var(--paper-soft);
+    border: 1px solid var(--rule-soft);
+    border-radius: var(--radius-md);
+    padding: 7px 12px;
+    display: flex; align-items: center; gap: 8px;
+    transition: border-color 0.15s;
+  }
+  .header__search:focus-within { border-color: var(--gold); }
+  .header__search-icon { font-size: 14px; color: var(--ink-soft); }
+  .header__search-input {
+    border: 0; outline: 0; background: transparent;
+    flex: 1; font-size: 12px; font-family: inherit;
+    color: var(--ink);
+  }
+  .header__search-input::placeholder { color: rgba(61, 90, 128, 0.55); }
+  .header__search-kbd {
+    font-size: 10px; color: var(--ink-soft);
+    background: var(--rule-faint);
+    padding: 2px 6px; border-radius: 3px;
+    font-family: var(--font-sans);
+  }
+
+  .header__actions {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .header__icon-btn {
+    background: transparent; border: 0; padding: 4px;
+    font-size: 18px; color: var(--ink-soft);
+    position: relative;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .header__icon-btn:hover { color: var(--ink); }
+  .header__badge {
+    position: absolute;
+    top: -2px; right: -4px;
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 500;
+    padding: 1px 5px;
+    border-radius: 8px;
+    min-width: 14px; text-align: center;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #ffffff;
+    border: 0;
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, transform 0.05s;
+  }
+  .btn-primary:hover { background: var(--accent-soft); }
+  .btn-primary:active { transform: translateY(1px); }
+
+  /* -----------------------------------------------------------
+     7. BODY
+     ----------------------------------------------------------- */
+  .body {
+    padding: 28px 24px;
+    flex: 1;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* -----------------------------------------------------------
+     8. WELCOME TOUR BANNER
+     Dismissible. After dismissal, collapses to a 1-line
+     "Tour available anytime in Help" reminder.
+     ----------------------------------------------------------- */
+  .welcome-banner {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: center;
+    box-shadow: var(--shadow-card);
+  }
+  .welcome-banner__title {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 12px;
+    font-size: 13px; font-weight: 500;
+    color: var(--ink);
+  }
+  .welcome-banner__title-icon { color: var(--accent); font-size: 16px; }
+
+  .welcome-banner__pillars {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .pillar { display: flex; gap: 9px; align-items: flex-start; }
+  .pillar__icon { color: var(--gold); font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+  .pillar__title {
+    font-size: 12px; font-weight: 500;
+    color: var(--ink); margin-bottom: 2px;
+  }
+  .pillar__text {
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+
+  .welcome-banner__cta {
+    display: flex; flex-direction: column;
+    gap: 8px; align-items: flex-end;
+    min-width: 150px;
+  }
+  .welcome-banner__skip {
+    font-size: 11px;
+    color: var(--gold);
+    cursor: pointer;
+  }
+  .welcome-banner__skip:hover { text-decoration: underline; }
+
+  /* -----------------------------------------------------------
+     9. SECTION HEADING — "What would you like to do today?"
+     ----------------------------------------------------------- */
+  .section-heading {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .section-heading h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .section-heading p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  /* -----------------------------------------------------------
+     10. FIVE LAUNCH TILES
+     Each tile shows:
+       - a miniature preview of the document type (CRITICAL:
+         the preview must look like a real document, not an icon)
+       - the document type title
+       - one-line description
+       - PRIMARY button: "+ New ___" (orange, filled)
+       - SECONDARY button: "My ___" (blue outline)
+     ----------------------------------------------------------- */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .tile {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    display: flex; flex-direction: column;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.08);
+    border-color: var(--rule);
+  }
+
+  /* The "Your custom document" tile is visually distinct:
+     dashed orange border + cream background hint. */
+  .tile--custom { border: 1px dashed var(--accent); }
+  .tile--custom .preview { background: var(--accent-tint); border-color: rgba(240, 138, 60, 0.4); border-style: dashed; }
+
+  .preview {
+    background: var(--paper-soft);
+    border: 1px solid var(--rule-soft);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    margin-bottom: 12px;
+    min-height: 140px;
+    font-size: 7px;
+    color: var(--ink-soft);
+  }
+
+  .tile__title {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .tile__desc {
+    margin: 0 0 14px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    flex: 1;
+  }
+
+  .tile__buttons {
+    display: flex; flex-direction: column;
+    gap: 7px;
+  }
+  .btn-tile-primary {
+    background: var(--accent);
+    color: #ffffff;
+    border: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  .btn-tile-primary:hover { background: var(--accent-soft); }
+
+  .btn-tile-secondary {
+    background: var(--paper);
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 7px 12px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn-tile-secondary:hover {
+    background: var(--gold);
+    color: #ffffff;
+  }
+
+  /* -----------------------------------------------------------
+     11. PREVIEW DETAILS — micro-typography for each tile's
+     mini-document. These tiny styles only appear inside .preview.
+     ----------------------------------------------------------- */
+
+  /* Letter preview */
+  .preview-letter__header {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 6px;
+  }
+  .preview-letter__brand {
+    font-size: 9px; font-weight: 500; color: var(--ink);
+  }
+  .preview-letter__brand::after {
+    content: ""; display: block;
+    width: 20px; height: 1px;
+    background: var(--accent);
+    margin-top: 2px;
+  }
+  .preview-letter__meta {
+    font-size: 7px; color: var(--ink-soft); text-align: right;
+  }
+  .preview-letter__addr { font-size: 7px; line-height: 1.4; margin-bottom: 5px; }
+  .preview-letter__subject {
+    font-size: 8px; font-weight: 500;
+    color: var(--ink); margin-bottom: 3px;
+  }
+  .preview-letter__body { font-size: 7px; line-height: 1.5; }
+  .preview-letter__sign {
+    margin-top: 6px; font-size: 7px;
+  }
+  .preview-letter__signature { font-style: italic; color: var(--ink); }
+
+  /* Worksheet preview */
+  .preview-worksheet__head {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 9px;
+  }
+  .preview-worksheet__title {
+    font-size: 9px; font-weight: 500; color: var(--ink);
+  }
+  .preview-worksheet__due {
+    font-size: 7px; color: #ffffff;
+    background: var(--accent);
+    padding: 1px 5px; border-radius: 2px;
+  }
+  .preview-worksheet__row {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 5px; font-size: 8px;
+  }
+  .preview-worksheet__check {
+    width: 10px; height: 10px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .preview-worksheet__check--done {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #ffffff;
+    font-size: 7px;
+  }
+  .preview-worksheet__check--add { border-style: dashed; }
+  .preview-worksheet__row--done {
+    color: rgba(61, 90, 128, 0.55);
+    text-decoration: line-through;
+  }
+  .preview-worksheet__row--current {
+    color: var(--ink); font-weight: 500;
+  }
+  .preview-worksheet__row--add { color: rgba(61, 90, 128, 0.55); font-style: italic; }
+
+  /* Billing preview */
+  .preview-bill__head {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 7px;
+  }
+  .preview-bill__title {
+    font-size: 9px; font-weight: 500; color: var(--ink);
+    letter-spacing: 0.5px;
+  }
+  .preview-bill__num {
+    font-size: 8px; color: var(--ink-soft);
+  }
+  .preview-bill__addr { font-size: 7px; line-height: 1.4; margin-bottom: 7px; }
+  .preview-bill__lines {
+    border-top: 1px solid var(--rule);
+    padding-top: 5px;
+  }
+  .preview-bill__line {
+    display: flex; justify-content: space-between;
+    font-size: 7px; padding: 1px 0;
+  }
+  .preview-bill__total {
+    border-top: 1px solid var(--rule);
+    margin-top: 4px; padding-top: 4px;
+    display: flex; justify-content: space-between;
+    align-items: center;
+  }
+  .preview-bill__total-label {
+    font-size: 8px; font-weight: 500; color: var(--ink);
+  }
+  .preview-bill__total-value {
+    font-size: 11px; font-weight: 500; color: var(--accent);
+  }
+
+  /* Template preview */
+  .preview-tpl__title {
+    font-size: 9px; font-weight: 500; color: var(--ink);
+    margin-bottom: 7px;
+  }
+  .preview-tpl__block {
+    background: var(--paper);
+    border: 1px dashed var(--rule);
+    padding: 4px 6px;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    font-size: 8px;
+  }
+  .preview-tpl__block--token {
+    border-color: var(--gold);
+  }
+  .preview-tpl__chip {
+    font-size: 8px;
+    color: var(--gold);
+    background: rgba(42, 143, 189, 0.12);
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+  .preview-tpl__block--add {
+    color: rgba(61, 90, 128, 0.55);
+  }
+
+  /* Custom-document preview */
+  .preview-custom__head {
+    font-size: 9px; font-weight: 500; color: var(--ink);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .preview-custom__head-icon { color: var(--accent); font-size: 10px; }
+  .preview-custom__placeholder {
+    background: var(--paper);
+    border: 1px dashed var(--rule);
+    padding: 4px 6px;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    font-size: 8px;
+    color: rgba(61, 90, 128, 0.55);
+    text-align: center;
+  }
+  .preview-custom__palette {
+    margin-top: 8px;
+    display: flex; gap: 4px; justify-content: center;
+  }
+  .preview-custom__palette-item {
+    width: 16px; height: 16px;
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: 3px;
+    display: grid; place-items: center;
+    font-size: 9px;
+    color: var(--ink-soft);
+  }
+
+  /* -----------------------------------------------------------
+     12. CONTINUE WHERE YOU LEFT OFF
+     ----------------------------------------------------------- */
+  .row-section { margin-bottom: 22px; }
+  .row-section__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 11px;
+  }
+  .row-section__title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .row-section__link {
+    font-size: 12px;
+    color: var(--gold);
+  }
+  .row-section__link:hover { text-decoration: underline; }
+
+  .continue {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .continue__card {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: var(--radius-md);
+    padding: 11px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .continue__card:hover {
+    border-color: var(--rule);
+    transform: translateY(-1px);
+  }
+  .continue__meta {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 6px;
+    font-size: 10px;
+    color: var(--ink-soft);
+  }
+  .continue__icon { font-size: 12px; }
+  .continue__name {
+    font-size: 12px; font-weight: 500;
+    color: var(--ink); margin-bottom: 4px;
+  }
+  .continue__time { font-size: 10px; color: var(--ink-soft); }
+
+  /* -----------------------------------------------------------
+     13. ACTIVITY FEED + TICKETS PANEL (bottom row, 2:1 split)
+     ----------------------------------------------------------- */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+  }
+
+  .activity {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .activity__item {
+    padding: 9px 14px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--rule-faint);
+  }
+  .activity__item:last-child { border-bottom: 0; }
+  .activity__avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 10px; font-weight: 500;
+    color: #ffffff; flex-shrink: 0;
+  }
+  .activity__avatar--orange { background: var(--accent); }
+  .activity__avatar--blue   { background: var(--gold); }
+  .activity__avatar--navy   { background: var(--ink); }
+  .activity__text {
+    flex: 1;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .activity__text strong {
+    color: var(--ink); font-weight: 500;
+  }
+  .activity__time {
+    font-size: 11px;
+    color: rgba(61, 90, 128, 0.55);
+  }
+
+  .ticket-panel {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    border-radius: var(--radius-md);
+    padding: 12px;
+  }
+  .ticket-panel__head {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 8px;
+  }
+  .ticket-panel__status-dot {
+    width: 8px; height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+  }
+  .ticket-panel__num {
+    font-size: 12px; font-weight: 500; color: var(--ink);
+  }
+  .ticket-panel__status {
+    font-size: 10px; color: var(--ink-soft);
+  }
+  .ticket-panel__body {
+    font-size: 11px; color: var(--ink-soft);
+    line-height: 1.45;
+  }
+  .ticket-panel__open {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+    display: block;
+  }
+  .ticket-panel__open:hover { text-decoration: underline; }
+
+  /* -----------------------------------------------------------
+     14. RESPONSIVE LAYOUT
+     ----------------------------------------------------------- */
+  @media (max-width: 1200px) {
+    .tiles { grid-template-columns: repeat(3, 1fr); }
+    /* 5 tiles wrap to two rows: 3 + 2 */
+  }
+  @media (max-width: 900px) {
+    .welcome-banner { grid-template-columns: 1fr; }
+    .welcome-banner__cta { align-items: flex-start; }
+    .welcome-banner__pillars { grid-template-columns: 1fr; gap: 10px; }
+    .continue { grid-template-columns: repeat(2, 1fr); }
+    .bottom-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    /* On mobile, sidebar would become a slide-out drawer.
+       The drawer behavior is not implemented in this mockup —
+       leave the structural placeholder for engineers. */
+    .tiles { grid-template-columns: 1fr; }
+    .body { padding: 18px 14px; }
+    .header__search { max-width: none; }
+    .header__greeting { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     APP ROOT
+     ============================================================ -->
+<div class="app">
+
+  <!-- ============================================================
+       LEFT SIDEBAR — vertical menu (Humpl-brand navy)
+       ============================================================
+       Structure mirrors Ledger & Lines convention so users feel
+       at home. Top: brand + workspace switcher. Middle: primary
+       and secondary navigation. Bottom: user identity + presence.
+       Replace .icon spans with Tabler Icons at implementation.
+  -->
+  <aside class="sidebar" role="navigation" aria-label="Main navigation">
+
+    <div class="sidebar__brand">
+      <div class="sidebar__brand-name">Humpl</div>
+      <div class="sidebar__brand-label">workspace</div>
+    </div>
+
+    <div class="sidebar__workspace" role="button" tabindex="0" aria-label="Switch workspace">
+      <div class="sidebar__workspace-avatar">B</div>
+      <div class="sidebar__workspace-name">Bernhard's team</div>
+      <span class="sidebar__workspace-chevron icon">▾</span>
+    </div>
+
+    <nav class="sidebar__nav">
+      <!-- PRIMARY NAVIGATION BLOCK -->
+      <a href="#" class="sidebar__nav-item sidebar__nav-item--active">
+        <span class="icon" aria-hidden="true">⌂</span> Home
+      </a>
+      <a href="#" class="sidebar__nav-item">
+        <span class="icon" aria-hidden="true">▤</span> Documents
+      </a>
+      <a href="#" class="sidebar__nav-item">
+        <span class="icon" aria-hidden="true">✉</span> Letters
+      </a>
+      <a href="#" class="sidebar__nav-item">
+        <span class="icon" aria-hidden="true">☑</span> Worksheets
+      </a>
+      <a href="#" class="sidebar__nav-item">
+        <span class="icon" aria-hidden="true">₪</span> Billing
+      </a>
+      <a href="#" class="sidebar__nav-item">
+        <span class="icon" aria-hidden="true">▣</span> Templates
+      </a>
+      <a href="#" class="sidebar__nav-item">
+        <span class="icon" aria-hidden="true">⊞</span> Tables
+      </a>
+      <a href="#" class="sidebar__nav-item">
+        <span class="icon" aria-hidden="true">⚇</span> Team
+      </a>
+
+      <div class="sidebar__divider"></div>
+
+      <!-- SECONDARY NAVIGATION BLOCK -->
+      <a href="#" class="sidebar__nav-item sidebar__nav-item--muted">
+        <span class="icon" aria-hidden="true">◉</span> Support tickets
+      </a>
+      <a href="#" class="sidebar__nav-item sidebar__nav-item--muted">
+        <span class="icon" aria-hidden="true">⚙</span> Settings
+      </a>
+      <a href="#" class="sidebar__nav-item sidebar__nav-item--muted">
+        <span class="icon" aria-hidden="true">◐</span> Skins
+      </a>
+      <a href="#" class="sidebar__nav-item sidebar__nav-item--muted">
+        <span class="icon" aria-hidden="true">⊕</span> Language
+      </a>
+      <a href="#" class="sidebar__nav-item sidebar__nav-item--muted">
+        <span class="icon" aria-hidden="true">?</span> Help
+      </a>
+    </nav>
+
+    <div class="sidebar__user">
+      <div class="sidebar__user-avatar" aria-label="Bernhard online">B</div>
+      <div style="flex: 1; min-width: 0;">
+        <div class="sidebar__user-name">Bernhard</div>
+        <div class="sidebar__user-role">Owner</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       MAIN CANVAS
+       ============================================================ -->
+  <main class="main">
+
+    <!-- HEADER BAR ============================================ -->
+    <header class="header" role="banner">
+      <div class="header__greeting">
+        Good morning, <span class="header__greeting-name">Bernhard</span>
+      </div>
+
+      <div class="header__search">
+        <span class="header__search-icon icon" aria-hidden="true">⌕</span>
+        <input
+          type="text"
+          class="header__search-input"
+          placeholder="Search documents, templates, people…"
+          aria-label="Search">
+        <span class="header__search-kbd">⌘K</span>
+      </div>
+
+      <div class="header__actions">
+        <button class="header__icon-btn" aria-label="Support tickets">
+          <span class="icon" aria-hidden="true">◉</span>
+        </button>
+        <button class="header__icon-btn" aria-label="Notifications">
+          <span class="icon" aria-hidden="true">◔</span>
+          <span class="header__badge">3</span>
+        </button>
+        <button class="header__icon-btn" aria-label="Activity feed">
+          <span class="icon" aria-hidden="true">~</span>
+        </button>
+        <button class="btn-primary" aria-label="Create new document">
+          <span aria-hidden="true">＋</span> New
+        </button>
+      </div>
+    </header>
+
+    <!-- BODY =================================================== -->
+    <div class="body">
+
+      <!-- WELCOME TOUR BANNER =================================
+           Dismissible. The three pillars communicate Humpl's
+           three differentiators: platform, humans, ticketing.
+           ===================================================== -->
+      <section class="welcome-banner" aria-label="Welcome tour">
+        <div>
+          <div class="welcome-banner__title">
+            <span class="welcome-banner__title-icon icon" aria-hidden="true">✦</span>
+            Welcome to Humpl — what makes us different
+          </div>
+          <div class="welcome-banner__pillars">
+
+            <div class="pillar">
+              <span class="pillar__icon icon" aria-hidden="true">▦</span>
+              <div>
+                <div class="pillar__title">A full document platform</div>
+                <div class="pillar__text">Letters, billing, worksheets, templates — one workspace, fully customizable.</div>
+              </div>
+            </div>
+
+            <div class="pillar">
+              <span class="pillar__icon icon" aria-hidden="true">♥</span>
+              <div>
+                <div class="pillar__title">Real humans behind the product</div>
+                <div class="pillar__text">Talk to a real person, not a chatbot. We help you set up and grow.</div>
+              </div>
+            </div>
+
+            <div class="pillar">
+              <span class="pillar__icon icon" aria-hidden="true">◉</span>
+              <div>
+                <div class="pillar__title">Ticketing system included</div>
+                <div class="pillar__text">Open a support ticket from any document, track it to resolution.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="welcome-banner__cta">
+          <button class="btn-primary" style="white-space: nowrap;">
+            Take the 2-min tour →
+          </button>
+          <a href="#" class="welcome-banner__skip">Skip and explore</a>
+        </div>
+      </section>
+
+      <!-- SECTION HEADING ====================================== -->
+      <div class="section-heading">
+        <h2>What would you like to do today?</h2>
+        <p>Create something new — or jump into what you already have.</p>
+      </div>
+
+      <!-- FIVE LAUNCH TILES ====================================
+           Order (left → right):
+             1. Business letter  — most universal starter
+             2. Worksheet / todo — daily productivity driver
+             3. Billing          — commercial anchor
+             4. Template editor  — power user tool
+             5. Custom document  — open canvas (visually distinct)
+           Each tile: real document preview → title → desc →
+           +New button (orange) → My X button (blue outline).
+           ===================================================== -->
+      <section class="tiles" aria-label="Quick start">
+
+        <!-- TILE 1: BUSINESS LETTER ============================ -->
+        <article class="tile">
+          <div class="preview">
+            <div class="preview-letter__header">
+              <div class="preview-letter__brand">Humpl</div>
+              <div class="preview-letter__meta">London<br>16 May 2026</div>
+            </div>
+            <div class="preview-letter__addr">
+              Dr. James Smith<br>Smith &amp; Partners
+            </div>
+            <div class="preview-letter__subject">Subject: Partnership proposal</div>
+            <div class="preview-letter__body">
+              Dear Dr. Smith,<br>
+              thank you for our meeting last week …
+            </div>
+            <div class="preview-letter__sign">
+              Kind regards, <span class="preview-letter__signature">B. Schneider</span>
+            </div>
+          </div>
+          <h3 class="tile__title">Business letter</h3>
+          <p class="tile__desc">Write professional correspondence.</p>
+          <div class="tile__buttons">
+            <button class="btn-tile-primary">+ New letter</button>
+            <button class="btn-tile-secondary">My letters</button>
+          </div>
+        </article>
+
+        <!-- TILE 2: WORKSHEET / TODO =========================== -->
+        <article class="tile">
+          <div class="preview">
+            <div class="preview-worksheet__head">
+              <div class="preview-worksheet__title">Daily worksheet · Mon</div>
+              <div class="preview-worksheet__due">Due today</div>
+            </div>
+            <div class="preview-worksheet__row preview-worksheet__row--done">
+              <span class="preview-worksheet__check preview-worksheet__check--done">✓</span>
+              <span>Send invoice to Miller Ltd</span>
+            </div>
+            <div class="preview-worksheet__row preview-worksheet__row--done">
+              <span class="preview-worksheet__check preview-worksheet__check--done">✓</span>
+              <span>Reply to Smith</span>
+            </div>
+            <div class="preview-worksheet__row preview-worksheet__row--current">
+              <span class="preview-worksheet__check"></span>
+              <span>Review Q2 templates</span>
+            </div>
+            <div class="preview-worksheet__row">
+              <span class="preview-worksheet__check"></span>
+              <span>Call with Magic · 14:00</span>
+            </div>
+            <div class="preview-worksheet__row preview-worksheet__row--add">
+              <span class="preview-worksheet__check preview-worksheet__check--add"></span>
+              <span>+ Add task</span>
+            </div>
+          </div>
+          <h3 class="tile__title">Worksheet / todo</h3>
+          <p class="tile__desc">Daily tasks and team assignments.</p>
+          <div class="tile__buttons">
+            <button class="btn-tile-primary">+ New worksheet</button>
+            <button class="btn-tile-secondary">My worksheets</button>
+          </div>
+        </article>
+
+        <!-- TILE 3: BILLING ==================================== -->
+        <article class="tile">
+          <div class="preview">
+            <div class="preview-bill__head">
+              <div class="preview-bill__title">INVOICE</div>
+              <div class="preview-bill__num">#2026-0142</div>
+            </div>
+            <div class="preview-bill__addr">
+              Miller Ltd<br>14 King Street<br>London
+            </div>
+            <div class="preview-bill__lines">
+              <div class="preview-bill__line"><span>Consulting · 12h</span><span>£1,440</span></div>
+              <div class="preview-bill__line"><span>Design work</span><span>£680</span></div>
+              <div class="preview-bill__line"><span>VAT 20%</span><span>£424</span></div>
+            </div>
+            <div class="preview-bill__total">
+              <span class="preview-bill__total-label">Total</span>
+              <span class="preview-bill__total-value">£2,544</span>
+            </div>
+          </div>
+          <h3 class="tile__title">Billing</h3>
+          <p class="tile__desc">Invoices, quotes, and reminders.</p>
+          <div class="tile__buttons">
+            <button class="btn-tile-primary">+ New invoice</button>
+            <button class="btn-tile-secondary">My billing</button>
+          </div>
+        </article>
+
+        <!-- TILE 4: TEMPLATE EDITOR ============================ -->
+        <article class="tile">
+          <div class="preview">
+            <div class="preview-tpl__title">TEMPLATE · Project brief</div>
+            <div class="preview-tpl__block preview-tpl__block--token">
+              <span class="preview-tpl__chip">{title}</span>
+            </div>
+            <div class="preview-tpl__block">Header · logo + date</div>
+            <div class="preview-tpl__block">Goals · text block</div>
+            <div class="preview-tpl__block">Brainstorm · 0–8 ★</div>
+            <div class="preview-tpl__block preview-tpl__block--add">+ Add section</div>
+          </div>
+          <h3 class="tile__title">Template editor</h3>
+          <p class="tile__desc">Reusable templates for any doc type.</p>
+          <div class="tile__buttons">
+            <button class="btn-tile-primary">+ New template</button>
+            <button class="btn-tile-secondary">My templates</button>
+          </div>
+        </article>
+
+        <!-- TILE 5: CUSTOM PROJECT / DOCUMENT ==================
+             Visually distinct: dashed orange border + cream
+             wash background. Signals "open canvas, not finished form."
+             ==================================================== -->
+        <article class="tile tile--custom">
+          <div class="preview">
+            <div class="preview-custom__head">
+              <span class="preview-custom__head-icon icon" aria-hidden="true">✎</span>
+              Your canvas
+            </div>
+            <div class="preview-custom__placeholder">+ Add text</div>
+            <div class="preview-custom__placeholder">+ Add table</div>
+            <div class="preview-custom__placeholder">+ Add image</div>
+            <div class="preview-custom__palette">
+              <span class="preview-custom__palette-item" title="Text">T</span>
+              <span class="preview-custom__palette-item" title="Table">⊞</span>
+              <span class="preview-custom__palette-item" title="Checklist">☑</span>
+              <span class="preview-custom__palette-item" title="Image">▣</span>
+            </div>
+          </div>
+          <h3 class="tile__title">Your custom document</h3>
+          <p class="tile__desc">Build something Humpl doesn't have yet.</p>
+          <div class="tile__buttons">
+            <button class="btn-tile-primary">+ Start blank</button>
+            <button class="btn-tile-secondary">My documents</button>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- CONTINUE WHERE YOU LEFT OFF ========================== -->
+      <section class="row-section" aria-label="Recent documents">
+        <div class="row-section__head">
+          <h3 class="row-section__title">Continue where you left off</h3>
+          <a href="#" class="row-section__link">See all documents →</a>
+        </div>
+        <div class="continue">
+
+          <div class="continue__card">
+            <div class="continue__meta">
+              <span class="continue__icon icon" style="color: var(--accent);" aria-hidden="true">₪</span>
+              <span>Invoice</span>
+            </div>
+            <div class="continue__name">Miller Ltd Q2</div>
+            <div class="continue__time">2 hours ago</div>
+          </div>
+
+          <div class="continue__card">
+            <div class="continue__meta">
+              <span class="continue__icon icon" style="color: var(--gold);" aria-hidden="true">☑</span>
+              <span>Worksheet</span>
+            </div>
+            <div class="continue__name">Daily · Monday</div>
+            <div class="continue__time">This morning</div>
+          </div>
+
+          <div class="continue__card">
+            <div class="continue__meta">
+              <span class="continue__icon icon" style="color: var(--ink);" aria-hidden="true">✉</span>
+              <span>Letter</span>
+            </div>
+            <div class="continue__name">Smith &amp; Partners</div>
+            <div class="continue__time">3 days ago</div>
+          </div>
+
+          <div class="continue__card">
+            <div class="continue__meta">
+              <span class="continue__icon icon" style="color: var(--gold);" aria-hidden="true">▣</span>
+              <span>Template</span>
+            </div>
+            <div class="continue__name">Project brief v3</div>
+            <div class="continue__time">Yesterday</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ACTIVITY + TICKETS BOTTOM ROW ======================== -->
+      <section class="bottom-row">
+
+        <!-- Team activity feed (2/3 width) -->
+        <div>
+          <div class="row-section__head">
+            <h3 class="row-section__title">Activity in your team</h3>
+            <a href="#" class="row-section__link">See all →</a>
+          </div>
+          <div class="activity">
+            <div class="activity__item">
+              <div class="activity__avatar activity__avatar--orange">M</div>
+              <div class="activity__text"><strong>Magic</strong> edited <strong>Q1 Invoice Template</strong></div>
+              <div class="activity__time">2h</div>
+            </div>
+            <div class="activity__item">
+              <div class="activity__avatar activity__avatar--blue">S</div>
+              <div class="activity__text"><strong>Sarah</strong> commented on <strong>Welcome Letter</strong></div>
+              <div class="activity__time">Yesterday</div>
+            </div>
+            <div class="activity__item">
+              <div class="activity__avatar activity__avatar--navy">J</div>
+              <div class="activity__text"><strong>Jan</strong> created worksheet <strong>Sprint 12 tasks</strong></div>
+              <div class="activity__time">2d</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Your tickets panel (1/3 width) -->
+        <div>
+          <div class="row-section__head">
+            <h3 class="row-section__title">Your tickets</h3>
+            <a href="#" class="row-section__link">+ New</a>
+          </div>
+          <div class="ticket-panel">
+            <div class="ticket-panel__head">
+              <span class="ticket-panel__status-dot" aria-hidden="true"></span>
+              <span class="ticket-panel__num">#247</span>
+              <span class="ticket-panel__status">answered</span>
+            </div>
+            <div class="ticket-panel__body">
+              Custom skin export not loading on iPad…
+            </div>
+            <a href="#" class="ticket-panel__open">Open ticket →</a>
+          </div>
+        </div>
+
+      </section>
+
+    </div><!-- /.body -->
+  </main>
+
+</div><!-- /.app -->
+
+<!-- ============================================================
+     SCRIPT NOTES FOR PROGRAMMERS
+     ============================================================
+     No scripts attached to this mockup. When wiring up:
+
+     1. ROUTES (suggested):
+          /home              → this landing page
+          /letters/new       → +New letter
+          /letters           → My letters (library view)
+          /worksheets/new    → +New worksheet
+          /worksheets        → My worksheets
+          /billing/new       → +New invoice
+          /billing           → My billing (with aging buckets)
+          /templates/new     → +New template
+          /templates         → My templates library
+          /documents/new     → +Start blank custom
+          /documents         → My documents
+          /tour              → Welcome tour flow (2-min guided)
+          /tickets           → Support tickets dashboard
+          /tickets/:id       → Specific ticket thread
+
+     2. STATE the landing page reads:
+          - user.firstName, user.locale  (greeting + language)
+          - workspace.activeId           (workspace switcher)
+          - recentDocuments[]            (Continue row, 4 items)
+          - teamActivity[]               (Activity feed, 3 items)
+          - openTickets[]                (Tickets panel, 1 item)
+          - notificationsUnread          (header bell badge)
+          - hasCompletedTour             (banner show/hide)
+
+     3. SKIN ENGINE:
+          The CSS variables in :root match the "humpl" skin
+          preset in the existing skin engine. Do not hardcode
+          colors at the component level — read from the skin
+          tokens so admin skin changes propagate everywhere.
+
+     4. I18N:
+          This mockup is presented in English for international
+          team handoff. All user-facing strings (greeting, section
+          heading, tile titles, button labels, banner copy, etc.)
+          must come from the existing 4-tier i18n cascade rather
+          than being hardcoded in components. German strings are
+          ~30% longer than English on average, so leave spacing
+          for that — do not pixel-pin labels.
+
+     5. ACCESSIBILITY:
+          - Sidebar items are <a> for keyboard nav.
+          - All icon-only buttons have aria-label.
+          - Search input has aria-label.
+          - Focus states must remain visible.
+          - Welcome banner should be dismissible with Esc.
+
+     6. ICONS:
+          The Unicode glyphs in this file are placeholders.
+          Replace with the existing icon system (Tabler Icons
+          recommended — same set used elsewhere in Ledger & Lines).
+     ============================================================ -->
+
+</body>
+</html>

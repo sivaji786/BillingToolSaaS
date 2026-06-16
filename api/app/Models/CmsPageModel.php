@@ -24,6 +24,18 @@ class CmsPageModel extends Model
         'nav_order',
         'page_template',
         'is_published',
+        // Nav v2
+        'nav_position',
+        'parent_id',
+        'link_url',
+        'link_target',
+        'footer_group',
+        // SEO
+        'meta_title',
+        'og_description',
+        'og_image',
+        // Scheduling
+        'published_at',
     ];
 
     // Dates

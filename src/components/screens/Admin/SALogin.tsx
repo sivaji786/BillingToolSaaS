@@ -6,7 +6,7 @@ import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Alert, AlertDescription } from '../../ui/alert';
-import { Loader2, Lock, Mail, Shield } from 'lucide-react';
+import { Loader2, Lock, Mail, Shield, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { TicketingWidget } from '../../TicketingWidget';
 import { getTicketingApiKey, getErrorMessage } from '../../../utils/config';
@@ -47,6 +47,18 @@ export function SALogin({ onLoginSuccess }: SALoginProps) {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+            {/* Home link — top-left */}
+            <div className="absolute top-4 left-4">
+                <a
+                    href="#/"
+                    onClick={() => { window.location.hash = '#/'; }}
+                    className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to Home
+                </a>
+            </div>
+
             <div className="w-full max-w-md">
                 {/* Logo and Title */}
                 <div className="text-center mb-8">

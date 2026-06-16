@@ -523,8 +523,20 @@ export const publicCmsService = {
         const response = await api.get(`/api/public/cms/${slug}`, { params: { lang } });
         return response.data;
     },
-    getNavPages: async (lang = 'en') => {
+    /** Returns { top: CmsNavItem[], bottom: CmsNavItem[] } */
+    getNav: async (lang = 'en') => {
         const response = await api.get('/api/public/cms/nav', { params: { lang } });
-        return response.data;
+        // Normalise: old API returned { data: CmsNavItem[] }, new returns { data: { top, bottom } }
+        const payload = response.data?.data ?? {};
+        if (Array.isArray(payload)) {
+            // Legacy flat array — treat all as top nav with no children
+            return { top: payload, bottom: [] };
+        }
+        return { top: payload.top ?? [], bottom: payload.bottom ?? [] };
+    },
+    /** @deprecated use getNav() */
+    getNavPages: async (lang = 'en') => {
+        const nav = await publicCmsService.getNav(lang);
+        return { data: nav.top };
     },
 };

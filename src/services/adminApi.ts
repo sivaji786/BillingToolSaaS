@@ -330,6 +330,16 @@ export const adminTicketService = {
     },
 };
 
+export interface MockupItem {
+    type: 'file' | 'directory';
+    name: string;
+    path: string;
+    url?: string;
+    size?: number;
+    created_at?: string;
+    children?: MockupItem[];
+}
+
 // Wiki Services
 export const adminWikiService = {
     getTree: async (lang = 'en'): Promise<any[]> => {
@@ -351,21 +361,102 @@ export const adminWikiService = {
         const response = await adminApi.post<{ path: string }>('/wiki/create', { path, lang });
         return response.data;
     },
+    listMockups: async (): Promise<MockupItem[]> => {
+        const response = await adminApi.get<MockupItem[]>('/wiki/mockups');
+        return response.data;
+    },
+    uploadMockup: async (file: File, folder = ''): Promise<MockupItem> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (folder) formData.append('folder', folder);
+        const response = await adminApi.post<MockupItem>('/wiki/mockups', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+    renameMockup: async (oldPath: string, newName: string): Promise<void> => {
+        await adminApi.patch('/wiki/mockups', { old_path: oldPath, new_name: newName });
+    },
+    deleteMockup: async (path: string): Promise<void> => {
+        await adminApi.delete('/wiki/mockups', { data: { path } });
+    },
+    createMockupFolder: async (path: string): Promise<void> => {
+        await adminApi.post('/wiki/mockups/folder', { path });
+    },
 };
 
-// CMS Services
+// ─── CMS Types ────────────────────────────────────────────────────────────────
+
+export type NavPosition = 'top' | 'bottom' | 'both' | 'none';
+export type LinkTarget  = '_self' | '_blank';
+export type PageTemplate = 'blank' | 'legal' | 'landing';
+
+export interface CmsNavItem {
+    id: number;
+    slug: string;
+    title: string;
+    nav_label: string | null;
+    nav_order: number;
+    nav_position: NavPosition;
+    footer_group: string | null;
+    link_url: string | null;
+    link_target: LinkTarget;
+    page_template: PageTemplate;
+    lang: string;
+    children: CmsNavItem[];
+}
+
+export interface CmsNavResponse {
+    top: CmsNavItem[];
+    bottom: CmsNavItem[];
+}
+
+export interface CmsPageUpdateData {
+    title?: string;
+    content?: any;
+    meta_description?: string;
+    meta_title?: string;
+    og_description?: string;
+    og_image?: string;
+    show_in_nav?: boolean | number;
+    nav_label?: string;
+    nav_order?: number;
+    nav_position?: NavPosition;
+    parent_id?: number | null;
+    link_url?: string | null;
+    link_target?: LinkTarget;
+    footer_group?: string | null;
+    is_published?: boolean | number;
+    published_at?: string | null;
+    page_template?: PageTemplate;
+}
+
+export interface NavReorderItem {
+    slug: string;
+    nav_order: number;
+    parent_id?: number | null;
+}
+
+// ─── CMS Services ─────────────────────────────────────────────────────────────
+
 export const adminCmsService = {
     getPages: async (lang = 'en'): Promise<any[]> => {
         const response = await adminApi.get<ApiResponse<any[]>>('/cms', { params: { lang } });
         return response.data.data;
     },
-    createPage: async (slug: string, lang: string, title: string, showInNav = false, navLabel = ''): Promise<void> => {
-        await adminApi.put(`/cms/${slug}`, { lang, title, content: '', show_in_nav: showInNav ? 1 : 0, nav_label: navLabel });
+    createPage: async (slug: string, lang: string, title: string, showInNav = false, navLabel = '', navPosition: NavPosition = 'none', footerGroup = ''): Promise<void> => {
+        await adminApi.put(`/cms/${slug}`, {
+            lang, title, content: '', is_published: 1,
+            show_in_nav: showInNav ? 1 : 0,
+            nav_label: navLabel,
+            nav_position: navPosition,
+            footer_group: footerGroup || null,
+        });
     },
-    updatePage: async (slug: string, lang: string, data: { title?: string; content?: any; meta_description?: string; show_in_nav?: boolean; nav_label?: string; nav_order?: number; is_published?: boolean }): Promise<void> => {
+    updatePage: async (slug: string, lang: string, data: CmsPageUpdateData): Promise<void> => {
         await adminApi.put(`/cms/${slug}`, { ...data, lang });
     },
-    patchCmsField: async (slug: string, lang: string, field: string, value: string): Promise<void> => {
+    patchCmsField: async (slug: string, lang: string, field: string, value: any): Promise<void> => {
         await adminApi.patch(`/cms/${slug}`, { lang, field, value });
     },
     uploadCmsImage: async (base64: string): Promise<string> => {
@@ -374,6 +465,31 @@ export const adminCmsService = {
     },
     deleteCmsPage: async (slug: string): Promise<void> => {
         await adminApi.delete(`/cms/${slug}`);
+    },
+    reorderNav: async (items: NavReorderItem[]): Promise<void> => {
+        await adminApi.patch('/cms/nav/reorder', { items });
+    },
+    // Version history
+    saveVersion: async (slug: string, lang: string): Promise<void> => {
+        await adminApi.post(`/cms/versions/${slug}`, { lang });
+    },
+    listVersions: async (slug: string, lang: string): Promise<any[]> => {
+        const response = await adminApi.get<ApiResponse<any[]>>(`/cms/versions/${slug}`, { params: { lang } });
+        return response.data.data;
+    },
+    restoreVersion: async (id: number): Promise<void> => {
+        await adminApi.post(`/cms/versions/restore/${id}`);
+    },
+    // Media library
+    listMedia: async (): Promise<any[]> => {
+        const response = await adminApi.get<ApiResponse<any[]>>('/cms/media');
+        return response.data.data;
+    },
+    updateMediaAlt: async (id: number, altText: string): Promise<void> => {
+        await adminApi.patch(`/cms/media/${id}`, { alt_text: altText });
+    },
+    deleteMedia: async (id: number): Promise<void> => {
+        await adminApi.delete(`/cms/media/${id}`);
     },
 };
 

@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { adminWikiService } from '../../../services/adminApi';
+import type { MockupItem } from '../../../services/adminApi';
+import { getApiBaseUrl } from '../../../utils/config';
 import { Card, CardContent } from '../../ui/card';
 import { ScrollArea } from '../../ui/scroll-area';
 import { Input } from '../../ui/input';
-import { Search, ChevronRight, ChevronDown, FileText, Folder, BookOpen, Clock, Download, Pencil, X, Save, FilePlus, Bold, Italic, Heading1, Heading2, Heading3, List, ListOrdered, Code, Link2, Table, Minus, Quote, HelpCircle } from 'lucide-react';
+import { Search, ChevronRight, ChevronDown, FileText, Folder, FolderPlus, BookOpen, Clock, Download, Pencil, X, Save, FilePlus, Bold, Italic, List, ListOrdered, Code, Link2, Table, Minus, Quote, HelpCircle, Upload, Trash2, ExternalLink, LayoutTemplate } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '../../../lib/utils';
@@ -116,8 +118,422 @@ function MermaidDiagram({ code }: { code: string }) {
 }
 
 
+function formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/**
+ * Build the correct URL for a mockup file across dev and production.
+ * Strips /index.php if present (CI4 without clean URL rewriting in production),
+ * then appends /uploads/mockups/path.
+ *
+ * Dev:  http://localhost:8080          → http://localhost:8080/uploads/mockups/…
+ * Prod: https://humpl.org/api/public/index.php
+ *                                      → https://humpl.org/api/public/uploads/mockups/…
+ */
+function getMockupUrl(path: string): string {
+    const base = getApiBaseUrl()
+        .replace(/\/index\.php$/, '')
+        .replace(/\/$/, '');
+    return `${base}/uploads/mockups/${path}`;
+}
+
+function MockupsPanel() {
+    const [tree, setTree] = useState<MockupItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
+    const [previewFile, setPreviewFile] = useState<MockupItem | null>(null);
+    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+    const [renamingPath, setRenamingPath] = useState<string | null>(null);
+    const [renameValue, setRenameValue] = useState('');
+    const [newFolderParent, setNewFolderParent] = useState<string | null>(null);
+    const [newFolderName, setNewFolderName] = useState('');
+    const [uploadTarget, setUploadTarget] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const renameInputRef = useRef<HTMLInputElement>(null);
+
+    const loadTree = useCallback(async () => {
+        setLoading(true);
+        try {
+            setTree(await adminWikiService.listMockups());
+        } catch {
+            toast.error('Failed to load mockups');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { loadTree(); }, [loadTree]);
+
+    useEffect(() => {
+        if (renamingPath) renameInputRef.current?.focus();
+    }, [renamingPath]);
+
+    const triggerUpload = (folderPath: string) => {
+        setUploadTarget(folderPath);
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        if (!file.name.toLowerCase().endsWith('.html')) {
+            toast.error('Only .html files are allowed');
+            return;
+        }
+        setUploading(true);
+        try {
+            await adminWikiService.uploadMockup(file, uploadTarget);
+            if (uploadTarget) setExpandedFolders(prev => new Set([...prev, uploadTarget]));
+            await loadTree();
+            toast.success(`"${file.name}" uploaded`);
+        } catch {
+            toast.error('Upload failed');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleDelete = async (item: MockupItem) => {
+        const label = item.type === 'directory'
+            ? `folder "${item.name}" and all its contents`
+            : `"${item.name}"`;
+        if (!confirm(`Delete ${label}?`)) return;
+        try {
+            await adminWikiService.deleteMockup(item.path);
+            if (previewFile && (previewFile.path === item.path || previewFile.path.startsWith(item.path + '/'))) {
+                setPreviewFile(null);
+            }
+            await loadTree();
+            toast.success('Deleted');
+        } catch {
+            toast.error('Delete failed');
+        }
+    };
+
+    const startRename = (item: MockupItem) => {
+        setRenamingPath(item.path);
+        setRenameValue(item.name);
+        setNewFolderParent(null);
+    };
+
+    const commitRename = async (item: MockupItem) => {
+        const trimmed = renameValue.trim();
+        setRenamingPath(null);
+        if (!trimmed || trimmed === item.name) return;
+        const finalName = item.type === 'file' && !trimmed.toLowerCase().endsWith('.html')
+            ? trimmed + '.html'
+            : trimmed;
+        try {
+            await adminWikiService.renameMockup(item.path, finalName);
+            if (previewFile?.path === item.path) setPreviewFile(null);
+            await loadTree();
+            toast.success('Renamed');
+        } catch {
+            toast.error('Rename failed');
+        }
+    };
+
+    const handleCreateFolder = async (parentPath: string) => {
+        const name = newFolderName.trim();
+        setNewFolderParent(null);
+        setNewFolderName('');
+        if (!name) return;
+        const fullPath = parentPath ? `${parentPath}/${name}` : name;
+        try {
+            await adminWikiService.createMockupFolder(fullPath);
+            setExpandedFolders(prev => new Set([...prev, ...(parentPath ? [parentPath] : []), fullPath]));
+            await loadTree();
+            toast.success(`Folder "${name}" created`);
+        } catch {
+            toast.error('Failed to create folder');
+        }
+    };
+
+    const toggleFolder = (path: string) => {
+        setExpandedFolders(prev => {
+            const next = new Set(prev);
+            next.has(path) ? next.delete(path) : next.add(path);
+            return next;
+        });
+    };
+
+    const renderTree = (items: MockupItem[], depth = 0): React.ReactNode => items.map(item => {
+        const isExpanded = expandedFolders.has(item.path);
+        const isSelected = previewFile?.path === item.path;
+        const isRenaming = renamingPath === item.path;
+        const pl = depth * 16 + 8;
+
+        if (item.type === 'directory') {
+            return (
+                <div key={item.path}>
+                    <div
+                        className="group flex items-center gap-1.5 pr-3 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+                        style={{ paddingLeft: pl }}
+                        onClick={() => !isRenaming && toggleFolder(item.path)}
+                    >
+                        {isExpanded
+                            ? <ChevronDown className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+                            : <ChevronRight className="h-3.5 w-3.5 text-purple-500 shrink-0" />}
+                        <Folder className="h-4 w-4 text-purple-500 shrink-0" />
+                        {isRenaming ? (
+                            <input
+                                ref={renameInputRef}
+                                value={renameValue}
+                                onChange={e => setRenameValue(e.target.value)}
+                                onKeyDown={e => {
+                                    e.stopPropagation();
+                                    if (e.key === 'Enter') commitRename(item);
+                                    if (e.key === 'Escape') setRenamingPath(null);
+                                }}
+                                onClick={e => e.stopPropagation()}
+                                className="flex-1 min-w-0 text-body bg-white border border-purple-300 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-purple-400"
+                            />
+                        ) : (
+                            <span className="flex-1 min-w-0 text-body font-semibold text-slate-700 truncate select-none">
+                                {item.name}
+                            </span>
+                        )}
+                        {!isRenaming && (
+                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
+                                <button title="New subfolder" onClick={() => { setNewFolderParent(item.path); setNewFolderName(''); setRenamingPath(null); }}
+                                    className="p-0.5 rounded hover:bg-purple-100 text-slate-400 hover:text-purple-600">
+                                    <FolderPlus className="h-3.5 w-3.5" />
+                                </button>
+                                <button title="Upload HTML here" onClick={() => triggerUpload(item.path)} disabled={uploading}
+                                    className="p-0.5 rounded hover:bg-blue-100 text-slate-400 hover:text-blue-600 disabled:opacity-40">
+                                    <Upload className="h-3.5 w-3.5" />
+                                </button>
+                                <button title="Rename folder" onClick={() => startRename(item)}
+                                    className="p-0.5 rounded hover:bg-amber-100 text-slate-400 hover:text-amber-600">
+                                    <Pencil className="h-3.5 w-3.5" />
+                                </button>
+                                <button title="Delete folder" onClick={() => handleDelete(item)}
+                                    className="p-0.5 rounded hover:bg-red-100 text-slate-400 hover:text-red-600">
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Inline new-subfolder input */}
+                    {newFolderParent === item.path && (
+                        <div className="flex items-center gap-1.5 pr-3 py-1" style={{ paddingLeft: pl + 24 }} onClick={e => e.stopPropagation()}>
+                            <Folder className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                            <input
+                                autoFocus
+                                value={newFolderName}
+                                onChange={e => setNewFolderName(e.target.value)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') handleCreateFolder(item.path);
+                                    if (e.key === 'Escape') { setNewFolderParent(null); setNewFolderName(''); }
+                                }}
+                                placeholder="Folder name…"
+                                className="flex-1 min-w-0 text-body bg-white border border-purple-300 rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-purple-400"
+                            />
+                            <button onClick={() => handleCreateFolder(item.path)} disabled={!newFolderName.trim()}
+                                className="text-micro px-2 py-0.5 rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 whitespace-nowrap">
+                                Add
+                            </button>
+                            <button onClick={() => { setNewFolderParent(null); setNewFolderName(''); }}
+                                className="p-0.5 rounded hover:bg-slate-200 text-slate-500">
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    )}
+
+                    {isExpanded && (
+                        item.children && item.children.length > 0
+                            ? <div>{renderTree(item.children, depth + 1)}</div>
+                            : <p className="text-micro text-slate-400 italic py-1" style={{ paddingLeft: pl + 28 }}>Empty</p>
+                    )}
+                </div>
+            );
+        }
+
+        // File row
+        return (
+            <div
+                key={item.path}
+                className={cn(
+                    'group flex items-center gap-2 pr-3 py-1.5 rounded-lg cursor-pointer transition-all',
+                    isSelected ? 'bg-purple-100 border border-purple-200' : 'hover:bg-slate-50 border border-transparent'
+                )}
+                style={{ paddingLeft: pl }}
+                onClick={() => !isRenaming && setPreviewFile(item)}
+            >
+                <FileText className={cn('h-4 w-4 shrink-0', isSelected ? 'text-purple-600' : 'text-slate-400')} />
+                {isRenaming ? (
+                    <input
+                        ref={renameInputRef}
+                        value={renameValue}
+                        onChange={e => setRenameValue(e.target.value)}
+                        onKeyDown={e => {
+                            e.stopPropagation();
+                            if (e.key === 'Enter') commitRename(item);
+                            if (e.key === 'Escape') setRenamingPath(null);
+                        }}
+                        onClick={e => e.stopPropagation()}
+                        className="flex-1 min-w-0 text-body bg-white border border-purple-300 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-purple-400"
+                    />
+                ) : (
+                    <div className="flex-1 min-w-0">
+                        <p className={cn('text-body truncate font-medium', isSelected ? 'text-purple-700' : 'text-slate-700')}>
+                            {item.name}
+                        </p>
+                        {item.size !== undefined && (
+                            <p className="text-micro text-slate-400">{formatBytes(item.size)}</p>
+                        )}
+                    </div>
+                )}
+                {!isRenaming && (
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
+                        <button title="Open in new tab" onClick={() => window.open(getMockupUrl(item.path), '_blank')}
+                            className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-700">
+                            <ExternalLink className="h-3.5 w-3.5" />
+                        </button>
+                        <button title="Rename" onClick={() => startRename(item)}
+                            className="p-0.5 rounded hover:bg-amber-100 text-slate-400 hover:text-amber-600">
+                            <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button title="Delete" onClick={() => handleDelete(item)}
+                            className="p-0.5 rounded hover:bg-red-100 text-slate-400 hover:text-red-600">
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    });
+
+    return (
+        <div className="flex flex-1 min-h-0 gap-6 overflow-hidden">
+            {/* Left panel — tree */}
+            <div className="w-80 flex flex-col gap-3 border-r shrink-0 h-full pr-3">
+                {/* Toolbar */}
+                <div className="flex items-center gap-2 shrink-0 pr-3">
+                    <span className="flex-1 text-body font-semibold text-slate-700">HTML Mockups</span>
+                    <button
+                        onClick={() => { setNewFolderParent(''); setNewFolderName(''); setRenamingPath(null); }}
+                        title="New folder"
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-micro font-medium rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                        <FolderPlus className="h-3.5 w-3.5" />
+                        Folder
+                    </button>
+                    <button
+                        onClick={() => triggerUpload('')}
+                        disabled={uploading}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-micro font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                    >
+                        <Upload className="h-3.5 w-3.5" />
+                        {uploading ? '…' : 'Upload'}
+                    </button>
+                    <input ref={fileInputRef} type="file" accept=".html,text/html" className="hidden" onChange={handleFileChange} />
+                </div>
+
+                {/* Root-level new folder input */}
+                {newFolderParent === '' && (
+                    <div className="flex items-center gap-2 px-2 py-1.5 mr-3 rounded-lg bg-purple-50 border border-purple-200">
+                        <Folder className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                        <input
+                            autoFocus
+                            value={newFolderName}
+                            onChange={e => setNewFolderName(e.target.value)}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') handleCreateFolder('');
+                                if (e.key === 'Escape') { setNewFolderParent(null); setNewFolderName(''); }
+                            }}
+                            placeholder="Folder name…"
+                            className="flex-1 min-w-0 text-body bg-transparent outline-none placeholder:text-slate-400"
+                        />
+                        <button onClick={() => handleCreateFolder('')} disabled={!newFolderName.trim()}
+                            className="text-micro px-2 py-0.5 rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 whitespace-nowrap">
+                            Add
+                        </button>
+                        <button onClick={() => { setNewFolderParent(null); setNewFolderName(''); }}
+                            className="p-0.5 rounded hover:bg-purple-200 text-slate-500">
+                            <X className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                )}
+
+                <ScrollArea className="flex-1 min-h-0">
+                    {loading ? (
+                        <div className="flex items-center justify-center p-8">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
+                        </div>
+                    ) : tree.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center gap-3 py-12 text-center px-4">
+                            <LayoutTemplate className="h-10 w-10 text-slate-300" />
+                            <p className="text-body text-slate-500">No mockups yet</p>
+                            <p className="text-micro text-slate-400">Upload an HTML file or create a folder</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-0.5">{renderTree(tree)}</div>
+                    )}
+                </ScrollArea>
+            </div>
+
+            {/* Right panel — preview */}
+            <div className="flex-1 h-full flex flex-col min-w-0 overflow-hidden">
+                {previewFile ? (
+                    <>
+                        <div className="flex items-center justify-between mb-3 shrink-0">
+                            <div className="min-w-0">
+                                <h2 className="text-heading-2 font-semibold text-slate-700 truncate">{previewFile.name}</h2>
+                                {previewFile.path.includes('/') && (
+                                    <p className="text-micro text-slate-400 truncate">{previewFile.path}</p>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 ml-4">
+                                <button
+                                    onClick={() => window.open(getMockupUrl(previewFile.path), '_blank')}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-micro font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm"
+                                >
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                    New Tab
+                                </button>
+                                <button onClick={() => setPreviewFile(null)}
+                                    className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                        <Card className="flex-1 overflow-hidden shadow-sm border-slate-200">
+                            <CardContent className="p-0 h-full">
+                                <iframe
+                                    key={previewFile.path}
+                                    src={getMockupUrl(previewFile.path)}
+                                    className="w-full h-full border-0 rounded-lg"
+                                    title={previewFile.name}
+                                    sandbox="allow-scripts allow-same-origin"
+                                />
+                            </CardContent>
+                        </Card>
+                    </>
+                ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
+                        <div className="w-20 h-20 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center">
+                            <LayoutTemplate className="h-9 w-9 text-purple-300" />
+                        </div>
+                        <div>
+                            <p className="text-heading-3 font-semibold text-slate-600 mb-1">No mockup selected</p>
+                            <p className="text-body text-slate-400">Select a file from the tree to preview it</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 export function SAWiki() {
     const { language } = useLanguage();
+    const [activeTab, setActiveTab] = useState<'docs' | 'mockups'>('docs');
     const [tree, setTree] = useState<WikiItem[]>([]);
     const [selectedPath, setSelectedPath] = useState<string | null>(null);
     const [content, setContent] = useState<string>('');
@@ -550,7 +966,38 @@ export function SAWiki() {
     };
 
     return (
-        <div className="flex h-[calc(100vh-8rem)] gap-6 overflow-hidden">
+        <div className="flex flex-col h-[calc(100vh-8rem)] gap-4 overflow-hidden">
+            {/* Tab bar */}
+            <div className="flex items-center gap-1 border-b pb-0 shrink-0">
+                <button
+                    onClick={() => setActiveTab('docs')}
+                    className={cn(
+                        'flex items-center gap-2 px-4 py-2 text-body font-medium rounded-t-lg transition-colors border-b-2 -mb-px',
+                        activeTab === 'docs'
+                            ? 'border-purple-600 text-purple-700 bg-purple-50'
+                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    )}
+                >
+                    <BookOpen className="h-4 w-4" />
+                    Documentation
+                </button>
+                <button
+                    onClick={() => setActiveTab('mockups')}
+                    className={cn(
+                        'flex items-center gap-2 px-4 py-2 text-body font-medium rounded-t-lg transition-colors border-b-2 -mb-px',
+                        activeTab === 'mockups'
+                            ? 'border-purple-600 text-purple-700 bg-purple-50'
+                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    )}
+                >
+                    <LayoutTemplate className="h-4 w-4" />
+                    Mockups
+                </button>
+            </div>
+
+            {activeTab === 'mockups' && <MockupsPanel />}
+
+            {activeTab === 'docs' && <div className="flex flex-1 gap-6 overflow-hidden min-h-0">
             {/* Sidebar Navigation */}
             <div className="w-80 flex flex-col gap-4 border-r pr-6 shrink-0 h-full overflow-hidden">
                 <div className="flex gap-2">
@@ -857,6 +1304,7 @@ export function SAWiki() {
                     </CardContent>
                 </Card>
             </div>
+            </div>}
         </div>
     );
 }

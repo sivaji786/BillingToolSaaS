@@ -139,11 +139,11 @@ export async function generateInvoicePDF(
     const titleFs = titlePos.fontSize || 26;
     const titleSubFs = Math.max(9, Math.round(titleFs * 0.46));
     doc.setFontSize(titleFs);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('helvetica', 'normal'); // Match web view: font-light (not bold)
     doc.setTextColor(...colors.primary);
     doc.text(isBusinessLetter ? (invoice.title || 'Business Letter') : (effectiveSeller.name || 'INVOICE'), titlePos.x, titlePos.y + 25);
 
-    doc.setFontSize(titleSubFs);
+    doc.setFontSize(titleSubFs + 2); // Slightly larger invoice number to match web's heading-2
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...colors.textMuted);
     doc.text(isBusinessLetter ? `Ref: ${invoice.invoiceNumber || 'N/A'}` : String(invoice.invoiceNumber || 'N/A'), titlePos.x, titlePos.y + 45);
@@ -180,9 +180,25 @@ export async function generateInvoicePDF(
     }
   }
 
-  // Seller & Buyer
-  const sellerPos = getPos('seller', pageWidth / 2 + 20, 210, 250, 100);
-  const buyerPos = getPos('buyer', margin, 210, 250, 100);
+  // Seller & Buyer — buyer always LEFT, seller always RIGHT (matches web view convention).
+  // We still use template y/fontSize/visibility, but ignore template x so columns never swap.
+  const rawBuyerLayout = layout?.find(e => e.type === 'buyer');
+  const rawSellerLayout = layout?.find(e => e.type === 'seller');
+  const partyY = Math.max(rawBuyerLayout?.y ?? 210, rawSellerLayout?.y ?? 210);
+  const buyerPos = {
+    x: margin,
+    y: partyY,
+    w: 250, h: 100,
+    visible: rawBuyerLayout ? rawBuyerLayout.visible !== false : true,
+    fontSize: rawBuyerLayout?.fontSize,
+  };
+  const sellerPos = {
+    x: pageWidth / 2 + 20,
+    y: partyY,
+    w: 250, h: 100,
+    visible: rawSellerLayout ? rawSellerLayout.visible !== false : true,
+    fontSize: rawSellerLayout?.fontSize,
+  };
 
   const renderParty = (title: string, data: any, x: number, y: number, baseFontSize?: number) => {
     const nameFs = baseFontSize || 11;
@@ -370,7 +386,7 @@ export async function generateInvoicePDF(
 
       drawRow('Subtotal', formatCurrency(invoice.lineExtensionAmount, invoice.currency));
       if (!showTaxSummary) {
-        invoice.taxTotals.forEach(t => drawRow(`${t.taxType} (${t.taxPercent}%)`, formatCurrency(t.taxAmount, invoice.currency)));
+        invoice.taxTotals.filter(t => t.taxAmount > 0).forEach(t => drawRow(`${t.taxType} (${t.taxPercent}%)`, formatCurrency(t.taxAmount, invoice.currency)));
       }
       doc.setDrawColor(...colors.border);
       doc.line(totalsPos.x, curY - 5, pageWidth - margin, curY - 5);
@@ -538,6 +554,86 @@ export async function generateInvoicePDF(
       }
 
       currentY = blockY + 20;
+    }
+  }
+
+  // --- 6. Fallback rendering when no template layout (e.g. SharedInvoiceView) ---
+  // Without a layout, flowElements is empty so totals and QR are never rendered above.
+  if (!layout && !isBusinessLetter) {
+    // Totals
+    checkPageOverflow(120);
+    const totalsX = pageWidth - margin - 200;
+    const totalsValFs = 11;
+    const totalsLblFs = 9;
+    let curY = currentY;
+    const drawFallbackRow = (lbl: string, val: string, bold = false) => {
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.setFontSize(bold ? totalsValFs : totalsLblFs);
+      doc.setTextColor(...(bold ? colors.accent : colors.textMuted));
+      doc.text(lbl, totalsX, curY);
+      doc.setTextColor(...(bold ? colors.accent : colors.text));
+      doc.text(val, pageWidth - margin, curY, { align: 'right' });
+      curY += bold ? 20 : 15;
+    };
+
+    drawFallbackRow('Subtotal', formatCurrency(invoice.lineExtensionAmount, invoice.currency));
+    invoice.taxTotals.filter(t => t.taxAmount > 0).forEach(t => drawFallbackRow(`${t.taxType} (${t.taxPercent}%)`, formatCurrency(t.taxAmount, invoice.currency)));
+    doc.setDrawColor(...colors.border);
+    doc.line(totalsX, curY - 5, pageWidth - margin, curY - 5);
+    curY += 10;
+    drawFallbackRow('TOTAL', formatCurrency(invoice.payableAmount, invoice.currency), true);
+    currentY = curY + 30;
+
+    // QR Code + Payment Details
+    if (effectivePaymentMeans?.iban) {
+      checkPageOverflow(160);
+      const qrSectionY = currentY;
+      const qrSize = 100;
+      const qrX = pageWidth - margin - qrSize;
+
+      let payY = qrSectionY;
+      const qrLblFs = 7;
+      const qrValFs = 10;
+      const drawPayRow = (lbl: string, val: string) => {
+        doc.setFontSize(qrLblFs);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.textMuted);
+        doc.text(lbl.toUpperCase(), margin, payY);
+        payY += 10;
+        doc.setFontSize(qrValFs);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colors.text);
+        doc.text(val, margin, payY);
+        payY += 15;
+      };
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colors.primary);
+      doc.text('PAYMENT DETAILS', margin, payY);
+      payY += 18;
+
+      if (effectivePaymentMeans.accountName) drawPayRow('Account Owner', effectivePaymentMeans.accountName);
+      drawPayRow('IBAN', effectivePaymentMeans.iban);
+      if (effectivePaymentMeans.bic) drawPayRow('BIC', effectivePaymentMeans.bic);
+
+      try {
+        const qrCodeDataURL = await getQRCodeDataURL({ ...invoice, paymentMeans: effectivePaymentMeans }, undefined, 400);
+        if (qrCodeDataURL) {
+          doc.addImage(qrCodeDataURL, 'PNG', qrX, qrSectionY, qrSize, qrSize);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...colors.primary);
+          doc.text('GiroCode / QR Pay', qrX + qrSize / 2, qrSectionY + qrSize + 12, { align: 'center' });
+          doc.setFontSize(qrLblFs);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...colors.textMuted);
+          doc.text('Scan with your banking app', qrX + qrSize / 2, qrSectionY + qrSize + 22, { align: 'center' });
+        }
+      } catch (e) {
+        console.warn('QR error:', e);
+      }
+      currentY = Math.max(payY, qrSectionY + 110) + 20;
     }
   }
 

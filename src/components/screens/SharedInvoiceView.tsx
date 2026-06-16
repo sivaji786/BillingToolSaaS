@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Invoice } from '../../types/invoice';
 import { invoiceService } from '../../services/api';
 import { generateInvoicePDF } from '../../utils/invoice-pdf';
@@ -6,7 +6,7 @@ import { formatCurrency, formatDate } from '../../utils/invoice-calculations';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
-import { Download, FileText, AlertTriangle, Loader2 } from 'lucide-react';
+import { Download, FileText, AlertTriangle, Loader2, Image } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SharedInvoiceViewProps {
@@ -24,10 +24,12 @@ function statusVariant(status: string): 'default' | 'secondary' | 'outline' | 'd
 }
 
 export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
+  const invoiceCaptureRef = useRef<HTMLDivElement>(null);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingPixelPerfect, setIsDownloadingPixelPerfect] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -50,6 +52,63 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
       toast.error('Failed to generate PDF');
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadPixelPerfect = async () => {
+    if (!invoice || !invoiceCaptureRef.current) return;
+    setIsDownloadingPixelPerfect(true);
+    const element = invoiceCaptureRef.current;
+    const savedStyle = {
+      width: element.style.width,
+      maxWidth: element.style.maxWidth,
+      margin: element.style.margin,
+    };
+    try {
+      // Pin to A4 width so the card fills the page correctly
+      element.style.width = '794px';
+      element.style.maxWidth = '794px';
+      element.style.margin = '0';
+      await new Promise(r => requestAnimationFrame(r));
+      await new Promise(r => requestAnimationFrame(r));
+
+      const { default: html2canvas } = await import('html2canvas');
+      const { default: jsPDF } = await import('jspdf');
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: element.offsetWidth,
+        height: element.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const scaledHeight = canvas.height * (pdfWidth / canvas.width);
+
+      let yOffset = 0;
+      let pageIndex = 0;
+      while (yOffset < scaledHeight) {
+        if (pageIndex > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, -yOffset, pdfWidth, scaledHeight);
+        yOffset += pdfHeight;
+        pageIndex++;
+      }
+
+      pdf.save(`${invoice.invoiceNumber}.pdf`);
+      toast.success('Downloaded', { description: `${invoice.invoiceNumber}.pdf` });
+    } catch {
+      toast.error('Failed to generate pixel-perfect PDF');
+    } finally {
+      element.style.width = savedStyle.width;
+      element.style.maxWidth = savedStyle.maxWidth;
+      element.style.margin = savedStyle.margin;
+      setIsDownloadingPixelPerfect(false);
     }
   };
 
@@ -90,22 +149,36 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
           <FileText className="h-5 w-5" />
           BillingTool
         </div>
-        <Button
-          onClick={handleDownloadPDF}
-          disabled={isDownloading}
-          className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white"
-        >
-          {isDownloading ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Download className="h-4 w-4 mr-2" />
-          )}
-          Download PDF
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleDownloadPDF}
+            disabled={isDownloading}
+            variant="outline"
+          >
+            {isDownloading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Download PDF
+          </Button>
+          <Button
+            onClick={handleDownloadPixelPerfect}
+            disabled={isDownloadingPixelPerfect}
+            className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700"
+          >
+            {isDownloadingPixelPerfect ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Image className="h-4 w-4 mr-2" />
+            )}
+            Pixel-Perfect PDF
+          </Button>
+        </div>
       </div>
 
       {/* Invoice card */}
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto" ref={invoiceCaptureRef}>
         <Card className="p-8 shadow-md">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8 pb-6 border-b">

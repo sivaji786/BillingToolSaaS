@@ -3,7 +3,7 @@ import { motion, Variants } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { Check, FileText, Globe, Shield, LayoutTemplate, Sparkles, ArrowRight, Star, Plus, Minus, MessageSquare } from 'lucide-react';
+import { Check, FileText, Globe, Shield, LayoutTemplate, Sparkles, ArrowRight, Star, Plus, Minus, MessageSquare, Menu, X } from 'lucide-react';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 import { billingService, publicCmsService } from '../../services/api';
 import { TicketingWidget } from '../TicketingWidget';
@@ -12,6 +12,8 @@ import { InlineEditableText } from '../cms/InlineEditableText';
 import { InlineEditableRich } from '../cms/InlineEditableRich';
 import { InlineImagePicker } from '../cms/InlineImagePicker';
 import { useAdminStore } from '../../stores/adminStore';
+import { DesktopDropdown, MobileAccordion } from '../NavDropdown';
+import type { CmsNavItem } from '../../services/adminApi';
 
 interface LandingPageProps {
     onLogin: () => void;
@@ -56,7 +58,9 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
     const [cmsContent, setCmsContent] = useState<any>(null);
-    const [navPages, setNavPages] = useState<any[]>([]);
+    const [topNav, setTopNav] = useState<CmsNavItem[]>([]);
+    const [bottomNav, setBottomNav] = useState<CmsNavItem[]>([]);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         const fetchPlans = async () => {
@@ -164,12 +168,9 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
 
         const fetchNavPages = async () => {
             try {
-                const response = await publicCmsService.getNavPages(language);
-                if (response.success && Array.isArray(response.data)) {
-                    // Filter out built-in slugs that already have dedicated routes
-                    const builtIn = new Set(['home', 'package-comparison', 'legal-notice', 'privacy-policy', 'terms-conditions', 'cookie-settings']);
-                    setNavPages(response.data.filter((p: any) => !builtIn.has(p.slug)));
-                }
+                const nav = await publicCmsService.getNav(language);
+                setTopNav(nav.top);
+                setBottomNav(nav.bottom);
             } catch {
                 // nav pages are optional, silently ignore
             }
@@ -218,6 +219,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
             {/* Header */}
             <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+                    {/* Logo */}
                     <div className="flex items-center gap-2">
                         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
                             <FileText className="h-5 w-5 text-white" />
@@ -226,41 +228,110 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             {t('appName') || 'BillingTool'}
                         </span>
                     </div>
-                    <nav className="flex items-center gap-4">
-                        <div className="hidden md:flex gap-4">
-                            <Button variant="ghost" onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}>
-                                {t('landing.aboutUs')}
-                            </Button>
-                            <Button variant="ghost" onClick={() => onNavigate('packageComparison')}>
-                                {t('nav.products')}
-                            </Button>
-                            {navPages.map((p: any) => (
-                                <Button key={p.slug} variant="ghost" onClick={() => onNavigate(`cms/${p.slug}`)}>
-                                    {p.nav_label || p.title}
-                                </Button>
-                            ))}
-                            {isAdminAuthenticated ? (
-                                <Button
-                                    variant="outline"
-                                    className="border-purple-400 text-purple-700 hover:bg-purple-50"
-                                    onClick={() => { window.location.hash = '#/SAdashboard'; }}
-                                >
-                                    ← Back to Admin Portal
-                                </Button>
-                            ) : (
-                                <>
-                                    <Button variant="ghost" onClick={onLogin}>
-                                        {t('landing.login')}
-                                    </Button>
-                                    <Button onClick={() => onSignup()}>
-                                        {t('landing.signup')}
-                                    </Button>
-                                </>
-                            )}
-                        </div>
-                        <LanguageSwitcher variant="login" />
+
+                    {/* Desktop nav */}
+                    <nav className="hidden md:flex items-center gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}>
+                            {t('landing.aboutUs')}
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => onNavigate('packageComparison')}>
+                            {t('nav.products')}
+                        </Button>
+                        {topNav.map(item => (
+                            <DesktopDropdown
+                                key={item.id}
+                                item={item}
+                                onNavigate={(screen, slug) => onNavigate(slug ? `cms/${slug}` : screen)}
+                            />
+                        ))}
                     </nav>
+
+                    {/* Desktop actions */}
+                    <div className="hidden md:flex items-center gap-2">
+                        {isAdminAuthenticated ? (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-purple-400 text-purple-700 hover:bg-purple-50"
+                                onClick={() => { window.location.hash = '#/SAdashboard'; }}
+                            >
+                                ← Back to Admin Portal
+                            </Button>
+                        ) : (
+                            <>
+                                <Button variant="ghost" size="sm" onClick={onLogin}>
+                                    {t('landing.login')}
+                                </Button>
+                                <Button size="sm" onClick={() => onSignup()}>
+                                    {t('landing.signup')}
+                                </Button>
+                            </>
+                        )}
+                        <LanguageSwitcher variant="login" />
+                    </div>
+
+                    {/* Mobile: hamburger + language */}
+                    <div className="flex md:hidden items-center gap-2">
+                        <LanguageSwitcher variant="login" />
+                        <button
+                            type="button"
+                            aria-label="Toggle menu"
+                            onClick={() => setMobileMenuOpen(o => !o)}
+                            className="p-2 rounded-md hover:bg-accent transition-colors"
+                        >
+                            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                        </button>
+                    </div>
                 </div>
+
+                {/* Mobile drawer */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden border-t bg-background animate-in slide-in-from-top-2">
+                        <div className="py-2">
+                            <button
+                                className="block w-full text-left px-4 py-3 text-sm font-medium hover:bg-accent transition-colors"
+                                onClick={() => { document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }); setMobileMenuOpen(false); }}
+                            >
+                                {t('landing.aboutUs')}
+                            </button>
+                            <button
+                                className="block w-full text-left px-4 py-3 text-sm font-medium hover:bg-accent transition-colors"
+                                onClick={() => { onNavigate('packageComparison'); setMobileMenuOpen(false); }}
+                            >
+                                {t('nav.products')}
+                            </button>
+                            {topNav.map(item => (
+                                <MobileAccordion
+                                    key={item.id}
+                                    item={item}
+                                    onNavigate={(screen, slug) => onNavigate(slug ? `cms/${slug}` : screen)}
+                                    onClose={() => setMobileMenuOpen(false)}
+                                />
+                            ))}
+                            <div className="border-t mt-2 pt-2 px-4 flex gap-2">
+                                {isAdminAuthenticated ? (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="border-purple-400 text-purple-700"
+                                        onClick={() => { window.location.hash = '#/SAdashboard'; setMobileMenuOpen(false); }}
+                                    >
+                                        Admin Portal
+                                    </Button>
+                                ) : (
+                                    <>
+                                        <Button variant="outline" size="sm" onClick={() => { onLogin(); setMobileMenuOpen(false); }}>
+                                            {t('landing.login')}
+                                        </Button>
+                                        <Button size="sm" onClick={() => { onSignup(); setMobileMenuOpen(false); }}>
+                                            {t('landing.signup')}
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </header>
 
             <main className="flex-1">
@@ -690,24 +761,69 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
 
             {/* Footer */}
             <footer className="border-t bg-slate-50 dark:bg-slate-950 py-12">
-                <div className="container px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-purple-600" />
-                        <span className="text-heading-3 font-bold text-foreground">BillingTool</span>
-                    </div>
-                    <p className="text-body text-muted-foreground">
-                        © 2026 BillingTool Inc. {t('landing.footer.rights')}
-                    </p>
-                    <div className="flex flex-wrap gap-4">
-                        <button onClick={() => onNavigate('impressum')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.impressum')}</button>
-                        <button onClick={() => onNavigate('privacyPolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.privacy')}</button>
-                        <button onClick={() => onNavigate('termsAndConditions')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.terms')}</button>
-                        <button onClick={() => onNavigate('cookiePolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.cookies')}</button>
-                        {navPages.map((p: any) => (
-                            <button key={p.slug} onClick={() => onNavigate(`cms/${p.slug}`)} className="text-body text-muted-foreground hover:text-primary transition-colors">
-                                {p.nav_label || p.title}
-                            </button>
-                        ))}
+                <div className="container px-4 md:px-6">
+                    {/* Grouped footer columns from CMS */}
+                    {bottomNav.length > 0 && (() => {
+                        // Build column map: group → items. Ungrouped items go to a "More" bucket.
+                        const groups: Record<string, CmsNavItem[]> = {};
+                        for (const item of bottomNav) {
+                            const key = item.footer_group || '__other__';
+                            if (!groups[key]) groups[key] = [];
+                            groups[key].push(item);
+                        }
+
+                        const renderLink = (item: CmsNavItem) => {
+                            const linkClass = "block text-sm text-muted-foreground hover:text-primary transition-colors";
+                            if (item.link_url) {
+                                return (
+                                    <a key={item.id} href={item.link_url} target={item.link_target ?? '_self'} rel={item.link_target === '_blank' ? 'noopener noreferrer' : undefined} className={linkClass}>
+                                        {item.nav_label || item.title}
+                                    </a>
+                                );
+                            }
+                            return (
+                                <button key={item.id} onClick={() => onNavigate(`cms/${item.slug}`)} className={linkClass}>
+                                    {item.nav_label || item.title}
+                                </button>
+                            );
+                        };
+
+                        return (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+                                {Object.entries(groups).map(([group, items]) => (
+                                    <div key={group}>
+                                        {group !== '__other__' && (
+                                            <p className="text-xs font-semibold uppercase tracking-wider text-foreground mb-3">{group}</p>
+                                        )}
+                                        <div className="space-y-2">
+                                            {items.map(renderLink)}
+                                            {/* Children (submenu) rendered as sub-links */}
+                                            {items.flatMap(item => item.children ?? []).map(renderLink)}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        );
+                    })()}
+
+                    {/* Bottom bar */}
+                    <div className="border-t pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-purple-600" />
+                            <span className="text-heading-3 font-bold text-foreground">BillingTool</span>
+                        </div>
+                        <p className="text-body text-muted-foreground">
+                            © 2026 BillingTool Inc. {t('landing.footer.rights')}
+                        </p>
+                        {/* Fallback legal links — only shown if CMS has no bottom nav items */}
+                        {bottomNav.length === 0 && (
+                            <div className="flex flex-wrap gap-4">
+                                <button onClick={() => onNavigate('impressum')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.impressum')}</button>
+                                <button onClick={() => onNavigate('privacyPolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.privacy')}</button>
+                                <button onClick={() => onNavigate('termsAndConditions')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.terms')}</button>
+                                <button onClick={() => onNavigate('cookiePolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.cookies')}</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </footer>
