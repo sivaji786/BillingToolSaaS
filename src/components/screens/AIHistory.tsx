@@ -70,7 +70,7 @@ export function AIHistory() {
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h1 className="text-heading-1 font-bold text-purple-900 dark:text-purple-100">AI Query History</h1>
+                    <h1 className="text-heading-1 font-medium text-[#1e3a5f] dark:text-white">AI Query History</h1>
                     <p className="text-gray-600 dark:text-gray-400">View your past AI queries within the workspace</p>
                 </div>
             </div>
@@ -115,7 +115,7 @@ export function AIHistory() {
                                             {(currentPage - 1) * pageSize + index + 1}
                                         </TableHead>
                                         <TableHead
-                                            className="font-medium cursor-pointer text-purple-600 hover:text-purple-800 hover:underline"
+                                            className="font-medium cursor-pointer text-[#2a8fbd] hover:text-[#1e3a5f] hover:underline"
                                             onClick={() => handlePromptClick(entry)}
                                         >
                                             {entry.prompt}

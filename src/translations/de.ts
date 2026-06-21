@@ -39,6 +39,7 @@ export const de = {
 
     // Navigation
     nav: {
+        home: 'Startseite',
         dashboard: 'Dashboard',
         templates: 'Vorlagen',
         activity: 'Aktivitätsprotokoll',
@@ -49,6 +50,88 @@ export const de = {
         workspace: 'Mein Workspace',
         invoices: 'Rechnungen',
         letters: 'Geschäftsbriefe',
+    },
+
+    // Tenant-Startseite
+    home: {
+        greeting: {
+            morning: 'Guten Morgen, {name}',
+            afternoon: 'Guten Tag, {name}',
+            evening: 'Guten Abend, {name}',
+        },
+        section: {
+            today: 'Was möchten Sie heute tun?',
+            todaySub: 'Erstellen Sie etwas Neues — oder setzen Sie dort fort, wo Sie aufgehört haben.',
+        },
+        welcome: {
+            title: 'Willkommen — was uns auszeichnet',
+            hint: 'Tour jederzeit in der Hilfe verfügbar.',
+            tour: '2-Minuten-Tour starten',
+            skip: 'Überspringen und erkunden',
+            pillar1: {
+                title: 'Eine vollständige Dokumentenplattform',
+                text: 'Briefe, Abrechnung, Arbeitsblätter, Vorlagen — ein Workspace, vollständig anpassbar.',
+            },
+            pillar2: {
+                title: 'Echte Menschen hinter dem Produkt',
+                text: 'Sprechen Sie mit echten Personen, keinem Chatbot. Wir helfen Ihnen bei der Einrichtung und dem Wachstum.',
+            },
+            pillar3: {
+                title: 'Ticketsystem inbegriffen',
+                text: 'Öffnen Sie ein Support-Ticket aus jedem Dokument und verfolgen Sie es bis zur Lösung.',
+            },
+        },
+        continue: {
+            title: 'Dort weitermachen, wo Sie aufgehört haben',
+            seeAll: 'Alle anzeigen →',
+            empty: 'Noch nichts vorhanden — erstellen Sie Ihr erstes Dokument oben.',
+        },
+        activity: {
+            title: 'Aktivitäten in Ihrem Team',
+            seeAll: 'Alle anzeigen →',
+            empty: 'Noch keine Aktivitäten vorhanden.',
+        },
+        tickets: {
+            title: 'Ihre Tickets',
+            new: '+ Neues Ticket',
+            allGood: 'Alle Systeme betriebsbereit',
+            cta: 'Brauchen Sie Hilfe? Öffnen Sie ein Support-Ticket und unser Team antwortet innerhalb eines Werktages.',
+            open: 'Ticket öffnen →',
+        },
+    },
+
+    // Kacheln
+    tile: {
+        billing: {
+            title: 'Abrechnung',
+            desc: 'Rechnungen, Angebote und Mahnungen.',
+            new: '+ Neue Rechnung',
+            mine: 'Meine Abrechnung',
+        },
+        letter: {
+            title: 'Geschäftsbrief',
+            desc: 'Professionelle Korrespondenz verfassen.',
+            new: '+ Neuer Brief',
+            mine: 'Meine Briefe',
+        },
+        template: {
+            title: 'Vorlagen-Editor',
+            desc: 'Wiederverwendbare Vorlagen für jeden Dokumenttyp.',
+            new: '+ Neue Vorlage',
+            mine: 'Meine Vorlagen',
+        },
+        workspace: {
+            title: 'Dokumente',
+            desc: 'Dateien und gemeinsamer Workspace.',
+            new: '+ Dateien hochladen',
+            mine: 'Mein Workspace',
+        },
+        custom: {
+            title: 'Ihr individuelles Dokument',
+            desc: 'Erstellen Sie etwas, das die App noch nicht hat.',
+            new: '+ Leer starten',
+            mine: 'Meine Dokumente',
+        },
     },
 
     // Dashboard

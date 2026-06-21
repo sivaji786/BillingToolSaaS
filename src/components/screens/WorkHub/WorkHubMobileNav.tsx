@@ -25,7 +25,7 @@ export function WorkHubMobileNav({ active, onNavigate, openTaskCount = 0, unread
     const TABS = ALL_TABS.filter((t) => !t.privileged || canAccessSettings);
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t flex md:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t flex md:hidden" role="navigation" aria-label="WorkHub navigation">
             {TABS.map(({ id, label, Icon }) => {
                 const isActive = active === id;
                 let badge: number | null = null;
@@ -37,7 +37,7 @@ export function WorkHubMobileNav({ active, onNavigate, openTaskCount = 0, unread
                         key={id}
                         onClick={() => onNavigate(id)}
                         className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 relative transition-colors ${
-                            isActive ? 'text-purple-600' : 'text-muted-foreground hover:text-foreground'
+                            isActive ? 'text-[#2a8fbd]' : 'text-muted-foreground hover:text-foreground'
                         }`}
                     >
                         <span className="relative">
@@ -49,8 +49,12 @@ export function WorkHubMobileNav({ active, onNavigate, openTaskCount = 0, unread
                                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                             )}
                             {badge !== null && (
-                                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-purple-600 text-white text-[10px] flex items-center justify-center px-0.5">
+                                <span
+                                    className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-[#f08a3c] text-white text-[10px] flex items-center justify-center px-0.5"
+                                    aria-label={`${badge} unread items`}
+                                >
                                     {badge > 99 ? '99+' : badge}
+                                    <span className="sr-only">{badge} unread</span>
                                 </span>
                             )}
                         </span>

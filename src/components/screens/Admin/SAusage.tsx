@@ -124,7 +124,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-heading-1 font-bold tracking-tight">Usage Analytics</h1>
+                    <h1 className="text-heading-1 font-medium tracking-tight">Usage Analytics</h1>
                     <p className="text-muted-foreground">Monitor platform resource usage and performance metrics</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -293,7 +293,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
                     <div className="space-y-8">
                         {[
                             { label: 'Total Storage', used: metrics?.storageUsed || 0, limit: metrics?.storageLimit || 1000, color: 'bg-blue-500' },
-                            { label: 'Monthly API Requests', used: metrics?.apiCalls || 0, limit: metrics?.apiCallsLimit || 1000000, color: 'bg-purple-500' },
+                            { label: 'Monthly API Requests', used: metrics?.apiCalls || 0, limit: metrics?.apiCallsLimit || 1000000, color: 'bg-[#f08a3c]' },
                             { label: 'Global Bandwidth', used: metrics?.bandwidthUsed || 0, limit: metrics?.bandwidthLimit || 10000, color: 'bg-green-500' },
                         ].map((quota) => {
                             const percentage = Math.min(Math.round((quota.used / quota.limit) * 100), 100);
@@ -394,7 +394,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Briefcase className="h-5 w-5 text-purple-600" />
+                        <Briefcase className="h-5 w-5 text-[#2a8fbd]" />
                         WorkHub Analytics
                     </CardTitle>
                     <CardDescription>
@@ -414,7 +414,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
                                         <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
                                         Tasks Completed
                                     </div>
-                                    <p className="text-heading-1 font-bold">{formatNumber(whMetrics.tasks_completed ?? 0)}</p>
+                                    <p className="text-heading-1 font-medium">{formatNumber(whMetrics.tasks_completed ?? 0)}</p>
                                     <p className="text-caption text-muted-foreground">this period</p>
                                 </div>
                                 <div className="rounded-lg border p-4 space-y-1">
@@ -422,7 +422,7 @@ export function SAusage({ onNavigate }: SAusageProps) {
                                         <Clock className="h-3.5 w-3.5 text-blue-500" />
                                         Completion Rate
                                     </div>
-                                    <p className="text-heading-1 font-bold">{whMetrics.completion_rate ?? 0}%</p>
+                                    <p className="text-heading-1 font-medium">{whMetrics.completion_rate ?? 0}%</p>
                                     <p className="text-caption text-muted-foreground">dual-signed</p>
                                 </div>
                                 <div className="rounded-lg border p-4 space-y-1">
@@ -430,15 +430,15 @@ export function SAusage({ onNavigate }: SAusageProps) {
                                         <Zap className="h-3.5 w-3.5 text-amber-500" />
                                         AI Calls
                                     </div>
-                                    <p className="text-heading-1 font-bold">{formatNumber(whMetrics.ai_calls ?? 0)}</p>
+                                    <p className="text-heading-1 font-medium">{formatNumber(whMetrics.ai_calls ?? 0)}</p>
                                     <p className="text-caption text-muted-foreground">all tenants</p>
                                 </div>
                                 <div className="rounded-lg border p-4 space-y-1">
                                     <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
-                                        <FileText className="h-3.5 w-3.5 text-purple-500" />
+                                        <FileText className="h-3.5 w-3.5 text-[#2a8fbd]" />
                                         PDF Exports
                                     </div>
-                                    <p className="text-heading-1 font-bold">{formatNumber(whMetrics.pdf_exports ?? 0)}</p>
+                                    <p className="text-heading-1 font-medium">{formatNumber(whMetrics.pdf_exports ?? 0)}</p>
                                     <p className="text-caption text-muted-foreground">all tenants</p>
                                 </div>
                             </div>

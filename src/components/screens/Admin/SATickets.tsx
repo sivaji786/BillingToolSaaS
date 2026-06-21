@@ -127,7 +127,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-heading-1 font-bold tracking-tight">{t('tickets.title')}</h2>
+                    <h2 className="text-heading-1 font-medium tracking-tight">{t('tickets.title')}</h2>
                     <p className="text-muted-foreground">{t('tickets.subtitle')}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
             {selectedIds.size > 0 && (
                 <div className="flex items-center gap-3 px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl">
                     <CheckSquare className="h-4 w-4 text-primary" />
-                    <span className="text-body font-semibold text-primary">
+                    <span className="text-body font-medium text-primary">
                         {t('tickets.bulk.selected').replace('{count}', String(selectedIds.size))}
                     </span>
                     <div className="flex gap-2 ml-auto">
@@ -252,7 +252,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <span className="text-micro font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                                <span className="text-micro font-medium uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
                                                     {ticket.type || 'bug'}
                                                 </span>
                                             </TableCell>
@@ -276,7 +276,7 @@ export function SATickets({ onNavigate }: SATicketsProps) {
                                                         href={getImageUrl(ticket.screenshot_path)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="flex items-center text-purple-600 hover:text-purple-800"
+                                                        className="flex items-center text-[#2a8fbd] hover:text-[#1e3a5f]"
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
                                                         <ExternalLink className="h-4 w-4 mr-1" />

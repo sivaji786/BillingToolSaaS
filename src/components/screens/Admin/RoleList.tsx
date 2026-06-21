@@ -76,7 +76,7 @@ export function RoleList({ onCreate, onEdit, companyTypeId: initialCompanyTypeId
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <h2 className="text-heading-2 font-semibold">{t('admin.roles.title')}</h2>
+                    <h2 className="text-heading-2 font-medium">{t('admin.roles.title')}</h2>
                     <Select value={selectedType} onValueChange={setSelectedType}>
                         <SelectTrigger className="w-[200px]">
                             <SelectValue placeholder={t('admin.roles.filterByType')} />

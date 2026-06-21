@@ -148,7 +148,7 @@ export function InlineImagePicker({
               'absolute bottom-2 right-2 z-10 flex items-center justify-center rounded-full p-1.5 shadow-md transition-all',
               isUploading
                 ? 'bg-amber-500 text-white'
-                : 'bg-white/90 text-gray-700 hover:bg-purple-600 hover:text-white',
+                : 'bg-white/90 text-gray-700 hover:bg-[#f08a3c] hover:text-white',
               isHovered || isUploading ? 'opacity-100' : 'opacity-0',
             ]
               .filter(Boolean)
@@ -192,7 +192,7 @@ export function InlineImagePicker({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-gray-300 px-4 py-6 text-body text-gray-500 transition-colors hover:border-purple-400 hover:text-purple-600 disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-gray-300 px-4 py-6 text-body text-gray-500 transition-colors hover:border-[rgba(30,58,95,0.25)] hover:text-[#f08a3c] disabled:opacity-60"
               >
                 {isUploading ? (
                   <>
@@ -219,7 +219,7 @@ export function InlineImagePicker({
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="https://example.com/image.png"
                 disabled={isUploading}
-                className="mb-3 w-full rounded-md border border-gray-300 px-3 py-2 text-body focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-60"
+                className="mb-3 w-full rounded-md border border-gray-300 px-3 py-2 text-body focus:border-[#f08a3c] focus:outline-none focus:ring-1 focus:ring-[#f08a3c] disabled:opacity-60"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleApplyUrl();
                 }}
@@ -228,7 +228,7 @@ export function InlineImagePicker({
                 type="button"
                 onClick={handleApplyUrl}
                 disabled={isUploading || !urlInput.trim()}
-                className="w-full rounded-md bg-purple-600 px-3 py-2 text-body font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-60"
+                className="w-full rounded-md bg-[#f08a3c] px-3 py-2 text-body font-medium text-white transition-colors hover:bg-[#e07530] disabled:opacity-60"
               >
                 {isUploading ? 'Saving…' : 'Apply'}
               </button>

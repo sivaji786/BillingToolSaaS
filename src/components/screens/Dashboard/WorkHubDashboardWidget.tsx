@@ -50,20 +50,20 @@ export function WorkHubDashboardWidget({ onNavigate, onDismiss }: WorkHubDashboa
     ];
 
     return (
-        <Card className="border-purple-200">
+        <Card className="border-[rgba(30,58,95,0.15)]">
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-body-lg">
-                        <Briefcase className="h-4 w-4 text-purple-600" />
+                        <Briefcase className="h-4 w-4 text-[#2a8fbd]" />
                         WorkHub
-                        <Badge className="bg-purple-100 text-purple-700 text-caption">{completionRate}% done</Badge>
+                        <Badge className="bg-[#f0f6ff] text-[#1e3a5f] text-caption">{completionRate}% done</Badge>
                     </CardTitle>
                     <div className="flex items-center gap-1">
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => onNavigate('workhub')}
-                            className="text-caption text-purple-600 h-7 px-2"
+                            className="text-caption text-[#2a8fbd] h-7 px-2"
                         >
                             Open <ExternalLink className="h-3 w-3 ml-1" />
                         </Button>
@@ -86,7 +86,7 @@ export function WorkHubDashboardWidget({ onNavigate, onDismiss }: WorkHubDashboa
                             {stats.map((s) => (
                                 <div key={s.label} className="rounded-md bg-muted/40 p-2 text-center">
                                     <s.icon className={cn('h-4 w-4 mx-auto mb-0.5', s.colour)} />
-                                    <p className={cn('text-lg font-bold leading-none', s.colour)}>{s.val}</p>
+                                    <p className={cn('text-heading-1 font-medium leading-none', s.colour)}>{s.val}</p>
                                     <p className="text-caption text-muted-foreground mt-0.5">{s.label}</p>
                                 </div>
                             ))}

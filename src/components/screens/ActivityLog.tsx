@@ -36,8 +36,8 @@ export function ActivityLog({ entries }: ActivityLogProps) {
       created: 'text-blue-600',
       updated: 'text-yellow-600',
       validated: 'text-green-600',
-      exported: 'text-purple-600',
-      sent: 'text-indigo-600',
+      exported: 'text-[#2a8fbd]',
+      sent: 'text-[#2a8fbd]',
       signed: 'text-green-700',
       deleted: 'text-red-600',
     };

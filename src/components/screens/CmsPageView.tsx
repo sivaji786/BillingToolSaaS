@@ -92,7 +92,7 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#2a8fbd]" />
             </div>
         );
     }
@@ -101,7 +101,7 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-4">
                 <FileText className="h-16 w-16 text-muted-foreground opacity-20" />
-                <h1 className="text-heading-1 font-bold">Page not found</h1>
+                <h1 className="text-heading-1 font-medium">Page not found</h1>
                 <p className="text-muted-foreground">The page you are looking for does not exist or has not been published yet.</p>
                 <Button variant="outline" onClick={onBack}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
@@ -124,8 +124,8 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
                         </Button>
                         <div className="h-5 w-px bg-border" />
                         <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate('landing')}>
-                            <FileText className="h-5 w-5 text-purple-600" />
-                            <span className="text-heading-3 font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
+                            <FileText className="h-5 w-5 text-[#2a8fbd]" />
+                            <span className="text-heading-3 font-medium bg-clip-text text-transparent bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80]">
                                 BillingTool
                             </span>
                         </div>
@@ -138,7 +138,7 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="border-purple-300 text-purple-700 hover:bg-purple-50 gap-1.5"
+                                    className="border-[rgba(30,58,95,0.20)] text-[#1e3a5f] hover:bg-[#f0f6ff] gap-1.5"
                                     onClick={() => {
                                         sessionStorage.setItem('cms_edit_slug', slug);
                                         window.location.hash = '#/SAPages';
@@ -165,7 +165,7 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
                                         <button
                                             disabled={deleting}
                                             onClick={handleDelete}
-                                            className="rounded-md bg-red-600 px-2.5 py-1 text-micro font-semibold text-white hover:bg-red-700 disabled:opacity-60 transition-colors"
+                                            className="rounded-md bg-red-600 px-2.5 py-1 text-micro font-medium text-white hover:bg-red-700 disabled:opacity-60 transition-colors"
                                         >
                                             {deleting ? 'Deleting…' : 'Yes, delete'}
                                         </button>
@@ -187,14 +187,14 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
             {/* Page Content */}
             <main className="flex-1 container px-4 md:px-6 py-12 max-w-4xl mx-auto">
                 {page?.title && (
-                    <h1 className="text-heading-1 md:text-display font-bold text-foreground mb-6">
+                    <h1 className="text-heading-1 md:text-display font-medium text-foreground mb-6">
                         <InlineEditableText
                             slug={slug}
                             field="title"
                             lang={language}
                             value={page.title}
                             as="span"
-                            className="text-heading-1 md:text-display font-bold text-foreground"
+                            className="text-heading-1 md:text-display font-medium text-foreground"
                             onSave={(v) => setPage((p: any) => ({ ...p, title: v }))}
                         />
                     </h1>
@@ -205,7 +205,7 @@ export function CmsPageView({ slug, onBack, onNavigate }: CmsPageViewProps) {
                         field="content"
                         lang={language}
                         value={page.content}
-                        className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-purple-600 hover:prose-a:text-purple-700"
+                        className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-medium prose-a:text-[#2a8fbd] hover:prose-a:text-[#1e3a5f]"
                         onSave={(v) => setPage((p: any) => ({ ...p, content: v }))}
                     />
                 ) : (

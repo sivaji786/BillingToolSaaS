@@ -341,11 +341,11 @@ export function InvoicePreview({
     return (
       <span
         onDoubleClick={!disabled ? () => handleDoubleClick(fieldName) : undefined}
-        className={`${className} inline-block ${!disabled ? 'cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950 rounded px-1 group relative' : ''} transition-colors`}
+        className={`${className} inline-block ${!disabled ? 'cursor-pointer hover:bg-[#f0f6ff] dark:hover:bg-[#1e3a5f] rounded px-1 group relative' : ''} transition-colors`}
         title={!disabled ? "Double-click to edit" : ""}
       >
         {(value !== undefined && value !== null && value !== '') ? value : <span className="text-gray-400 italic">{placeholder}</span>}
-        {!disabled && <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-50 text-purple-600" />}
+        {!disabled && <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-50 text-[#2a8fbd]" />}
       </span>
     );
   };
@@ -554,10 +554,10 @@ export function InvoicePreview({
         }
         return (
           <div key={key} className="w-full">
-            <h3 className="text-body font-semibold uppercase tracking-wide text-gray-500 mb-3">{t('previewModal.items')}</h3>
+            <h3 className="text-body font-medium uppercase tracking-wide text-gray-500 mb-3">{t('previewModal.items')}</h3>
             <div className="border rounded-xl overflow-hidden shadow-sm">
               <table className="w-full text-body">
-                <thead className="bg-purple-50 text-gray-500">
+                <thead className="bg-[#f0f6ff] text-gray-500">
                   <tr>
                     <th className="text-center p-3 w-8">#</th>
                     <th className="text-left p-3">{t('previewModal.colDescription')}</th>
@@ -608,7 +608,7 @@ export function InvoicePreview({
               </table>
             </div>
             {isInteractive && (
-              <Button variant="outline" size="sm" onClick={handleAddLine} className="mt-3 gap-1.5 text-micro border-dashed text-purple-600 border-purple-200 hover:bg-purple-50">
+              <Button variant="outline" size="sm" onClick={handleAddLine} className="mt-3 gap-1.5 text-micro border-dashed text-[#2a8fbd] border-[rgba(30,58,95,0.15)] hover:bg-[#f0f6ff]">
                 <Plus className="h-3.5 w-3.5" />
                 {t('previewModal.addLineItem')}
               </Button>
@@ -633,9 +633,9 @@ export function InvoicePreview({
                   <span>{formatCurrency(tax.taxAmount, editedInvoice.currency)}</span>
                 </div>
               ))}
-              <div className="border-t-2 border-purple-200 pt-3 flex justify-between text-heading-3 font-semibold">
+              <div className="border-t-2 border-[rgba(30,58,95,0.15)] pt-3 flex justify-between text-heading-3 font-medium">
                 <span>{t('previewModal.total')}</span>
-                <span className="text-purple-700 font-bold">{formatCurrency(calculated.payableAmount, editedInvoice.currency)}</span>
+                <span className="text-[#1e3a5f] font-medium">{formatCurrency(calculated.payableAmount, editedInvoice.currency)}</span>
               </div>
             </div>
           </div>
@@ -646,10 +646,10 @@ export function InvoicePreview({
         if (isBusinessLetter || !isTaxSummaryVisible || calculated.taxTotals.length === 0) return null;
         return (
           <div key={key} className="w-full">
-            <h3 className="text-body font-semibold uppercase tracking-wide text-gray-500 mb-3">{t('previewModal.taxSummary')}</h3>
+            <h3 className="text-body font-medium uppercase tracking-wide text-gray-500 mb-3">{t('previewModal.taxSummary')}</h3>
             <div className="border rounded-xl overflow-hidden shadow-sm">
               <table className="w-full text-body">
-                <thead className="bg-purple-50 text-gray-500">
+                <thead className="bg-[#f0f6ff] text-gray-500">
                   <tr>
                     <th className="text-left p-3">{t('previewModal.colTaxType')}</th>
                     <th className="text-right p-3">{t('previewModal.colTaxPercent')}</th>
@@ -704,18 +704,18 @@ export function InvoicePreview({
         };
 
         return (
-          <div key={key} className="w-full mt-8 rounded-[2rem] p-8 bg-purple-50/40 border border-purple-100/50 relative overflow-hidden group">
+          <div key={key} className="w-full mt-8 rounded-[2rem] p-8 bg-[#f0f6ff]/40 border border-[rgba(30,58,95,0.10)]/50 relative overflow-hidden group">
             {/* Subtle background decoration */}
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-purple-200/20 rounded-full blur-3xl group-hover:bg-purple-300/30 transition-all duration-700"></div>
+            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-[#dbe8f7]/20 rounded-full blur-3xl group-hover:bg-[#dbe8f7]/30 transition-all duration-700"></div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center relative z-10">
               {/* Column 1: Textual Payment Details */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                  <div className="p-2 bg-[#f0f6ff] rounded-lg text-[#2a8fbd]">
                     <Code className="h-4 w-4" />
                   </div>
-                  <h4 className="text-body font-bold uppercase tracking-widest text-purple-900">
+                  <h4 className="text-body font-medium uppercase tracking-widest text-[#1e3a5f]">
                     {t('previewModal.paymentDetails')}
                   </h4>
                 </div>
@@ -723,18 +723,18 @@ export function InvoicePreview({
                 <div className="grid gap-3">
                   {effectivePaymentMeans.accountName && (
                     <div className="flex flex-col">
-                      <span className="text-body text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.accountOwner')}</span>
-                      <span className="text-body font-medium text-purple-900">{effectivePaymentMeans.accountName}</span>
+                      <span className="text-body text-[#3d5a80] font-medium uppercase tracking-tight">{t('previewModal.accountOwner')}</span>
+                      <span className="text-body font-medium text-[#1e3a5f]">{effectivePaymentMeans.accountName}</span>
                     </div>
                   )}
                   <div className="flex flex-col">
-                    <span className="text-body text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.iban')}</span>
-                    <span className="text-body font-mono font-medium text-purple-900 break-all">{effectivePaymentMeans.iban}</span>
+                    <span className="text-body text-[#3d5a80] font-medium uppercase tracking-tight">{t('previewModal.iban')}</span>
+                    <span className="text-body font-mono font-medium text-[#1e3a5f] break-all">{effectivePaymentMeans.iban}</span>
                   </div>
                   {effectivePaymentMeans.bic && (
                     <div className="flex flex-col">
-                      <span className="text-body text-purple-400 font-bold uppercase tracking-tight">{t('previewModal.bic')}</span>
-                      <span className="text-body font-mono font-medium text-purple-900">{effectivePaymentMeans.bic}</span>
+                      <span className="text-body text-[#3d5a80] font-medium uppercase tracking-tight">{t('previewModal.bic')}</span>
+                      <span className="text-body font-mono font-medium text-[#1e3a5f]">{effectivePaymentMeans.bic}</span>
                     </div>
                   )}
                 </div>
@@ -742,12 +742,12 @@ export function InvoicePreview({
 
               {/* Column 2: QR Code */}
               <div className={`flex flex-col items-center ${isRtl ? 'md:items-start' : 'md:items-end'}`}>
-                <div className="bg-white p-4 rounded-3xl shadow-xl shadow-purple-200/50 border border-purple-100 flex items-center justify-center transition-transform hover:scale-105 duration-300">
+                <div className="bg-white p-4 rounded-3xl shadow-xl shadow-[rgba(30,58,95,0.10)] border border-[rgba(30,58,95,0.10)] flex items-center justify-center transition-transform hover:scale-105 duration-300">
                   <InvoiceQRCode invoice={qrInvoice} size={140} showLabel={false} />
                 </div>
                 <div className={`mt-4 text-center ${isRtl ? 'md:text-left' : 'md:text-right'}`}>
-                  <p className="text-body font-bold text-purple-900">{t('qrCode.giroTitle')}</p>
-                  <p className="text-body-lg text-purple-700/60 leading-relaxed max-w-[200px]">
+                  <p className="text-body font-medium text-[#1e3a5f]">{t('qrCode.giroTitle')}</p>
+                  <p className="text-body-lg text-[#1e3a5f]/60 leading-relaxed max-w-[200px]">
                     {t('qrCode.giroNote')}
                   </p>
                 </div>
@@ -769,8 +769,8 @@ export function InvoicePreview({
       if (el.type === 'signature') {
         return (
           <div key={key} className="mt-12 flex justify-end w-full">
-            <div className="text-center w-48 border-t-2 border-purple-100 pt-2">
-              <p className="text-body text-gray-400 uppercase font-bold tracking-widest mb-1">Signature</p>
+            <div className="text-center w-48 border-t-2 border-[rgba(30,58,95,0.10)] pt-2">
+              <p className="text-body text-gray-400 uppercase font-medium tracking-widest mb-1">Signature</p>
               <div className="h-8"></div>
             </div>
           </div>
@@ -781,10 +781,10 @@ export function InvoicePreview({
         const buyer = editedInvoice.buyer;
         return (
           <div key={key} className="w-full mb-8">
-            <p className="text-body text-gray-400 uppercase font-bold tracking-widest mb-3 border-b border-gray-100 pb-2">{t('editor.buyer')}</p>
+            <p className="text-body text-gray-400 uppercase font-medium tracking-widest mb-3 border-b border-gray-100 pb-2">{t('editor.buyer')}</p>
             <div className="text-body space-y-1">
-              <div className="text-heading-3 font-bold text-gray-900">
-                {renderEditableField('buyer.name', buyer.name || '', (val) => handleFieldChange('buyer.name', val), 'font-bold', false, t('previewModal.placeholderBuyerName'), !isInteractive)}
+              <div className="text-heading-3 font-medium text-gray-900">
+                {renderEditableField('buyer.name', buyer.name || '', (val) => handleFieldChange('buyer.name', val), 'font-medium', false, t('previewModal.placeholderBuyerName'), !isInteractive)}
               </div>
               <div className="text-gray-600">
                 {renderEditableField('buyer.address.street', buyer.address?.street || '', (val) => handleFieldChange('buyer.address.street', val), '', false, t('previewModal.placeholderStreet'), !isInteractive)}
@@ -835,11 +835,11 @@ export function InvoicePreview({
         if (hasDatesEl) processedIds.add(hasDatesEl.id);
 
         sections.push(
-          <div key="_header" className="flex justify-between items-start pb-8 border-b-2 border-purple-200 w-full mb-4">
+          <div key="_header" className="flex justify-between items-start pb-8 border-b-2 border-[rgba(30,58,95,0.15)] w-full mb-4">
             <div className="flex-1">
               {hasTitleEl && (
                 <>
-                  <div className="text-display font-light text-purple-700 tracking-tight">
+                  <div className="text-display font-light text-[#1e3a5f] tracking-tight">
                     {isBusinessLetter 
                       ? renderEditableField('title', editedInvoice.title || 'Business Letter', (val) => handleFieldChange('title', val), '', false, 'Letter Title', !isInteractive)
                       : renderEditableField('seller.name', effectiveSeller.name || '', (val) => handleFieldChange('seller.name', val), '', false, t('previewModal.placeholderSellerName'), !isInteractive)
@@ -853,13 +853,13 @@ export function InvoicePreview({
             </div>
             {hasDatesEl && (
               <div className="text-right space-y-1 shrink-0 ml-6">
-                <p className="text-body text-gray-400 uppercase font-bold tracking-widest">{t('previewModal.issueDate')}</p>
+                <p className="text-body text-gray-400 uppercase font-medium tracking-widest">{t('previewModal.issueDate')}</p>
                 <div className="text-heading-2 text-gray-900">
                   {renderEditableField('issueDate', editedInvoice.issueDate || '', (val) => handleFieldChange('issueDate', val), '', false, t('previewModal.placeholderIssueDate'), !isInteractive)}
                 </div>
                 {editedInvoice.dueDate && (
                   <>
-                    <p className="text-body text-gray-400 uppercase font-bold tracking-widest mt-3">{t('previewModal.dueDate')}</p>
+                    <p className="text-body text-gray-400 uppercase font-medium tracking-widest mt-3">{t('previewModal.dueDate')}</p>
                     <div className="text-heading-2 text-gray-900">
                       {renderEditableField('dueDate', editedInvoice.dueDate || '', (val) => handleFieldChange('dueDate', val), '', false, t('previewModal.placeholderDueDate'), !isInteractive)}
                     </div>
@@ -883,10 +883,10 @@ export function InvoicePreview({
             {hasBuyerEl && (
               <div>
                 <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-                  <p className="text-body text-gray-400 uppercase font-bold tracking-widest">{isBusinessLetter ? (t('editor.recipient') || 'TO') : t('previewModal.billTo')}</p>
+                  <p className="text-body text-gray-400 uppercase font-medium tracking-widest">{isBusinessLetter ? (t('editor.recipient') || 'TO') : t('previewModal.billTo')}</p>
                   {isInteractive && buyers.length > 0 && (
                     <Select onValueChange={handleBuyerSelect}>
-                      <SelectTrigger className="h-7 w-auto border-none bg-purple-50 text-purple-700 text-body font-bold uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-purple-100 transition-colors">
+                      <SelectTrigger className="h-7 w-auto border-none bg-[#f0f6ff] text-[#1e3a5f] text-body font-medium uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-[#f0f6ff] transition-colors">
                         <Users className="h-3 w-3" />
                         <SelectValue placeholder={t('previewModal.selectFromDirectory') || 'Select Buyer'} />
                       </SelectTrigger>
@@ -901,7 +901,7 @@ export function InvoicePreview({
                   )}
                 </div>
                 <div className="space-y-1 text-body">
-                  <div className="font-bold text-heading-2 text-gray-900">
+                  <div className="font-medium text-heading-2 text-gray-900">
                     {renderEditableField('buyer.name', editedInvoice.buyer.name || '', (val) => handleFieldChange('buyer.name', val), '', false, t('previewModal.placeholderBuyerName'), !isInteractive)}
                   </div>
                   <div className="text-gray-500 leading-relaxed">
@@ -918,9 +918,9 @@ export function InvoicePreview({
             )}
             {hasSellerEl && (
               <div>
-                <p className="text-body text-gray-400 uppercase font-bold tracking-widest mb-3">{t('previewModal.from')}</p>
+                <p className="text-body text-gray-400 uppercase font-medium tracking-widest mb-3">{t('previewModal.from')}</p>
                 <div className="space-y-1 text-body">
-                  <div className="font-bold text-heading-2 text-gray-900">
+                  <div className="font-medium text-heading-2 text-gray-900">
                     {renderEditableField('seller.name2', effectiveSeller.name || '', (val) => handleFieldChange('seller.name', val), '', false, t('previewModal.placeholderSellerName'), !isInteractive)}
                   </div>
                   <div className="text-gray-500 leading-relaxed">
@@ -959,7 +959,7 @@ export function InvoicePreview({
   return (
     <div className="flex flex-col h-full max-h-[85vh]">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-6 pt-2 flex items-center justify-between border-b border-purple-50 shadow-sm -mx-2 px-2">
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-6 pt-2 flex items-center justify-between border-b border-[rgba(30,58,95,0.06)] shadow-sm -mx-2 px-2">
         <div className="flex gap-4 items-center">
           <Button variant="outline" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -968,7 +968,7 @@ export function InvoicePreview({
 
           {allTemplates.length > 0 && (
             <div className="flex items-center gap-2">
-              <Layout className="h-4 w-4 text-purple-600" />
+              <Layout className="h-4 w-4 text-[#2a8fbd]" />
               <Select
                 value={template?.id}
                 onValueChange={(val) => {
@@ -981,7 +981,7 @@ export function InvoicePreview({
                   }
                 }}
               >
-                <SelectTrigger className="w-[200px] bg-white border-purple-100 shadow-sm hover:border-purple-300 transition-colors">
+                <SelectTrigger className="w-[200px] bg-white border-[rgba(30,58,95,0.10)] shadow-sm hover:border-[rgba(30,58,95,0.20)] transition-colors">
                   <SelectValue placeholder={t('previewModal.switchLayout') || 'Switch Layout'} />
                 </SelectTrigger>
                 <SelectContent>
@@ -1000,7 +1000,7 @@ export function InvoicePreview({
           <Button
             onClick={handleSave}
             disabled={isSaving || (!hasChanges && !String(editedInvoice.id ?? '').includes('_'))}
-            className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-md"
+            className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] text-white shadow-md"
           >
             <Save className="h-4 w-4 mr-2" />
             {isSaving ? t('common.saving') || 'Saving...' : t('common.save')}
@@ -1017,10 +1017,10 @@ export function InvoicePreview({
       <Card className="p-6">
         <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as 'pdf' | 'ubl')}>
           <div className="flex items-center justify-between mb-6">
-            <TabsList className="bg-white shadow-md border-2 border-purple-100">
+            <TabsList className="bg-white shadow-md border-2 border-[rgba(30,58,95,0.10)]">
               <TabsTrigger
                 value="pdf"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-purple-600 data-[state=active]:to-fuchsia-600 data-[state=active]:text-white"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a5f] data-[state=active]:via-[#2a8fbd] data-[state=active]:to-[#3d5a80] data-[state=active]:text-white"
               >
                 <FileText className="h-4 w-4 mr-2" />
                 {isBusinessLetter ? (t('ai.letterPreview') || 'Letter Preview') : t('previewModal.pdfPreview')}
@@ -1028,7 +1028,7 @@ export function InvoicePreview({
               {!isBusinessLetter && (
                 <TabsTrigger
                   value="ubl"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-purple-600 data-[state=active]:to-fuchsia-600 data-[state=active]:text-white"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a5f] data-[state=active]:via-[#2a8fbd] data-[state=active]:to-[#3d5a80] data-[state=active]:text-white"
                 >
                   <Code className="h-4 w-4 mr-2" />
                   {t('previewModal.ublXml')}
@@ -1039,17 +1039,17 @@ export function InvoicePreview({
             <div className="flex gap-2">
               {activeTab === 'pdf' ? (
                 <>
-                  <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 h-10">
+                  <div className="flex bg-[#f0f6ff] p-1 rounded-lg border border-[rgba(30,58,95,0.12)] h-10">
                     <button
                       onClick={() => setPreviewMode('web')}
-                      className={`px-4 rounded-md text-body font-black uppercase tracking-widest transition-all ${previewMode === 'web' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                      className={`px-4 rounded-md text-body font-medium uppercase tracking-widest transition-all ${previewMode === 'web' ? 'bg-white shadow-sm text-[#1e3a5f]' : 'text-[#3d5a80] hover:text-[#1e3a5f]'}`}
                     >
                       <Layout className="h-3 w-3 inline mr-2" />
                       {t('previewModal.webView') || 'Web View'}
                     </button>
                     <button
                       onClick={() => setPreviewMode('print')}
-                      className={`px-4 rounded-md text-body font-black uppercase tracking-widest transition-all ${previewMode === 'print' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                      className={`px-4 rounded-md text-body font-medium uppercase tracking-widest transition-all ${previewMode === 'print' ? 'bg-white shadow-sm text-[#1e3a5f]' : 'text-[#3d5a80] hover:text-[#1e3a5f]'}`}
                     >
                       <Printer className="h-3 w-3 inline mr-2" />
                       {t('previewModal.printView') || 'Print View'}
@@ -1059,7 +1059,7 @@ export function InvoicePreview({
                     <Download className="h-4 w-4 mr-2" />
                     {t('previewModal.downloadPdf') || 'Download PDF'}
                   </Button>
-                  <Button onClick={handleDownloadPDFPixelPerfect} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700">
+                  <Button onClick={handleDownloadPDFPixelPerfect} className="bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80] text-white hover:from-[#e07530] hover:to-[#e07530]">
                     <Image className="h-4 w-4 mr-2" />
                     Pixel-Perfect PDF
                   </Button>

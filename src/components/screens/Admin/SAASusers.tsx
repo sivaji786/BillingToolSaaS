@@ -203,8 +203,8 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                                 onClick={() => toggleWorkhubMutation.mutate(user.id)}
                                                 className="gap-1.5"
                                             >
-                                                <Briefcase className={`h-4 w-4 shrink-0 ${(user as any).workhub_enabled ? 'text-purple-600' : 'text-muted-foreground'}`} />
-                                                <span className={`text-xs font-medium ${(user as any).workhub_enabled ? 'text-purple-600' : 'text-muted-foreground'}`}>
+                                                <Briefcase className={`h-4 w-4 shrink-0 ${(user as any).workhub_enabled ? 'text-[#2a8fbd]' : 'text-muted-foreground'}`} />
+                                                <span className={`text-body font-medium ${(user as any).workhub_enabled ? 'text-[#2a8fbd]' : 'text-muted-foreground'}`}>
                                                     {(user as any).workhub_enabled ? 'On' : 'Off'}
                                                 </span>
                                             </Button>
@@ -216,7 +216,7 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                                     title="Click to view SSO config summary"
                                                     onClick={() => setSamlModalUser(user)}
                                                 >
-                                                    <Badge variant="outline" className="text-xs border-purple-300 text-purple-700 bg-purple-50 gap-1 group-hover:bg-purple-100 transition-colors">
+                                                    <Badge variant="outline" className="text-body border-[rgba(30,58,95,0.20)] text-[#1e3a5f] bg-[#f0f6ff] gap-1 group-hover:bg-[#f0f6ff] transition-colors">
                                                         <Shield className="h-3 w-3" />
                                                         {((user as any).saml_provider || 'saml').toUpperCase()}
                                                     </Badge>
@@ -225,7 +225,7 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                                     )}
                                                 </button>
                                             ) : (
-                                                <span className="text-xs text-muted-foreground">—</span>
+                                                <span className="text-body text-muted-foreground">—</span>
                                             )}
                                         </TableCell>
                                         <TableCell className="text-right">
@@ -305,27 +305,27 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
             <DialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-purple-600" />
+                        <Shield className="h-5 w-5 text-[#2a8fbd]" />
                         SSO Configuration — {samlModalUser?.name}
                     </DialogTitle>
                 </DialogHeader>
                 {samlModalUser && (
-                    <div className="space-y-4 text-sm">
+                    <div className="space-y-4 text-heading-3">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wide">Protocol</p>
+                                <p className="text-body text-muted-foreground uppercase tracking-wide">Protocol</p>
                                 <p className="font-medium mt-0.5">{(samlModalUser.saml_provider || 'saml').toUpperCase()}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wide">Status</p>
+                                <p className="text-body text-muted-foreground uppercase tracking-wide">Status</p>
                                 <Badge variant="outline" className="mt-0.5 border-green-300 text-green-700 bg-green-50">Enabled</Badge>
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wide">SSO Only</p>
+                                <p className="text-body text-muted-foreground uppercase tracking-wide">SSO Only</p>
                                 <p className="font-medium mt-0.5">{samlModalUser.sso_only ? 'Yes — password login blocked' : 'No — password login allowed'}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wide">Last Login via SSO</p>
+                                <p className="text-body text-muted-foreground uppercase tracking-wide">Last Login via SSO</p>
                                 <p className="font-medium mt-0.5">
                                     {samlModalUser.lastLogin
                                         ? format(new Date(samlModalUser.lastLogin), 'MMM dd, yyyy HH:mm')
@@ -333,11 +333,11 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                 </p>
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wide">Tenant</p>
-                                <p className="font-mono text-xs mt-0.5">{samlModalUser.subdomain}</p>
+                                <p className="text-body text-muted-foreground uppercase tracking-wide">Tenant</p>
+                                <p className="font-mono text-body mt-0.5">{samlModalUser.subdomain}</p>
                             </div>
                         </div>
-                        <p className="text-xs text-muted-foreground border-t pt-3">
+                        <p className="text-body text-muted-foreground border-t pt-3">
                             IdP details are managed by the tenant admin in Settings → SSO &amp; SAML.
                         </p>
                     </div>

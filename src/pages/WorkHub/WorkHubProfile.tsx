@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileService, workerService, gdprService } from '../../services/workhubApi';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -8,7 +8,7 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Badge } from '../../components/ui/badge';
 import { Skeleton } from '../../components/ui/skeleton';
-import { User, Clock, Languages, Camera, CheckCircle, AlertCircle, Download, ShieldCheck } from 'lucide-react';
+import { User, Clock, Languages, Camera, CheckCircle, AlertCircle, Download, ShieldCheck, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const LANGUAGES = [
@@ -44,7 +44,26 @@ export function WorkHubProfile() {
         }
     }, [profile, initialised]);
 
-    const [gdprExporting, setGdprExporting] = useState(false);
+    const [gdprExporting,   setGdprExporting]   = useState(false);
+    const [photoUploading,  setPhotoUploading]  = useState(false);
+    const photoInputRef = useRef<HTMLInputElement>(null);
+
+    async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setPhotoUploading(true);
+        try {
+            await profileService.uploadIdentityPhoto(file);
+            qc.invalidateQueries({ queryKey: ['wh-profile'] });
+            toast.success('Identity photo uploaded successfully');
+        } catch {
+            toast.error('Failed to upload identity photo. Please try again.');
+        } finally {
+            setPhotoUploading(false);
+            // Reset so the same file can be re-selected if needed
+            if (photoInputRef.current) photoInputRef.current.value = '';
+        }
+    }
 
     async function handleGdprExport() {
         setGdprExporting(true);
@@ -110,17 +129,17 @@ export function WorkHubProfile() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-purple-600" />
+                        <User className="h-4 w-4 text-[#2a8fbd]" />
                         Personal Information
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="w-14 h-14 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xl font-bold">
+                        <div className="w-14 h-14 rounded-full bg-[#f0f6ff] text-[#1e3a5f] flex items-center justify-center text-display font-medium">
                             {initials}
                         </div>
                         <div>
-                            <p className="font-semibold text-body-lg">{profile?.name ?? '—'}</p>
+                            <p className="font-medium text-body-lg">{profile?.name ?? '—'}</p>
                             <p className="text-body text-muted-foreground">{profile?.email ?? '—'}</p>
                             <Badge variant="outline" className="mt-1 text-caption">{profile?.role ?? 'Worker'}</Badge>
                         </div>
@@ -136,7 +155,7 @@ export function WorkHubProfile() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <ShieldCheck className="h-4 w-4 text-purple-600" />
+                            <ShieldCheck className="h-4 w-4 text-[#2a8fbd]" />
                             WorkHub Role
                         </CardTitle>
                     </CardHeader>
@@ -167,7 +186,7 @@ export function WorkHubProfile() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-purple-600" />
+                        <Clock className="h-4 w-4 text-[#2a8fbd]" />
                         WorkHub Capacity
                     </CardTitle>
                 </CardHeader>
@@ -201,7 +220,7 @@ export function WorkHubProfile() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Languages className="h-4 w-4 text-purple-600" />
+                        <Languages className="h-4 w-4 text-[#2a8fbd]" />
                         Language Preferences
                     </CardTitle>
                 </CardHeader>
@@ -242,11 +261,20 @@ export function WorkHubProfile() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Camera className="h-4 w-4 text-purple-600" />
+                        <Camera className="h-4 w-4 text-[#2a8fbd]" />
                         Identity Photo
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
+                    {/* Hidden file input */}
+                    <input
+                        ref={photoInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="user"
+                        className="hidden"
+                        onChange={handlePhotoSelected}
+                    />
                     {profile?.has_identity_photo ? (
                         <div className="flex items-center gap-2 text-green-700">
                             <CheckCircle className="h-4 w-4" />
@@ -258,6 +286,18 @@ export function WorkHubProfile() {
                             <span className="text-body">No identity photo. Capture one during your next done report.</span>
                         </div>
                     )}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={photoUploading}
+                        className="gap-2"
+                        onClick={() => photoInputRef.current?.click()}
+                    >
+                        {photoUploading
+                            ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</>
+                            : <><Camera className="h-4 w-4" /> {profile?.has_identity_photo ? 'Replace identity photo' : 'Upload identity photo'}</>
+                        }
+                    </Button>
                 </CardContent>
             </Card>
 
@@ -265,7 +305,7 @@ export function WorkHubProfile() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Download className="h-4 w-4 text-purple-600" />
+                        <Download className="h-4 w-4 text-[#2a8fbd]" />
                         My Data (GDPR Art. 15)
                     </CardTitle>
                 </CardHeader>
@@ -289,7 +329,7 @@ export function WorkHubProfile() {
             <Button
                 onClick={() => updateMutation.mutate()}
                 disabled={updateMutation.isPending}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-[#f08a3c] hover:bg-[#e07530]"
             >
                 {updateMutation.isPending ? 'Saving…' : 'Save Changes'}
             </Button>

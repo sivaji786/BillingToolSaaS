@@ -373,7 +373,7 @@ export function Buyers() {
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                    <h1 className="text-purple-900 dark:text-purple-100 mb-1">{t('buyers.title')}</h1>
+                    <h1 className="text-[#1e3a5f] dark:text-white mb-1">{t('buyers.title')}</h1>
                     <p className="text-gray-600 dark:text-gray-400">{t('buyers.subtitle')}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -388,7 +388,7 @@ export function Buyers() {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="gap-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                        className="gap-2 border-[rgba(30,58,95,0.20)] text-[#1e3a5f] hover:bg-[#f0f6ff]"
                         onClick={() => fileInputRef.current?.click()}
                     >
                         <Upload className="h-4 w-4" />
@@ -398,7 +398,7 @@ export function Buyers() {
                     <Button
                         size="sm"
                         onClick={handleOpenAdd}
-                        className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-md shadow-purple-500/20 gap-2"
+                        className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] text-white shadow-md shadow-[rgba(30,58,95,0.10)] gap-2"
                     >
                         <Plus className="h-4 w-4" />
                         {t('buyers.addBuyer')}
@@ -451,7 +451,7 @@ export function Buyers() {
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-12">
                                     <div className="flex flex-col items-center gap-2">
-                                        <RefreshCw className="h-8 w-8 animate-spin text-purple-600" />
+                                        <RefreshCw className="h-8 w-8 animate-spin text-[#2a8fbd]" />
                                         <p className="text-body text-gray-500">{t('common.loading')}</p>
                                     </div>
                                 </TableCell>
@@ -622,7 +622,7 @@ export function Buyers() {
                         </div>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>{t('common.cancel')}</Button>
-                            <Button type="submit" className="bg-purple-600 hover:bg-purple-700">{t('common.save')}</Button>
+                            <Button type="submit" className="bg-[#f08a3c] hover:bg-[#e07530]">{t('common.save')}</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -643,7 +643,7 @@ export function Buyers() {
                 <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <Upload className="h-5 w-5 text-purple-600" />
+                            <Upload className="h-5 w-5 text-[#2a8fbd]" />
                             Import Preview
                         </DialogTitle>
                         <DialogDescription>
@@ -699,7 +699,7 @@ export function Buyers() {
                         <Button
                             disabled={importing || importNewCount === 0}
                             onClick={handleConfirmImport}
-                            className="bg-purple-600 hover:bg-purple-700 gap-2"
+                            className="bg-[#f08a3c] hover:bg-[#e07530] gap-2"
                         >
                             {importing
                                 ? <><RefreshCw className="h-4 w-4 animate-spin" />Importing…</>

@@ -73,7 +73,7 @@ export function AdminLayout() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-heading-1 font-bold tracking-tight">{t('admin.title')}</h1>
+                <h1 className="text-heading-1 font-medium tracking-tight">{t('admin.title')}</h1>
                 <p className="text-muted-foreground mt-2">{t('admin.subtitle')}</p>
             </div>
 

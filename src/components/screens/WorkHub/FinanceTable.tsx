@@ -13,8 +13,8 @@ interface Props {
 
 export function FinanceTable({ onSelectTask }: Props) {
     const { data: tasksData, isLoading: tasksLoading } = useQuery({
-        queryKey: ['wh-tasks-done'],
-        queryFn: () => taskService.list({ status: 'done' }),
+        queryKey: ['wh-tasks-finance'],
+        queryFn: () => taskService.list({}),
         staleTime: 60 * 1000,
     });
 
@@ -37,7 +37,12 @@ export function FinanceTable({ onSelectTask }: Props) {
     const rows = tasks.map((t) => {
         const hours = t.logged_hours ?? 0;
         const labour = hours * rate;
-        const materialsTotal = t.materials?.reduce((s, m) => s + (Number(m.total_price) || 0), 0) ?? 0;
+        const materialsTotal = t.materials?.reduce(
+            (s, m) => s + (m.total_price != null
+                ? Number(m.total_price)
+                : (m.quantity ?? 1) * (m.unit_price ?? 0)),
+            0,
+        ) ?? 0;
         const subtotal = labour + materialsTotal;
         const tax = subtotal * (taxPct / 100);
         const total = subtotal + tax;
@@ -65,16 +70,16 @@ export function FinanceTable({ onSelectTask }: Props) {
             {/* Summary cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                    { label: 'Billable Tasks',   val: String(tasks.length),    icon: DollarSign,   warn: false },
+                    { label: 'Total Tasks',       val: String(tasks.length),    icon: DollarSign,   warn: false },
                     { label: 'Dual-Signed',       val: String(signedCount),     icon: TrendingUp,   warn: signedCount < tasks.length },
                     { label: 'Labour Total',      val: fmt(grandLabour),        icon: DollarSign,   warn: false },
                     { label: `Total incl. ${taxPct}% VAT`, val: fmt(grandTotal), icon: TrendingUp,  warn: false },
                 ].map(({ label, val, icon: Icon, warn }) => (
                     <Card key={label}>
                         <CardContent className="p-3 flex items-center gap-3">
-                            <Icon className={cn('w-5 h-5 shrink-0', warn ? 'text-amber-500' : 'text-purple-600')} />
+                            <Icon className={cn('w-5 h-5 shrink-0', warn ? 'text-amber-500' : 'text-[#2a8fbd]')} />
                             <div>
-                                <p className={cn('text-body-lg font-bold', warn ? 'text-amber-600' : 'text-foreground')}>{val}</p>
+                                <p className={cn('text-body-lg font-medium', warn ? 'text-amber-600' : 'text-foreground')}>{val}</p>
                                 <p className="text-caption text-muted-foreground">{label}</p>
                             </div>
                         </CardContent>
@@ -86,28 +91,29 @@ export function FinanceTable({ onSelectTask }: Props) {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-body-lg flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-purple-600" />
-                        Completed Tasks — Billing Summary
+                        <DollarSign className="w-4 h-4 text-[#2a8fbd]" />
+                        All Tasks — Billing Summary
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                     {tasks.length === 0 ? (
                         <p className="p-6 text-body text-muted-foreground text-center">
-                            No completed tasks yet.
+                            No tasks yet.
                         </p>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto w-full">
                             <table className="w-full text-body">
                                 <thead>
                                     <tr className="border-b bg-muted/50 text-caption">
                                         <th className="text-left px-4 py-2 font-medium">Task</th>
+                                        <th className="text-left px-4 py-2 font-medium whitespace-nowrap">Task Status</th>
                                         <th className="text-right px-4 py-2 font-medium whitespace-nowrap">Hours</th>
                                         <th className="text-right px-4 py-2 font-medium whitespace-nowrap">Labour</th>
-                                        <th className="text-right px-4 py-2 font-medium whitespace-nowrap">Materials</th>
+                                        <th className="text-right px-4 py-2 font-medium whitespace-nowrap hidden md:table-cell">Materials</th>
                                         <th className="text-right px-4 py-2 font-medium whitespace-nowrap">Subtotal</th>
-                                        <th className="text-right px-4 py-2 font-medium whitespace-nowrap">VAT</th>
+                                        <th className="text-right px-4 py-2 font-medium whitespace-nowrap hidden md:table-cell">VAT</th>
                                         <th className="text-right px-4 py-2 font-medium whitespace-nowrap">Total</th>
-                                        <th className="px-4 py-2 font-medium">Status</th>
+                                        <th className="px-4 py-2 font-medium">Sig.</th>
                                         <th className="px-4 py-2" />
                                     </tr>
                                 </thead>
@@ -118,20 +124,42 @@ export function FinanceTable({ onSelectTask }: Props) {
                                                 <p className="font-medium truncate">{task.title}</p>
                                                 {task.location_tag && (
                                                     <p className="text-caption text-muted-foreground truncate">
-                                                        📍 {task.location_tag}
+                                                        {task.location_tag}
                                                     </p>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                {task.status === 'done' && (
+                                                    <Badge className="bg-green-100 text-green-700 border-green-300 text-[10px]">
+                                                        Done
+                                                    </Badge>
+                                                )}
+                                                {task.status === 'in_progress' && (
+                                                    <Badge className="bg-orange-100 text-orange-700 border-orange-300 text-[10px]">
+                                                        In Progress
+                                                    </Badge>
+                                                )}
+                                                {task.status === 'open' && (
+                                                    <Badge className="bg-blue-100 text-blue-700 border-blue-300 text-[10px]">
+                                                        Open
+                                                    </Badge>
+                                                )}
+                                                {task.status === 'problem' && (
+                                                    <Badge className="bg-red-100 text-red-700 border-red-300 text-[10px]">
+                                                        Problem
+                                                    </Badge>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3 text-right whitespace-nowrap">{hours.toFixed(2)}h</td>
                                             <td className="px-4 py-3 text-right whitespace-nowrap">{fmt(labour)}</td>
-                                            <td className="px-4 py-3 text-right whitespace-nowrap">
+                                            <td className="px-4 py-3 text-right whitespace-nowrap hidden md:table-cell">
                                                 {materialsTotal > 0 ? fmt(materialsTotal) : '—'}
                                             </td>
                                             <td className="px-4 py-3 text-right whitespace-nowrap font-medium">{fmt(subtotal)}</td>
-                                            <td className="px-4 py-3 text-right whitespace-nowrap text-muted-foreground">
+                                            <td className="px-4 py-3 text-right whitespace-nowrap text-muted-foreground hidden md:table-cell">
                                                 {fmt(tax)}
                                             </td>
-                                            <td className="px-4 py-3 text-right whitespace-nowrap font-bold">{fmt(total)}</td>
+                                            <td className="px-4 py-3 text-right whitespace-nowrap font-medium">{fmt(total)}</td>
                                             <td className="px-4 py-3">
                                                 {dualSigned ? (
                                                     <Badge className="bg-green-100 text-green-700 border-green-300 text-[10px]">
@@ -158,11 +186,12 @@ export function FinanceTable({ onSelectTask }: Props) {
                                     ))}
                                 </tbody>
                                 <tfoot>
-                                    <tr className="border-t bg-muted/50 font-semibold text-body">
+                                    <tr className="border-t bg-muted/50 font-medium text-body">
                                         <td className="px-4 py-2" colSpan={4}>Totals</td>
+                                        <td className="px-4 py-2 text-right hidden md:table-cell">{fmt(grandMaterials > 0 ? grandMaterials : 0)}</td>
                                         <td className="px-4 py-2 text-right">{fmt(grandSubtotal)}</td>
-                                        <td className="px-4 py-2 text-right text-muted-foreground">{fmt(grandTax)}</td>
-                                        <td className="px-4 py-2 text-right text-purple-700">{fmt(grandTotal)}</td>
+                                        <td className="px-4 py-2 text-right text-muted-foreground hidden md:table-cell">{fmt(grandTax)}</td>
+                                        <td className="px-4 py-2 text-right text-[#1e3a5f]">{fmt(grandTotal)}</td>
                                         <td colSpan={2} />
                                     </tr>
                                 </tfoot>
@@ -173,8 +202,8 @@ export function FinanceTable({ onSelectTask }: Props) {
             </Card>
 
             <p className="text-caption text-muted-foreground">
-                Invoices are auto-generated from dual-signed completion records.
-                Rate: {fmt(rate)}/h · VAT: {taxPct}% · Dual-signed tasks are immediately billable.
+                Showing all tasks across all statuses. Invoices are auto-generated from dual-signed completion records.
+                Rate: {fmt(rate)}/h · VAT: {taxPct}% · Dual-signed done tasks are immediately billable.
             </p>
         </div>
     );

@@ -189,10 +189,10 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                         </h3>
                         <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-body font-black uppercase tracking-widest ${
                             isLetterTemplate
-                                ? 'bg-purple-50 text-purple-600 border border-purple-200'
+                                ? 'bg-[#f0f6ff] text-[#2a8fbd] border border-[rgba(30,58,95,0.15)]'
                                 : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                         }`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${isLetterTemplate ? 'bg-purple-500' : 'bg-emerald-500'}`} />
+                            <span className={`h-1.5 w-1.5 rounded-full ${isLetterTemplate ? 'bg-[#f08a3c]' : 'bg-emerald-500'}`} />
                             {isLetterTemplate ? (t('nav.letters') || 'Business Letter') : (t('nav.invoices') || 'Invoice')} {t('templates.templateType') || 'Template'}
                         </div>
                     </div>

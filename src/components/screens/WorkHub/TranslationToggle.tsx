@@ -52,7 +52,7 @@ export function TranslationToggle({ text, defaultLanguage = 'en', className }: T
         <div className={cn('space-y-2', className)}>
             {/* Language selector row */}
             <div className="flex items-center gap-2 flex-wrap">
-                <Languages className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />
+                <Languages className="h-3.5 w-3.5 text-[#2a8fbd] flex-shrink-0" />
                 <Select value={targetLang} onValueChange={handleLangChange}>
                     <SelectTrigger className="h-7 w-36 text-caption">
                         <SelectValue />
@@ -68,7 +68,7 @@ export function TranslationToggle({ text, defaultLanguage = 'en', className }: T
 
                 {isTranslated && (
                     <>
-                        <Badge className="bg-purple-100 text-purple-700 text-caption px-1.5">
+                        <Badge className="bg-[#f0f6ff] text-[#1e3a5f] text-caption px-1.5">
                             {translation?.from_cache ? 'cached' : 'translated'}
                         </Badge>
                         <Button

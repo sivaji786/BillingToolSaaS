@@ -26,7 +26,7 @@ interface Props {
     onNavigate: (screen: string) => void;
 }
 
-const spin = <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-purple-600" /></div>;
+const spin = <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-[#2a8fbd]" /></div>;
 
 export function WorkHubLayout({ onNavigate }: Props) {
     const qc = useQueryClient();
@@ -162,6 +162,11 @@ export function WorkHubLayout({ onNavigate }: Props) {
         qc.invalidateQueries({ queryKey: ['wh-task', selectedTaskId] });
     };
 
+    const handleApproveReport = () => {
+        // Placeholder — full approval modal wired here later
+        toast.success('Approved');
+    };
+
     return (
         <WorkHubGate onUpgrade={() => onNavigate('billing')}>
             <OfflineBanner />
@@ -193,7 +198,7 @@ export function WorkHubLayout({ onNavigate }: Props) {
                             />
                         )
                     )}
-                    {activeTab === 'timer' && (
+                    {activeTab === 'timer' && role !== 'client' && (
                         <div className="p-4">
                             <TimerWidget onViewTask={handleTaskSelect} />
                         </div>
@@ -243,6 +248,8 @@ export function WorkHubLayout({ onNavigate }: Props) {
                                 onSelectTask={handleTaskSelect}
                                 onUpdated={handleTaskUpdated}
                                 readOnly={false}
+                                selectedProjectId={selectedProjectId}
+                                role={role}
                             />
                         ) : role === 'client' ? (
                             <TaskList

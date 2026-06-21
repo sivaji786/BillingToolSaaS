@@ -167,7 +167,7 @@ export function AIAssistantChat({
         return (
             <Button
                 onClick={() => setIsOpen(true)}
-                className={`fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 ${className}`}
+                className={`fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-[#f08a3c] to-[#1e3a5f] hover:from-[#1e3a5f] hover:to-[#1e3a5f] ${className}`}
                 size="icon"
             >
                 <Sparkles className="h-6 w-6 animate-pulse" />
@@ -177,16 +177,16 @@ export function AIAssistantChat({
 
     return (
         <Card
-            className={`fixed bottom-6 right-6 w-[min(400px,calc(100vw-3rem))] max-h-[min(600px,calc(100vh-6rem))] shadow-2xl border-2 border-purple-200 overflow-hidden transition-all duration-300 z-50 ${isExpanded ? 'h-[min(600px,calc(100vh-6rem))]' : 'h-[60px]'
+            className={`fixed bottom-6 right-6 w-[min(400px,calc(100vw-3rem))] max-h-[min(600px,calc(100vh-6rem))] shadow-2xl border-2 border-[rgba(30,58,95,0.15)] overflow-hidden transition-all duration-300 z-50 ${isExpanded ? 'h-[min(600px,calc(100vh-6rem))]' : 'h-[60px]'
                 } ${className}`}
         >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#f08a3c] to-[#1e3a5f] text-white">
                 <div className="flex items-center gap-2">
                     <Sparkles className="h-5 w-5" />
-                    <h3 className="font-semibold">{t('ai.assistant') || 'AI Assistant'}</h3>
+                    <h3 className="font-medium">{t('ai.assistant') || 'AI Assistant'}</h3>
                     {messages.length > 1 && (
-                        <Badge variant="secondary" className="bg-purple-800 text-white">
+                        <Badge variant="secondary" className="bg-[#1e3a5f] text-white">
                             {messages.length - 1}
                         </Badge>
                     )}
@@ -196,7 +196,7 @@ export function AIAssistantChat({
                         variant="ghost"
                         size="icon"
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className="h-8 w-8 text-white hover:bg-purple-800"
+                        className="h-8 w-8 text-white hover:bg-[#1e3a5f]"
                     >
                         {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                     </Button>
@@ -204,7 +204,7 @@ export function AIAssistantChat({
                         variant="ghost"
                         size="icon"
                         onClick={() => setIsOpen(false)}
-                        className="h-8 w-8 text-white hover:bg-purple-800"
+                        className="h-8 w-8 text-white hover:bg-[#1e3a5f]"
                     >
                         <X className="h-4 w-4" />
                     </Button>
@@ -214,7 +214,7 @@ export function AIAssistantChat({
             {/* Chat Messages */}
             {isExpanded && (
                 <>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[calc(100%-140px)] bg-gradient-to-b from-purple-50/30 to-transparent">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[calc(100%-140px)] bg-gradient-to-b from-[#f0f6ff]/30 to-transparent">
                         {messages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                                 <MessageSquare className="h-12 w-12 mb-4 opacity-50" />
@@ -236,7 +236,7 @@ export function AIAssistantChat({
                                 {isLoading && (
                                     <div className="flex justify-start">
                                         <div className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center gap-2">
-                                            <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
+                                            <Loader2 className="h-4 w-4 animate-spin text-[#2a8fbd]" />
                                             <span className="text-body text-muted-foreground">
                                                 {t('ai.thinking') || 'Thinking...'}
                                             </span>

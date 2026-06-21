@@ -235,7 +235,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                 {/* Focus box border outline + cursor */}
                 {targetRect && (
                     <motion.div
-                        className="absolute bg-transparent border-2 border-purple-500 rounded-lg pointer-events-none shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+                        className="absolute bg-transparent border-2 border-[#f08a3c] rounded-lg pointer-events-none shadow-[0_0_15px_rgba(168,85,247,0.5)]"
                         initial={false}
                         animate={{
                             top: targetRect.top - 12,
@@ -261,9 +261,9 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                                     repeatDelay: 0.5
                                 }}
                             >
-                                <MousePointer2 className="h-6 w-6 fill-white text-purple-600 drop-shadow-md" />
+                                <MousePointer2 className="h-6 w-6 fill-white text-[#2a8fbd] drop-shadow-md" />
                                 <motion.div
-                                    className="absolute -top-1 -left-1 w-8 h-8 rounded-full border border-purple-400"
+                                    className="absolute -top-1 -left-1 w-8 h-8 rounded-full border border-[rgba(30,58,95,0.25)]"
                                     animate={{
                                         scale: [1, 2, 2.5],
                                         opacity: [0, 0.8, 0]
@@ -283,7 +283,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                 {/* Tooltip Card */}
                 {targetRect && (
                     <motion.div
-                        className="absolute bg-white rounded-xl shadow-2xl p-5 w-72 pointer-events-auto border border-purple-100 z-10"
+                        className="absolute bg-white rounded-xl shadow-2xl p-5 w-72 pointer-events-auto border border-[rgba(30,58,95,0.10)] z-10"
                         initial={{ opacity: 0, y: 15, scale: 0.95 }}
                         animate={{
                             opacity: 1,
@@ -298,8 +298,8 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                         }}
                     >
                         <div className="flex justify-between items-start mb-3">
-                            <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-micro text-center font-bold">
+                            <h3 className="font-medium text-gray-800 flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#f0f6ff] text-[#1e3a5f] text-micro text-center font-medium">
                                     {currentStep + 1}
                                 </span>
                                 {step.title}
@@ -318,7 +318,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                                 {steps.map((_, i) => (
                                     <div
                                         key={i}
-                                        className={`h-1.5 rounded-full transition-all duration-300 ${i === currentStep ? 'w-5 bg-purple-600' : 'w-1.5 bg-purple-200'}`}
+                                        className={`h-1.5 rounded-full transition-all duration-300 ${i === currentStep ? 'w-5 bg-[#f08a3c]' : 'w-1.5 bg-[#dbe8f7]'}`}
                                     />
                                 ))}
                             </div>
@@ -335,7 +335,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                                 <Button
                                     size="sm"
                                     onClick={handleNext}
-                                    className="h-8 px-3 text-micro bg-purple-600 hover:bg-purple-700 shadow-sm"
+                                    className="h-8 px-3 text-micro bg-[#f08a3c] hover:bg-[#e07530] shadow-sm"
                                 >
                                     {currentStep === steps.length - 1 ? t('quickAccessTour.finish') : t('quickAccessTour.next')}
                                     {currentStep !== steps.length - 1 && <ChevronRight className="h-3.5 w-3.5 ml-1" />}

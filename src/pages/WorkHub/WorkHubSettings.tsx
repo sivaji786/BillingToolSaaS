@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Settings, Save, Loader2, Users, Trash2, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
@@ -36,6 +36,7 @@ export function WorkHubSettings() {
     const [addingWorker,    setAddingWorker]    = useState(false);
     const [selectedUserId,  setSelectedUserId]  = useState('');
     const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
+    const [workerRates,     setWorkerRates]     = useState<Record<number, string>>({});
 
     const { data: workers = [], isLoading: workersLoading } = useQuery({
         queryKey: ['wh-workers'],
@@ -82,6 +83,31 @@ export function WorkHubSettings() {
             toast.success('WorkHub role updated');
         },
         onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to update role'),
+    });
+
+    // Initialise workerRates when workers load / change
+    useEffect(() => {
+        if (workers.length > 0) {
+            setWorkerRates((prev) => {
+                const next = { ...prev };
+                workers.forEach((w: WHWorker) => {
+                    if (!(w.id in next)) {
+                        next[w.id] = w.hourly_rate_override != null ? String(w.hourly_rate_override) : '';
+                    }
+                });
+                return next;
+            });
+        }
+    }, [workers]);
+
+    const saveRateMut = useMutation({
+        mutationFn: ({ id, rate }: { id: number; rate: string }) =>
+            workerService.update(id, { hourly_rate_override: rate === '' ? null : Number(rate) }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['wh-workers'] });
+            toast.success('Rate override saved');
+        },
+        onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to save rate'),
     });
 
     function handleRemoveClick(id: number) {
@@ -138,8 +164,8 @@ export function WorkHubSettings() {
     return (
         <div className="p-6 max-w-2xl space-y-6">
             <div>
-                <h1 className="text-heading-1 font-bold flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-purple-600" />
+                <h1 className="text-heading-1 font-medium flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-[#2a8fbd]" />
                     WorkHub Settings
                 </h1>
                 <p className="text-muted-foreground text-body mt-1">
@@ -151,7 +177,7 @@ export function WorkHubSettings() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-3">
                     <CardTitle className="text-body-lg flex items-center gap-2">
-                        <Users className="w-4 h-4 text-purple-600" />
+                        <Users className="w-4 h-4 text-[#2a8fbd]" />
                         Workers
                     </CardTitle>
                     {!addingWorker && (
@@ -195,7 +221,7 @@ export function WorkHubSettings() {
                             </Select>
                             <Button
                                 size="sm"
-                                className="bg-purple-600 hover:bg-purple-700 shrink-0"
+                                className="bg-[#f08a3c] hover:bg-[#e07530] shrink-0"
                                 disabled={!selectedUserId || addWorkerMut.isPending}
                                 onClick={() => addWorkerMut.mutate()}
                             >
@@ -230,62 +256,82 @@ export function WorkHubSettings() {
                                 return (
                                     <div
                                         key={w.id}
-                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg border"
+                                        className="flex flex-col gap-2 px-3 py-2.5 rounded-lg border"
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold shrink-0">
-                                            {initials(w.name)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-body font-medium truncate flex items-center gap-1.5">
-                                                {w.name}
-                                                {String(w.user_id) === String(currentUserId) && (
-                                                    <span className="text-caption px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-normal shrink-0">You</span>
+                                        {/* Row 1: avatar, name, util badge, remove */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-[#f0f6ff] text-[#1e3a5f] flex items-center justify-center text-body font-medium shrink-0">
+                                                {initials(w.name)}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-body font-medium truncate flex items-center gap-1.5">
+                                                    {w.name}
+                                                    {String(w.user_id) === String(currentUserId) && (
+                                                        <span className="text-caption px-1.5 py-0.5 rounded-full bg-[#f0f6ff] text-[#1e3a5f] font-normal shrink-0">You</span>
+                                                    )}
+                                                </p>
+                                                {w.email && (
+                                                    <p className="text-caption text-muted-foreground truncate">{w.email}</p>
                                                 )}
-                                            </p>
-                                            {w.email && (
-                                                <p className="text-caption text-muted-foreground truncate">{w.email}</p>
-                                            )}
+                                            </div>
+                                            <span className={cn('text-caption px-1.5 py-0.5 rounded-full shrink-0', utilBadge(pct))}>
+                                                {pct}%
+                                            </span>
+                                            <button
+                                                onClick={() => handleRemoveClick(w.id)}
+                                                disabled={removeWorkerMut.isPending && confirmRemoveId === w.id}
+                                                className={cn(
+                                                    'p-1.5 rounded transition-colors shrink-0',
+                                                    isConfirming
+                                                        ? 'text-red-600 bg-red-50'
+                                                        : 'text-muted-foreground hover:text-red-600 hover:bg-red-50'
+                                                )}
+                                                title={isConfirming ? 'Click again to confirm remove' : 'Remove worker'}
+                                            >
+                                                {removeWorkerMut.isPending && confirmRemoveId === w.id
+                                                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                                                    : <Trash2 className="w-4 h-4" />
+                                                }
+                                            </button>
                                         </div>
-                                        {/* WorkHub role selector */}
-                                        <select
-                                            value={w.wh_role ?? ''}
-                                            onChange={(e) => setRoleMut.mutate({
-                                                id: w.id,
-                                                wh_role: (e.target.value || null) as WHWorker['wh_role'],
-                                            })}
-                                            disabled={setRoleMut.isPending}
-                                            className="text-caption border rounded px-1.5 py-1 bg-background focus:outline-none focus:ring-2 focus:ring-purple-400 shrink-0"
-                                            title="WorkHub role (overrides system role)"
-                                        >
-                                            <option value="">Auto</option>
-                                            <option value="worker">Worker</option>
-                                            <option value="planner">Planner</option>
-                                            <option value="manager">Manager</option>
-                                            <option value="finance">Finance</option>
-                                            <option value="client">Client</option>
-                                        </select>
-                                        <span className="text-caption text-muted-foreground shrink-0">
-                                            {w.queue_depth ?? 0} tasks
-                                        </span>
-                                        <span className={cn('text-caption px-1.5 py-0.5 rounded-full shrink-0', utilBadge(pct))}>
-                                            {pct}%
-                                        </span>
-                                        <button
-                                            onClick={() => handleRemoveClick(w.id)}
-                                            disabled={removeWorkerMut.isPending && confirmRemoveId === w.id}
-                                            className={cn(
-                                                'p-1.5 rounded transition-colors shrink-0',
-                                                isConfirming
-                                                    ? 'text-red-600 bg-red-50'
-                                                    : 'text-muted-foreground hover:text-red-600 hover:bg-red-50'
-                                            )}
-                                            title={isConfirming ? 'Click again to confirm remove' : 'Remove worker'}
-                                        >
-                                            {removeWorkerMut.isPending && confirmRemoveId === w.id
-                                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                                : <Trash2 className="w-4 h-4" />
-                                            }
-                                        </button>
+                                        {/* Row 2: role, rate, task count */}
+                                        <div className="flex items-center gap-2 pl-11 flex-wrap">
+                                            <select
+                                                value={w.wh_role ?? ''}
+                                                onChange={(e) => setRoleMut.mutate({
+                                                    id: w.id,
+                                                    wh_role: (e.target.value || null) as WHWorker['wh_role'],
+                                                })}
+                                                disabled={setRoleMut.isPending}
+                                                className="text-caption border rounded px-1.5 py-1 bg-background focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)] shrink-0"
+                                                title="WorkHub role (overrides system role)"
+                                            >
+                                                <option value="">Auto</option>
+                                                <option value="worker">Worker</option>
+                                                <option value="planner">Planner</option>
+                                                <option value="manager">Manager</option>
+                                                <option value="finance">Finance</option>
+                                                <option value="client">Client</option>
+                                            </select>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={workerRates[w.id] ?? ''}
+                                                placeholder="€/h override"
+                                                title="Hourly rate override for this worker"
+                                                className="w-28 text-xs border rounded px-1.5 py-1 bg-background focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)] shrink-0"
+                                                onChange={(e) =>
+                                                    setWorkerRates((prev) => ({ ...prev, [w.id]: e.target.value }))
+                                                }
+                                                onBlur={() =>
+                                                    saveRateMut.mutate({ id: w.id, rate: workerRates[w.id] ?? '' })
+                                                }
+                                            />
+                                            <span className="text-caption text-muted-foreground shrink-0 ml-auto">
+                                                {w.queue_depth ?? 0} tasks
+                                            </span>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -372,12 +418,8 @@ export function WorkHubSettings() {
                 </CardContent>
             </Card>
 
-            <p className="text-caption text-muted-foreground">
-                Per-worker hourly rate overrides can be set in each worker's profile.
-            </p>
-
             <Button
-                className="bg-purple-600 hover:bg-purple-700 gap-2"
+                className="bg-[#f08a3c] hover:bg-[#e07530] gap-2"
                 disabled={saveMut.isPending}
                 onClick={() => saveMut.mutate()}
             >

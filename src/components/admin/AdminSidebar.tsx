@@ -70,10 +70,10 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                     <div className="flex h-16 items-center justify-between px-4 border-b">
                         {!sidebarCollapsed && (
                             <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 rounded-lg bg-purple-600 flex items-center justify-center">
-                                    <span className="text-white font-bold text-xs">{t('admin.sa')}</span>
+                                <div className="h-8 w-8 rounded-lg bg-[#f08a3c] flex items-center justify-center">
+                                    <span className="text-white font-medium text-body">{t('admin.sa')}</span>
                                 </div>
-                                <span className="font-semibold text-xs">{t('admin.adminPortal')}</span>
+                                <span className="font-medium text-body">{t('admin.adminPortal')}</span>
                             </div>
                         )}
                         {/* Mobile close */}
@@ -116,9 +116,9 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                                             }
                                         }}
                                         className={cn(
-                                            'w-full flex items-start gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors',
+                                            'w-full flex items-start gap-3 px-3 py-2 rounded-lg text-body font-medium transition-colors',
                                             isActive
-                                                ? 'bg-purple-600 text-white'
+                                                ? 'bg-[#f08a3c] text-white'
                                                 : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                                             sidebarCollapsed && 'justify-center items-center'
                                         )}
@@ -140,12 +140,12 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-9 w-9">
                                         <AvatarImage src="" alt={adminUser.name} />
-                                        <AvatarFallback className="bg-purple-600 text-white">
+                                        <AvatarFallback className="bg-[#f08a3c] text-white">
                                             {adminUser.name.substring(0, 2).toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-medium truncate">{adminUser.name}</p>
+                                        <p className="text-body font-medium truncate">{adminUser.name}</p>
                                         <p className="text-[10px] text-muted-foreground truncate">{adminUser.email}</p>
                                     </div>
                                 </div>
@@ -157,7 +157,7 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
                                         sessionStorage.setItem('cms_edit_mode', '1');
                                         onNavigate('landing');
                                     }}
-                                    className="w-full justify-start text-purple-600 border-purple-200 hover:bg-purple-50"
+                                    className="w-full justify-start text-[#2a8fbd] border-[rgba(30,58,95,0.15)] hover:bg-[#f0f6ff]"
                                 >
                                     <ExternalLink className="h-4 w-4 mr-2" />
                                     Edit Live Site

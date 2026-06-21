@@ -25,7 +25,7 @@ export function LanguageSwitcher({ variant = 'default' }: LanguageSwitcherProps)
   const currentLanguage = languages.find((lang) => lang.code === language);
 
   const buttonClassName = variant === 'login'
-    ? 'bg-white/90 text-purple-700 border-purple-200 hover:bg-white hover:border-purple-300'
+    ? 'bg-white/90 text-[#1e3a5f] border-[rgba(30,58,95,0.15)] hover:bg-white hover:border-[rgba(30,58,95,0.20)]'
     : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white backdrop-blur-sm';
 
   return (

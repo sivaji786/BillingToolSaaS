@@ -11,20 +11,12 @@ import { toast } from 'sonner';
 import { cn } from '../../../lib/utils';
 
 type Priority = 'low' | 'medium' | 'high' | 'urgent';
-type TaskStatus = 'open' | 'in_progress' | 'done' | 'problem';
 
 const PRIORITY_OPTS: { value: Priority; label: string }[] = [
     { value: 'low',    label: 'Low' },
     { value: 'medium', label: 'Medium' },
     { value: 'high',   label: 'High' },
     { value: 'urgent', label: 'Urgent' },
-];
-
-const STATUS_OPTS: { value: TaskStatus; label: string }[] = [
-    { value: 'open',        label: 'Open' },
-    { value: 'in_progress', label: 'In Progress' },
-    { value: 'problem',     label: 'Problem' },
-    { value: 'done',        label: 'Done' },
 ];
 
 function utilColour(pct: number): string {
@@ -51,7 +43,6 @@ export function TaskEditModal({ task, onClose, onSaved }: Props) {
     const [title,       setTitle]       = useState(task.title ?? '');
     const [description, setDescription] = useState(task.description ?? '');
     const [priority,    setPriority]    = useState<Priority>((task.priority as Priority) ?? 'medium');
-    const [status,      setStatus]      = useState<TaskStatus>((task.status as TaskStatus) ?? 'open');
     const [estHours,    setEstHours]    = useState(task.est_hours != null ? String(task.est_hours) : '');
     const [locationTag, setLocationTag] = useState(task.location_tag ?? '');
     const [dueDate,     setDueDate]     = useState(task.due_date ?? '');
@@ -65,23 +56,42 @@ export function TaskEditModal({ task, onClose, onSaved }: Props) {
     });
 
     const saveMut = useMutation({
-        mutationFn: () => taskService.update(task.id, {
-            title:               title.trim(),
-            description:         description.trim() || undefined,
-            priority,
-            status,
-            est_hours:           estHours ? Number(estHours) : undefined,
-            location_tag:        locationTag.trim() || undefined,
-            due_date:            dueDate || undefined,
-            assigned_worker_id:  workerId ?? undefined,
-        } as any),
+        mutationFn: () => {
+            const payload: Record<string, any> = {
+                title:       title.trim(),
+                priority,
+            };
+            if (description.trim()) payload.description = description.trim();
+            if (estHours)           payload.est_hours = Number(estHours);
+            if (locationTag.trim()) payload.location_tag = locationTag.trim();
+            if (dueDate)            payload.due_date = dueDate;
+            // Only include project_id if the task already has one (preserve it)
+            if (task.project_id != null) payload.project_id = task.project_id;
+            // Only send assigned_worker_id when it's a real number; omit when null
+            if (workerId != null) payload.assigned_worker_id = workerId;
+            console.debug('[TaskEditModal] PUT payload:', payload);
+            return taskService.update(task.id, payload as any);
+        },
         onSuccess: () => {
             toast.success('Task updated');
             qc.invalidateQueries({ queryKey: ['wh-task', task.id] });
             qc.invalidateQueries({ queryKey: ['wh-tasks'] });
             onSaved();
         },
-        onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to save task'),
+        onError: (e: any) => {
+            const data = e.response?.data;
+            console.error('[TaskEditModal] 422 response:', data);
+            // CI4 returns { status, error, messages: { field: "msg" } }
+            const validationBag = data?.messages ?? data?.errors;
+            if (validationBag && typeof validationBag === 'object') {
+                const detail = Object.entries(validationBag)
+                    .map(([field, msg]) => `${field}: ${msg}`)
+                    .join(' | ');
+                toast.error('Validation failed', { description: detail });
+            } else {
+                toast.error(data?.message ?? 'Failed to save task');
+            }
+        },
     });
 
     const canSave = title.trim().length >= 3;
@@ -121,7 +131,7 @@ export function TaskEditModal({ task, onClose, onSaved }: Props) {
                         />
                     </div>
 
-                    {/* Priority + Status */}
+                    {/* Priority + Status (status is read-only — move via board) */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                             <Label>Priority</Label>
@@ -136,14 +146,16 @@ export function TaskEditModal({ task, onClose, onSaved }: Props) {
                         </div>
                         <div className="space-y-1">
                             <Label>Status</Label>
-                            <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {STATUS_OPTS.map((s) => (
-                                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="flex items-center h-9 px-3 rounded-md border border-[rgba(30,58,95,0.20)] bg-[#f8fafc] text-body text-[#3d5a80] gap-2">
+                                <span className={cn('w-2 h-2 rounded-full shrink-0', {
+                                    'bg-[#2a8fbd]': task.status === 'open',
+                                    'bg-[#d97706]': task.status === 'in_progress',
+                                    'bg-[#059669]': task.status === 'done',
+                                    'bg-[#dc2626]': task.status === 'problem',
+                                })} />
+                                <span className="capitalize">{task.status.replace('_', ' ')}</span>
+                                <span className="ml-auto text-[10px] text-muted-foreground">via board</span>
+                            </div>
                         </div>
                     </div>
 
@@ -198,8 +210,8 @@ export function TaskEditModal({ task, onClose, onSaved }: Props) {
                                     className={cn(
                                         'p-3 rounded-lg border-2 text-left transition-colors',
                                         workerId === null
-                                            ? 'border-purple-500 bg-purple-50'
-                                            : 'border-border hover:border-purple-300'
+                                            ? 'border-[#f08a3c] bg-[#f0f6ff]'
+                                            : 'border-border hover:border-[rgba(30,58,95,0.20)]'
                                     )}
                                 >
                                     <div className="text-body font-medium">Unassigned</div>
@@ -217,8 +229,8 @@ export function TaskEditModal({ task, onClose, onSaved }: Props) {
                                             className={cn(
                                                 'p-3 rounded-lg border-2 text-left transition-colors',
                                                 isChosen
-                                                    ? 'border-purple-500 bg-purple-50'
-                                                    : utilColour(pct) + ' hover:border-purple-300'
+                                                    ? 'border-[#f08a3c] bg-[#f0f6ff]'
+                                                    : utilColour(pct) + ' hover:border-[rgba(30,58,95,0.20)]'
                                             )}
                                         >
                                             <div className="flex items-center justify-between mb-1">
@@ -251,7 +263,7 @@ export function TaskEditModal({ task, onClose, onSaved }: Props) {
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" onClick={onClose}>Cancel</Button>
                         <Button
-                            className="bg-purple-600 hover:bg-purple-700 gap-2"
+                            className="bg-[#f08a3c] hover:bg-[#e07530] gap-2"
                             disabled={!canSave || saveMut.isPending}
                             onClick={() => saveMut.mutate()}
                         >

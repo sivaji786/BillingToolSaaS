@@ -46,7 +46,7 @@ export function BatchLocationPanel({ locationTag, currentTaskId, onTaskSelect }:
                 onClick={() => setOpen((v) => !v)}
                 className="w-full flex items-center gap-2 px-3 py-2.5 bg-muted/50 hover:bg-muted text-body font-medium transition-colors"
             >
-                <MapPin className="w-4 h-4 text-purple-500 shrink-0" />
+                <MapPin className="w-4 h-4 text-[#2a8fbd] shrink-0" />
                 <span className="flex-1 text-left">Also at {locationTag}</span>
                 {!open && others.length > 0 && (
                     <Badge variant="outline" className="text-caption">{others.length}</Badge>

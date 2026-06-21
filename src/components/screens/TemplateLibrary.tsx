@@ -208,7 +208,7 @@ export function TemplateLibrary({
                 {/* Badges */}
                 <div className="flex gap-2 flex-wrap">
                   {PLATFORM_TEMPLATES.some(pt => pt.id === template.id) && (
-                    <Badge variant="outline" className="text-purple-600 border-purple-200 bg-purple-50">
+                    <Badge variant="outline" className="text-[#2a8fbd] border-[rgba(30,58,95,0.15)] bg-[#f0f6ff]">
                       System Default
                     </Badge>
                   )}
@@ -220,7 +220,7 @@ export function TemplateLibrary({
 
                 {/* Name + description */}
                 <div>
-                  <h3 className="font-semibold text-heading-2">{template.name}</h3>
+                  <h3 className="font-medium text-heading-2">{template.name}</h3>
                   <p className="text-body text-muted-foreground mt-1 line-clamp-2">
                     {template.description}
                   </p>

@@ -17,7 +17,21 @@ module.exports = {
             },
         },
         extend: {
+            fontFamily: {
+                sans: ['system-ui', '-apple-system', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+            },
             colors: {
+                // Humpl skin tokens — consumed by TenantHome components
+                'ht-ink':          'var(--ht-ink)',
+                'ht-ink-soft':     'var(--ht-ink-soft)',
+                'ht-paper':        'var(--ht-paper)',
+                'ht-paper-soft':   'var(--ht-paper-soft)',
+                'ht-paper-warm':   'var(--ht-paper-warm)',
+                'ht-accent':       'var(--ht-accent)',
+                'ht-accent-soft':  'var(--ht-accent-soft)',
+                'ht-accent-tint':  'var(--ht-accent-tint)',
+                'ht-gold':         'var(--ht-gold)',
+
                 border: "hsl(var(--border))",
                 input: "hsl(var(--input))",
                 ring: "hsl(var(--ring))",

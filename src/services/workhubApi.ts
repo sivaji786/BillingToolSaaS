@@ -87,6 +87,7 @@ export interface WHWorker {
     role?: string;
     wh_role?: 'worker' | 'planner' | 'manager' | 'finance' | 'client' | null;
     capacity_hours_per_week?: number;
+    hourly_rate_override?: number | null;
     utilisation_pct?: number;
     queue_depth?: number;
     free_from_date?: string;
@@ -298,6 +299,10 @@ export const workerService = {
     setRole: async (workerId: number, wh_role: WHWorker['wh_role']) => {
         await api.patch(`/workers/${workerId}/role`, { wh_role: wh_role ?? null });
     },
+    update: async (workerId: number, payload: Partial<Pick<WHWorker, 'capacity_hours_per_week' | 'hourly_rate_override'>>) => {
+        const r = await api.put<{ data: WHWorker }>(`/workers/${workerId}`, payload);
+        return r.data.data;
+    },
 };
 
 export const projectService = {
@@ -336,7 +341,7 @@ export interface WHTimesheetSignoff {
 }
 
 export const timesheetService = {
-    get: async (params?: { worker_id?: number; week?: string; month?: string }) => {
+    get: async (params?: { worker_id?: number; week?: string; month?: string; from?: string; to?: string }) => {
         const r = await api.get('/timesheet', { params });
         return r.data;
     },
@@ -440,6 +445,14 @@ export const profileService = {
     },
     update: async (payload: Partial<Pick<WHProfile, 'capacity_hours_per_week' | 'skills' | 'ui_language' | 'export_language'>>): Promise<void> => {
         await api.patch('/profile', payload);
+    },
+    uploadIdentityPhoto: async (file: File): Promise<{ url: string }> => {
+        const form = new FormData();
+        form.append('file', file);
+        const r = await api.post<{ url: string }>('/workers/me/identity-photo', form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return r.data;
     },
 };
 

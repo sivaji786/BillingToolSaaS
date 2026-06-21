@@ -117,7 +117,7 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                     <Button variant="ghost" size="icon" onClick={() => onNavigate('SAASusers')}>
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <h2 className="text-heading-1 font-bold">User Not Found</h2>
+                    <h2 className="text-heading-1 font-medium">User Not Found</h2>
                 </div>
             </div>
         );
@@ -207,7 +207,7 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
                     <div>
-                        <h2 className="text-heading-1 font-bold">{user.name}</h2>
+                        <h2 className="text-heading-1 font-medium">{user.name}</h2>
                         <p className="text-body text-muted-foreground">Complete user profile and billing information</p>
                     </div>
                 </div>
@@ -285,7 +285,7 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                     </CardHeader>
                     <CardContent className="flex items-center justify-center py-12">
                         <div className="text-center">
-                            <p className="text-heading-3 font-semibold text-muted-foreground">Coming Soon</p>
+                            <p className="text-heading-3 font-medium text-muted-foreground">Coming Soon</p>
                             <p className="text-body text-muted-foreground mt-1">Subscription details will be available soon</p>
                         </div>
                     </CardContent>
@@ -300,7 +300,7 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                 </CardHeader>
                 <CardContent className="flex items-center justify-center py-12">
                     <div className="text-center">
-                        <p className="text-heading-3 font-semibold text-muted-foreground">Coming Soon</p>
+                        <p className="text-heading-3 font-medium text-muted-foreground">Coming Soon</p>
                         <p className="text-body text-muted-foreground mt-1">Payment information will be available soon</p>
                     </div>
                 </CardContent>
@@ -393,7 +393,7 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
                                             <p className="text-body font-medium text-muted-foreground uppercase tracking-wider">Storage Used</p>
-                                            <p className="text-heading-1 font-bold">{formatBytes(usage?.storageUsed || 0)}</p>
+                                            <p className="text-heading-1 font-medium">{formatBytes(usage?.storageUsed || 0)}</p>
                                         </div>
                                         <div className="p-2 bg-primary/10 rounded-lg">
                                             <FileText className="h-5 w-5 text-primary" />
@@ -406,7 +406,7 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
                                             <p className="text-body font-medium text-muted-foreground uppercase tracking-wider">API Calls</p>
-                                            <p className="text-heading-1 font-bold">{usage?.apiCalls?.toLocaleString()}</p>
+                                            <p className="text-heading-1 font-medium">{usage?.apiCalls?.toLocaleString()}</p>
                                         </div>
                                         <div className="p-2 bg-primary/10 rounded-lg">
                                             <Activity className="h-5 w-5 text-primary" />
@@ -419,7 +419,7 @@ export function SAUserDetails({ userId, onNavigate }: SAUserDetailsProps) {
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
                                             <p className="text-body font-medium text-muted-foreground uppercase tracking-wider">Bandwidth</p>
-                                            <p className="text-heading-1 font-bold">{formatBytes(usage?.bandwidthUsed || 0)}</p>
+                                            <p className="text-heading-1 font-medium">{formatBytes(usage?.bandwidthUsed || 0)}</p>
                                         </div>
                                         <div className="p-2 bg-primary/10 rounded-lg">
                                             <Download className="h-5 w-5 text-primary" />

@@ -637,7 +637,7 @@ export function SAsettings() {
                 </CardHeader>
                 {health && (
                     <CardContent className="space-y-3">
-                        <div className={`text-body font-semibold px-3 py-1.5 rounded-md inline-flex items-center gap-2 ${
+                        <div className={`text-body font-medium px-3 py-1.5 rounded-md inline-flex items-center gap-2 ${
                             health.overall === 'ok' ? 'bg-green-50 text-green-700' :
                             health.overall === 'warning' ? 'bg-yellow-50 text-yellow-700' :
                             'bg-red-50 text-red-700'

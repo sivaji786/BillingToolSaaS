@@ -99,7 +99,7 @@ export function TaskDocumentsTab({ taskId, isDualSigned = false, hasCompletionRe
                         }`}
                     >
                         <div className="flex items-center gap-3">
-                            <FileText className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                            <FileText className="h-4 w-4 text-[#2a8fbd] flex-shrink-0" />
                             <div>
                                 <p className="text-body font-medium">{docDef.label}</p>
                                 {existing ? (

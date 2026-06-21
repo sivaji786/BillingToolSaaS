@@ -146,7 +146,7 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
             <div className="space-y-6 max-w-2xl">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-heading-1 font-bold">{editingService ? 'Edit Service Column' : 'Add Service Column'}</h2>
+                        <h2 className="text-heading-1 font-medium">{editingService ? 'Edit Service Column' : 'Add Service Column'}</h2>
                         <p className="text-muted-foreground">Define what columns will show up in package creation</p>
                     </div>
                 </div>
@@ -237,7 +237,7 @@ export function SAPackageServices({ onNavigate }: SAPackageServicesProps) {
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h2 className="text-heading-1 font-bold">Package Columns</h2>
+                    <h2 className="text-heading-1 font-medium">Package Columns</h2>
                     <p className="text-muted-foreground">Manage the columns available for packages</p>
                 </div>
             </div>

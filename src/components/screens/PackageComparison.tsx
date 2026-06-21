@@ -130,7 +130,7 @@ function InlineField({
     return (
         <span style={{ position: 'relative', display: 'inline' }}>
             <H
-                className={[className, hovered ? 'outline-dashed outline-2 outline-purple-400/50' : ''].filter(Boolean).join(' ')}
+                className={[className, hovered ? 'outline-dashed outline-2 outline-[rgba(30,58,95,0.25)]' : ''].filter(Boolean).join(' ')}
                 style={{ borderRadius: hovered ? 4 : undefined, cursor: hovered ? 'text' : undefined, display: 'inline' }}
                 onMouseEnter={() => setHovered(true)}
                 onMouseLeave={() => setHovered(false)}
@@ -270,7 +270,7 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#f08a3c]"></div>
             </div>
         );
     }
@@ -285,10 +285,10 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
                         {t('common.back') || 'Back'}
                     </Button>
                     <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#1e3a5f] to-[#3d5a80]">
                             <FileText className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-heading-2 font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
+                        <span className="text-heading-2 font-medium bg-clip-text text-transparent bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80]">
                             {t('appName') || 'BillingTool'}
                         </span>
                     </div>
@@ -301,7 +301,7 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
 
                     {/* Page title / subtitle — CMS editable */}
                     <div className="text-center space-y-4">
-                        <motion.h1 variants={itemVariants} className="text-display font-extrabold tracking-tight lg:text-5xl">
+                        <motion.h1 variants={itemVariants} className="text-display font-medium tracking-tight lg:text-5xl">
                             <InlineEditableText slug="package-comparison" field="compare_title" lang={language} value={cmsContent?.compare_title || t('landing.pricing.compareTitle') || 'Compare our plans'} />
                         </motion.h1>
                         <motion.p variants={itemVariants} className="text-heading-2 text-slate-500 max-w-2xl mx-auto">
@@ -315,34 +315,34 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
                             <Table>
                                 <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b-2">
                                     <TableRow>
-                                        <TableHead className="w-[300px] py-8 px-6 text-heading-3 font-bold">
+                                        <TableHead className="w-[300px] py-8 px-6 text-heading-3 font-medium">
                                             {t('landing.pricing.features') || 'Features'}
                                         </TableHead>
                                         {plans.map(plan => (
                                             <TableHead key={plan.id} className="text-center py-8 min-w-[200px]">
                                                 <div className="space-y-2">
                                                     {/* Plan name — DB inline editable */}
-                                                    <div className="text-heading-1 font-bold text-slate-900 dark:text-white">
+                                                    <div className="text-heading-1 font-medium text-slate-900 dark:text-white">
                                                         <InlineField
                                                             value={plan.name}
                                                             onSave={(v) => savePlan(plan.id, { name: v })}
-                                                            className="text-heading-1 font-bold text-slate-900 dark:text-white"
+                                                            className="text-heading-1 font-medium text-slate-900 dark:text-white"
                                                         />
                                                     </div>
                                                     {/* Plan price — DB inline editable (raw number, € prefix shown outside) */}
-                                                    <div className="text-purple-600 font-extrabold text-heading-2">
+                                                    <div className="text-[#2a8fbd] font-medium text-heading-2">
                                                         {parseFloat(plan.price) === 0 ? (
                                                             <InlineField
                                                                 value={plan.price}
                                                                 onSave={(v) => savePlan(plan.id, { price: v })}
-                                                                className="text-purple-600 font-extrabold text-heading-2"
+                                                                className="text-[#2a8fbd] font-medium text-heading-2"
                                                             />
                                                         ) : (
                                                             <>
                                                                 €<InlineField
                                                                     value={plan.price}
                                                                     onSave={(v) => savePlan(plan.id, { price: v })}
-                                                                    className="text-purple-600 font-extrabold text-heading-2"
+                                                                    className="text-[#2a8fbd] font-medium text-heading-2"
                                                                 />
                                                             </>
                                                         )}
@@ -350,7 +350,7 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
                                                     </div>
                                                     <Button
                                                         size="sm"
-                                                        className="mt-4 bg-purple-600 hover:bg-purple-700 w-full"
+                                                        className="mt-4 bg-[#f08a3c] hover:bg-[#e07530] w-full"
                                                         onClick={() => onSignup(plan.id)}
                                                     >
                                                         {t('landing.hero.getStarted') || 'Get Started'}
@@ -363,13 +363,13 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
                                 <TableBody>
                                     {columns.map(col => (
                                         <TableRow key={col.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
-                                            <TableCell className="py-6 px-6 font-semibold text-slate-800 dark:text-slate-200">
+                                            <TableCell className="py-6 px-6 font-medium text-slate-800 dark:text-slate-200">
                                                 <div>
                                                     {/* Column name — DB inline editable */}
                                                     <InlineField
                                                         value={col.name}
                                                         onSave={(v) => saveColumn(col.id, { name: v })}
-                                                        className="font-semibold text-slate-800 dark:text-slate-200"
+                                                        className="font-medium text-slate-800 dark:text-slate-200"
                                                     />
                                                     {/* Column description — DB inline editable */}
                                                     {col.description && (
@@ -407,7 +407,7 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
                         {[
                             { icon: <Shield className="text-green-500" />, titleField: 'trust_1_title', descField: 'trust_1_desc', defaultTitle: 'Highly Secure', defaultDesc: 'Enterprise-grade encryption for all your data.' },
                             { icon: <Globe className="text-blue-500" />, titleField: 'trust_2_title', descField: 'trust_2_desc', defaultTitle: 'Go Global', defaultDesc: 'Multi-currency and multi-language support included.' },
-                            { icon: <LayoutTemplate className="text-purple-500" />, titleField: 'trust_3_title', descField: 'trust_3_desc', defaultTitle: 'Customizable', defaultDesc: 'Design templates that match your brand identity.' }
+                            { icon: <LayoutTemplate className="text-[#2a8fbd]" />, titleField: 'trust_3_title', descField: 'trust_3_desc', defaultTitle: 'Customizable', defaultDesc: 'Design templates that match your brand identity.' }
                         ].map((item, i) => (
                             <Card key={i} className="border-none shadow-md bg-white/50 dark:bg-slate-900/50 backdrop-blur">
                                 <CardHeader className="flex flex-row items-center gap-4">

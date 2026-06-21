@@ -45,7 +45,7 @@ export function StatsCard({ title, value, icon: Icon, trend, loading, className,
                 <Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-heading-1 font-bold">{value}</div>
+                <div className="text-heading-1 font-medium">{value}</div>
                 {trend && (
                     <div className="flex items-center text-micro mt-1">
                         {trend.isPositive ? (

@@ -25,12 +25,12 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
                 {/* Message Bubble */}
                 <div
                     className={`rounded-2xl px-4 py-3 ${isUser
-                            ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white'
+                            ? 'bg-gradient-to-br from-[#f08a3c] to-[#1e3a5f] text-white'
                             : 'bg-card border border-border'
                         }`}
                 >
                     <p className="text-body whitespace-pre-wrap">{message.content}</p>
-                    <p className={`text-micro mt-1 ${isUser ? 'text-purple-200' : 'text-muted-foreground'}`}>
+                    <p className={`text-micro mt-1 ${isUser ? 'text-[rgba(255,255,255,0.8)]' : 'text-muted-foreground'}`}>
                         {new Date(message.timestamp).toLocaleTimeString()}
                     </p>
                 </div>
@@ -43,8 +43,8 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
                             <>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <Mail className="h-5 w-5 text-purple-600" />
-                                        <h4 className="font-semibold">{t('ai.letterPreview') || 'Letter Preview'}</h4>
+                                        <Mail className="h-5 w-5 text-[#2a8fbd]" />
+                                        <h4 className="font-medium">{t('ai.letterPreview') || 'Letter Preview'}</h4>
                                     </div>
                                     {message.invoiceData.body && message.invoiceData.buyer?.name ? (
                                         <Badge variant="outline" className="gap-1">
@@ -73,7 +73,7 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
 
                                     {/* Salutation */}
                                     {message.invoiceData.salutation && (
-                                        <div className="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 rounded text-micro italic text-purple-800 dark:text-purple-200">
+                                        <div className="px-3 py-1.5 bg-[#f0f6ff] dark:bg-[#1e3a5f]/20 rounded text-micro italic text-[#1e3a5f] dark:text-[rgba(255,255,255,0.8)]">
                                             {message.invoiceData.salutation}
                                         </div>
                                     )}
@@ -101,7 +101,7 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
                                     <div className="flex gap-2 pt-2 border-t">
                                         <Button
                                             onClick={() => onUseInvoice(message.invoiceData)}
-                                            className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600"
+                                            className="flex-1 bg-gradient-to-r from-[#1e3a5f] to-[#f08a3c]"
                                             size="sm"
                                         >
                                             <Mail className="h-3.5 w-3.5 mr-1.5" />
@@ -120,8 +120,8 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
                             <>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <FileText className="h-5 w-5 text-purple-600" />
-                                        <h4 className="font-semibold">{t('ai.invoicePreview') || 'Invoice Preview'}</h4>
+                                        <FileText className="h-5 w-5 text-[#2a8fbd]" />
+                                        <h4 className="font-medium">{t('ai.invoicePreview') || 'Invoice Preview'}</h4>
                                     </div>
                                     {message.invoiceData.lines && message.invoiceData.lines.length > 0 ? (
                                         <Badge variant="outline" className="gap-1">
@@ -152,7 +152,7 @@ export function ChatMessageComponent({ message, onUseInvoice, onDiscard }: ChatM
                                     {message.invoiceData.payableAmount !== undefined && (
                                         <div className="flex justify-between border-t pt-2">
                                             <span className="text-muted-foreground">{t('editor.total')}:</span>
-                                            <span className="font-bold text-heading-3">
+                                            <span className="font-medium text-heading-3">
                                                 {message.invoiceData.currency} {message.invoiceData.payableAmount.toFixed(2)}
                                             </span>
                                         </div>

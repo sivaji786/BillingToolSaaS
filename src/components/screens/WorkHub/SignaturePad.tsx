@@ -148,7 +148,7 @@ export function SignaturePad({ label, legalNotice, onSign, onClear, readOnly = f
             </div>
 
             {legalNotice && (
-                <p className="text-caption text-muted-foreground border-l-2 border-purple-200 pl-2">
+                <p className="text-caption text-muted-foreground border-l-2 border-[rgba(30,58,95,0.15)] pl-2">
                     {legalNotice}
                 </p>
             )}
@@ -158,7 +158,7 @@ export function SignaturePad({ label, legalNotice, onSign, onClear, readOnly = f
                     <Button type="button" variant="outline" size="sm" className="gap-1" onClick={handleClear} disabled={!hasMark}>
                         <RotateCcw className="w-3.5 h-3.5" /> Clear
                     </Button>
-                    <Button type="button" size="sm" className="gap-1 bg-purple-600 hover:bg-purple-700" onClick={handleDone}>
+                    <Button type="button" size="sm" className="gap-1 bg-[#f08a3c] hover:bg-[#e07530]" onClick={handleDone}>
                         <Check className="w-3.5 h-3.5" /> Done
                     </Button>
                 </div>

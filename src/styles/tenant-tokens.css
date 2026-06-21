@@ -1,0 +1,33 @@
+/* ================================================================
+   TENANT HOME — Humpl skin design tokens
+   Prefixed --ht- to avoid collision with existing Tailwind variables.
+   All tenant portal home components read from these tokens.
+   ================================================================ */
+:root {
+  --ht-ink:          #1e3a5f;
+  --ht-ink-soft:     #3d5a80;
+  --ht-paper:        #ffffff;
+  --ht-paper-soft:   #f0f6ff;
+  --ht-paper-warm:   #dbe8f7;
+  --ht-accent:       #f08a3c;
+  --ht-accent-soft:  #ff9d52;
+  --ht-accent-tint:  #fff5ec;
+  --ht-gold:         #2a8fbd;
+  --ht-rule:         rgba(30, 58, 95, 0.20);
+  --ht-rule-soft:    rgba(30, 58, 95, 0.10);
+  --ht-rule-faint:   rgba(30, 58, 95, 0.065);
+
+  --ht-radius-sm: 4px;
+  --ht-radius-md: 8px;
+  --ht-radius-lg: 12px;
+
+  --ht-shadow-card:  0 1px 2px rgba(30, 58, 95, 0.04);
+  --ht-shadow-hover: 0 4px 12px rgba(30, 58, 95, 0.08);
+
+  --ht-transition: 0.15s ease;
+
+  /* Typography */
+  --ht-font:           system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ht-weight-normal:  400;
+  --ht-weight-medium:  500;
+}

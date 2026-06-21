@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Loader2, CheckCircle, Mail, MessageSquare, Send } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../ui/dialog';
@@ -13,6 +13,9 @@ import { SignaturePad } from './SignaturePad';
 import { completionService, WHMaterial, WHPhoto } from '../../../services/workhubApi';
 import { toast } from 'sonner';
 import { cn } from '../../../lib/utils';
+import { useWorkhubOfflineStore } from '../../../stores/workhubOfflineStore';
+
+const CONSENT_VERSION = import.meta.env.VITE_CONSENT_VERSION ?? 'v1';
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type CopyChannel = 'none' | 'email' | 'sms' | 'whatsapp' | 'telegram';
@@ -41,8 +44,10 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
     const qc = useQueryClient();
     const [step, setStep] = useState<Step>(1);
 
-    // Step 1
-    const [note, setNote] = useState('');
+    // Step 1 — initialise note from persisted draft if one exists
+    const [note, setNote] = useState<string>(() => {
+        return useWorkhubOfflineStore.getState().draftNotes[taskId] ?? '';
+    });
     const [noteOriginal, setNoteOriginal] = useState('');
 
     // Step 2
@@ -60,9 +65,17 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
     const [customerName, setCustomerName] = useState('');
     const [customerGdpr, setCustomerGdpr] = useState(false);
 
+    // Step 3 — photo upload progress
+    const [uploadingCount, setUploadingCount] = useState(0);
+
     // Step 7 — copy delivery
     const [copyChannel, setCopyChannel] = useState<CopyChannel>('none');
     const [copyRecipient, setCopyRecipient] = useState('');
+
+    // Auto-save draft note whenever it changes
+    useEffect(() => {
+        useWorkhubOfflineStore.getState().setDraftNote(taskId, note);
+    }, [note, taskId]);
 
     const submitMut = useMutation({
         mutationFn: async () => {
@@ -72,7 +85,7 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
                 worker_signature_data: workerSig,
                 gdpr_consent_given: true,
                 materials: materials.filter((m) => m.material_name.trim()),
-                consent_text_version: 'v1',
+                consent_text_version: CONSENT_VERSION,
                 copy_channel: copyChannel !== 'none' ? copyChannel : undefined,
                 copy_recipient: copyChannel !== 'none' ? copyRecipient.trim() : undefined,
             });
@@ -82,12 +95,13 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
                     customer_signature_data: customerSig,
                     customer_name: customerName,
                     gdpr_consent_given: true,
-                    consent_text_version: 'v1',
+                    consent_text_version: CONSENT_VERSION,
                 });
             }
             return completion;
         },
         onSuccess: () => {
+            useWorkhubOfflineStore.getState().clearDraftNote(taskId);
             const channelLabel = copyChannel !== 'none' ? ` Copy queued via ${copyChannel}.` : '';
             toast.success(`Done report submitted!${channelLabel}`);
             onSubmitted();
@@ -122,11 +136,18 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
                 </DialogHeader>
 
                 {/* Progress bar */}
-                <div className="flex gap-0.5 mb-4">
+                <div
+                    className="flex gap-0.5 mb-4"
+                    role="progressbar"
+                    aria-valuenow={step}
+                    aria-valuemin={1}
+                    aria-valuemax={7}
+                    aria-label={`Step ${step} of 7`}
+                >
                     {([1, 2, 3, 4, 5, 6, 7] as Step[]).map((s) => (
                         <div
                             key={s}
-                            className={cn('h-1 flex-1 rounded-full transition-colors', step >= s ? 'bg-purple-600' : 'bg-muted')}
+                            className={cn('h-1 flex-1 rounded-full transition-colors', step >= s ? 'bg-[#f08a3c]' : 'bg-muted')}
                         />
                     ))}
                 </div>
@@ -161,7 +182,11 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
                             <PhotoUploadGrid
                                 taskId={taskId}
                                 existingPhotos={photos}
-                                onUploaded={(p) => setPhotos((prev) => [...prev, p])}
+                                onUploaded={(p) => {
+                                    setUploadingCount((c) => Math.max(0, c - 1));
+                                    setPhotos((prev) => [...prev, p]);
+                                }}
+                                onUploadStart={() => setUploadingCount((c) => c + 1)}
                                 onRemove={(id) => setPhotos((prev) => prev.filter((p) => p.id !== id))}
                             />
                         </div>
@@ -217,7 +242,7 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
 
                     {step === 6 && (
                         <div className="space-y-4">
-                            <h3 className="text-body font-semibold">Summary</h3>
+                            <h3 className="text-body font-medium">Summary</h3>
                             <div className="space-y-2 text-body">
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Completion note</span>
@@ -261,25 +286,31 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
                             {/* Channel selector */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 {([
-                                    { value: 'none',     label: 'No copy',  Icon: null },
-                                    { value: 'email',    label: 'Email',    Icon: Mail },
-                                    { value: 'sms',      label: 'SMS',      Icon: MessageSquare },
-                                    { value: 'whatsapp', label: 'WhatsApp', Icon: MessageSquare },
-                                    { value: 'telegram', label: 'Telegram', Icon: Send },
-                                ] as { value: CopyChannel; label: string; Icon: any }[]).map(({ value, label, Icon }) => (
+                                    { value: 'none',     label: 'No copy',           Icon: null,          comingSoon: false },
+                                    { value: 'email',    label: 'Email',              Icon: Mail,          comingSoon: false },
+                                    { value: 'sms',      label: 'SMS',               Icon: MessageSquare, comingSoon: true  },
+                                    { value: 'whatsapp', label: 'WhatsApp',           Icon: MessageSquare, comingSoon: true  },
+                                    { value: 'telegram', label: 'Telegram',           Icon: Send,          comingSoon: false },
+                                ] as { value: CopyChannel; label: string; Icon: any; comingSoon: boolean }[]).map(({ value, label, Icon, comingSoon }) => (
                                     <button
                                         key={value}
                                         type="button"
-                                        onClick={() => { setCopyChannel(value); setCopyRecipient(''); }}
+                                        disabled={comingSoon}
+                                        onClick={() => { if (!comingSoon) { setCopyChannel(value); setCopyRecipient(''); } }}
                                         className={cn(
                                             'flex flex-col items-center gap-1.5 rounded-lg border p-3 text-caption font-medium transition-colors',
-                                            copyChannel === value
-                                                ? 'border-purple-500 bg-purple-50 text-purple-700'
-                                                : 'border-muted hover:border-purple-300 hover:bg-purple-50/50 text-muted-foreground'
+                                            comingSoon
+                                                ? 'opacity-50 cursor-not-allowed border-muted text-muted-foreground'
+                                                : copyChannel === value
+                                                    ? 'border-[#f08a3c] bg-[#f0f6ff] text-[#1e3a5f]'
+                                                    : 'border-muted hover:border-[rgba(30,58,95,0.20)] hover:bg-[#f0f6ff]/50 text-muted-foreground'
                                         )}
                                     >
                                         {Icon && <Icon className="w-4 h-4" />}
                                         {label}
+                                        {comingSoon && (
+                                            <span className="text-[10px] font-normal leading-none">(coming soon)</span>
+                                        )}
                                     </button>
                                 ))}
                             </div>
@@ -323,12 +354,18 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
                             </Button>
                         )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
+                        {uploadingCount > 0 && (
+                            <span className="flex items-center gap-1.5 text-caption text-muted-foreground">
+                                <Loader2 className="animate-spin w-3 h-3" />
+                                Uploading {uploadingCount} photo{uploadingCount !== 1 ? 's' : ''}…
+                            </span>
+                        )}
                         <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
                         {step < 7 ? (
                             <Button
                                 type="button"
-                                className="bg-purple-600 hover:bg-purple-700 gap-1"
+                                className="bg-[#f08a3c] hover:bg-[#e07530] gap-1"
                                 disabled={!canProceed()}
                                 onClick={next}
                             >
@@ -340,6 +377,7 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
                                 className="bg-green-600 hover:bg-green-700 gap-1"
                                 disabled={
                                     submitMut.isPending ||
+                                    uploadingCount > 0 ||
                                     !workerSig ||
                                     photos.filter(p => p.photo_type === 'jobsite').length === 0 ||
                                     (copyChannel !== 'none' && copyRecipient.trim().length === 0)

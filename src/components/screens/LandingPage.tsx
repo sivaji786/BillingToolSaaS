@@ -182,7 +182,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
     }, [language]);
 
     const featureIcons = [
-        <FileText className="h-6 w-6 text-purple-600" />,
+        <FileText className="h-6 w-6 text-[#2a8fbd]" />,
         <LayoutTemplate className="h-6 w-6 text-pink-600" />,
         <Globe className="h-6 w-6 text-blue-600" />,
         <Shield className="h-6 w-6 text-green-600" />,
@@ -209,7 +209,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#f08a3c]"></div>
             </div>
         );
     }
@@ -221,10 +221,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 <div className="container flex h-16 items-center justify-between px-4 md:px-6">
                     {/* Logo */}
                     <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#1e3a5f] to-[#3d5a80]">
                             <FileText className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-heading-2 font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
+                        <span className="text-heading-2 font-medium bg-clip-text text-transparent bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80]">
                             {t('appName') || 'BillingTool'}
                         </span>
                     </div>
@@ -252,7 +252,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-purple-400 text-purple-700 hover:bg-purple-50"
+                                className="border-[rgba(30,58,95,0.25)] text-[#1e3a5f] hover:bg-[#f0f6ff]"
                                 onClick={() => { window.location.hash = '#/SAdashboard'; }}
                             >
                                 ← Back to Admin Portal
@@ -289,13 +289,13 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                     <div className="md:hidden border-t bg-background animate-in slide-in-from-top-2">
                         <div className="py-2">
                             <button
-                                className="block w-full text-left px-4 py-3 text-sm font-medium hover:bg-accent transition-colors"
+                                className="block w-full text-left px-4 py-3 text-heading-3 font-medium hover:bg-accent transition-colors"
                                 onClick={() => { document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }); setMobileMenuOpen(false); }}
                             >
                                 {t('landing.aboutUs')}
                             </button>
                             <button
-                                className="block w-full text-left px-4 py-3 text-sm font-medium hover:bg-accent transition-colors"
+                                className="block w-full text-left px-4 py-3 text-heading-3 font-medium hover:bg-accent transition-colors"
                                 onClick={() => { onNavigate('packageComparison'); setMobileMenuOpen(false); }}
                             >
                                 {t('nav.products')}
@@ -313,7 +313,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="border-purple-400 text-purple-700"
+                                        className="border-[rgba(30,58,95,0.25)] text-[#1e3a5f]"
                                         onClick={() => { window.location.hash = '#/SAdashboard'; setMobileMenuOpen(false); }}
                                     >
                                         Admin Portal
@@ -354,14 +354,14 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             variants={containerVariants}
                             className="flex flex-col items-center space-y-6 text-center"
                         >
-                            <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-4 py-1.5 text-micro font-semibold border-purple-100 bg-purple-50/50 text-purple-700 backdrop-blur-sm shadow-sm transition-all hover:bg-purple-100/50">
-                                <Sparkles className="mr-2 h-3.5 w-3.5 text-purple-600" />
+                            <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-4 py-1.5 text-micro font-medium border-[rgba(30,58,95,0.10)] bg-[#f0f6ff]/50 text-[#1e3a5f] backdrop-blur-sm shadow-sm transition-all hover:bg-[#f0f6ff]/50">
+                                <Sparkles className="mr-2 h-3.5 w-3.5 text-[#2a8fbd]" />
                                 <InlineEditableText slug="home" field="hero_badge" lang={language} value={cmsContent?.hero_badge || t('landing.hero.badge')} />
                             </motion.div>
-                            <motion.h1 variants={itemVariants} className="text-5xl font-extrabold tracking-tight lg:text-6xl xl:text-7xl max-w-4xl text-slate-900 dark:text-white pb-2 leading-[1.1]">
+                            <motion.h1 variants={itemVariants} className="text-5xl font-medium tracking-tight lg:text-6xl xl:text-7xl max-w-4xl text-slate-900 dark:text-white pb-2 leading-[1.1]">
                                 <InlineEditableText slug="home" field="hero_title" lang={language} value={cmsContent?.hero_title || t('landing.hero.title')} />{' '}
                                 <br className="hidden sm:inline" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-fuchsia-600">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80]">
                                     <InlineEditableText slug="home" field="hero_title_accent" lang={language} value={cmsContent?.hero_title_accent || t('landing.hero.titleAccent')} />
                                 </span>{' '}
                                 <InlineEditableText slug="home" field="hero_title_suffix" lang={language} value={cmsContent?.hero_title_suffix || t('landing.hero.titleSuffix')} />
@@ -370,7 +370,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 <InlineEditableText slug="home" field="hero_subtitle" lang={language} value={cmsContent?.hero_subtitle || t('landing.hero.subtitle')} multiline />
                             </motion.p>
                             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 min-w-[300px] justify-center pt-4">
-                                <Button size="lg" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 h-12 px-8 text-heading-3 shadow-xl shadow-purple-200 dark:shadow-none" onClick={() => onSignup()}>
+                                <Button size="lg" className="bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80] hover:from-[#e07530] hover:to-[#e07530] h-12 px-8 text-heading-3 shadow-xl shadow-[rgba(30,58,95,0.10)] dark:shadow-none" onClick={() => onSignup()}>
                                     {t('landing.hero.getStarted')}
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
@@ -378,7 +378,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                     <Button
                                         size="lg"
                                         variant="outline"
-                                        className="h-12 px-8 text-heading-3 border-2 border-purple-300 hover:border-purple-500 hover:bg-purple-50 text-purple-700 font-semibold gap-2 shadow-md"
+                                        className="h-12 px-8 text-heading-3 border-2 border-[rgba(30,58,95,0.20)] hover:border-[#f08a3c] hover:bg-[#f0f6ff] text-[#1e3a5f] font-medium gap-2 shadow-md"
                                         onClick={onTryNow}
                                         id="hero-try-now"
                                     >
@@ -399,7 +399,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                         </p>
                         <div className="flex justify-center flex-wrap gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
                             {['[mn]medianet', 'Voicepoint', 'Highgo', 'digitalks.in', 'we4service'].map((partner, i) => (
-                                <div key={i} className="flex items-center gap-2 text-heading-2 font-bold text-slate-800 dark:text-slate-200">
+                                <div key={i} className="flex items-center gap-2 text-heading-2 font-medium text-slate-800 dark:text-slate-200">
                                     <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
                                         <div className="w-full h-full bg-gradient-to-br from-slate-400 to-slate-200 dark:from-slate-600 dark:to-slate-800" />
                                     </div> 
@@ -420,7 +420,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             variants={containerVariants}
                             className="text-center mb-16"
                         >
-                            <motion.h2 variants={itemVariants} className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl">
+                            <motion.h2 variants={itemVariants} className="text-heading-1 font-medium tracking-tighter sm:text-display md:text-5xl">
                                 <InlineEditableText slug="home" field="features_tag" lang={language} value={cmsContent?.features_tag || t('landing.features.tag')} />
                             </motion.h2>
                             <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2/relaxed lg:text-heading-2/relaxed xl:text-heading-2/relaxed dark:text-gray-400 mt-4">
@@ -438,7 +438,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 <motion.div key={index} variants={itemVariants}>
                                     <Card className="h-full border-none shadow-lg bg-background/60 backdrop-blur hover:bg-background transition-colors hover:scale-[1.02] duration-300">
                                         <CardHeader>
-                                            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/20">
+                                            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#f0f6ff] dark:bg-[#1e3a5f]/20">
                                                 {feature.icon}
                                             </div>
                                             <CardTitle className="text-heading-2">{feature.title}</CardTitle>
@@ -457,7 +457,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 <section className="py-12 md:py-24 lg:py-32">
                     <div className="container px-4 md:px-6">
                         <div className="text-center mb-16">
-                            <h2 className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl">
+                            <h2 className="text-heading-1 font-medium tracking-tighter sm:text-display md:text-5xl">
                                 <InlineEditableText slug="home" field="how_it_works_tag" lang={language} value={cmsContent?.how_it_works_tag || t('landing.howItWorks.tag')} />
                             </h2>
                             <p className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2 dark:text-gray-400 mt-4">
@@ -466,14 +466,14 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
                             {/* Connecting Line */}
-                            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-purple-200 via-fuchsia-200 to-purple-200 dark:from-purple-900 dark:via-fuchsia-900 dark:to-purple-900 z-0" />
+                            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-[rgba(30,58,95,0.12)] via-[rgba(30,58,95,0.18)] to-[rgba(30,58,95,0.12)] dark:from-[#1e3a5f] dark:via-[#3d5a80] dark:to-[#1e3a5f] z-0" />
 
                             {howItWorksSteps.map((step, idx) => (
                                 <div key={idx} className="relative z-10 flex flex-col items-center text-center">
-                                    <div className="w-24 h-24 rounded-full bg-background border-4 border-purple-100 dark:border-purple-900/50 flex items-center justify-center text-heading-1 font-bold text-purple-600 shadow-xl mb-6">
+                                    <div className="w-24 h-24 rounded-full bg-background border-4 border-[rgba(30,58,95,0.10)] dark:border-[rgba(30,58,95,0.30)] flex items-center justify-center text-heading-1 font-medium text-[#2a8fbd] shadow-xl mb-6">
                                         {idx + 1}
                                     </div>
-                                    <h3 className="text-heading-2 font-bold mb-2">{step.title}</h3>
+                                    <h3 className="text-heading-2 font-medium mb-2">{step.title}</h3>
                                     <p className="text-muted-foreground">{step.desc}</p>
                                 </div>
                             ))}
@@ -491,7 +491,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 viewport={{ once: true }}
                                 variants={containerVariants}
                             >
-                                <motion.h2 variants={itemVariants} className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl mb-6">
+                                <motion.h2 variants={itemVariants} className="text-heading-1 font-medium tracking-tighter sm:text-display md:text-5xl mb-6">
                                     <InlineEditableText slug="home" field="about_title" lang={language} value={cmsContent?.about_title || t('landing.aboutUs')} />
                                 </motion.h2>
                                 <motion.div variants={itemVariants} className="space-y-4 text-gray-500 md:text-heading-3 dark:text-gray-400">
@@ -499,13 +499,13 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                     <InlineEditableRich slug="home" field="about_text2" lang={language} value={cmsContent?.about_text2 || t('landing.about.desc2')} />
                                     <div className="flex gap-4 pt-4">
                                         <div className="flex flex-col">
-                                            <span className="text-heading-1 font-bold text-purple-600">10k+</span>
+                                            <span className="text-heading-1 font-medium text-[#2a8fbd]">10k+</span>
                                             <span className="text-body">
                                                 <InlineEditableText slug="home" field="about_stat1_label" lang={language} value={cmsContent?.about_stat1_label || t('landing.about.activeUsers')} />
                                             </span>
                                         </div>
                                         <div className="border-l pl-4 flex flex-col">
-                                            <span className="text-heading-1 font-bold text-purple-600">500k+</span>
+                                            <span className="text-heading-1 font-medium text-[#2a8fbd]">500k+</span>
                                             <span className="text-body">
                                                 <InlineEditableText slug="home" field="about_stat2_label" lang={language} value={cmsContent?.about_stat2_label || t('landing.about.invoicesSent')} />
                                             </span>
@@ -531,7 +531,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                     />
                                 ) : (
                                     <>
-                                        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-fuchsia-600/20 z-10" />
+                                        <div className="absolute inset-0 bg-gradient-to-br from-[#f08a3c]/20 to-[#3d5a80]/20 z-10" />
                                         <div className="relative w-full aspect-[4/3] bg-slate-900 flex flex-col">
                                             {/* Mockup Header */}
                                             <div className="h-10 bg-slate-800 border-b border-slate-700 flex items-center px-4 gap-2">
@@ -543,12 +543,12 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                             <div className="flex-1 p-6 relative overflow-hidden flex flex-col gap-4">
                                                 <div className="flex justify-between items-center mb-2">
                                                     <div className="h-8 w-32 bg-slate-700/50 rounded-md" />
-                                                    <div className="h-8 w-24 bg-purple-600/80 rounded-md" />
+                                                    <div className="h-8 w-24 bg-[#f08a3c]/80 rounded-md" />
                                                 </div>
                                                 {/* Chart Mock */}
                                                 <div className="h-24 w-full bg-slate-800/80 rounded-lg flex items-end px-4 gap-2 pb-2">
                                                     {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
-                                                        <div key={i} className="flex-1 bg-gradient-to-t from-purple-600 to-fuchsia-400 rounded-t-sm opacity-80" style={{ height: `${h}%` }} />
+                                                        <div key={i} className="flex-1 bg-gradient-to-t from-[#f08a3c] to-[#ff9d52] rounded-t-sm opacity-80" style={{ height: `${h}%` }} />
                                                     ))}
                                                 </div>
                                                 {/* Lists Mock */}
@@ -585,7 +585,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             variants={containerVariants}
                             className="text-center mb-16"
                         >
-                            <motion.h2 variants={itemVariants} className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl">
+                            <motion.h2 variants={itemVariants} className="text-heading-1 font-medium tracking-tighter sm:text-display md:text-5xl">
                                 <InlineEditableText slug="home" field="pricing_tag" lang={language} value={cmsContent?.pricing_tag || t('landing.pricing.tag')} />
                             </motion.h2>
                             <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2/relaxed lg:text-heading-2/relaxed xl:text-heading-2/relaxed dark:text-gray-400 mt-4">
@@ -601,10 +601,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                         >
                             {plans.map((plan: Plan) => (
                                 <motion.div key={plan.id} variants={itemVariants}>
-                                    <Card className={`flex flex-col h-full relative ${plan.highlight ? 'border-purple-600 shadow-xl scale-105 z-10' : 'border-slate-200'}`}>
+                                    <Card className={`flex flex-col h-full relative ${plan.highlight ? 'border-[#f08a3c] shadow-xl scale-105 z-10' : 'border-slate-200'}`}>
                                         {plan.highlight && (
                                             <div className="absolute -top-4 left-0 right-0 flex justify-center">
-                                                <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-micro font-semibold uppercase tracking-wide shadow-md">
+                                                <span className="bg-[#f08a3c] text-white px-3 py-1 rounded-full text-micro font-medium uppercase tracking-wide shadow-md">
                                                     {t('landing.pricing.popular')}
                                                 </span>
                                             </div>
@@ -615,13 +615,13 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                         </CardHeader>
                                         <CardContent className="flex-1">
                                             <div className="mb-6">
-                                                <span className="text-display font-bold">{plan.price}</span>
+                                                <span className="text-display font-medium">{plan.price}</span>
                                                 {plan.price !== 'Custom' && <span className="text-muted-foreground">{t('billing.perMonth')}</span>}
                                             </div>
                                             <ul className="space-y-3 text-body">
                                                 {plan.features.map((feature: string, i: number) => (
                                                     <li key={i} className="flex items-center">
-                                                        <Check className="mr-2 h-4 w-4 text-purple-600" />
+                                                        <Check className="mr-2 h-4 w-4 text-[#2a8fbd]" />
                                                         {feature}
                                                     </li>
                                                 ))}
@@ -629,7 +629,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                         </CardContent>
                                         <CardFooter>
                                             <Button
-                                                className={`w-full ${plan.highlight ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+                                                className={`w-full ${plan.highlight ? 'bg-[#f08a3c] hover:bg-[#e07530]' : ''}`}
                                                 variant={plan.highlight ? 'default' : 'outline'}
                                                 onClick={() => onSignup(plan.id)}
                                             >
@@ -647,7 +647,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 <section className="py-12 md:py-24 lg:py-32 bg-slate-50 dark:bg-slate-900/50">
                     <div className="container px-4 md:px-6">
                         <div className="text-center mb-16">
-                            <h2 className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl">
+                            <h2 className="text-heading-1 font-medium tracking-tighter sm:text-display md:text-5xl">
                                 <InlineEditableText slug="home" field="testimonials_tag" lang={language} value={cmsContent?.testimonials_tag || t('landing.testimonials.tag')} />
                             </h2>
                             <p className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2 dark:text-gray-400 mt-4">
@@ -664,7 +664,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 return (
                                     <Card key={idx} className="bg-background border border-slate-200 dark:border-slate-800 shadow-xl relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
                                         <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                            <MessageSquare className="w-24 h-24 text-purple-600" />
+                                            <MessageSquare className="w-24 h-24 text-[#2a8fbd]" />
                                         </div>
                                         <CardContent className="pt-8 relative z-10">
                                             <div className="flex gap-1 mb-6 text-amber-400">
@@ -678,11 +678,11 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                                 "{text}"
                                             </p>
                                             <div className="flex items-center gap-4 border-t pt-4 border-slate-100 dark:border-slate-800">
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white font-bold text-heading-3 shadow-inner">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#3d5a80] flex items-center justify-center text-white font-medium text-heading-3 shadow-inner">
                                                     {name?.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold">{name}</h4>
+                                                    <h4 className="font-medium">{name}</h4>
                                                     <p className="text-body text-muted-foreground">{role}</p>
                                                 </div>
                                             </div>
@@ -698,7 +698,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                 <section className="py-12 md:py-24 lg:py-32">
                     <div className="container px-4 md:px-6 max-w-3xl mx-auto">
                         <div className="text-center mb-16">
-                            <h2 className="text-heading-1 font-bold tracking-tighter sm:text-display md:text-5xl">
+                            <h2 className="text-heading-1 font-medium tracking-tighter sm:text-display md:text-5xl">
                                 <InlineEditableText slug="home" field="faq_tag" lang={language} value={cmsContent?.faq_tag || t('landing.faq.tag')} />
                             </h2>
                             <p className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2 dark:text-gray-400 mt-4">
@@ -712,10 +712,10 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 const answer = isCms ? faqItem.a : t(`landing.faq.q${faqItem}.a`);
 
                                 return (
-                                    <details key={idx} className="group bg-slate-50 dark:bg-slate-900/50 rounded-xl open:bg-white dark:open:bg-slate-900 border border-transparent open:border-purple-100 dark:open:border-purple-900/50 transition-all duration-300 open:shadow-md">
-                                        <summary className="flex items-center justify-between font-semibold cursor-pointer p-6 list-none [&::-webkit-details-marker]:hidden">
+                                    <details key={idx} className="group bg-slate-50 dark:bg-slate-900/50 rounded-xl open:bg-white dark:open:bg-slate-900 border border-transparent open:border-[rgba(30,58,95,0.10)] dark:open:border-[rgba(30,58,95,0.30)] transition-all duration-300 open:shadow-md">
+                                        <summary className="flex items-center justify-between font-medium cursor-pointer p-6 list-none [&::-webkit-details-marker]:hidden">
                                             <span className="text-heading-3 pr-4">{question}</span>
-                                            <span className="transition-transform duration-300 group-open:rotate-180 flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 p-2 rounded-full text-purple-600">
+                                            <span className="transition-transform duration-300 group-open:rotate-180 flex-shrink-0 bg-[#f0f6ff] dark:bg-[#1e3a5f]/30 p-2 rounded-full text-[#2a8fbd]">
                                                 <Plus className="w-4 h-4 block group-open:hidden" />
                                                 <Minus className="w-4 h-4 hidden group-open:block" />
                                             </span>
@@ -732,7 +732,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
 
                 {/* Bottom CTA */}
                 <section className="py-24 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-fuchsia-600 z-0" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a5f] to-[#3d5a80] z-0" />
                     <div className="absolute inset-0 bg-black/10 mix-blend-overlay z-0" />
                     <div className="container px-4 md:px-6 relative z-10 text-center text-white flex flex-col items-center">
                         <motion.div
@@ -741,17 +741,17 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
                         >
-                            <h2 className="text-display font-extrabold tracking-tighter sm:text-5xl md:text-6xl mb-6">
+                            <h2 className="text-display font-medium tracking-tighter sm:text-5xl md:text-6xl mb-6">
                                 <InlineEditableText slug="home" field="cta_title" lang={language} value={cmsContent?.cta_title || t('landing.bottomCta.title')} />
                             </h2>
-                            <p className="text-purple-100 text-heading-3 md:text-heading-2 mb-10 max-w-[600px] mx-auto">
+                            <p className="text-white text-heading-3 md:text-heading-2 mb-10 max-w-[600px] mx-auto">
                                 <InlineEditableText slug="home" field="cta_subtitle" lang={language} value={cmsContent?.cta_subtitle || t('landing.bottomCta.subtitle')} multiline />
                             </p>
-                            <Button size="lg" className="bg-white text-purple-600 hover:bg-slate-50 h-14 px-10 text-heading-3 shadow-2xl rounded-full transition-transform hover:scale-105" onClick={() => onSignup()}>
+                            <Button size="lg" className="bg-white text-[#2a8fbd] hover:bg-slate-50 h-14 px-10 text-heading-3 shadow-2xl rounded-full transition-transform hover:scale-105" onClick={() => onSignup()}>
                                 {t('landing.hero.getStarted')}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>
-                            <p className="mt-6 text-purple-200 text-body font-medium">
+                            <p className="mt-6 text-[rgba(255,255,255,0.8)] text-body font-medium">
                                 <InlineEditableText slug="home" field="cta_context" lang={language} value={cmsContent?.cta_context || t('landing.bottomCta.ctaContext')} />
                             </p>
                         </motion.div>
@@ -773,7 +773,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                         }
 
                         const renderLink = (item: CmsNavItem) => {
-                            const linkClass = "block text-sm text-muted-foreground hover:text-primary transition-colors";
+                            const linkClass = "block text-heading-3 text-muted-foreground hover:text-primary transition-colors";
                             if (item.link_url) {
                                 return (
                                     <a key={item.id} href={item.link_url} target={item.link_target ?? '_self'} rel={item.link_target === '_blank' ? 'noopener noreferrer' : undefined} className={linkClass}>
@@ -793,7 +793,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 {Object.entries(groups).map(([group, items]) => (
                                     <div key={group}>
                                         {group !== '__other__' && (
-                                            <p className="text-xs font-semibold uppercase tracking-wider text-foreground mb-3">{group}</p>
+                                            <p className="text-body font-medium uppercase tracking-wider text-foreground mb-3">{group}</p>
                                         )}
                                         <div className="space-y-2">
                                             {items.map(renderLink)}
@@ -809,8 +809,8 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                     {/* Bottom bar */}
                     <div className="border-t pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-purple-600" />
-                            <span className="text-heading-3 font-bold text-foreground">BillingTool</span>
+                            <FileText className="h-5 w-5 text-[#2a8fbd]" />
+                            <span className="text-heading-3 font-medium text-foreground">BillingTool</span>
                         </div>
                         <p className="text-body text-muted-foreground">
                             © 2026 BillingTool Inc. {t('landing.footer.rights')}

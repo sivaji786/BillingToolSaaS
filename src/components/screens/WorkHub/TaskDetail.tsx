@@ -77,7 +77,7 @@ export function TaskDetail({ taskId, onBack, onUpdated, workers = [], canEdit = 
                 <Button variant="ghost" size="icon" className="shrink-0" onClick={onBack}>
                     <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <h2 className="text-heading-2 font-semibold flex-1 min-w-0 truncate">{task.title}</h2>
+                <h2 className="text-heading-2 font-medium flex-1 min-w-0 truncate">{task.title}</h2>
                 <Badge className={STATUS_COLORS[task.status]}>{task.status.replace('_', ' ')}</Badge>
                 {canEdit && (
                     <Button
@@ -101,7 +101,7 @@ export function TaskDetail({ taskId, onBack, onUpdated, workers = [], canEdit = 
                             <User className="w-4 h-4 shrink-0 text-muted-foreground" />
                             {assignedWorker ? (
                                 <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                    <div className="w-6 h-6 rounded-full bg-[#f0f6ff] text-[#1e3a5f] flex items-center justify-center text-[10px] font-medium shrink-0">
                                         {assignedWorker.name.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()}
                                     </div>
                                     <span className="font-medium">{assignedWorker.name}</span>
@@ -137,9 +137,45 @@ export function TaskDetail({ taskId, onBack, onUpdated, workers = [], canEdit = 
                 </Card>
 
                 {/* Description */}
-                {task.description && (
+                {task.description ? (
                     <div className="text-body text-foreground whitespace-pre-wrap">{task.description}</div>
+                ) : (
+                    <p className="text-caption text-muted-foreground italic">No description provided</p>
                 )}
+
+                {/* Completion record */}
+                <div>
+                    <div className="flex items-center gap-1.5 mb-2 text-body font-medium">
+                        <CheckSquare className="w-4 h-4" />
+                        Completion
+                    </div>
+                    {task.completion_record ? (
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-body text-muted-foreground">
+                            {task.completion_record.customer_signed_at && (
+                                <>
+                                    <dt className="font-medium text-foreground">Date</dt>
+                                    <dd>{new Date(task.completion_record.customer_signed_at).toLocaleDateString()}</dd>
+                                </>
+                            )}
+                            <dt className="font-medium text-foreground">Dual-signed</dt>
+                            <dd>{task.completion_record.is_dual_signed ? 'Yes' : 'No'}</dd>
+                            {task.completion_record.customer_name && (
+                                <>
+                                    <dt className="font-medium text-foreground">Customer</dt>
+                                    <dd>{task.completion_record.customer_name}</dd>
+                                </>
+                            )}
+                            {assignedWorker && (
+                                <>
+                                    <dt className="font-medium text-foreground">Worker</dt>
+                                    <dd>{assignedWorker.name}</dd>
+                                </>
+                            )}
+                        </dl>
+                    ) : (
+                        <p className="text-caption text-muted-foreground italic">No completion record yet</p>
+                    )}
+                </div>
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2">
@@ -192,7 +228,7 @@ export function TaskDetail({ taskId, onBack, onUpdated, workers = [], canEdit = 
                             <Image className="w-4 h-4" />
                             Photos ({task.photos.length})
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {task.photos.map((p) => (
                                 <img
                                     key={p.id}
@@ -218,8 +254,8 @@ export function TaskDetail({ taskId, onBack, onUpdated, workers = [], canEdit = 
                 {task.source_module && task.source_module !== 'manual' && (
                     <Card>
                         <CardContent className="p-3 space-y-1.5 text-caption text-muted-foreground">
-                            <div className="flex items-center gap-2 font-semibold text-body text-foreground mb-1">
-                                <Link2 className="w-4 h-4 text-purple-600 shrink-0" />
+                            <div className="flex items-center gap-2 font-medium text-body text-foreground mb-1">
+                                <Link2 className="w-4 h-4 text-[#2a8fbd] shrink-0" />
                                 Integration Origin
                             </div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1">

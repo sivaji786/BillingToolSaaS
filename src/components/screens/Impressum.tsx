@@ -49,10 +49,10 @@ export function Impressum({ onBack, onNavigate }: ImpressumProps) {
             {/* Header */}
             <header className="bg-white dark:bg-gray-900 border-b px-6 py-3 flex items-center justify-between shadow-sm sticky top-0 z-10">
                 <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
+                    <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-[#1e3a5f] to-[#3d5a80]">
                         <FileText className="h-4 w-4 text-white" />
                     </div>
-                    <span className="font-bold text-gray-800 dark:text-gray-100 text-body">BillingTool</span>
+                    <span className="font-medium text-gray-800 dark:text-gray-100 text-body">BillingTool</span>
                 </a>
                 <div className="flex items-center gap-3">
                     <LanguageSwitcher variant="login" />
@@ -67,7 +67,7 @@ export function Impressum({ onBack, onNavigate }: ImpressumProps) {
             <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-10">
                 {/* Page title */}
                 <div className="mb-8">
-                    <h1 className="text-heading-1 font-bold text-gray-900 dark:text-gray-50 mb-1">
+                    <h1 className="text-heading-1 font-medium text-gray-900 dark:text-gray-50 mb-1">
                         {t('impressum.title')}
                     </h1>
                     <p className="text-body text-gray-500">{t('impressum.subtitle')}</p>
@@ -76,7 +76,7 @@ export function Impressum({ onBack, onNavigate }: ImpressumProps) {
                 <div className="space-y-6">
                     {isLoading ? (
                         <div className="flex justify-center p-12">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f08a3c]"></div>
                         </div>
                     ) : cmsContent ? (
                         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 shadow-sm prose dark:prose-invert max-w-none">
@@ -86,26 +86,26 @@ export function Impressum({ onBack, onNavigate }: ImpressumProps) {
                         <>
                             {/* Company block */}
                             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-8 shadow-sm">
-                                <p className="text-micro font-semibold uppercase tracking-wider text-purple-600 mb-3">
+                                <p className="text-micro font-medium uppercase tracking-wider text-[#2a8fbd] mb-3">
                                     {t('impressum.sections.legalNotice.title')}
                                 </p>
-                                <p className="font-semibold text-gray-900 dark:text-gray-50 text-heading-3">[mn]medianet</p>
+                                <p className="font-medium text-gray-900 dark:text-gray-50 text-heading-3">[mn]medianet</p>
                                 <p className="text-gray-700 dark:text-gray-300 mt-0.5">Bernhard Hnida</p>
                                 <p className="text-gray-600 dark:text-gray-400 text-body mt-1">Am Taubhaus 29</p>
                                 <p className="text-gray-600 dark:text-gray-400 text-body">63303 Dreieich</p>
 
                                 <div className="mt-4 space-y-1.5">
                                     <div className="flex items-center gap-2 text-body text-gray-600 dark:text-gray-400">
-                                        <Phone className="h-3.5 w-3.5 text-purple-500" />
+                                        <Phone className="h-3.5 w-3.5 text-[#2a8fbd]" />
                                         <span>{t('impressum.phone')}: +49 (0) 6103 / 69 77 84</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-body text-gray-600 dark:text-gray-400">
-                                        <Printer className="h-3.5 w-3.5 text-purple-500" />
+                                        <Printer className="h-3.5 w-3.5 text-[#2a8fbd]" />
                                         <span>{t('impressum.fax')}: +49 (0) 6103 / 69 77 85</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-body text-gray-600 dark:text-gray-400">
-                                        <Mail className="h-3.5 w-3.5 text-purple-500" />
-                                        <a href="mailto:info@medianet-home.de" className="text-purple-600 hover:underline">
+                                        <Mail className="h-3.5 w-3.5 text-[#2a8fbd]" />
+                                        <a href="mailto:info@medianet-home.de" className="text-[#2a8fbd] hover:underline">
                                             info@medianet-home.de
                                         </a>
                                     </div>
@@ -119,7 +119,7 @@ export function Impressum({ onBack, onNavigate }: ImpressumProps) {
                                         key={idx}
                                         className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm"
                                     >
-                                        <h2 className="text-heading-2 font-semibold text-gray-900 dark:text-gray-50 mb-3 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                        <h2 className="text-heading-2 font-medium text-gray-900 dark:text-gray-50 mb-3 border-b border-gray-100 dark:border-gray-800 pb-2">
                                             {section.title}
                                         </h2>
                                         <p className="text-body text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
@@ -141,10 +141,10 @@ export function Impressum({ onBack, onNavigate }: ImpressumProps) {
             {/* Legal footer */}
             <footer className="border-t bg-white dark:bg-gray-900 py-5 px-4">
                 <div className="max-w-3xl mx-auto flex flex-wrap justify-center gap-4 text-micro text-gray-400">
-                    <button onClick={() => onNavigate('impressum')} className="hover:text-purple-600 transition-colors font-semibold text-purple-600">{t('legal.footer.impressum')}</button>
-                    <button onClick={() => onNavigate('privacyPolicy')} className="hover:text-purple-600 transition-colors">{t('legal.footer.privacy')}</button>
-                    <button onClick={() => onNavigate('termsAndConditions')} className="hover:text-purple-600 transition-colors">{t('legal.footer.terms')}</button>
-                    <button onClick={() => onNavigate('cookiePolicy')} className="hover:text-purple-600 transition-colors">{t('legal.footer.cookies')}</button>
+                    <button onClick={() => onNavigate('impressum')} className="hover:text-[#f08a3c] transition-colors font-medium text-[#2a8fbd]">{t('legal.footer.impressum')}</button>
+                    <button onClick={() => onNavigate('privacyPolicy')} className="hover:text-[#f08a3c] transition-colors">{t('legal.footer.privacy')}</button>
+                    <button onClick={() => onNavigate('termsAndConditions')} className="hover:text-[#f08a3c] transition-colors">{t('legal.footer.terms')}</button>
+                    <button onClick={() => onNavigate('cookiePolicy')} className="hover:text-[#f08a3c] transition-colors">{t('legal.footer.cookies')}</button>
                 </div>
                 <p className="text-center text-micro text-gray-300 mt-3">© 2026 BillingTool Inc. · [mn]medianet</p>
             </footer>

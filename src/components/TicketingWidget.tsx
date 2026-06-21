@@ -426,7 +426,7 @@ export function TicketingWidget({
                     <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30 rounded-t-lg border-l-4 shrink-0"
                         style={{ borderLeftColor: PRIORITY_COLORS[formData.priority] }}>
                         <div className="min-w-0 flex-1">
-                            <h3 className="font-semibold text-heading-3">Support Ticket</h3>
+                            <h3 className="font-medium text-heading-3">Support Ticket</h3>
                             <p className="text-micro text-muted-foreground truncate max-w-[280px]">
                                 {window.location.pathname}
                             </p>

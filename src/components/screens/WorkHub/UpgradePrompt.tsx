@@ -66,7 +66,7 @@ export function UpgradePrompt({ limitType, onClose, onUpgrade }: Props) {
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-purple-600" />
+                        <TrendingUp className="w-5 h-5 text-[#2a8fbd]" />
                         Upgrade Your WorkHub Plan
                     </DialogTitle>
                 </DialogHeader>
@@ -82,15 +82,15 @@ export function UpgradePrompt({ limitType, onClose, onUpgrade }: Props) {
                     {TIERS.map((tier) => (
                         <div
                             key={tier.name}
-                            className={`rounded-lg border p-4 space-y-3 ${tier.name === 'Pro' ? 'border-purple-400 ring-1 ring-purple-400' : ''}`}
+                            className={`rounded-lg border p-4 space-y-3 ${tier.name === 'Pro' ? 'border-[rgba(30,58,95,0.25)] ring-1 ring-[rgba(30,58,95,0.25)]' : ''}`}
                         >
                             <div className="flex items-center justify-between">
-                                <span className="font-semibold text-body">{tier.name}</span>
+                                <span className="font-medium text-body">{tier.name}</span>
                                 {tier.name === 'Pro' && (
-                                    <Badge className="bg-purple-600 text-white text-caption">Popular</Badge>
+                                    <Badge className="bg-[#f08a3c] text-white text-caption">Popular</Badge>
                                 )}
                             </div>
-                            <p className="text-heading-2 font-bold text-purple-700">{tier.price}</p>
+                            <p className="text-heading-2 font-medium text-[#1e3a5f]">{tier.price}</p>
                             <ul className="space-y-1.5 text-caption text-muted-foreground">
                                 <li className="flex items-center gap-1.5">
                                     <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
@@ -123,7 +123,7 @@ export function UpgradePrompt({ limitType, onClose, onUpgrade }: Props) {
                     <Button type="button" variant="ghost" onClick={onClose}>Not now</Button>
                     <Button
                         type="button"
-                        className="bg-purple-600 hover:bg-purple-700 gap-1.5"
+                        className="bg-[#f08a3c] hover:bg-[#e07530] gap-1.5"
                         onClick={onUpgrade}
                     >
                         <TrendingUp className="w-4 h-4" />

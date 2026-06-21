@@ -210,7 +210,7 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
         <Button
           onClick={onNewInvoice}
           size="lg"
-          className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white shadow-lg shadow-purple-500/30"
+          className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] hover:from-[#e07530] hover:via-[#f08a3c] hover:to-[#e07530] text-white shadow-lg shadow-[rgba(30,58,95,0.15)]"
         >
           <Plus className="h-5 w-5 mr-2" />
           {t('dashboard.newInvoice')}
@@ -220,16 +220,16 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card
-          className="p-6 border-2 bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200 shadow-md cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
+          className="p-6 border-2 bg-gradient-to-br from-[#f0f6ff] to-[#f0f6ff] border-[rgba(30,58,95,0.15)] shadow-md cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all"
           onClick={() => window.location.hash = 'invoices'}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-body text-violet-700">{t('dashboard.totalInvoices')}</p>
-              <p className="text-heading-1 mt-2 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">{stats.total}</p>
+              <p className="text-body text-[#1e3a5f]">{t('dashboard.totalInvoices')}</p>
+              <p className="text-heading-1 mt-2 bg-gradient-to-r from-[#1e3a5f] to-[#f08a3c] bg-clip-text text-transparent">{stats.total}</p>
             </div>
-            <div className="p-3 bg-violet-100 rounded-xl">
-              <FileText className="h-8 w-8 text-violet-600" />
+            <div className="p-3 bg-[#f0f6ff] rounded-xl">
+              <FileText className="h-8 w-8 text-[#2a8fbd]" />
             </div>
           </div>
         </Card>
@@ -365,13 +365,13 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
           <Button
             variant="outline"
             onClick={onNewInvoice}
-            className="h-auto py-6 border-2 border-violet-200 hover:border-violet-300 hover:bg-violet-50 transition-all"
+            className="h-auto py-6 border-2 border-[rgba(30,58,95,0.15)] hover:border-[rgba(30,58,95,0.20)] hover:bg-[#f0f6ff] transition-all"
           >
             <div className="text-left w-full">
-              <div className="p-2 bg-violet-100 rounded-lg inline-block mb-2">
-                <FileText className="h-5 w-5 text-violet-600" />
+              <div className="p-2 bg-[#f0f6ff] rounded-lg inline-block mb-2">
+                <FileText className="h-5 w-5 text-[#2a8fbd]" />
               </div>
-              <p className="text-violet-900">{t('dashboard.createInvoice')}</p>
+              <p className="text-[#1e3a5f]">{t('dashboard.createInvoice')}</p>
               <p className="text-body text-muted-foreground mt-1">
                 {t('dashboard.createInvoiceDesc')}
               </p>
@@ -381,13 +381,13 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
           <Button
             variant="outline"
             onClick={() => setShowImportDialog(true)}
-            className="h-auto py-6 border-2 border-fuchsia-200 hover:border-fuchsia-300 hover:bg-fuchsia-50 transition-all"
+            className="h-auto py-6 border-2 border-[rgba(30,58,95,0.15)] hover:border-[rgba(30,58,95,0.20)] hover:bg-[#f0f6ff] transition-all"
           >
             <div className="text-left w-full">
-              <div className="p-2 bg-fuchsia-100 rounded-lg inline-block mb-2">
-                <Upload className="h-5 w-5 text-fuchsia-600" />
+              <div className="p-2 bg-[#f0f6ff] rounded-lg inline-block mb-2">
+                <Upload className="h-5 w-5 text-[#f08a3c]" />
               </div>
-              <p className="text-fuchsia-900">{t('dashboard.importData')}</p>
+              <p className="text-[#1e3a5f]">{t('dashboard.importData')}</p>
               <p className="text-body text-muted-foreground mt-1">
                 {t('dashboard.importDataDesc')}
               </p>
@@ -419,8 +419,8 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
         <div className="space-y-3">
           {recentInvoices.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <div className="p-4 bg-violet-100 rounded-2xl inline-block mb-4">
-                <FileText className="h-12 w-12 text-violet-600" />
+              <div className="p-4 bg-[#f0f6ff] rounded-2xl inline-block mb-4">
+                <FileText className="h-12 w-12 text-[#2a8fbd]" />
               </div>
               <p>{t('dashboard.noInvoices')}</p>
               <p className="text-body mt-2">{t('dashboard.noInvoicesDesc')}</p>
@@ -429,12 +429,12 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
             recentInvoices.map((invoice) => (
               <div
                 key={invoice.id}
-                className="flex items-center justify-between p-4 border-2 rounded-xl hover:border-purple-300 hover:bg-purple-50/50 cursor-pointer transition-all shadow-sm hover:shadow-md"
+                className="flex items-center justify-between p-4 border-2 rounded-xl hover:border-[rgba(30,58,95,0.20)] hover:bg-[#f0f6ff]/50 cursor-pointer transition-all shadow-sm hover:shadow-md"
                 onClick={() => onOpenInvoice(invoice)}
               >
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="p-2 bg-violet-100 rounded-lg">
-                    <FileText className="h-5 w-5 text-violet-600" />
+                  <div className="p-2 bg-[#f0f6ff] rounded-lg">
+                    <FileText className="h-5 w-5 text-[#2a8fbd]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
@@ -471,7 +471,7 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5 text-violet-600" />
+              <Upload className="h-5 w-5 text-[#2a8fbd]" />
               {t('dashboard.importData')}
             </DialogTitle>
             <DialogDescription>
@@ -492,9 +492,9 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-lg file:border-2
                     file:text-body file:font-medium
-                    file:bg-violet-50 file:text-violet-700
-                    file:border-violet-200
-                    hover:file:bg-violet-100
+                    file:bg-[#f0f6ff] file:text-[#1e3a5f]
+                    file:border-[rgba(30,58,95,0.15)]
+                    hover:file:bg-[#f0f6ff]
                     file:cursor-pointer cursor-pointer"
                 />
               </div>
@@ -505,9 +505,9 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
               )}
             </div>
 
-            <div className="p-4 bg-violet-50 border-2 border-violet-200 rounded-lg">
-              <p className="text-body text-violet-900 mb-2">{t('import.supportedFormats')}:</p>
-              <ul className="text-body text-violet-700 space-y-1 list-disc list-inside">
+            <div className="p-4 bg-[#f0f6ff] border-2 border-[rgba(30,58,95,0.15)] rounded-lg">
+              <p className="text-body text-[#1e3a5f] mb-2">{t('import.supportedFormats')}:</p>
+              <ul className="text-body text-[#1e3a5f] space-y-1 list-disc list-inside">
                 <li>JSON (.json)</li>
                 <li>CSV (.csv)</li>
                 <li>UBL XML (.xml)</li>
@@ -528,7 +528,7 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
             <Button
               onClick={handleImport}
               disabled={!selectedFile || isImporting}
-              className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700"
+              className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] hover:from-[#e07530] hover:via-[#f08a3c] hover:to-[#e07530]"
             >
               {isImporting ? (
                 <>{t('import.importing')}...</>

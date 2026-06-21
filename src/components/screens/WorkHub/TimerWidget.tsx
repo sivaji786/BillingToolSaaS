@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Play, Pause, Square, Coffee, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '../../ui/button';
@@ -8,8 +8,10 @@ import { useWorkhubTimerStore, formatHMS } from '../../../stores/workhubTimerSto
 import { timerService } from '../../../services/workhubApi';
 import { toast } from 'sonner';
 
-// §16 ArbZG: warn at 6h without break
+// §16 ArbZG: auto-pause at 6h (360 min), warn starting 30 min before
+const ARBZG_LIMIT_SECONDS = 6 * 3600; // 6 hours
 const WARN_MINUTES = 360;
+const MIN_BREAK_SECONDS = 30 * 60; // 30 minutes
 
 interface Props {
     onViewTask?: (id: number) => void;
@@ -20,6 +22,9 @@ export function TimerWidget({ onViewTask }: Props) {
     const qc = useQueryClient();
     const [elapsed, setElapsed] = useState(0);
     const [breakElapsed, setBreakElapsed] = useState(0);
+
+    // --- Change 3: debounce flag for all timer API calls ---
+    const isRequestInFlight = useRef(false);
 
     // Tick every second
     useEffect(() => {
@@ -36,15 +41,67 @@ export function TimerWidget({ onViewTask }: Props) {
         setBreakElapsed(timer.getBreakSeconds());
     }, [timer.state]);
 
-    // §16 ArbZG toast at exactly 6h
+    // --- Change 2: on mount, sync timer with server if needsServerSync is set ---
     useEffect(() => {
-        if (timer.state === 'running' && elapsed === WARN_MINUTES * 60) {
-            toast.warning('§16 ArbZG: You have worked 6 hours without a break. A 30-minute break is required.');
+        const { needsServerSync, activeTaskId, markSynced, state } = useWorkhubTimerStore.getState();
+        if (needsServerSync && activeTaskId && state !== 'idle') {
+            timerService.start(activeTaskId)
+                .then(() => {
+                    markSynced();
+                })
+                .catch(() => {
+                    toast.warning('Could not sync timer with server. Local timer continues.');
+                });
+        }
+    }, []); // intentionally runs only on mount
+
+    // --- Change 1: auto-pause at 6h (ArbZG) ---
+    const autoPausedRef = useRef(false);
+    useEffect(() => {
+        if (timer.state === 'running' && elapsed >= ARBZG_LIMIT_SECONDS && !autoPausedRef.current) {
+            autoPausedRef.current = true;
+            // Fire-and-forget pause API call; update local state regardless
+            isRequestInFlight.current = true;
+            timerService.pause(timer.activeTaskId!)
+                .catch(() => {
+                    // Server call failed but we still pause locally to enforce the law
+                })
+                .finally(() => {
+                    isRequestInFlight.current = false;
+                });
+            timer.pause();
+            qc.invalidateQueries({ queryKey: ['wh-tasks'] });
+            toast.error('Break required by law (§16 ArbZG). Timer paused automatically.');
+        }
+        // Reset auto-pause gate when a new work session starts (elapsed resets below limit)
+        if (elapsed < ARBZG_LIMIT_SECONDS) {
+            autoPausedRef.current = false;
+        }
+    }, [elapsed, timer.state]);
+
+    // Near-limit toast warning (30 min before) — only while running, not after auto-pause
+    const nearWarnedRef = useRef(false);
+    useEffect(() => {
+        const workedMinutes = Math.floor(elapsed / 60);
+        if (
+            timer.state === 'running' &&
+            workedMinutes >= WARN_MINUTES - 30 &&
+            workedMinutes < WARN_MINUTES &&
+            !nearWarnedRef.current
+        ) {
+            nearWarnedRef.current = true;
+            toast.warning(`§16 ArbZG: Break required in ${WARN_MINUTES - workedMinutes} min.`);
+        }
+        if (workedMinutes < WARN_MINUTES - 30) {
+            nearWarnedRef.current = false;
         }
     }, [elapsed, timer.state]);
 
     const pauseMut = useMutation({
-        mutationFn: () => timerService.pause(timer.activeTaskId!),
+        mutationFn: () => {
+            isRequestInFlight.current = true;
+            return timerService.pause(timer.activeTaskId!);
+        },
         onSuccess: (data) => {
             timer.pause();
             qc.invalidateQueries({ queryKey: ['wh-tasks'] });
@@ -53,19 +110,41 @@ export function TimerWidget({ onViewTask }: Props) {
             else toast.success('Break started');
         },
         onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to pause'),
+        onSettled: () => { isRequestInFlight.current = false; },
     });
 
     const resumeMut = useMutation({
-        mutationFn: () => timerService.start(timer.activeTaskId!),
+        mutationFn: () => {
+            // --- Change 1: enforce minimum 30-minute break before allowing resume ---
+            const currentBreakSeconds = useWorkhubTimerStore.getState().getBreakSeconds();
+            if (currentBreakSeconds < MIN_BREAK_SECONDS) {
+                const remaining = Math.ceil((MIN_BREAK_SECONDS - currentBreakSeconds) / 60);
+                throw new Error(`MIN_BREAK:${remaining}`);
+            }
+            isRequestInFlight.current = true;
+            return timerService.start(timer.activeTaskId!);
+        },
         onSuccess: () => {
             timer.resume();
             toast.success('Resumed');
         },
-        onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to resume'),
+        onError: (e: any) => {
+            const msg: string = e?.message ?? '';
+            if (msg.startsWith('MIN_BREAK:')) {
+                const remaining = msg.split(':')[1];
+                toast.error(`Minimum 30-minute break required (§16 ArbZG). ${remaining} minutes remaining.`);
+            } else {
+                toast.error(e.response?.data?.message ?? 'Failed to resume');
+            }
+        },
+        onSettled: () => { isRequestInFlight.current = false; },
     });
 
     const stopMut = useMutation({
-        mutationFn: () => timerService.stop(timer.activeTaskId!),
+        mutationFn: () => {
+            isRequestInFlight.current = true;
+            return timerService.stop(timer.activeTaskId!);
+        },
         onSuccess: (data) => {
             const taskId = timer.activeTaskId;
             timer.stop();
@@ -81,7 +160,11 @@ export function TimerWidget({ onViewTask }: Props) {
             }
         },
         onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to stop'),
+        onSettled: () => { isRequestInFlight.current = false; },
     });
+
+    // Derived: are any mutations pending (used for button disabled state alongside isRequestInFlight)
+    const anyPending = pauseMut.isPending || resumeMut.isPending || stopMut.isPending;
 
     if (timer.state === 'idle') {
         return (
@@ -97,7 +180,12 @@ export function TimerWidget({ onViewTask }: Props) {
 
     const workedMinutes = Math.floor(elapsed / 60);
     const nearBreakLimit = timer.state === 'running' && workedMinutes >= WARN_MINUTES - 30 && workedMinutes < WARN_MINUTES;
-    const overBreakLimit = timer.state === 'running' && workedMinutes >= WARN_MINUTES;
+    const overBreakLimit = timer.state === 'running' && elapsed >= ARBZG_LIMIT_SECONDS;
+
+    // How many minutes of the current break have elapsed (used in mandatory break notice)
+    const breakMinutesElapsed = Math.floor(breakElapsed / 60);
+    const breakMinutesRemaining = Math.max(0, Math.ceil((MIN_BREAK_SECONDS - breakElapsed) / 60));
+    const breakSufficient = breakElapsed >= MIN_BREAK_SECONDS;
 
     return (
         <Card className={overBreakLimit ? 'border-red-400' : nearBreakLimit ? 'border-amber-400' : ''}>
@@ -105,7 +193,7 @@ export function TimerWidget({ onViewTask }: Props) {
                 {/* Task name */}
                 <div className="flex items-center justify-between gap-2">
                     <button
-                        className="text-body font-semibold text-left truncate hover:underline"
+                        className="text-body font-medium text-left truncate hover:underline"
                         onClick={() => timer.activeTaskId && onViewTask?.(timer.activeTaskId)}
                     >
                         {timer.activeTaskTitle}
@@ -121,7 +209,7 @@ export function TimerWidget({ onViewTask }: Props) {
 
                 {/* Elapsed */}
                 <div className="text-center">
-                    <span className="text-4xl font-mono font-bold tracking-wider">
+                    <span className="text-4xl font-mono font-medium tracking-wider">
                         {formatHMS(timer.state === 'break' ? breakElapsed : elapsed)}
                     </span>
                     {timer.state === 'break' && (
@@ -131,13 +219,26 @@ export function TimerWidget({ onViewTask }: Props) {
                     )}
                 </div>
 
-                {/* ArbZG warning */}
-                {(nearBreakLimit || overBreakLimit) && (
+                {/* ArbZG warning banner (while still running and approaching/at limit) */}
+                {(nearBreakLimit || overBreakLimit) && timer.state === 'running' && (
                     <div className={`flex items-center gap-2 rounded-md px-3 py-2 text-caption ${overBreakLimit ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                         {overBreakLimit
                             ? '§16 ArbZG: 6 hours reached — break required now.'
                             : `§16 ArbZG: Break required in ${WARN_MINUTES - workedMinutes} min.`}
+                    </div>
+                )}
+
+                {/* --- Change 1: Mandatory break notice shown when timer is in break state --- */}
+                {timer.state === 'break' && (
+                    <div className={`rounded-md px-3 py-2 text-caption space-y-1 ${breakSufficient ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        <div className="flex items-center gap-2">
+                            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                            {breakSufficient
+                                ? 'Minimum break completed. You may resume.'
+                                : `Mandatory break in progress — ${breakMinutesRemaining} min remaining (§16 ArbZG).`}
+                        </div>
+                        <p className="text-xs opacity-75">Break so far: {breakMinutesElapsed} min · Required: 30 min</p>
                     </div>
                 )}
 
@@ -148,16 +249,16 @@ export function TimerWidget({ onViewTask }: Props) {
                             <Button
                                 variant="outline"
                                 className="flex-1 gap-1"
-                                onClick={() => pauseMut.mutate()}
-                                disabled={pauseMut.isPending}
+                                onClick={() => !anyPending && !isRequestInFlight.current && pauseMut.mutate()}
+                                disabled={anyPending || pauseMut.isPending}
                             >
                                 <Coffee className="w-4 h-4" /> Break
                             </Button>
                             <Button
                                 variant="destructive"
                                 className="flex-1 gap-1"
-                                onClick={() => stopMut.mutate()}
-                                disabled={stopMut.isPending}
+                                onClick={() => !anyPending && !isRequestInFlight.current && stopMut.mutate()}
+                                disabled={anyPending || stopMut.isPending}
                             >
                                 <Square className="w-4 h-4" /> Stop
                             </Button>
@@ -166,16 +267,16 @@ export function TimerWidget({ onViewTask }: Props) {
                         <>
                             <Button
                                 className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
-                                onClick={() => resumeMut.mutate()}
-                                disabled={resumeMut.isPending}
+                                onClick={() => !anyPending && !isRequestInFlight.current && resumeMut.mutate()}
+                                disabled={anyPending || resumeMut.isPending}
                             >
-                                <Play className="w-4 h-4" /> Resume
+                                <Play className="w-4 h-4" /> End Break
                             </Button>
                             <Button
                                 variant="destructive"
                                 className="flex-1 gap-1"
-                                onClick={() => stopMut.mutate()}
-                                disabled={stopMut.isPending}
+                                onClick={() => !anyPending && !isRequestInFlight.current && stopMut.mutate()}
+                                disabled={anyPending || stopMut.isPending}
                             >
                                 <Square className="w-4 h-4" /> Stop
                             </Button>

@@ -26,7 +26,7 @@ function MeterBar({ used, limit, unit }: { used: number; limit: number; unit?: s
                     <div
                         className={cn(
                             'h-full rounded-full transition-all',
-                            pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-purple-500'
+                            pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-[#f08a3c]'
                         )}
                         style={{ width: `${pct}%` }}
                     />
@@ -71,18 +71,24 @@ export function QuotaMeters() {
 
     return (
         <div className="space-y-3 p-3 rounded-lg border bg-card">
-            <p className="text-caption font-semibold text-muted-foreground uppercase tracking-wide">
+            <p className="text-caption font-medium text-muted-foreground uppercase tracking-wide">
                 Monthly Quotas
             </p>
-            {meters.map((m) => (
-                <div key={m.label} className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-caption font-medium">
-                        <m.icon className="w-3.5 h-3.5 text-purple-500" />
-                        {m.label}
+            {meters.map((m) => {
+                const pct = m.limit === 0 ? null : Math.round((m.used / m.limit) * 100);
+                return (
+                    <div key={m.label} className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-caption font-medium">
+                            <m.icon className="w-3.5 h-3.5 text-[#2a8fbd]" />
+                            {m.label}
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#f0f6ff] text-[#1e3a5f]">
+                                {pct === null ? '—' : `${pct}%`}
+                            </span>
+                        </div>
+                        <MeterBar used={m.used} limit={m.limit} unit={m.unit} />
                     </div>
-                    <MeterBar used={m.used} limit={m.limit} unit={m.unit} />
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 }

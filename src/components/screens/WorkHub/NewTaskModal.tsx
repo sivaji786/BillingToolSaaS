@@ -11,8 +11,16 @@ import { toast } from 'sonner';
 import { cn } from '../../../lib/utils';
 
 type Priority = 'low' | 'medium' | 'high' | 'urgent';
+type TaskType = 'fault_resolution' | 'commissioning' | 'configuration' | 'investigation' | 'maintenance';
 
 const PRIORITY_OPTS: Priority[] = ['low', 'medium', 'high', 'urgent'];
+const TASK_TYPE_OPTS: { value: TaskType; label: string }[] = [
+    { value: 'fault_resolution', label: 'Fault Resolution' },
+    { value: 'commissioning',    label: 'Commissioning' },
+    { value: 'configuration',    label: 'Configuration' },
+    { value: 'investigation',    label: 'Investigation' },
+    { value: 'maintenance',      label: 'Maintenance' },
+];
 
 function utilColour(pct: number): string {
     if (pct <= 70) return 'border-green-400 bg-green-50';
@@ -29,14 +37,16 @@ function utilBadge(pct: number): string {
 interface Props {
     onClose: () => void;
     onCreated: () => void;
+    defaultProjectId?: number;
 }
 
-export function NewTaskModal({ onClose, onCreated }: Props) {
+export function NewTaskModal({ onClose, onCreated, defaultProjectId }: Props) {
     const [step, setStep] = useState<1 | 2>(1);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState<Priority>('medium');
-    const [projectId, setProjectId] = useState('');
+    const [taskType, setTaskType] = useState<TaskType>('fault_resolution');
+    const [projectId, setProjectId] = useState(defaultProjectId ? String(defaultProjectId) : '');
     const [estHours, setEstHours] = useState('');
     const [locationTag, setLocationTag] = useState('');
     const [dueDate, setDueDate] = useState('');
@@ -58,6 +68,7 @@ export function NewTaskModal({ onClose, onCreated }: Props) {
             title,
             description: description || undefined,
             priority,
+            task_type: taskType,
             project_id: projectId ? Number(projectId) : undefined,
             est_hours: estHours ? Number(estHours) : undefined,
             location_tag: locationTag || undefined,
@@ -68,7 +79,18 @@ export function NewTaskModal({ onClose, onCreated }: Props) {
             toast.success('Task created');
             onCreated();
         },
-        onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to create task'),
+        onError: (e: any) => {
+            const data = e.response?.data;
+            const validationBag = data?.messages ?? data?.errors;
+            if (validationBag && typeof validationBag === 'object') {
+                const detail = Object.entries(validationBag)
+                    .map(([field, msg]) => `${field}: ${msg}`)
+                    .join(' | ');
+                toast.error('Validation failed', { description: detail });
+            } else {
+                toast.error(data?.message ?? 'Failed to create task');
+            }
+        },
     });
 
     const canNext = title.trim().length >= 3;
@@ -91,7 +113,7 @@ export function NewTaskModal({ onClose, onCreated }: Props) {
                     {[1, 2].map((s) => (
                         <div
                             key={s}
-                            className={cn('h-1 flex-1 rounded-full transition-colors', step >= s ? 'bg-purple-600' : 'bg-muted')}
+                            className={cn('h-1 flex-1 rounded-full transition-colors', step >= s ? 'bg-[#f08a3c]' : 'bg-muted')}
                         />
                     ))}
                 </div>
@@ -133,26 +155,45 @@ export function NewTaskModal({ onClose, onCreated }: Props) {
                                 </Select>
                             </div>
                             <div>
-                                <Label>Project</Label>
-                                <Select
-                                    value={projectId || '__none__'}
-                                    onValueChange={(v) => setProjectId(v === '__none__' ? '' : v)}
-                                >
-                                    <SelectTrigger><SelectValue placeholder="(none)" /></SelectTrigger>
+                                <Label>Task type</Label>
+                                <Select value={taskType} onValueChange={(v) => setTaskType(v as TaskType)}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="__none__">None</SelectItem>
-                                        {projects.map((p: any) => (
-                                            <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                                        {TASK_TYPE_OPTS.map((t) => (
+                                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
 
+                        <div>
+                            <Label>Project</Label>
+                            <Select
+                                value={projectId || '__none__'}
+                                onValueChange={(v) => setProjectId(v === '__none__' ? '' : v)}
+                                disabled={projects.length === 0}
+                            >
+                                <SelectTrigger><SelectValue placeholder="(none)" /></SelectTrigger>
+                                <SelectContent>
+                                    {projects.length === 0 ? (
+                                        <SelectItem value="__none__" disabled>No projects — create one first</SelectItem>
+                                    ) : (
+                                        <>
+                                            <SelectItem value="__none__">None</SelectItem>
+                                            {projects.map((p: any) => (
+                                                <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                                            ))}
+                                        </>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <Label htmlFor="est">Est. hours</Label>
-                                <Input id="est" type="number" min="0" step="0.5" value={estHours}
+                                <Input id="est" type="number" min="0.5" max="999" step="0.5" value={estHours}
                                     onChange={(e) => setEstHours(e.target.value)} placeholder="e.g. 4" />
                             </div>
                             <div>
@@ -170,7 +211,7 @@ export function NewTaskModal({ onClose, onCreated }: Props) {
                         <div className="flex justify-end gap-2 pt-2">
                             <Button variant="outline" onClick={onClose}>Cancel</Button>
                             <Button
-                                className="bg-purple-600 hover:bg-purple-700 gap-1"
+                                className="bg-[#f08a3c] hover:bg-[#e07530] gap-1"
                                 disabled={!canNext}
                                 onClick={() => setStep(2)}
                             >
@@ -199,7 +240,7 @@ export function NewTaskModal({ onClose, onCreated }: Props) {
                                     onClick={() => setSelectedWorkerId(null)}
                                     className={cn(
                                         'p-3 rounded-lg border-2 text-left transition-colors',
-                                        selectedWorkerId === null ? 'border-purple-500 bg-purple-50' : 'border-border hover:border-purple-300'
+                                        selectedWorkerId === null ? 'border-[#f08a3c] bg-[#f0f6ff]' : 'border-border hover:border-[rgba(30,58,95,0.20)]'
                                     )}
                                 >
                                     <div className="text-body font-medium">Unassigned</div>
@@ -214,8 +255,8 @@ export function NewTaskModal({ onClose, onCreated }: Props) {
                                             onClick={() => setSelectedWorkerId(w.id)}
                                             className={cn(
                                                 'p-3 rounded-lg border-2 text-left transition-colors',
-                                                selectedWorkerId === w.id ? 'border-purple-500' : utilColour(pct),
-                                                selectedWorkerId === w.id ? '' : 'hover:border-purple-300'
+                                                selectedWorkerId === w.id ? 'border-[#f08a3c]' : utilColour(pct),
+                                                selectedWorkerId === w.id ? '' : 'hover:border-[rgba(30,58,95,0.20)]'
                                             )}
                                         >
                                             <div className="flex items-center justify-between mb-1">
@@ -245,7 +286,7 @@ export function NewTaskModal({ onClose, onCreated }: Props) {
                                 <ChevronLeft className="w-4 h-4" /> Back
                             </Button>
                             <Button
-                                className="bg-purple-600 hover:bg-purple-700 gap-1"
+                                className="bg-[#f08a3c] hover:bg-[#e07530] gap-1"
                                 onClick={() => createMut.mutate()}
                                 disabled={createMut.isPending}
                             >

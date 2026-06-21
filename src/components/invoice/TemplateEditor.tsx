@@ -178,7 +178,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-purple-900 dark:text-purple-100 mb-1">
+        <h1 className="text-[#1e3a5f] dark:text-white mb-1">
           {template ? t('templates.editTemplate') : t('templates.newTemplate')}
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
@@ -189,7 +189,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
       <Card className="p-6 space-y-6">
         {/* Basic Information */}
         <div className="space-y-4">
-          <h3 className="text-purple-900 dark:text-purple-100">
+          <h3 className="text-[#1e3a5f] dark:text-white">
             {t('templates.basicInfo') || 'Basic Information'}
           </h3>
 
@@ -269,7 +269,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
 
         {/* Branding */}
         <div className="space-y-4">
-          <h3 className="text-purple-900 dark:text-purple-100">
+          <h3 className="text-[#1e3a5f] dark:text-white">
             {t('templates.branding') || 'Branding'}
           </h3>
 
@@ -357,7 +357,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
 
         {/* Seller Information */}
         <div className="space-y-4">
-          <h3 className="text-purple-900 dark:text-purple-100">
+          <h3 className="text-[#1e3a5f] dark:text-white">
             {t('editor.sellerInfo') || 'Seller Information'}
           </h3>
 
@@ -470,7 +470,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
         {!isLetter && (
           <>
             <div className="space-y-4">
-              <h3 className="text-purple-900 dark:text-purple-100">
+              <h3 className="text-[#1e3a5f] dark:text-white">
                 {t('templates.defaultTaxSettings') || 'Default Tax Settings'}
               </h3>
 
@@ -513,7 +513,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
             <Separator />
 
             <div className="space-y-4">
-              <h3 className="text-purple-900 dark:text-purple-100">
+              <h3 className="text-[#1e3a5f] dark:text-white">
                 {t('templates.defaultPaymentTerms') || 'Default Payment Terms'}
               </h3>
 
@@ -551,7 +551,7 @@ export function TemplateEditor({ template, profile, onSave, onCancel, initialTem
           </Button>
           <Button
             onClick={handleSave}
-            className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white"
+            className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] text-white"
           >
             {t('common.save')}
           </Button>

@@ -82,7 +82,7 @@ export function CompanyTypeList() {
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-heading-3 font-semibold">Company Types</h2>
+                    <h2 className="text-heading-3 font-medium">Company Types</h2>
                     <p className="text-body text-gray-500">Manage different types of organizations (e.g. Agency, Client).</p>
                 </div>
                 <Button onClick={handleCreate}><Plus className="h-4 w-4 mr-2" /> Add Type</Button>

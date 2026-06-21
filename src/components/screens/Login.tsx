@@ -48,7 +48,7 @@ function SsoProviderIcon({ provider }: { provider: string }) {
     );
   }
   if (provider === 'saml' || provider === 'oidc') {
-    return <Shield className="h-4 w-4 text-purple-600" />;
+    return <Shield className="h-4 w-4 text-[#2a8fbd]" />;
   }
   return null;
 }
@@ -145,12 +145,12 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#f0f6ff] via-[#dbe8f7] to-[#f0f6ff]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.1),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(236,72,153,0.1),transparent_50%)]" />
-        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob" />
-        <div className="absolute top-40 right-20 w-72 h-72 bg-fuchsia-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000" />
-        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-violet-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000" />
+        <div className="absolute top-20 left-20 w-72 h-72 bg-[#dbe8f7] rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob" />
+        <div className="absolute top-40 right-20 w-72 h-72 bg-[#dbe8f7] rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000" />
+        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-[#dbe8f7] rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000" />
       </div>
 
       {/* Content */}
@@ -162,7 +162,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="text-violet-600 hover:text-violet-700 hover:bg-violet-50"
+              className="text-[#2a8fbd] hover:text-[#1e3a5f] hover:bg-[#f0f6ff]"
               onClick={onGoHome}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -173,10 +173,10 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
 
           {/* Logo and Header */}
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 shadow-lg shadow-purple-500/50 mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] shadow-lg shadow-[rgba(30,58,95,0.25)] mb-6">
               <FileText className="h-10 w-10 text-white" />
             </div>
-            <h1 className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+            <h1 className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] bg-clip-text text-transparent">
               {t('appName')}
             </h1>
             <p className="mt-2 text-muted-foreground">
@@ -188,8 +188,8 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
           <Card className="border-2 shadow-xl backdrop-blur-sm bg-white/80">
             {/* Card Header + optional pending action banner */}
             {hasPendingAction && (
-              <div className="mx-6 mt-4 mb-0 flex items-start gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-body text-violet-800">
-                <Info className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+              <div className="mx-6 mt-4 mb-0 flex items-start gap-2 rounded-lg border border-[rgba(30,58,95,0.15)] bg-[#f0f6ff] px-3 py-2 text-body text-[#1e3a5f]">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#2a8fbd]" />
                 <span>{t('login.pendingActionBanner') || 'Account found! Log in below to continue with your invoice.'}</span>
               </div>
             )}
@@ -221,7 +221,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
 
                     <Button
                       type="submit"
-                      className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white shadow-lg shadow-purple-500/30"
+                      className="w-full bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] hover:from-[#e07530] hover:via-[#f08a3c] hover:to-[#e07530] text-white shadow-lg shadow-[rgba(30,58,95,0.15)]"
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -237,7 +237,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
                       <button
                         type="button"
                         onClick={() => setIsForgotPasswordMode(false)}
-                        className="text-body font-medium text-violet-600 hover:text-violet-500"
+                        className="text-body font-medium text-[#2a8fbd] hover:text-[#2a8fbd]"
                       >
                         Back to login
                       </button>
@@ -277,7 +277,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
                         <button
                           type="button"
                           onClick={() => setIsForgotPasswordMode(true)}
-                          className="text-micro font-medium text-violet-600 hover:text-violet-500"
+                          className="text-micro font-medium text-[#2a8fbd] hover:text-[#2a8fbd]"
                         >
                           Forgot password?
                         </button>
@@ -309,7 +309,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
 
                     <Button
                       type="submit"
-                      className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 text-white shadow-lg shadow-purple-500/30"
+                      className="w-full bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] hover:from-[#e07530] hover:via-[#f08a3c] hover:to-[#e07530] text-white shadow-lg shadow-[rgba(30,58,95,0.15)]"
                       disabled={isLoading}
                     >
                       {isLoading ? t('login.loggingIn') : t('login.signIn')}
@@ -371,12 +371,12 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
               {t('login.footer2')}
             </p>
             {onSignup && (
-              <div className="mt-6 pt-6 border-t border-violet-100">
+              <div className="mt-6 pt-6 border-t border-[rgba(30,58,95,0.10)]">
                 <p className="text-muted-foreground">
                   {t('login.noAccount')}{' '}
                   <button
                     onClick={onSignup}
-                    className="text-violet-600 font-semibold hover:text-violet-700 transition-colors"
+                    className="text-[#2a8fbd] font-medium hover:text-[#1e3a5f] transition-colors"
                   >
                     {t('login.signup')}
                   </button>

@@ -11,11 +11,13 @@ interface WorkhubTimerStore {
     accumulatedSeconds: number;     // seconds banked before current period
     breakStartedAt: number | null;  // Date.now() when break began
     accumulatedBreakSeconds: number;
+    needsServerSync: boolean;
 
     start: (taskId: number, title: string) => void;
     pause: () => void;
     resume: () => void;
     stop: () => void;
+    markSynced: () => void;
     getElapsedSeconds: () => number;
     getBreakSeconds: () => number;
 }
@@ -30,6 +32,7 @@ export const useWorkhubTimerStore = create<WorkhubTimerStore>()(
             accumulatedSeconds: 0,
             breakStartedAt: null,
             accumulatedBreakSeconds: 0,
+            needsServerSync: false,
 
             start: (taskId, title) => set({
                 state: 'running',
@@ -39,6 +42,7 @@ export const useWorkhubTimerStore = create<WorkhubTimerStore>()(
                 accumulatedSeconds: 0,
                 breakStartedAt: null,
                 accumulatedBreakSeconds: 0,
+                needsServerSync: true,
             }),
 
             pause: () => {
@@ -73,6 +77,8 @@ export const useWorkhubTimerStore = create<WorkhubTimerStore>()(
                 accumulatedBreakSeconds: 0,
             }),
 
+            markSynced: () => set({ needsServerSync: false }),
+
             getElapsedSeconds: () => {
                 const { state, startedAt, accumulatedSeconds } = get();
                 if (state === 'running' && startedAt) {
@@ -99,6 +105,7 @@ export const useWorkhubTimerStore = create<WorkhubTimerStore>()(
                 accumulatedSeconds: s.accumulatedSeconds,
                 breakStartedAt: s.breakStartedAt,
                 accumulatedBreakSeconds: s.accumulatedBreakSeconds,
+                needsServerSync: s.needsServerSync,
             }),
         }
     )

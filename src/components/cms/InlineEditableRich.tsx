@@ -95,7 +95,7 @@ export function InlineEditableRich({ slug, field, lang, value, className, onSave
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-1.5 rounded-md bg-purple-600 px-3 py-1.5 text-body font-medium text-white transition-colors hover:bg-purple-700 disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-md bg-[#f08a3c] px-3 py-1.5 text-body font-medium text-white transition-colors hover:bg-[#e07530] disabled:opacity-60"
           >
             {isSaving ? (
               <>
@@ -139,7 +139,7 @@ export function InlineEditableRich({ slug, field, lang, value, className, onSave
       className={[
         className,
         'relative cursor-text transition-all',
-        isHovered ? 'outline-dashed outline-2 outline-purple-400/50' : '',
+        isHovered ? 'outline-dashed outline-2 outline-[rgba(30,58,95,0.25)]' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -151,7 +151,7 @@ export function InlineEditableRich({ slug, field, lang, value, className, onSave
       {isHovered && (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -top-6 right-0 z-10 whitespace-nowrap rounded bg-purple-700 px-2 py-0.5 text-micro text-white"
+          className="pointer-events-none absolute -top-6 right-0 z-10 whitespace-nowrap rounded bg-[#e07530] px-2 py-0.5 text-micro text-white"
         >
           Double-click to edit
         </span>

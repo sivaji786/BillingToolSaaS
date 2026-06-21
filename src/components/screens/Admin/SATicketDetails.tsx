@@ -132,7 +132,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         <div className="space-y-4 flex-1">
                             <div className="space-y-1">
                                 <div className="flex items-center gap-3">
-                                    <h2 className="text-heading-1 font-extrabold tracking-tight text-slate-900">
+                                    <h2 className="text-heading-1 font-medium tracking-tight text-slate-900">
                                         {t('tickets.ticketId', { id: ticket.id.toString() })}
                                     </h2>
                                     <Badge variant="secondary" className="font-mono text-body uppercase tracking-widest bg-slate-200/50 text-slate-600 border-none px-2 py-0">
@@ -147,11 +147,11 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 </div>
                             </div>
                             <div className="relative pl-5 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-1.5 before:bg-primary before:rounded-full">
-                                <h3 className="text-heading-2 font-bold text-slate-800 leading-tight">
+                                <h3 className="text-heading-2 font-medium text-slate-800 leading-tight">
                                     {ticket.subject}
                                 </h3>
                                 {ticket.type && (
-                                    <span className="inline-block mt-1.5 text-micro font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                    <span className="inline-block mt-1.5 text-micro font-medium uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
                                         {ticket.type}
                                     </span>
                                 )}
@@ -164,9 +164,9 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 {/* Status + Priority row */}
                                 <div className="flex items-center gap-2">
                                     <div className="flex flex-col flex-1 px-2">
-                                        <span className="text-body font-bold text-slate-400 uppercase tracking-widest mb-1">{t('tickets.status.label')}</span>
+                                        <span className="text-body font-medium text-slate-400 uppercase tracking-widest mb-1">{t('tickets.status.label')}</span>
                                         <Select value={status} onValueChange={setStatus}>
-                                            <SelectTrigger className="w-full h-9 border-none bg-transparent hover:bg-slate-50 transition-colors font-semibold p-0 shadow-none focus:ring-0">
+                                            <SelectTrigger className="w-full h-9 border-none bg-transparent hover:bg-slate-50 transition-colors font-medium p-0 shadow-none focus:ring-0">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -179,9 +179,9 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                     </div>
                                     <div className="w-px h-10 bg-slate-100" />
                                     <div className="flex flex-col flex-1 px-2">
-                                        <span className="text-body font-bold text-slate-400 uppercase tracking-widest mb-1">{t('tickets.priority.label')}</span>
+                                        <span className="text-body font-medium text-slate-400 uppercase tracking-widest mb-1">{t('tickets.priority.label')}</span>
                                         <Select value={priority} onValueChange={setPriority}>
-                                            <SelectTrigger className="w-full h-9 border-none bg-transparent hover:bg-slate-50 transition-colors font-semibold p-0 shadow-none focus:ring-0">
+                                            <SelectTrigger className="w-full h-9 border-none bg-transparent hover:bg-slate-50 transition-colors font-medium p-0 shadow-none focus:ring-0">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -196,7 +196,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
 
                                 {/* Assignee row — S4-08 */}
                                 <div className="border-t border-slate-100 pt-3 px-2">
-                                    <span className="text-body font-bold text-slate-400 uppercase tracking-widest mb-1 block">{t('tickets.assignee')}</span>
+                                    <span className="text-body font-medium text-slate-400 uppercase tracking-widest mb-1 block">{t('tickets.assignee')}</span>
                                     <Select value={assignedTo} onValueChange={setAssignedTo}>
                                         <SelectTrigger className="w-full h-9 border border-slate-200 rounded-xl bg-white text-body font-medium focus:ring-2 focus:ring-primary/20">
                                             <UserCheck className="h-3.5 w-3.5 mr-2 text-slate-400" />
@@ -229,7 +229,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                     </div>
                                     <Button
                                         size="lg"
-                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-200 active:scale-[0.98] transition-all rounded-2xl h-12"
+                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-lg shadow-emerald-200 active:scale-[0.98] transition-all rounded-2xl h-12"
                                         onClick={handleUpdate}
                                         disabled={isUpdating}
                                     >
@@ -247,37 +247,37 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         {/* Description */}
                         <div className="space-y-8">
                             <div className="space-y-4">
-                                <h3 className="text-micro font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <h3 className="text-micro font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <MessageSquare className="h-3.5 w-3.5" />
                                     {t('tickets.columns.description')}
                                 </h3>
-                                <div className="bg-slate-50 p-7 rounded-[2rem] border border-slate-100 whitespace-pre-wrap text-sm leading-relaxed text-slate-700 shadow-inner min-h-[200px]">
+                                <div className="bg-slate-50 p-7 rounded-[2rem] border border-slate-100 whitespace-pre-wrap text-heading-3 leading-relaxed text-slate-700 shadow-inner min-h-[200px]">
                                     {ticket.description}
                                 </div>
                             </div>
 
                             {/* S4-09: SLA / Response time card */}
                             <div className="space-y-4">
-                                <h3 className="text-micro font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <h3 className="text-micro font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <Clock className="h-3.5 w-3.5" />
                                     {t('tickets.sla.title')}
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100">
-                                        <span className="block text-body uppercase tracking-wider text-indigo-400 font-bold mb-1">
+                                    <div className="p-4 rounded-2xl bg-[#f0f6ff]/60 border border-[rgba(30,58,95,0.12)]">
+                                        <span className="block text-body uppercase tracking-wider text-[#3d5a80] font-medium mb-1">
                                             {t('tickets.sla.firstResponse')}
                                         </span>
-                                        <span className="text-body font-semibold text-slate-800">
+                                        <span className="text-body font-medium text-slate-800">
                                             {ticket.first_response_at && ticket.created_at
                                                 ? slaHours(ticket.created_at, ticket.first_response_at)
                                                 : <span className="italic text-slate-400">{t('tickets.sla.pending')}</span>}
                                         </span>
                                     </div>
                                     <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
-                                        <span className="block text-body uppercase tracking-wider text-emerald-400 font-bold mb-1">
+                                        <span className="block text-body uppercase tracking-wider text-emerald-400 font-medium mb-1">
                                             {t('tickets.sla.resolution')}
                                         </span>
-                                        <span className="text-body font-semibold text-slate-800">
+                                        <span className="text-body font-medium text-slate-800">
                                             {ticket.resolved_at && ticket.created_at
                                                 ? slaHours(ticket.created_at, ticket.resolved_at)
                                                 : <span className="italic text-slate-400">{t('tickets.sla.notResolved')}</span>}
@@ -290,21 +290,21 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         {/* Metadata */}
                         <div className="space-y-8 md:border-l md:pl-12 border-slate-100">
                             <div className="space-y-4">
-                                <h3 className="text-micro font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 opacity-70">
+                                <h3 className="text-micro font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2 opacity-70">
                                     <User className="h-3.5 w-3.5" />
                                     {t('tickets.reporterInfo')}
                                 </h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="p-3 rounded-xl bg-muted/10 border border-slate-100 transition-all hover:bg-muted/20">
-                                        <span className="block text-body uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.columns.ip')}</span>
+                                        <span className="block text-body uppercase tracking-wider text-muted-foreground font-medium mb-1">{t('tickets.columns.ip')}</span>
                                         <span className="text-body font-medium font-mono">{ticket.client_ip || t('tickets.notAvailable')}</span>
                                     </div>
                                     <div className="p-3 rounded-xl bg-muted/10 border border-slate-100 transition-all hover:bg-muted/20">
-                                        <span className="block text-body uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.projectId')}</span>
+                                        <span className="block text-body uppercase tracking-wider text-muted-foreground font-medium mb-1">{t('tickets.projectId')}</span>
                                         <span className="text-body font-medium font-mono">{ticket.project_id || t('tickets.notAvailable')}</span>
                                     </div>
                                     <div className="p-3 rounded-xl bg-muted/10 border border-slate-100 col-span-2 transition-all hover:bg-muted/20">
-                                        <span className="block text-body uppercase tracking-wider text-muted-foreground font-bold mb-1">{t('tickets.assignee')}</span>
+                                        <span className="block text-body uppercase tracking-wider text-muted-foreground font-medium mb-1">{t('tickets.assignee')}</span>
                                         <span className="text-body font-medium">
                                             {ticket.assigned_to
                                                 ? (adminStaff.find(a => a.id === ticket.assigned_to)?.name ?? t('tickets.notAvailable'))
@@ -316,7 +316,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
 
                             {ticket.screenshot_path && (
                                 <div className="space-y-4">
-                                    <h3 className="text-micro font-bold text-muted-foreground uppercase tracking-widest opacity-70">{t('tickets.attachedScreenshot')}</h3>
+                                    <h3 className="text-micro font-medium text-muted-foreground uppercase tracking-widest opacity-70">{t('tickets.attachedScreenshot')}</h3>
                                     <div className="border-2 border-slate-100 rounded-2xl overflow-hidden bg-muted/10 group relative shadow-sm transition-all hover:shadow-md">
                                         <img
                                             src={getImageUrl(ticket.screenshot_path)}
@@ -328,7 +328,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                                 href={getImageUrl(ticket.screenshot_path)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="bg-white text-slate-900 px-5 py-2.5 rounded-xl font-bold flex items-center shadow-xl hover:bg-white/90 active:scale-95 transition-all"
+                                                className="bg-white text-slate-900 px-5 py-2.5 rounded-xl font-medium flex items-center shadow-xl hover:bg-white/90 active:scale-95 transition-all"
                                             >
                                                 <ExternalLink className="h-4 w-4 mr-2" />
                                                 {t('tickets.viewFullSize')}
@@ -347,7 +347,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 if (!paths.length) return null;
                                 return (
                                     <div className="space-y-4">
-                                        <h3 className="text-micro font-bold text-muted-foreground uppercase tracking-widest opacity-70 flex items-center gap-2">
+                                        <h3 className="text-micro font-medium text-muted-foreground uppercase tracking-widest opacity-70 flex items-center gap-2">
                                             <Paperclip className="h-3.5 w-3.5" />
                                             Attachments ({paths.length})
                                         </h3>
@@ -384,7 +384,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                     {/* Ticket Tracking */}
                     <div className="border-t border-slate-100 pt-12">
                         <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-heading-2 font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                            <h3 className="text-heading-2 font-medium text-slate-900 tracking-tight flex items-center gap-2">
                                 <span className="p-2 rounded-lg bg-primary/10 text-primary">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 </span>
@@ -407,13 +407,13 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 {tracking.map((item, index) => {
                                     const dotColor =
                                         item.action === 'created'          ? 'bg-emerald-500' :
-                                        item.action === 'comment'          ? 'bg-indigo-500'  :
-                                        item.action === 'assignment_change'? 'bg-violet-500'  :
+                                        item.action === 'comment'          ? 'bg-[#2a8fbd]'  :
+                                        item.action === 'assignment_change'? 'bg-[#f0f6ff]0'  :
                                         'bg-amber-500';
                                     const labelColor =
                                         item.action === 'created'          ? 'bg-emerald-50 text-emerald-600' :
-                                        item.action === 'comment'          ? 'bg-indigo-50 text-indigo-600'   :
-                                        item.action === 'assignment_change'? 'bg-violet-50 text-violet-600'   :
+                                        item.action === 'comment'          ? 'bg-[#f0f6ff] text-[#2a8fbd]'   :
+                                        item.action === 'assignment_change'? 'bg-[#f0f6ff] text-[#2a8fbd]'   :
                                         'bg-amber-50 text-amber-600';
                                     return (
                                         <div key={item.id} className="relative group animate-in fade-in slide-in-from-left-4 duration-500" style={{ animationDelay: `${index * 50}ms` }}>
@@ -422,30 +422,30 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <div className="flex flex-wrap items-center gap-x-3 text-micro">
-                                                    <span className={`font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${labelColor}`}>
+                                                    <span className={`font-medium px-2 py-0.5 rounded-full uppercase tracking-wider ${labelColor}`}>
                                                         {t(`tickets.tracking.${item.action}`) || item.action.replace('_', ' ')}
                                                     </span>
                                                     <div className="h-1 w-1 rounded-full bg-slate-300" />
-                                                    <time className="font-bold text-slate-500">
+                                                    <time className="font-medium text-slate-500">
                                                         {format(new Date(item.created_at), 'PP p')}
                                                     </time>
                                                 </div>
                                                 <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm transition-all hover:shadow-md hover:border-slate-300">
-                                                    <div className="text-sm prose-sm">
+                                                    <div className="text-heading-3 prose-sm">
                                                         {item.old_value && (
                                                             <div className="flex items-center gap-3 text-slate-600 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
-                                                                <span className="text-micro font-bold uppercase tracking-widest opacity-60">{t('tickets.tracking.changedFrom')}:</span>
+                                                                <span className="text-micro font-medium uppercase tracking-widest opacity-60">{t('tickets.tracking.changedFrom')}:</span>
                                                                 <span className="line-through text-slate-400">{item.old_value}</span>
                                                                 <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                                                                <span className="font-bold text-slate-900">{item.new_value}</span>
+                                                                <span className="font-medium text-slate-900">{item.new_value}</span>
                                                             </div>
                                                         )}
                                                         {!item.old_value && item.new_value && (
                                                             <p className="text-slate-700 font-medium">{item.new_value}</p>
                                                         )}
                                                         {item.comment && (
-                                                            <div className="mt-3 bg-indigo-50/30 p-4 rounded-xl italic text-slate-700 border-l-4 border-indigo-400/50 flex gap-3">
-                                                                <svg className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                                                            <div className="mt-3 bg-[#f0f6ff]/30 p-4 rounded-xl italic text-slate-700 border-l-4 border-[#3d5a80]/50 flex gap-3">
+                                                                <svg className="w-5 h-5 text-[#3d5a80] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
                                                                 <p className="leading-relaxed">{item.comment}</p>
                                                             </div>
                                                         )}

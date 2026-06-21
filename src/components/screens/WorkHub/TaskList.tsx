@@ -1,44 +1,62 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Calendar, X } from 'lucide-react';
-import { Badge } from '../../ui/badge';
+import { Plus, Search, X, CheckCircle2, Clock, AlertCircle, Circle } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { WHTask, TaskStatus } from '../../../services/workhubApi';
 import { NewTaskModal } from './NewTaskModal';
 import { cn } from '../../../lib/utils';
 
-const STATUS_FILTERS: { label: string; value: TaskStatus | '' }[] = [
-    { label: 'All', value: '' },
-    { label: 'Open', value: 'open' },
-    { label: 'In Progress', value: 'in_progress' },
-    { label: 'Done', value: 'done' },
-    { label: 'Problem', value: 'problem' },
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const STATUS_OPTS = [
+    { label: 'All Status',   value: '__all__', icon: null,            dot: '' },
+    { label: 'Open',         value: 'open',    icon: Circle,          dot: 'bg-[#2a8fbd]' },
+    { label: 'In Progress',  value: 'in_progress', icon: Clock,       dot: 'bg-amber-500' },
+    { label: 'Done',         value: 'done',    icon: CheckCircle2,    dot: 'bg-green-500' },
+    { label: 'Problem',      value: 'problem', icon: AlertCircle,     dot: 'bg-red-500' },
 ];
 
-const DATE_PRESETS: { label: string; value: string }[] = [
-    { label: 'Today',      value: 'today' },
-    { label: 'Yesterday',  value: 'yesterday' },
-    { label: 'This Week',  value: 'this_week' },
-    { label: 'Last Week',  value: 'last_week' },
-    { label: 'This Month', value: 'this_month' },
-    { label: 'Last Month', value: 'last_month' },
-    { label: 'Custom',     value: 'custom' },
+const DATE_OPTS = [
+    { label: 'All time',    value: '__all__' },
+    { label: 'Today',       value: 'today' },
+    { label: 'Yesterday',   value: 'yesterday' },
+    { label: 'This Week',   value: 'this_week' },
+    { label: 'Last Week',   value: 'last_week' },
+    { label: 'This Month',  value: 'this_month' },
+    { label: 'Last Month',  value: 'last_month' },
+    { label: 'Custom range…', value: 'custom' },
 ];
 
-const STATUS_COLORS: Record<TaskStatus, string> = {
-    open:        'bg-blue-100 text-blue-700',
-    in_progress: 'bg-amber-100 text-amber-700',
-    done:        'bg-green-100 text-green-700',
-    problem:     'bg-red-100 text-red-700',
+const STATUS_PILL: Record<TaskStatus, string> = {
+    open:        'bg-blue-50 text-blue-700 border border-blue-200',
+    in_progress: 'bg-amber-50 text-amber-700 border border-amber-200',
+    done:        'bg-green-50 text-green-700 border border-green-200',
+    problem:     'bg-red-50 text-red-700 border border-red-200',
 };
 
-const PRIORITY_COLORS: Record<string, string> = {
-    low:    'bg-gray-200 text-gray-600',
-    medium: 'bg-blue-100 text-blue-600',
-    high:   'bg-orange-100 text-orange-600',
-    urgent: 'bg-red-100 text-red-600',
+const STATUS_DOT: Record<TaskStatus, string> = {
+    open:        'bg-[#2a8fbd]',
+    in_progress: 'bg-amber-500',
+    done:        'bg-green-500',
+    problem:     'bg-red-500',
 };
+
+const PRIORITY_BAR: Record<string, string> = {
+    urgent: 'bg-red-500',
+    high:   'bg-orange-400',
+    medium: 'bg-[#2a8fbd]',
+    low:    'bg-gray-300',
+};
+
+const PRIORITY_LABEL: Record<string, string> = {
+    urgent: 'text-red-600',
+    high:   'text-orange-500',
+    medium: 'text-[#2a8fbd]',
+    low:    'text-gray-400',
+};
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props {
     tasks: WHTask[];
@@ -54,33 +72,56 @@ interface Props {
     readOnly?: boolean;
 }
 
-export function TaskList({ tasks, statusFilter, onStatusFilter, datePreset = '', onDatePreset, customFrom = '', customTo = '', onCustomRange, onSelectTask, onUpdated, readOnly = false }: Props) {
+export function TaskList({
+    tasks, statusFilter, onStatusFilter,
+    datePreset = '', onDatePreset,
+    customFrom = '', customTo = '', onCustomRange,
+    onSelectTask, onUpdated, readOnly = false,
+}: Props) {
     const [search, setSearch] = useState('');
     const [showNew, setShowNew] = useState(false);
 
     const filtered = tasks.filter((t) =>
-        !search || t.title.toLowerCase().includes(search.toLowerCase()) ||
+        !search ||
+        t.title.toLowerCase().includes(search.toLowerCase()) ||
         (t.location_tag ?? '').toLowerCase().includes(search.toLowerCase())
     );
 
+    const hasFilters = !!(statusFilter || datePreset);
+    const activeStatus = STATUS_OPTS.find(o => o.value === statusFilter);
+    const activeDateLabel = DATE_OPTS.find(o => o.value === (datePreset || '__all__'))?.label ?? 'All time';
+
+    const clearFilters = () => { onStatusFilter(''); onDatePreset?.(''); };
+
     return (
-        <div className="flex flex-col h-full">
-            {/* Filter bar */}
-            <div className="sticky top-0 z-10 bg-background border-b px-4 py-2 space-y-2">
+        <div className="flex flex-col h-full bg-[#f4f8fd]">
+
+            {/* ── Sticky filter header ───────────────────────────────────── */}
+            <div className="sticky top-0 z-10 bg-background border-b shadow-sm px-3 pt-3 pb-2 space-y-2">
+
+                {/* Search + New */}
                 <div className="flex items-center gap-2">
                     <div className="relative flex-1">
-                        <Search className="absolute left-2 top-2 w-4 h-4 text-muted-foreground" />
+                        <Search className="absolute left-2.5 top-2 w-4 h-4 text-muted-foreground pointer-events-none" />
                         <Input
-                            className="pl-8 h-8 text-body"
+                            className="pl-8 h-8 text-body bg-[#f4f8fd] border-[rgba(30,58,95,0.15)]"
                             placeholder="Search tasks…"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
+                        {search && (
+                            <button
+                                onClick={() => setSearch('')}
+                                className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
                     </div>
                     {!readOnly && (
                         <Button
                             size="sm"
-                            className="bg-purple-600 hover:bg-purple-700 gap-1 shrink-0"
+                            className="bg-[#f08a3c] hover:bg-[#e07530] gap-1 shrink-0"
                             onClick={() => setShowNew(true)}
                         >
                             <Plus className="w-4 h-4" />
@@ -88,118 +129,208 @@ export function TaskList({ tasks, statusFilter, onStatusFilter, datePreset = '',
                         </Button>
                     )}
                 </div>
-                <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
-                    {STATUS_FILTERS.map(({ label, value }) => (
-                        <button
-                            key={value}
-                            onClick={() => onStatusFilter(value)}
+
+                {/* Status + Date selects */}
+                <div className="grid grid-cols-2 gap-2">
+                    {/* Status select */}
+                    <Select
+                        value={statusFilter || '__all__'}
+                        onValueChange={v => onStatusFilter(v === '__all__' ? '' : v)}
+                    >
+                        <SelectTrigger
                             className={cn(
-                                'shrink-0 px-3 py-1 rounded-full text-caption font-medium transition-colors',
-                                statusFilter === value
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-muted text-muted-foreground hover:bg-accent'
+                                'h-8 text-caption font-medium',
+                                statusFilter
+                                    ? 'border-[#f08a3c] text-[#f08a3c] bg-[#fff8f3]'
+                                    : 'border-[rgba(30,58,95,0.15)] text-muted-foreground'
                             )}
                         >
-                            {label}
-                        </button>
-                    ))}
+                            <span className="flex items-center gap-1.5 min-w-0">
+                                {statusFilter && (
+                                    <span className={cn('w-2 h-2 rounded-full shrink-0', STATUS_DOT[statusFilter as TaskStatus])} />
+                                )}
+                                <span className="truncate">
+                                    {statusFilter
+                                        ? STATUS_OPTS.find(o => o.value === statusFilter)?.label ?? 'Status'
+                                        : 'All Status'}
+                                </span>
+                            </span>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="__all__">All Status</SelectItem>
+                            {STATUS_OPTS.slice(1).map(o => (
+                                <SelectItem key={o.value} value={o.value}>
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn('w-2 h-2 rounded-full shrink-0', o.dot)} />
+                                        {o.label}
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {/* Date select */}
+                    <Select
+                        value={datePreset || '__all__'}
+                        onValueChange={v => onDatePreset?.(v === '__all__' ? '' : v)}
+                    >
+                        <SelectTrigger
+                            className={cn(
+                                'h-8 text-caption font-medium',
+                                datePreset
+                                    ? 'border-[#f08a3c] text-[#f08a3c] bg-[#fff8f3]'
+                                    : 'border-[rgba(30,58,95,0.15)] text-muted-foreground'
+                            )}
+                        >
+                            <span className="truncate">{activeDateLabel}</span>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {DATE_OPTS.map(o => (
+                                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
 
-                {/* Date filter row */}
-                {onDatePreset && (
-                    <div className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none flex-1">
-                            {DATE_PRESETS.map(({ label, value }) => (
-                                <button
-                                    key={value}
-                                    onClick={() => onDatePreset(datePreset === value ? '' : value)}
-                                    className={cn(
-                                        'shrink-0 px-3 py-1 rounded-full text-caption font-medium transition-colors',
-                                        datePreset === value
-                                            ? 'bg-purple-600 text-white'
-                                            : 'bg-muted text-muted-foreground hover:bg-accent'
-                                    )}
-                                >
-                                    {label}
-                                </button>
-                            ))}
-                        </div>
-                        {datePreset && (
-                            <button
-                                onClick={() => onDatePreset('')}
-                                className="shrink-0 text-muted-foreground hover:text-foreground"
-                            >
-                                <X className="w-3.5 h-3.5" />
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {/* Custom date range inputs */}
+                {/* Custom date range */}
                 {datePreset === 'custom' && onCustomRange && (
                     <div className="flex items-center gap-2">
                         <input
                             type="date"
                             value={customFrom}
                             onChange={(e) => onCustomRange(e.target.value, customTo)}
-                            className="flex-1 h-7 rounded border border-input bg-background px-2 text-caption"
+                            className="flex-1 h-7 rounded-md border border-input bg-background px-2 text-caption focus:outline-none focus:ring-1 focus:ring-[#f08a3c]"
                         />
                         <span className="text-caption text-muted-foreground shrink-0">to</span>
                         <input
                             type="date"
                             value={customTo}
                             onChange={(e) => onCustomRange(customFrom, e.target.value)}
-                            className="flex-1 h-7 rounded border border-input bg-background px-2 text-caption"
+                            className="flex-1 h-7 rounded-md border border-input bg-background px-2 text-caption focus:outline-none focus:ring-1 focus:ring-[#f08a3c]"
                         />
                     </div>
                 )}
+
+                {/* Result count + clear */}
+                <div className="flex items-center justify-between">
+                    <span className="text-caption text-muted-foreground">
+                        {filtered.length} task{filtered.length !== 1 ? 's' : ''}
+                        {search && ` matching "${search}"`}
+                    </span>
+                    {hasFilters && (
+                        <button
+                            onClick={clearFilters}
+                            className="text-caption text-[#f08a3c] hover:underline flex items-center gap-0.5"
+                        >
+                            <X className="w-3 h-3" /> Clear filters
+                        </button>
+                    )}
+                </div>
             </div>
 
-            {/* Task rows */}
-            <div className="flex-1 overflow-y-auto divide-y">
+            {/* ── Task list ─────────────────────────────────────────────── */}
+            <div className="flex-1 overflow-y-auto">
                 {filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-40 text-muted-foreground text-body gap-2">
-                        <span>No tasks found</span>
-                        {!readOnly && (
-                            <Button variant="outline" size="sm" onClick={() => setShowNew(true)}>
-                                Create first task
+                    <div className="flex flex-col items-center justify-center h-48 text-muted-foreground gap-3">
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                            <Search className="w-5 h-5" />
+                        </div>
+                        <div className="text-center">
+                            <p className="text-body font-medium">No tasks found</p>
+                            <p className="text-caption mt-0.5">
+                                {hasFilters ? 'Try adjusting your filters' : 'Create your first task'}
+                            </p>
+                        </div>
+                        {!readOnly && !hasFilters && (
+                            <Button size="sm" variant="outline" onClick={() => setShowNew(true)}>
+                                <Plus className="w-4 h-4 mr-1" /> New Task
+                            </Button>
+                        )}
+                        {hasFilters && (
+                            <Button size="sm" variant="outline" onClick={clearFilters}>
+                                Clear filters
                             </Button>
                         )}
                     </div>
                 ) : (
-                    filtered.map((task) => (
-                        <button
-                            key={task.id}
-                            onClick={() => onSelectTask(task.id)}
-                            className="w-full text-left px-4 py-3 hover:bg-accent transition-colors flex gap-3 items-start"
-                        >
-                            {/* Priority bar */}
-                            <span
-                                className={cn(
-                                    'mt-1 w-1 h-10 rounded-full shrink-0',
-                                    task.priority === 'urgent' ? 'bg-red-500' :
-                                    task.priority === 'high'   ? 'bg-orange-400' :
-                                    task.priority === 'medium' ? 'bg-blue-400' : 'bg-gray-300'
-                                )}
-                            />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-body font-medium truncate">{task.title}</span>
-                                    <Badge className={cn('text-[10px] px-1.5 py-0', STATUS_COLORS[task.status])}>
-                                        {task.status.replace('_', ' ')}
-                                    </Badge>
-                                </div>
-                                <div className="flex items-center gap-2 mt-0.5 text-caption text-muted-foreground flex-wrap">
-                                    {task.location_tag && <span>📍 {task.location_tag}</span>}
-                                    {task.logged_hours !== undefined && task.est_hours !== undefined && (
-                                        <span>{task.logged_hours}h / {task.est_hours}h</span>
-                                    )}
-                                    {task.due_date && <span>Due {task.due_date}</span>}
-                                </div>
-                            </div>
-                        </button>
-                    ))
+                    <div className="px-3 py-2 space-y-2">
+                        {filtered.map((task) => {
+                            const logged = task.logged_hours ?? 0;
+                            const est = task.est_hours ?? 0;
+                            const pct = est > 0 ? Math.min(Math.round((logged / est) * 100), 100) : 0;
+                            const isOverBudget = est > 0 && logged > est;
+
+                            return (
+                                <button
+                                    key={task.id}
+                                    onClick={() => onSelectTask(task.id)}
+                                    className="w-full text-left bg-background rounded-xl border border-[rgba(30,58,95,0.10)] shadow-sm hover:shadow-md hover:border-[rgba(30,58,95,0.20)] active:scale-[0.99] transition-all duration-150 flex gap-0 overflow-hidden"
+                                >
+                                    {/* Priority accent bar */}
+                                    <span className={cn('w-1 shrink-0 rounded-l-xl', PRIORITY_BAR[task.priority ?? 'low'])} />
+
+                                    <div className="flex-1 min-w-0 px-3 py-3 space-y-2">
+                                        {/* Title row */}
+                                        <div className="flex items-start justify-between gap-2">
+                                            <span className="text-body font-semibold leading-snug line-clamp-2 flex-1 text-[#1e3a5f]">
+                                                {task.title}
+                                            </span>
+                                            <span className={cn(
+                                                'text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 mt-0.5',
+                                                STATUS_PILL[task.status]
+                                            )}>
+                                                {task.status.replace('_', ' ')}
+                                            </span>
+                                        </div>
+
+                                        {/* Meta chips */}
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            {task.location_tag && (
+                                                <span className="flex items-center gap-0.5 text-caption text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md">
+                                                    <span className="text-[9px]">📍</span> {task.location_tag}
+                                                </span>
+                                            )}
+                                            {est > 0 && (
+                                                <span className={cn(
+                                                    'text-caption px-1.5 py-0.5 rounded-md',
+                                                    isOverBudget
+                                                        ? 'bg-red-50 text-red-600'
+                                                        : 'bg-muted text-muted-foreground'
+                                                )}>
+                                                    ⏱ {logged}h / {est}h
+                                                </span>
+                                            )}
+                                            {task.due_date && (
+                                                <span className="text-caption text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md">
+                                                    📅 {task.due_date}
+                                                </span>
+                                            )}
+                                            {task.priority && task.priority !== 'medium' && (
+                                                <span className={cn('text-caption font-medium capitalize', PRIORITY_LABEL[task.priority])}>
+                                                    {task.priority}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Progress bar */}
+                                        {est > 0 && (
+                                            <div className="space-y-0.5">
+                                                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                                    <div
+                                                        className={cn(
+                                                            'h-full rounded-full transition-all',
+                                                            isOverBudget ? 'bg-red-400' : pct >= 80 ? 'bg-amber-400' : 'bg-[#2a8fbd]'
+                                                        )}
+                                                        style={{ width: `${pct}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
                 )}
             </div>
 

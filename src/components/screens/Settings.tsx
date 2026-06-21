@@ -53,7 +53,7 @@ function ImageUploadField({ label, value, inputRef, onUpload, onRemove, hint, pr
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/20 transition-colors cursor-pointer gap-2 text-muted-foreground"
+          className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-[rgba(30,58,95,0.25)] hover:bg-[#f0f6ff] dark:hover:bg-[#1e3a5f]/20 transition-colors cursor-pointer gap-2 text-muted-foreground"
         >
           <Upload className="h-5 w-5" />
           <span className="text-body font-medium">Upload {label}</span>
@@ -529,7 +529,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                 <p className="text-micro text-muted-foreground mt-1">
                   Tokens: <code className="bg-muted px-1 rounded">{'{YYYY}'}</code> <code className="bg-muted px-1 rounded">{'{YY}'}</code> <code className="bg-muted px-1 rounded">{'{MM}'}</code> <code className="bg-muted px-1 rounded">{'{NNN…}'}</code>
                 </p>
-                <p className="text-micro mt-1 font-mono text-purple-700 bg-purple-50 border border-purple-100 rounded px-2 py-1">
+                <p className="text-micro mt-1 font-mono text-[#1e3a5f] bg-[#f0f6ff] border border-[rgba(30,58,95,0.10)] rounded px-2 py-1">
                   Preview: {formatNumberPreview(editedProfile.invoiceNumberFormat || 'INV-{YYYY}-{NNNNN}', 42)}
                 </p>
               </div>
@@ -546,7 +546,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                 <p className="text-micro text-muted-foreground mt-1">
                   Tokens: <code className="bg-muted px-1 rounded">{'{YYYY}'}</code> <code className="bg-muted px-1 rounded">{'{YY}'}</code> <code className="bg-muted px-1 rounded">{'{MM}'}</code> <code className="bg-muted px-1 rounded">{'{NNN…}'}</code>
                 </p>
-                <p className="text-micro mt-1 font-mono text-purple-700 bg-purple-50 border border-purple-100 rounded px-2 py-1">
+                <p className="text-micro mt-1 font-mono text-[#1e3a5f] bg-[#f0f6ff] border border-[rgba(30,58,95,0.10)] rounded px-2 py-1">
                   Preview: {formatNumberPreview(editedProfile.letterNumberFormat || 'LTR-{YYYY}-{NNNNN}', 7)}
                 </p>
               </div>
@@ -735,7 +735,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                         <div key={key}>
                           <Label>{label}</Label>
                           <Input
-                            className="mt-1 font-mono text-sm"
+                            className="mt-1 font-mono text-heading-3"
                             placeholder={placeholder}
                             value={(ssoConfig.config[key] as string) || ''}
                             onChange={(e) => setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, [key]: e.target.value } })}
@@ -746,7 +746,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                         <Label>IdP X.509 Certificate</Label>
                         <textarea
                           rows={6}
-                          className="mt-1 w-full font-mono text-xs border rounded-md p-3 bg-background resize-y"
+                          className="mt-1 w-full font-mono text-body border rounded-md p-3 bg-background resize-y"
                           placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"
                           value={(ssoConfig.config.idp_cert as string) || ''}
                           onChange={(e) => setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, idp_cert: e.target.value } })}
@@ -756,7 +756,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                         <Label>{t('settings.samlRoleMapping') || 'Role Mapping (JSON)'}</Label>
                         <textarea
                           rows={4}
-                          className="mt-1 w-full font-mono text-xs border rounded-md p-3 bg-background resize-y"
+                          className="mt-1 w-full font-mono text-body border rounded-md p-3 bg-background resize-y"
                           placeholder='{"BillingTool-Admin": "admin", "BillingTool-Member": "member"}'
                           value={typeof ssoConfig.config.role_mapping === 'object'
                             ? JSON.stringify(ssoConfig.config.role_mapping, null, 2)
@@ -773,10 +773,10 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                       </div>
                       {/* SP Metadata download */}
                       {ssoConfig.sp_metadata_url && (
-                        <div className="flex items-center gap-2 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
-                          <ExternalLink className="h-4 w-4 text-purple-600 shrink-0" />
+                        <div className="flex items-center gap-2 bg-[#f0f6ff] dark:bg-[#1e3a5f]/20 border border-[rgba(30,58,95,0.15)] dark:border-[rgba(30,58,95,0.50)] rounded-lg p-4">
+                          <ExternalLink className="h-4 w-4 text-[#2a8fbd] shrink-0" />
                           <div className="flex-1">
-                            <p className="text-sm font-medium">{t('settings.spMetadata') || 'SP Metadata URL'}</p>
+                            <p className="text-heading-3 font-medium">{t('settings.spMetadata') || 'SP Metadata URL'}</p>
                             <p className="text-micro text-muted-foreground font-mono">{ssoConfig.sp_metadata_url}</p>
                           </div>
                           <Button variant="outline" size="sm" onClick={() => window.open(ssoConfig.sp_metadata_url, '_blank')}>
@@ -795,7 +795,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                         <Label>Issuer URL</Label>
                         <div className="flex gap-2 mt-1">
                           <Input
-                            className="font-mono text-sm flex-1"
+                            className="font-mono text-heading-3 flex-1"
                             placeholder="https://accounts.example.com"
                             value={(ssoConfig.config.issuer_url as string) || ''}
                             onChange={(e) => setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, issuer_url: e.target.value } })}
@@ -824,7 +824,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                       <div>
                         <Label>Client ID</Label>
                         <Input
-                          className="mt-1 font-mono text-sm"
+                          className="mt-1 font-mono text-heading-3"
                           placeholder="your-client-id"
                           value={(ssoConfig.config.client_id as string) || ''}
                           onChange={(e) => setSsoConfig({ ...ssoConfig, config: { ...ssoConfig.config, client_id: e.target.value } })}
@@ -833,7 +833,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
                       <div>
                         <Label>Client Secret</Label>
                         <Input
-                          className="mt-1 font-mono text-sm"
+                          className="mt-1 font-mono text-heading-3"
                           type="password"
                           placeholder="••••••••"
                           value={(ssoConfig.config.client_secret as string) || ''}

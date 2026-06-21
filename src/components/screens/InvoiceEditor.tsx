@@ -262,7 +262,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
       {/* Locked banner */}
       {isLocked && (
         <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-body">
-          <span className="font-semibold">Read-only:</span>
+          <span className="font-medium">Read-only:</span>
           <span>This invoice has status <span className="font-medium capitalize">{invoice.status}</span> and cannot be edited. Change the status first to unlock editing.</span>
         </div>
       )}
@@ -309,7 +309,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                     className="flex flex-col items-start gap-1 py-2"
                   >
                     <div className="flex items-center gap-2 w-full">
-                      <FileText className="h-4 w-4 text-purple-600" />
+                      <FileText className="h-4 w-4 text-[#2a8fbd]" />
                       <span className="font-medium">{template.name}</span>
                     </div>
                     {template.description && (
@@ -592,7 +592,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
           {isBusinessLetter ? (
             <Card className="p-6 space-y-5">
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-purple-600" />
+                <Mail className="h-4 w-4 text-[#2a8fbd]" />
                 <h2 className="m-0">{t('editor.letterBody') || 'Letter Body'}</h2>
               </div>
 
@@ -697,7 +697,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
           {/* Letter quick-info card */}
           {isBusinessLetter && (
             <Card className="p-6 space-y-3">
-              <h3 className="text-body font-semibold">{t('editor.letterDetails') || 'Letter Details'}</h3>
+              <h3 className="text-body font-medium">{t('editor.letterDetails') || 'Letter Details'}</h3>
               <div className="text-micro text-muted-foreground space-y-2">
                 <div className="flex justify-between">
                   <span>{t('editor.letterNumber') || 'Reference'}</span>
@@ -734,7 +734,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
         <Button
           onClick={handleSave}
           disabled={!hasUnsavedChanges || isSaving || isLocked}
-          className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white min-w-[150px]"
+          className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] text-white min-w-[150px]"
         >
           {isSaving ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -398,7 +398,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-purple-900 dark:text-purple-100 mb-1">
+          <h1 className="text-[#1e3a5f] dark:text-white mb-1">
             {t(isLetter ? 'invoiceList.lettersTitle' : 'invoiceList.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -408,7 +408,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
         <div className="flex items-center gap-2">
           <Button
             onClick={onNewInvoice}
-            className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-md shadow-purple-500/20"
+            className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] text-white shadow-md shadow-[rgba(30,58,95,0.10)]"
           >
             <Plus className="h-4 w-4 mr-2" />
             {t(isLetter ? 'editor.newLetter' : 'dashboard.newInvoice')}
@@ -490,7 +490,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
         {/* Custom Date Range Picker */}
         {dateFilter === 'customRange' && (
-          <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+          <div className="mt-4 p-4 bg-[#f0f6ff] dark:bg-[#1e3a5f]/20 rounded-lg border border-[rgba(30,58,95,0.15)] dark:border-[rgba(30,58,95,0.50)]">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <label className="text-body font-medium">{t('invoiceList.from')}:</label>
@@ -629,7 +629,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
-                    <RefreshCw className="h-8 w-8 animate-spin text-purple-600" />
+                    <RefreshCw className="h-8 w-8 animate-spin text-[#2a8fbd]" />
                     <p className="text-body text-gray-500">{t('common.loading')}</p>
                   </div>
                 </TableCell>
@@ -816,9 +816,9 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
             {/* Progress Indicator */}
             {isImporting && (
-              <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-md">
-                <p className="text-body text-purple-800 dark:text-purple-200 flex items-center gap-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-purple-600 border-t-transparent rounded-full" />
+              <div className="bg-[#f0f6ff] dark:bg-[#1e3a5f]/20 p-3 rounded-md">
+                <p className="text-body text-[#1e3a5f] dark:text-[rgba(255,255,255,0.8)] flex items-center gap-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-[#f08a3c] border-t-transparent rounded-full" />
                   {t('invoiceList.processingFile')}
                 </p>
               </div>
@@ -839,7 +839,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
             <Button
               onClick={handleImport}
               disabled={!selectedFile || isImporting}
-              className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600"
+              className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80]"
             >
               {isImporting ? (
                 <>
@@ -956,7 +956,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
             </Button>
             <Button
               onClick={handleBulkStatusChange}
-              className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600"
+              className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80]"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               {t('invoiceList.updateStatus') || 'Update Status'}
@@ -1009,12 +1009,12 @@ const InvoiceRow = memo(({
         <div className="flex items-center gap-2">
           <button
             onClick={invoice.templateType === 'business_letter' ? onEdit : onView}
-            className="font-medium text-purple-600 hover:text-purple-700 hover:underline text-left"
+            className="font-medium text-[#2a8fbd] hover:text-[#1e3a5f] hover:underline text-left"
           >
             {invoice.invoiceNumber || <span className="text-muted-foreground italic font-normal">No number</span>}
           </button>
           {(invoice as any).source === 'workhub' && (
-            <Badge className="bg-purple-100 text-purple-700 border-purple-300 text-caption px-1.5 py-0">
+            <Badge className="bg-[#f0f6ff] text-[#1e3a5f] border-[rgba(30,58,95,0.20)] text-caption px-1.5 py-0">
               WorkHub
             </Badge>
           )}

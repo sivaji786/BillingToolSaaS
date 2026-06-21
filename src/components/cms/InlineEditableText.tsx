@@ -223,7 +223,7 @@ export function InlineEditableText({
         className={[
           className,
           isHovered
-            ? 'outline-dashed outline-2 outline-purple-400/50'
+            ? 'outline-dashed outline-2 outline-[rgba(30,58,95,0.25)]'
             : '',
         ]
           .filter(Boolean)

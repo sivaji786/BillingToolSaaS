@@ -43,7 +43,7 @@ export function WorkHubQuickActions({ onNavigate, onNewTask }: Props) {
             style={{ zIndex: 9999 }}
         >
             <div className="flex items-center justify-between px-2 py-1">
-                <span className="text-caption font-semibold text-muted-foreground">WorkHub</span>
+                <span className="text-caption font-medium text-muted-foreground">WorkHub</span>
                 <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
                     <X className="w-3 h-3" />
                 </button>
@@ -54,7 +54,7 @@ export function WorkHubQuickActions({ onNavigate, onNewTask }: Props) {
                     onClick={a.onClick}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-body hover:bg-muted transition-colors text-left"
                 >
-                    <a.icon className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                    <a.icon className="w-3.5 h-3.5 text-[#2a8fbd] shrink-0" />
                     {a.label}
                 </button>
             ))}
@@ -72,8 +72,8 @@ export function WorkHubQuickActions({ onNavigate, onNewTask }: Props) {
                     className={cn(
                         'w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors',
                         open
-                            ? 'bg-purple-700 text-white'
-                            : 'bg-purple-600 hover:bg-purple-700 text-white',
+                            ? 'bg-[#e07530] text-white'
+                            : 'bg-[#f08a3c] hover:bg-[#e07530] text-white',
                     )}
                     title="WorkHub quick actions"
                 >

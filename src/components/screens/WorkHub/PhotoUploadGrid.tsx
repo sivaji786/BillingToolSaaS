@@ -14,6 +14,7 @@ interface Props {
     existingPhotos?: WHPhoto[];
     onUploaded: (photo: WHPhoto) => void;
     onRemove?: (id: number) => void;
+    onUploadStart?: () => void;
 }
 
 function PhotoThumb({ url, onRemove }: { url: string; onRemove?: () => void }) {
@@ -33,7 +34,7 @@ function PhotoThumb({ url, onRemove }: { url: string; onRemove?: () => void }) {
     );
 }
 
-export function PhotoUploadGrid({ taskId, existingPhotos = [], onUploaded, onRemove }: Props) {
+export function PhotoUploadGrid({ taskId, existingPhotos = [], onUploaded, onRemove, onUploadStart }: Props) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cameraInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
@@ -62,6 +63,7 @@ export function PhotoUploadGrid({ taskId, existingPhotos = [], onUploaded, onRem
         }
 
         setUploading(true);
+        onUploadStart?.();
         try {
             const result = await fileService.upload(taskId, file, photoType);
             onUploaded({ id: result.photo_id, photo_type: photoType, url: result.url, created_at: new Date().toISOString() });

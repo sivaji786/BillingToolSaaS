@@ -124,7 +124,7 @@ export function SAbilling() {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-heading-1 font-bold">
+                        <div className="text-heading-1 font-medium">
                             €{revenueData?.totalRevenue?.toLocaleString() || '0'}
                         </div>
                         <p className="text-micro text-muted-foreground">
@@ -140,7 +140,7 @@ export function SAbilling() {
                         <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-heading-1 font-bold">{revenueData?.paidInvoices || 0}</div>
+                        <div className="text-heading-1 font-medium">{revenueData?.paidInvoices || 0}</div>
                         <p className="text-micro text-muted-foreground">Last 6 months</p>
                     </CardContent>
                 </Card>
@@ -151,7 +151,7 @@ export function SAbilling() {
                         <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-heading-1 font-bold">{revenueData?.pendingInvoices || 0}</div>
+                        <div className="text-heading-1 font-medium">{revenueData?.pendingInvoices || 0}</div>
                         <p className="text-micro text-muted-foreground">Awaiting payment</p>
                     </CardContent>
                 </Card>

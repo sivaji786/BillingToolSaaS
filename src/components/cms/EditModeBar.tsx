@@ -41,7 +41,7 @@ export function EditModeBar() {
                     <>
                         <button
                             onClick={() => { window.location.hash = '#/SAdashboard'; }}
-                            className="flex items-center gap-1.5 rounded-full border border-purple-300 bg-white px-4 py-2 text-body font-medium text-purple-700 shadow-lg transition-colors hover:bg-purple-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
+                            className="flex items-center gap-1.5 rounded-full border border-[rgba(30,58,95,0.20)] bg-white px-4 py-2 text-body font-medium text-[#1e3a5f] shadow-lg transition-colors hover:bg-[#f0f6ff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#f08a3c]"
                             type="button"
                         >
                             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -49,13 +49,13 @@ export function EditModeBar() {
                         </button>
                         <button
                             onClick={() => setShowModal(true)}
-                            className="flex items-center gap-1.5 rounded-full border border-purple-300 bg-white px-4 py-2 text-body font-medium text-purple-700 shadow-lg transition-colors hover:bg-purple-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
+                            className="flex items-center gap-1.5 rounded-full border border-[rgba(30,58,95,0.20)] bg-white px-4 py-2 text-body font-medium text-[#1e3a5f] shadow-lg transition-colors hover:bg-[#f0f6ff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#f08a3c]"
                             type="button"
                         >
                             <Plus className="h-4 w-4" aria-hidden="true" />
                             New Page
                         </button>
-                        <div className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-body font-semibold text-white shadow-lg">
+                        <div className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-body font-medium text-white shadow-lg">
                             <span className="inline-block h-2 w-2 rounded-full bg-white" style={{ animation: 'pulse 1.5s ease-in-out infinite' }} aria-hidden="true" />
                             EDITING LIVE
                         </div>
@@ -71,7 +71,7 @@ export function EditModeBar() {
                 ) : (
                     <button
                         onClick={() => setEditMode(true)}
-                        className="flex items-center gap-2 rounded-full bg-purple-600 px-5 py-2.5 text-body font-semibold text-white shadow-md transition-all hover:bg-purple-700 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
+                        className="flex items-center gap-2 rounded-full bg-[#f08a3c] px-5 py-2.5 text-body font-medium text-white shadow-md transition-all hover:bg-[#e07530] hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#f08a3c]"
                         type="button"
                     >
                         <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -133,7 +133,7 @@ export function EditModeBar() {
                     {/* Panel */}
                     <div className="relative w-full max-w-md mx-4 rounded-2xl bg-white shadow-2xl dark:bg-slate-900 p-6 space-y-5">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-heading-3 font-semibold text-slate-900 dark:text-white">Create New Page</h2>
+                            <h2 className="text-heading-3 font-medium text-slate-900 dark:text-white">Create New Page</h2>
                             <button
                                 onClick={() => setShowModal(false)}
                                 className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
@@ -151,7 +151,7 @@ export function EditModeBar() {
                         <div className="space-y-1.5">
                             <label className="text-body font-medium text-slate-700 dark:text-slate-300">Page Title</label>
                             <input
-                                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-body outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-body outline-none focus:ring-2 focus:ring-[#f08a3c] focus:border-transparent"
                                 placeholder="e.g. About Us"
                                 value={title}
                                 onChange={(e) => {
@@ -168,7 +168,7 @@ export function EditModeBar() {
                             <div className="flex items-center gap-1.5">
                                 <span className="text-micro text-muted-foreground whitespace-nowrap">#/cms/</span>
                                 <input
-                                    className="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-body outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    className="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-body outline-none focus:ring-2 focus:ring-[#f08a3c] focus:border-transparent"
                                     placeholder="about-us"
                                     value={slug}
                                     onChange={(e) => setSlug(slugify(e.target.value))}
@@ -188,7 +188,7 @@ export function EditModeBar() {
                                 role="switch"
                                 aria-checked={showInNav}
                                 onClick={() => setShowInNav(!showInNav)}
-                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500 ${showInNav ? 'bg-purple-600' : 'bg-slate-200 dark:bg-slate-600'}`}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#f08a3c] ${showInNav ? 'bg-[#f08a3c]' : 'bg-slate-200 dark:bg-slate-600'}`}
                             >
                                 <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${showInNav ? 'translate-x-5' : 'translate-x-0'}`} />
                             </button>
@@ -198,7 +198,7 @@ export function EditModeBar() {
                             <div className="space-y-1.5">
                                 <label className="text-body font-medium text-slate-700 dark:text-slate-300">Navigation Label <span className="text-muted-foreground font-normal">(optional)</span></label>
                                 <input
-                                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-body outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-body outline-none focus:ring-2 focus:ring-[#f08a3c] focus:border-transparent"
                                     placeholder={title || 'e.g. About Us'}
                                     value={navLabel}
                                     onChange={(e) => setNavLabel(e.target.value)}
@@ -219,7 +219,7 @@ export function EditModeBar() {
                                 type="button"
                                 disabled={creating || !title.trim() || !slug.trim()}
                                 onClick={handleCreate}
-                                className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-body font-semibold text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="flex items-center gap-2 rounded-lg bg-[#f08a3c] px-4 py-2 text-body font-medium text-white hover:bg-[#e07530] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 {creating ? (
                                     <><Loader2 className="h-4 w-4 animate-spin" /> Creating…</>

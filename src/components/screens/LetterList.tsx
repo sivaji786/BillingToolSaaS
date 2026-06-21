@@ -114,12 +114,12 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-heading-1 font-bold">{t('invoiceList.lettersTitle') || 'Business Letters'}</h1>
+          <h1 className="text-heading-1 font-medium">{t('invoiceList.lettersTitle') || 'Business Letters'}</h1>
           <p className="text-body text-muted-foreground mt-1">
             {t('invoiceList.lettersSubtitle') || 'View and manage all your business letters'}
           </p>
         </div>
-        <Button onClick={onNewLetter} className="bg-gradient-to-r from-violet-600 to-purple-600 text-white gap-2">
+        <Button onClick={onNewLetter} className="bg-gradient-to-r from-[#1e3a5f] to-[#f08a3c] text-white gap-2">
           <Plus className="h-4 w-4" />
           {t('editor.newLetter') || 'New Letter'}
         </Button>
@@ -288,7 +288,7 @@ const LetterRow = memo(function LetterRow({ letter, t, isSelected, onSelect, onV
         <Checkbox checked={isSelected} onCheckedChange={() => onSelect(letter.id)} />
       </TableCell>
       <TableCell>
-        <button onClick={onView} className="font-medium text-purple-600 hover:text-purple-700 hover:underline text-left">
+        <button onClick={onView} className="font-medium text-[#2a8fbd] hover:text-[#1e3a5f] hover:underline text-left">
           {letter.invoiceNumber || <span className="text-muted-foreground italic font-normal">No number</span>}
         </button>
       </TableCell>

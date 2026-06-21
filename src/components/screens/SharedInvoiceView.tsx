@@ -116,7 +116,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-gray-500">
-          <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#2a8fbd]" />
           <p>Loading invoice…</p>
         </div>
       </div>
@@ -128,7 +128,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <Card className="max-w-md w-full p-8 text-center space-y-4">
           <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto" />
-          <h2 className="text-heading-2 font-semibold text-gray-900">Link not found</h2>
+          <h2 className="text-heading-2 font-medium text-gray-900">Link not found</h2>
           <p className="text-gray-500">{error ?? 'This share link is no longer valid.'}</p>
           <Button variant="outline" onClick={() => window.location.href = '/'}>
             Go to BillingTool
@@ -145,7 +145,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       {/* Top bar */}
       <div className="max-w-4xl mx-auto mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-purple-700 font-semibold">
+        <div className="flex items-center gap-2 text-[#1e3a5f] font-medium">
           <FileText className="h-5 w-5" />
           BillingTool
         </div>
@@ -165,7 +165,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
           <Button
             onClick={handleDownloadPixelPerfect}
             disabled={isDownloadingPixelPerfect}
-            className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700"
+            className="bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80] text-white hover:from-[#e07530] hover:to-[#e07530]"
           >
             {isDownloadingPixelPerfect ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -183,7 +183,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8 pb-6 border-b">
             <div>
-              <h1 className="text-heading-1 font-bold text-gray-900 mb-2">
+              <h1 className="text-heading-1 font-medium text-gray-900 mb-2">
                 {invoice.invoiceNumber}
               </h1>
               <Badge variant={statusVariant(invoice.status)}>
@@ -201,8 +201,8 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
           {/* Seller & Buyer */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
             <div>
-              <h3 className="text-micro font-semibold text-gray-400 uppercase tracking-wide mb-2">From</h3>
-              <div className="text-gray-900 font-semibold">{invoice.seller.name}</div>
+              <h3 className="text-micro font-medium text-gray-400 uppercase tracking-wide mb-2">From</h3>
+              <div className="text-gray-900 font-medium">{invoice.seller.name}</div>
               {invoice.seller.vatId && <div className="text-body text-gray-500">VAT: {invoice.seller.vatId}</div>}
               {invoice.seller.address?.street && (
                 <div className="text-body text-gray-500 mt-1">
@@ -216,8 +216,8 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
               )}
             </div>
             <div>
-              <h3 className="text-micro font-semibold text-gray-400 uppercase tracking-wide mb-2">To</h3>
-              <div className="text-gray-900 font-semibold">{invoice.buyer.name}</div>
+              <h3 className="text-micro font-medium text-gray-400 uppercase tracking-wide mb-2">To</h3>
+              <div className="text-gray-900 font-medium">{invoice.buyer.name}</div>
               {invoice.buyer.vatId && <div className="text-body text-gray-500">VAT: {invoice.buyer.vatId}</div>}
               {invoice.buyer.address?.street && (
                 <div className="text-body text-gray-500 mt-1">
@@ -235,7 +235,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
           {/* Line items */}
           {invoice.lines && invoice.lines.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-micro font-semibold text-gray-400 uppercase tracking-wide mb-3">Items</h3>
+              <h3 className="text-micro font-medium text-gray-400 uppercase tracking-wide mb-3">Items</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-body">
                   <thead>
@@ -280,7 +280,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
                   <span>{formatCurrency(tax, invoice.currency)}</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold text-heading-2 text-gray-900 border-t pt-2">
+              <div className="flex justify-between font-medium text-heading-2 text-gray-900 border-t pt-2">
                 <span>Total</span>
                 <span>{formatCurrency(invoice.payableAmount, invoice.currency)}</span>
               </div>
@@ -298,7 +298,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
         {/* CTA footer */}
         <p className="text-center text-body text-gray-400 mt-6">
           Powered by{' '}
-          <a href="/" className="text-purple-600 hover:underline font-medium">
+          <a href="/" className="text-[#2a8fbd] hover:underline font-medium">
             BillingTool
           </a>
           {' '}— create and share professional invoices for free.

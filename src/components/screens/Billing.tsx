@@ -18,7 +18,7 @@ function UsageBar({ label, icon: Icon, used, limit, unit = '' }: {
     const warning = !unlimited && pct >= 80 && pct < 100;
     const exceeded = !unlimited && pct >= 100;
 
-    const barColor = exceeded ? 'bg-red-500' : warning ? 'bg-amber-500' : 'bg-violet-500';
+    const barColor = exceeded ? 'bg-red-500' : warning ? 'bg-amber-500' : 'bg-[#f0f6ff]0';
     const trackColor = exceeded ? 'bg-red-100' : warning ? 'bg-amber-100' : 'bg-gray-100';
 
     return (
@@ -40,7 +40,7 @@ function UsageBar({ label, icon: Icon, used, limit, unit = '' }: {
                 </div>
                 <span className="text-body text-gray-500 tabular-nums">
                     {unlimited
-                        ? <span className="text-violet-600 font-medium">Unlimited</span>
+                        ? <span className="text-[#2a8fbd] font-medium">Unlimited</span>
                         : <>{used}{unit} <span className="text-gray-400">/</span> {limit}{unit}</>}
                 </span>
             </div>
@@ -122,7 +122,7 @@ export const Billing = () => {
     return (
         <div className="space-y-8 max-w-6xl mx-auto p-6">
             <div className="flex flex-col gap-2">
-                <h1 className="text-heading-1 font-bold tracking-tight">{t('billing.title')}</h1>
+                <h1 className="text-heading-1 font-medium tracking-tight">{t('billing.title')}</h1>
                 <p className="text-muted-foreground">{t('billing.subtitle')}</p>
             </div>
 
@@ -135,7 +135,7 @@ export const Billing = () => {
                 }`}>
                     <AlertTriangle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${anyExceeded ? 'text-red-500' : 'text-amber-500'}`} />
                     <div className="flex-1 min-w-0">
-                        <p className={`text-body font-semibold ${anyExceeded ? 'text-red-800' : 'text-amber-800'}`}>
+                        <p className={`text-body font-medium ${anyExceeded ? 'text-red-800' : 'text-amber-800'}`}>
                             {anyExceeded ? 'Usage limit reached' : 'You\'re approaching your plan limits'}
                         </p>
                         <p className={`text-body mt-0.5 ${anyExceeded ? 'text-red-700' : 'text-amber-700'}`}>
@@ -189,14 +189,14 @@ export const Billing = () => {
                     return (
                         <Card key={plan.id} className={`flex flex-col relative ${isCurrent ? 'border-primary border-2 shadow-lg' : ''}`}>
                             {isCurrent && (
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-micro font-bold flex items-center gap-1">
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-micro font-medium flex items-center gap-1">
                                     <ShieldCheck className="w-3 h-3" /> {t('billing.currentPlan')}
                                 </div>
                             )}
                             <CardHeader>
                                 <CardTitle>{plan.name}</CardTitle>
                                 <div className="flex items-baseline gap-1 mt-2">
-                                    <span className="text-heading-1 font-bold">{formatCurrency(Number(plan.price), 'EUR')}</span>
+                                    <span className="text-heading-1 font-medium">{formatCurrency(Number(plan.price), 'EUR')}</span>
                                     <span className="text-muted-foreground text-body">{t('billing.perMonth')}</span>
                                 </div>
                             </CardHeader>

@@ -141,7 +141,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                     <Button variant="ghost" size="icon" onClick={() => onNavigate('SApackages')}>
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <h2 className="text-heading-1 font-bold">Loading...</h2>
+                    <h2 className="text-heading-1 font-medium">Loading...</h2>
                 </div>
             </div>
         );
@@ -155,7 +155,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h2 className="text-heading-1 font-bold">{isEditing ? 'Edit Package' : 'Add New Package'}</h2>
+                    <h2 className="text-heading-1 font-medium">{isEditing ? 'Edit Package' : 'Add New Package'}</h2>
                     <p className="text-body text-muted-foreground">
                         {isEditing ? 'Update package details and features' : 'Create a new subscription package'}
                     </p>
@@ -255,7 +255,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                                     id="isTrailing"
                                     checked={isTrailing}
                                     onChange={(e) => setIsTrailing(e.target.checked)}
-                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                    className="h-4 w-4 rounded border-gray-300 text-[#2a8fbd] focus:ring-[#2a8fbd]"
                                 />
                                 <Label htmlFor="isTrailing" className="font-medium cursor-pointer">
                                     Default (Trailing) Package
@@ -271,7 +271,7 @@ export function SAPackageForm({ packageId, onNavigate }: SAPackageFormProps) {
                                     id="isPublic"
                                     checked={isPublic}
                                     onChange={(e) => setIsPublic(e.target.checked)}
-                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                    className="h-4 w-4 rounded border-gray-300 text-[#2a8fbd] focus:ring-[#2a8fbd]"
                                 />
                                 <Label htmlFor="isPublic" className="font-medium cursor-pointer">
                                     Visible to Public

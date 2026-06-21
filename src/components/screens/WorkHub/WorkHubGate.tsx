@@ -23,11 +23,11 @@ export function WorkHubGate({ children, onUpgrade }: Props) {
 
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 gap-6">
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-purple-100">
-                    <Briefcase className="w-8 h-8 text-purple-600" />
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#f0f6ff]">
+                    <Briefcase className="w-8 h-8 text-[#2a8fbd]" />
                 </div>
                 <div className="text-center max-w-md">
-                    <h2 className="text-heading-1 font-bold mb-2">WorkHub is not included in your plan</h2>
+                    <h2 className="text-heading-1 font-medium mb-2">WorkHub is not included in your plan</h2>
                     <p className="text-body text-muted-foreground mb-6">
                         WorkHub gives your team real-time task management, time tracking, digital completion reports,
                         and auto-invoicing for field-service work.
@@ -42,14 +42,14 @@ export function WorkHubGate({ children, onUpgrade }: Props) {
                     ].map(({ label, value }) => (
                         <Card key={label} className="py-3">
                             <CardContent className="p-2">
-                                <div className="text-heading-2 font-bold text-purple-600">{value}</div>
+                                <div className="text-heading-2 font-medium text-[#2a8fbd]">{value}</div>
                                 <div className="text-caption text-muted-foreground">{label}</div>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
 
-                <Button onClick={onUpgrade} className="bg-purple-600 hover:bg-purple-700 gap-2">
+                <Button onClick={onUpgrade} className="bg-[#f08a3c] hover:bg-[#e07530] gap-2">
                     <Zap className="w-4 h-4" />
                     Upgrade to unlock WorkHub
                 </Button>
@@ -67,7 +67,7 @@ export function WorkHubGate({ children, onUpgrade }: Props) {
     return (
         <>
             {quotas.length > 0 && (
-                <div className="flex gap-3 px-4 py-1 border-b bg-purple-50/50 text-caption text-muted-foreground flex-wrap">
+                <div className="flex gap-3 px-4 py-1 border-b bg-[#f0f6ff]/50 text-caption text-muted-foreground flex-wrap">
                     {quotas.map(({ label, used, limit }) => (
                         <span key={label}>
                             {label}:{' '}

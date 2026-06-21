@@ -212,7 +212,7 @@ export function HelpChatBot({ config, currentScreen = '' }: Props) {
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 flexShrink: 0,
             }}>
-                <div className="text-heading-2 font-semibold" style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'white' }}>
+                <div className="text-heading-2 font-medium" style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'white' }}>
                     <HelpCircle style={{ width: 18, height: 18 }} />
                     {config.botName}
                 </div>

@@ -164,8 +164,8 @@ export function SAdashboard({ onNavigate }: SAdashboardProps) {
                         <div className="space-y-4">
                             {stats.recentActivity.map((activity) => (
                                 <div key={activity.id} className="flex items-start gap-4 pb-4 border-b last:border-0">
-                                    <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
-                                        <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                                    <div className="h-10 w-10 rounded-full bg-[#f0f6ff] dark:bg-[#1e3a5f]/30 flex items-center justify-center shrink-0">
+                                        <TrendingUp className="h-5 w-5 text-[#2a8fbd] dark:text-[#3d5a80]" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-body font-medium">{activity.description}</p>

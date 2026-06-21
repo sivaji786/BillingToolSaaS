@@ -88,7 +88,7 @@ export function RoleForm({ roleId, onBack, companyTypeId }: RoleFormProps) {
                 <Button variant="ghost" onClick={onBack}>
                     <ArrowLeft className="h-4 w-4 mr-2" /> {t('common.back')}
                 </Button>
-                <h2 className="text-heading-2 font-semibold">{roleId ? t('admin.roles.editRole') : t('admin.roles.createRole')}</h2>
+                <h2 className="text-heading-2 font-medium">{roleId ? t('admin.roles.editRole') : t('admin.roles.createRole')}</h2>
             </div>
 
             <div className="border p-6 rounded-md bg-card space-y-6">
@@ -118,7 +118,7 @@ export function RoleForm({ roleId, onBack, companyTypeId }: RoleFormProps) {
                                         <Square className="h-4 w-4 text-muted-foreground shrink-0" />
                                     }
                                     <span className="text-body">
-                                        <span className="font-semibold text-micro text-muted-foreground uppercase mr-1">{right.module}</span>
+                                        <span className="font-medium text-micro text-muted-foreground uppercase mr-1">{right.module}</span>
                                         {right.action}
                                     </span>
                                 </div>

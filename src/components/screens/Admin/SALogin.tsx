@@ -46,13 +46,13 @@ export function SALogin({ onLoginSuccess }: SALoginProps) {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f0f6ff] via-white to-[#dbe8f7] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
             {/* Home link — top-left */}
             <div className="absolute top-4 left-4">
                 <a
                     href="#/"
                     onClick={() => { window.location.hash = '#/'; }}
-                    className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-heading-3 text-gray-500 dark:text-gray-400 hover:text-[#f08a3c] dark:hover:text-[#3d5a80] transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Home
@@ -62,10 +62,10 @@ export function SALogin({ onLoginSuccess }: SALoginProps) {
             <div className="w-full max-w-md">
                 {/* Logo and Title */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple-600 mb-4 shadow-lg">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#f08a3c] mb-4 shadow-lg">
                         <Shield className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-heading-1 font-bold text-gray-900 dark:text-white mb-2">
+                    <h1 className="text-heading-1 font-medium text-gray-900 dark:text-white mb-2">
                         SaaS Admin Portal
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400">

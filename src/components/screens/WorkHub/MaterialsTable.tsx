@@ -103,7 +103,7 @@ export function MaterialsTable({ materials, onChange, readOnly = false }: Props)
 
             {/* Running total */}
             <div className="flex justify-end pt-1 border-t">
-                <span className="text-body font-semibold">Total: €{total.toFixed(2)}</span>
+                <span className="text-body font-medium">Total: €{total.toFixed(2)}</span>
             </div>
         </div>
     );

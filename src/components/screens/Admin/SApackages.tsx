@@ -171,7 +171,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                 <div className="flex gap-2 w-full md:w-auto">
                     <Button 
                         onClick={() => onNavigate('SAPackageForm')}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white flex-1 md:flex-none"
+                        className="bg-[#1e3a5f] hover:bg-[#1e3a5f] text-white flex-1 md:flex-none"
                     >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Package
@@ -185,7 +185,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                     <Table className="border-collapse min-w-[800px]">
                         <TableHeader>
                             <TableRow className="hover:bg-transparent border-b bg-muted/30">
-                                <TableHead className="w-[200px] font-bold text-foreground py-6 px-6 sticky left-0 bg-muted/95 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                                <TableHead className="w-[200px] font-medium text-foreground py-6 px-6 sticky left-0 bg-muted/95 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                                     Features
                                 </TableHead>
                                 {filteredPackages.map((pkg) => (
@@ -194,13 +194,13 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                                             <DebouncedInput 
                                                 value={pkg.name} 
                                                 onSave={(val) => handleUpdate(pkg.id, 'name', val)}
-                                                className="text-center font-bold text-heading-3 h-10 border-none bg-transparent hover:bg-muted/50 focus:bg-white"
+                                                className="text-center font-medium text-heading-3 h-10 border-none bg-transparent hover:bg-muted/50 focus:bg-white"
                                             />
                                             <div className="flex gap-1">
                                                 <Button 
                                                     variant="ghost" 
                                                     size="icon" 
-                                                    className="h-7 w-7 text-muted-foreground hover:text-indigo-600"
+                                                    className="h-7 w-7 text-muted-foreground hover:text-[#2a8fbd]"
                                                     onClick={() => onNavigate('SAPackageForm', { packageId: pkg.id })}
                                                 >
                                                     <Edit className="h-3.5 w-3.5" />
@@ -228,7 +228,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                         <TableBody>
                             {/* Price Row */}
                             <TableRow className="group border-b hover:bg-muted/10">
-                                <TableCell className="font-semibold py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                                <TableCell className="font-medium py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                                     Price
                                 </TableCell>
                                 {filteredPackages.map((pkg) => (
@@ -238,7 +238,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                                                 type="number"
                                                 value={pkg.price}
                                                 onSave={(val) => handleUpdate(pkg.id, 'price', val)}
-                                                className="w-24 text-center font-bold"
+                                                className="w-24 text-center font-medium"
                                             />
                                         </div>
                                     </TableCell>
@@ -247,7 +247,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
 
                             {/* Currency Row */}
                             <TableRow className="group border-b hover:bg-muted/10">
-                                <TableCell className="font-semibold py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                                <TableCell className="font-medium py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                                     Currency
                                 </TableCell>
                                 {filteredPackages.map((pkg) => (
@@ -272,7 +272,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
 
                             {/* Duration Row */}
                             <TableRow className="group border-b hover:bg-muted/10">
-                                <TableCell className="font-semibold py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                                <TableCell className="font-medium py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                                     Duration / Cycle
                                 </TableCell>
                                 {filteredPackages.map((pkg) => (
@@ -296,7 +296,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
 
                             {/* Status Row */}
                             <TableRow className="group border-b hover:bg-muted/10">
-                                <TableCell className="font-semibold py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                                <TableCell className="font-medium py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                                     Active / Inactive
                                 </TableCell>
                                 {filteredPackages.map((pkg) => (
@@ -312,7 +312,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
 
                             {/* Public Visibility Row */}
                             <TableRow className="group border-b hover:bg-muted/10">
-                                <TableCell className="font-semibold py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                                <TableCell className="font-medium py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                                     Visible to Public
                                 </TableCell>
                                 {filteredPackages.map((pkg) => (
@@ -328,14 +328,14 @@ export function SApackages({ onNavigate }: SApackagesProps) {
 
                             {/* Default Package Row */}
                             <TableRow className="group border-b hover:bg-muted/10">
-                                <TableCell className="font-semibold py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                                <TableCell className="font-medium py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                                     Default (trailing)
                                 </TableCell>
                                 {filteredPackages.map((pkg) => (
                                     <TableCell key={pkg.id} className="py-4 px-4 text-center border-l">
                                         <div className="flex items-center justify-center">
                                             {pkg.isTrailing ? (
-                                                <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 border-indigo-200">
+                                                <Badge className="bg-[#dbe8f7] text-[#1e3a5f] hover:bg-[#dbe8f7] border-[rgba(30,58,95,0.20)]">
                                                     Current Default
                                                 </Badge>
                                             ) : (
@@ -355,7 +355,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
 
                             {/* Divider for Services */}
                             <TableRow className="bg-muted/20">
-                                <TableCell colSpan={filteredPackages.length + 1} className="py-2 px-6 text-micro font-bold uppercase tracking-wider text-muted-foreground">
+                                <TableCell colSpan={filteredPackages.length + 1} className="py-2 px-6 text-micro font-medium uppercase tracking-wider text-muted-foreground">
                                     Service Limits & Features
                                 </TableCell>
                             </TableRow>
@@ -365,7 +365,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                                 <TableRow key={service.id} className="group border-b hover:bg-muted/10">
                                     <TableCell className="py-4 px-6 sticky left-0 bg-card/95 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                                         <div className="flex flex-col">
-                                            <span className="font-semibold">{service.name}</span>
+                                            <span className="font-medium">{service.name}</span>
                                             <span className="text-body text-muted-foreground uppercase">{service.type}</span>
                                         </div>
                                     </TableCell>
@@ -401,7 +401,7 @@ export function SApackages({ onNavigate }: SApackagesProps) {
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => onNavigate('SAPackageServices')}
-                                        className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                        className="text-[#2a8fbd] border-[rgba(30,58,95,0.20)] hover:bg-[#f0f6ff]"
                                     >
                                         <Plus className="h-3.5 w-3.5 mr-1" />
                                         Add New Service

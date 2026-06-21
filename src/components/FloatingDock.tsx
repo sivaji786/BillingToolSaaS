@@ -12,12 +12,17 @@ import { useFloatingDock } from '../contexts/FloatingDockContext';
  *   order 3 = Edit Mode bar   (SA admin only)
  */
 export function FloatingDock() {
-    const { slots } = useFloatingDock();
+    const { slots, currentScreen } = useFloatingDock();
     if (!slots.length) return null;
+
+    // On mobile, WorkHub has a bottom nav ~60px tall — push the dock above it.
+    const bottomClass = currentScreen === 'workhub'
+        ? 'bottom-[72px] md:bottom-6'
+        : 'bottom-6';
 
     return (
         <div
-            className="fixed bottom-6 right-6 flex flex-col-reverse items-end gap-3 pointer-events-none"
+            className={`fixed ${bottomClass} right-6 flex flex-col-reverse items-end gap-3 pointer-events-none`}
             style={{ zIndex: 9998 }}
         >
             {slots.map(slot => (

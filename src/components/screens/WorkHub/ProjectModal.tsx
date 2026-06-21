@@ -159,7 +159,7 @@ export function ProjectModal({ project, onClose, onSaved }: Props) {
                                 />
                             ))}
                             <div
-                                className="relative w-6 h-6 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground hover:border-purple-400 cursor-pointer transition-colors"
+                                className="relative w-6 h-6 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground hover:border-[rgba(30,58,95,0.25)] cursor-pointer transition-colors"
                                 title="Custom colour"
                             >
                                 <div className="w-full h-full" style={{ backgroundColor: colour }} />
@@ -176,7 +176,7 @@ export function ProjectModal({ project, onClose, onSaved }: Props) {
                     <div className="flex justify-end gap-2 pt-1">
                         <Button variant="outline" onClick={onClose}>Cancel</Button>
                         <Button
-                            className="bg-purple-600 hover:bg-purple-700"
+                            className="bg-[#f08a3c] hover:bg-[#e07530]"
                             disabled={!canSave || saveMut.isPending}
                             onClick={() => saveMut.mutate()}
                         >

@@ -31,7 +31,7 @@ export function AdminLayout({ children, currentScreen, onNavigate, onLogout }: A
                 {/* Header */}
                 <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-6">
                     <div>
-                        <h1 className="text-heading-1 font-bold">
+                        <h1 className="text-heading-1 font-medium">
                             {(() => {
                                 switch (currentScreen) {
                                     case 'SAdashboard': return 'Dashboard';

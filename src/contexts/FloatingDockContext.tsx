@@ -13,12 +13,15 @@ interface FloatingDockContextValue {
     add: (entry: SlotEntry) => void;
     remove: (id: string) => void;
     ping: () => void;
+    currentScreen: string;
+    setScreen: (screen: string) => void;
 }
 
 const FloatingDockContext = React.createContext<FloatingDockContextValue | null>(null);
 
 export function FloatingDockProvider({ children }: { children: React.ReactNode }) {
     const [slots, setSlots] = React.useState<SlotEntry[]>([]);
+    const [currentScreen, setCurrentScreen] = React.useState('');
 
     const add = React.useCallback((entry: SlotEntry) => {
         setSlots(prev =>
@@ -37,8 +40,12 @@ export function FloatingDockProvider({ children }: { children: React.ReactNode }
         setSlots(prev => [...prev]);
     }, []);
 
+    const setScreen = React.useCallback((screen: string) => {
+        setCurrentScreen(screen);
+    }, []);
+
     return (
-        <FloatingDockContext.Provider value={{ slots, add, remove, ping }}>
+        <FloatingDockContext.Provider value={{ slots, add, remove, ping, currentScreen, setScreen }}>
             {children}
         </FloatingDockContext.Provider>
     );

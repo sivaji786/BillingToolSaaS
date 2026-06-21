@@ -36,6 +36,15 @@ interface WorkHubOfflineState {
     setSyncing: (v: boolean) => void;
     lastSyncedAt: string | null;
     setLastSyncedAt: (v: string) => void;
+
+    // Ephemeral sync failure tracking (not persisted)
+    syncFailures: QueuedRequest[];
+    setSyncFailures: (items: QueuedRequest[]) => void;
+    clearSyncFailures: () => void;
+
+    // Ephemeral per-item sync progress (not persisted)
+    syncProgress: { current: number; total: number } | null;
+    setSyncProgress: (v: { current: number; total: number } | null) => void;
 }
 
 export const useWorkhubOfflineStore = create<WorkHubOfflineState>()(
@@ -75,6 +84,13 @@ export const useWorkhubOfflineStore = create<WorkHubOfflineState>()(
             setSyncing: (v) => set({ isSyncing: v }),
             lastSyncedAt: null,
             setLastSyncedAt: (v) => set({ lastSyncedAt: v }),
+
+            syncFailures: [],
+            setSyncFailures: (items) => set({ syncFailures: items }),
+            clearSyncFailures: () => set({ syncFailures: [] }),
+
+            syncProgress: null,
+            setSyncProgress: (v) => set({ syncProgress: v }),
         }),
         {
             name: 'workhub-offline-store',
@@ -96,29 +112,44 @@ export const useWorkhubOfflineStore = create<WorkHubOfflineState>()(
  */
 export async function flushOfflineQueue(
     store: ReturnType<typeof useWorkhubOfflineStore.getState>
-): Promise<{ flushed: number; failed: number }> {
+): Promise<{ flushed: number; failed: number; failedItems: QueuedRequest[] }> {
     const queue = store.requestQueue;
-    if (queue.length === 0) return { flushed: 0, failed: 0 };
+    if (queue.length === 0) return { flushed: 0, failed: 0, failedItems: [] };
+
+    const token = localStorage.getItem('wh-auth');
+    const authHeaders: Record<string, string> = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
 
     store.setSyncing(true);
+    store.setSyncProgress({ current: 0, total: queue.length });
     let flushed = 0;
     let failed  = 0;
+    const failedItems: QueuedRequest[] = [];
 
-    for (const req of queue) {
-        try {
-            await fetch(req.url, {
-                method: req.method,
-                headers: { 'Content-Type': 'application/json' },
-                body: req.body ? JSON.stringify(req.body) : undefined,
-            });
-            store.dequeueRequest(req.id);
-            flushed++;
-        } catch {
-            failed++;
+    try {
+        for (let i = 0; i < queue.length; i++) {
+            const req = queue[i];
+            store.setSyncProgress({ current: i + 1, total: queue.length });
+            try {
+                await fetch(req.url, {
+                    method: req.method,
+                    headers: { 'Content-Type': 'application/json', ...authHeaders },
+                    body: req.body ? JSON.stringify(req.body) : undefined,
+                });
+                store.dequeueRequest(req.id);
+                flushed++;
+            } catch {
+                failed++;
+                failedItems.push(req);
+            }
         }
+    } finally {
+        store.setSyncing(false);
+        store.setSyncProgress(null);
+        store.setLastSyncedAt(new Date().toISOString());
+        store.setSyncFailures(failedItems);
     }
 
-    store.setSyncing(false);
-    store.setLastSyncedAt(new Date().toISOString());
-    return { flushed, failed };
+    return { flushed, failed, failedItems };
 }

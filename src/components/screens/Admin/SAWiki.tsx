@@ -276,9 +276,9 @@ function MockupsPanel() {
                         onClick={() => !isRenaming && toggleFolder(item.path)}
                     >
                         {isExpanded
-                            ? <ChevronDown className="h-3.5 w-3.5 text-purple-500 shrink-0" />
-                            : <ChevronRight className="h-3.5 w-3.5 text-purple-500 shrink-0" />}
-                        <Folder className="h-4 w-4 text-purple-500 shrink-0" />
+                            ? <ChevronDown className="h-3.5 w-3.5 text-[#2a8fbd] shrink-0" />
+                            : <ChevronRight className="h-3.5 w-3.5 text-[#2a8fbd] shrink-0" />}
+                        <Folder className="h-4 w-4 text-[#2a8fbd] shrink-0" />
                         {isRenaming ? (
                             <input
                                 ref={renameInputRef}
@@ -290,17 +290,17 @@ function MockupsPanel() {
                                     if (e.key === 'Escape') setRenamingPath(null);
                                 }}
                                 onClick={e => e.stopPropagation()}
-                                className="flex-1 min-w-0 text-body bg-white border border-purple-300 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-purple-400"
+                                className="flex-1 min-w-0 text-body bg-white border border-[rgba(30,58,95,0.20)] rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-[rgba(30,58,95,0.25)]"
                             />
                         ) : (
-                            <span className="flex-1 min-w-0 text-body font-semibold text-slate-700 truncate select-none">
+                            <span className="flex-1 min-w-0 text-body font-medium text-slate-700 truncate select-none">
                                 {item.name}
                             </span>
                         )}
                         {!isRenaming && (
                             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
                                 <button title="New subfolder" onClick={() => { setNewFolderParent(item.path); setNewFolderName(''); setRenamingPath(null); }}
-                                    className="p-0.5 rounded hover:bg-purple-100 text-slate-400 hover:text-purple-600">
+                                    className="p-0.5 rounded hover:bg-[#f0f6ff] text-slate-400 hover:text-[#f08a3c]">
                                     <FolderPlus className="h-3.5 w-3.5" />
                                 </button>
                                 <button title="Upload HTML here" onClick={() => triggerUpload(item.path)} disabled={uploading}
@@ -322,7 +322,7 @@ function MockupsPanel() {
                     {/* Inline new-subfolder input */}
                     {newFolderParent === item.path && (
                         <div className="flex items-center gap-1.5 pr-3 py-1" style={{ paddingLeft: pl + 24 }} onClick={e => e.stopPropagation()}>
-                            <Folder className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                            <Folder className="h-3.5 w-3.5 text-[#3d5a80] shrink-0" />
                             <input
                                 autoFocus
                                 value={newFolderName}
@@ -332,10 +332,10 @@ function MockupsPanel() {
                                     if (e.key === 'Escape') { setNewFolderParent(null); setNewFolderName(''); }
                                 }}
                                 placeholder="Folder name…"
-                                className="flex-1 min-w-0 text-body bg-white border border-purple-300 rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-purple-400"
+                                className="flex-1 min-w-0 text-body bg-white border border-[rgba(30,58,95,0.20)] rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-[rgba(30,58,95,0.25)]"
                             />
                             <button onClick={() => handleCreateFolder(item.path)} disabled={!newFolderName.trim()}
-                                className="text-micro px-2 py-0.5 rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 whitespace-nowrap">
+                                className="text-micro px-2 py-0.5 rounded bg-[#f08a3c] text-white hover:bg-[#e07530] disabled:opacity-50 whitespace-nowrap">
                                 Add
                             </button>
                             <button onClick={() => { setNewFolderParent(null); setNewFolderName(''); }}
@@ -360,12 +360,12 @@ function MockupsPanel() {
                 key={item.path}
                 className={cn(
                     'group flex items-center gap-2 pr-3 py-1.5 rounded-lg cursor-pointer transition-all',
-                    isSelected ? 'bg-purple-100 border border-purple-200' : 'hover:bg-slate-50 border border-transparent'
+                    isSelected ? 'bg-[#f0f6ff] border border-[rgba(30,58,95,0.15)]' : 'hover:bg-slate-50 border border-transparent'
                 )}
                 style={{ paddingLeft: pl }}
                 onClick={() => !isRenaming && setPreviewFile(item)}
             >
-                <FileText className={cn('h-4 w-4 shrink-0', isSelected ? 'text-purple-600' : 'text-slate-400')} />
+                <FileText className={cn('h-4 w-4 shrink-0', isSelected ? 'text-[#2a8fbd]' : 'text-slate-400')} />
                 {isRenaming ? (
                     <input
                         ref={renameInputRef}
@@ -377,11 +377,11 @@ function MockupsPanel() {
                             if (e.key === 'Escape') setRenamingPath(null);
                         }}
                         onClick={e => e.stopPropagation()}
-                        className="flex-1 min-w-0 text-body bg-white border border-purple-300 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-purple-400"
+                        className="flex-1 min-w-0 text-body bg-white border border-[rgba(30,58,95,0.20)] rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-[rgba(30,58,95,0.25)]"
                     />
                 ) : (
                     <div className="flex-1 min-w-0">
-                        <p className={cn('text-body truncate font-medium', isSelected ? 'text-purple-700' : 'text-slate-700')}>
+                        <p className={cn('text-body truncate font-medium', isSelected ? 'text-[#1e3a5f]' : 'text-slate-700')}>
                             {item.name}
                         </p>
                         {item.size !== undefined && (
@@ -415,7 +415,7 @@ function MockupsPanel() {
             <div className="w-80 flex flex-col gap-3 border-r shrink-0 h-full pr-3">
                 {/* Toolbar */}
                 <div className="flex items-center gap-2 shrink-0 pr-3">
-                    <span className="flex-1 text-body font-semibold text-slate-700">HTML Mockups</span>
+                    <span className="flex-1 text-body font-medium text-slate-700">HTML Mockups</span>
                     <button
                         onClick={() => { setNewFolderParent(''); setNewFolderName(''); setRenamingPath(null); }}
                         title="New folder"
@@ -427,7 +427,7 @@ function MockupsPanel() {
                     <button
                         onClick={() => triggerUpload('')}
                         disabled={uploading}
-                        className="flex items-center gap-1 px-2.5 py-1.5 text-micro font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-micro font-medium rounded-md bg-[#f08a3c] text-white hover:bg-[#e07530] disabled:opacity-50 transition-colors"
                     >
                         <Upload className="h-3.5 w-3.5" />
                         {uploading ? '…' : 'Upload'}
@@ -437,8 +437,8 @@ function MockupsPanel() {
 
                 {/* Root-level new folder input */}
                 {newFolderParent === '' && (
-                    <div className="flex items-center gap-2 px-2 py-1.5 mr-3 rounded-lg bg-purple-50 border border-purple-200">
-                        <Folder className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                    <div className="flex items-center gap-2 px-2 py-1.5 mr-3 rounded-lg bg-[#f0f6ff] border border-[rgba(30,58,95,0.15)]">
+                        <Folder className="h-3.5 w-3.5 text-[#3d5a80] shrink-0" />
                         <input
                             autoFocus
                             value={newFolderName}
@@ -451,11 +451,11 @@ function MockupsPanel() {
                             className="flex-1 min-w-0 text-body bg-transparent outline-none placeholder:text-slate-400"
                         />
                         <button onClick={() => handleCreateFolder('')} disabled={!newFolderName.trim()}
-                            className="text-micro px-2 py-0.5 rounded bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 whitespace-nowrap">
+                            className="text-micro px-2 py-0.5 rounded bg-[#f08a3c] text-white hover:bg-[#e07530] disabled:opacity-50 whitespace-nowrap">
                             Add
                         </button>
                         <button onClick={() => { setNewFolderParent(null); setNewFolderName(''); }}
-                            className="p-0.5 rounded hover:bg-purple-200 text-slate-500">
+                            className="p-0.5 rounded hover:bg-[#dbe8f7] text-slate-500">
                             <X className="h-3.5 w-3.5" />
                         </button>
                     </div>
@@ -464,7 +464,7 @@ function MockupsPanel() {
                 <ScrollArea className="flex-1 min-h-0">
                     {loading ? (
                         <div className="flex items-center justify-center p-8">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#f08a3c]" />
                         </div>
                     ) : tree.length === 0 ? (
                         <div className="flex flex-col items-center justify-center gap-3 py-12 text-center px-4">
@@ -484,7 +484,7 @@ function MockupsPanel() {
                     <>
                         <div className="flex items-center justify-between mb-3 shrink-0">
                             <div className="min-w-0">
-                                <h2 className="text-heading-2 font-semibold text-slate-700 truncate">{previewFile.name}</h2>
+                                <h2 className="text-heading-2 font-medium text-slate-700 truncate">{previewFile.name}</h2>
                                 {previewFile.path.includes('/') && (
                                     <p className="text-micro text-slate-400 truncate">{previewFile.path}</p>
                                 )}
@@ -492,7 +492,7 @@ function MockupsPanel() {
                             <div className="flex items-center gap-2 shrink-0 ml-4">
                                 <button
                                     onClick={() => window.open(getMockupUrl(previewFile.path), '_blank')}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-micro font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-micro font-medium rounded-md bg-[#f08a3c] text-white hover:bg-[#e07530] transition-colors shadow-sm"
                                 >
                                     <ExternalLink className="h-3.5 w-3.5" />
                                     New Tab
@@ -517,11 +517,11 @@ function MockupsPanel() {
                     </>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
-                        <div className="w-20 h-20 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center">
-                            <LayoutTemplate className="h-9 w-9 text-purple-300" />
+                        <div className="w-20 h-20 rounded-2xl bg-[#f0f6ff] border border-[rgba(30,58,95,0.10)] flex items-center justify-center">
+                            <LayoutTemplate className="h-9 w-9 text-[#3d5a80]" />
                         </div>
                         <div>
-                            <p className="text-heading-3 font-semibold text-slate-600 mb-1">No mockup selected</p>
+                            <p className="text-heading-3 font-medium text-slate-600 mb-1">No mockup selected</p>
                             <p className="text-body text-slate-400">Select a file from the tree to preview it</p>
                         </div>
                     </div>
@@ -810,11 +810,11 @@ export function SAWiki() {
                         <div key={item.name} className="flex flex-col">
                             <button
                                 onClick={() => toggleFolder(item.name)}
-                                className="flex items-center gap-2 px-2 py-1.5 hover:bg-accent rounded-md text-xs font-semibold text-slate-700 w-full text-left transition-colors"
+                                className="flex items-center gap-2 px-2 py-1.5 hover:bg-accent rounded-md text-body font-medium text-slate-700 w-full text-left transition-colors"
                                 style={{ paddingLeft: `${depth * 1.5 + 0.5}rem` }}
                             >
-                                {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-purple-500" /> : <ChevronRight className="h-3.5 w-3.5 text-purple-500" />}
-                                <Folder className="h-3.5 w-3.5 text-purple-600 shrink-0" />
+                                {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-[#2a8fbd]" /> : <ChevronRight className="h-3.5 w-3.5 text-[#2a8fbd]" />}
+                                <Folder className="h-3.5 w-3.5 text-[#2a8fbd] shrink-0" />
                                 <span className="truncate capitalize">{item.name.replace(/_/g, ' ')}</span>
                             </button>
                             {isExpanded && item.children && (
@@ -831,14 +831,14 @@ export function SAWiki() {
                         key={item.path}
                         onClick={() => item.path && setSelectedPath(item.path)}
                         className={cn(
-                            "flex items-center gap-2 px-2 py-1 rounded-md text-xs w-full text-left transition-all mb-0.5",
+                            "flex items-center gap-2 px-2 py-1 rounded-md text-body w-full text-left transition-all mb-0.5",
                             isSelected
-                                ? "bg-purple-100 text-purple-700 font-medium border-l-2 border-purple-500"
+                                ? "bg-[#f0f6ff] text-[#1e3a5f] font-medium border-l-2 border-[#f08a3c]"
                                 : "hover:bg-accent text-slate-500"
                         )}
                         style={{ paddingLeft: `${depth * 1.5 + 1.5}rem` }}
                     >
-                        <FileText className={cn("h-3.5 w-3.5 shrink-0", isSelected ? "text-purple-500" : "text-slate-400")} />
+                        <FileText className={cn("h-3.5 w-3.5 shrink-0", isSelected ? "text-[#2a8fbd]" : "text-slate-400")} />
                         <span className="truncate">{item.name.replace('.md', '').replace(/_/g, ' ')}</span>
                     </button>
                 );
@@ -915,7 +915,7 @@ export function SAWiki() {
                         const el = document.getElementById(anchor);
                         if (el) el.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="text-purple-600 hover:underline cursor-pointer"
+                    className="text-[#2a8fbd] hover:underline cursor-pointer"
                     {...props}
                 >
                     {children}
@@ -926,7 +926,7 @@ export function SAWiki() {
         // External link
         if (href.startsWith('http://') || href.startsWith('https://')) {
             return (
-                <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline" {...props}>
+                <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#2a8fbd] hover:underline" {...props}>
                     {children}
                 </a>
             );
@@ -954,7 +954,7 @@ export function SAWiki() {
                             }, 600);
                         }
                     }}
-                    className="text-purple-600 hover:text-purple-800 hover:underline cursor-pointer font-medium"
+                    className="text-[#2a8fbd] hover:text-[#1e3a5f] hover:underline cursor-pointer font-medium"
                     {...props}
                 >
                     {children}
@@ -962,7 +962,7 @@ export function SAWiki() {
             );
         }
 
-        return <a href={href} className="text-purple-600 hover:underline" {...props}>{children}</a>;
+        return <a href={href} className="text-[#2a8fbd] hover:underline" {...props}>{children}</a>;
     };
 
     return (
@@ -974,7 +974,7 @@ export function SAWiki() {
                     className={cn(
                         'flex items-center gap-2 px-4 py-2 text-body font-medium rounded-t-lg transition-colors border-b-2 -mb-px',
                         activeTab === 'docs'
-                            ? 'border-purple-600 text-purple-700 bg-purple-50'
+                            ? 'border-[#f08a3c] text-[#1e3a5f] bg-[#f0f6ff]'
                             : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                     )}
                 >
@@ -986,7 +986,7 @@ export function SAWiki() {
                     className={cn(
                         'flex items-center gap-2 px-4 py-2 text-body font-medium rounded-t-lg transition-colors border-b-2 -mb-px',
                         activeTab === 'mockups'
-                            ? 'border-purple-600 text-purple-700 bg-purple-50'
+                            ? 'border-[#f08a3c] text-[#1e3a5f] bg-[#f0f6ff]'
                             : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                     )}
                 >
@@ -1012,7 +1012,7 @@ export function SAWiki() {
                     </div>
                     <button
                         onClick={() => { setShowNewDocForm(v => !v); setNewDocName(''); setNewDocFolder(''); }}
-                        className="flex items-center gap-1 px-2.5 py-1.5 text-micro font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors shrink-0"
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-micro font-medium rounded-md bg-[#f08a3c] text-white hover:bg-[#e07530] transition-colors shrink-0"
                         title="New document"
                     >
                         <FilePlus className="h-3.5 w-3.5" />
@@ -1021,8 +1021,8 @@ export function SAWiki() {
                 </div>
 
                 {showNewDocForm && (
-                    <div className="flex flex-col gap-2 p-3 rounded-lg border border-purple-200 bg-purple-50">
-                        <p className="text-micro font-semibold text-purple-800 uppercase tracking-wide">New Document</p>
+                    <div className="flex flex-col gap-2 p-3 rounded-lg border border-[rgba(30,58,95,0.15)] bg-[#f0f6ff]">
+                        <p className="text-micro font-medium text-[#1e3a5f] uppercase tracking-wide">New Document</p>
                         <Input
                             placeholder="Document name"
                             className="h-7 text-body"
@@ -1042,7 +1042,7 @@ export function SAWiki() {
                             <button
                                 onClick={handleCreateDocument}
                                 disabled={creating || !newDocName.trim()}
-                                className="flex-1 py-1 text-micro font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                                className="flex-1 py-1 text-micro font-medium rounded-md bg-[#f08a3c] text-white hover:bg-[#e07530] disabled:opacity-50 transition-colors"
                             >
                                 {creating ? 'Creating…' : 'Create'}
                             </button>
@@ -1060,7 +1060,7 @@ export function SAWiki() {
                     <div className="space-y-1">
                         {loading ? (
                             <div className="flex items-center justify-center p-8">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#f08a3c]" />
                             </div>
                         ) : (
                             renderTree(tree)
@@ -1071,7 +1071,7 @@ export function SAWiki() {
                 <div className="p-4 bg-muted/30 rounded-lg border border-dashed text-micro text-muted-foreground flex flex-col gap-2">
                     <div className="flex items-center gap-2">
                         <BookOpen className="h-3 w-3" />
-                        <span className="font-semibold uppercase tracking-wider text-body">Platform Wiki v1.0</span>
+                        <span className="font-medium uppercase tracking-wider text-body">Platform Wiki v1.0</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <Clock className="h-3 w-3" />
@@ -1084,7 +1084,7 @@ export function SAWiki() {
             <div className="flex-1 h-full flex flex-col min-w-0 overflow-hidden">
                 {/* Content Header */}
                 <div className="flex items-center justify-between mb-3 shrink-0">
-                    <h2 className="text-heading-2 font-semibold text-slate-700 capitalize truncate">
+                    <h2 className="text-heading-2 font-medium text-slate-700 capitalize truncate">
                         {getPageTitle()}
                     </h2>
                     {selectedPath && !contentLoading && (
@@ -1119,7 +1119,7 @@ export function SAWiki() {
                                     </button>
                                     <button
                                         onClick={handleExportPDF}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-micro font-medium rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-sm"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-micro font-medium rounded-md bg-[#f08a3c] text-white hover:bg-[#e07530] transition-colors shadow-sm"
                                         title="Export this page as PDF"
                                     >
                                         <Download className="h-3.5 w-3.5" />
@@ -1148,7 +1148,7 @@ export function SAWiki() {
                                     <span className="w-px h-4 bg-slate-300 mx-1" />
                                     {[1, 2, 3].map(level => (
                                         <button key={level} title={`Heading ${level}`} onClick={() => insertHeading(level)}
-                                            className="px-1.5 py-1 rounded hover:bg-slate-200 text-slate-600 text-micro font-bold transition-colors">
+                                            className="px-1.5 py-1 rounded hover:bg-slate-200 text-slate-600 text-micro font-medium transition-colors">
                                             H{level}
                                         </button>
                                     ))}
@@ -1177,13 +1177,13 @@ export function SAWiki() {
                                     ))}
                                     <span className="w-px h-4 bg-slate-300 mx-1" />
                                     <button title="Insert Mermaid diagram" onClick={() => insertBlock('```mermaid\nflowchart LR\n    A[Start] --> B[End]\n```')}
-                                        className="px-1.5 py-1 rounded hover:bg-slate-200 text-slate-600 text-micro font-semibold transition-colors">
+                                        className="px-1.5 py-1 rounded hover:bg-slate-200 text-slate-600 text-micro font-medium transition-colors">
                                         ◈ Diagram
                                     </button>
                                     <div className="ml-auto">
                                         <button title="Markdown cheatsheet" onClick={() => setShowCheatsheet(v => !v)}
                                             className={cn("flex items-center gap-1 px-2 py-1 rounded text-micro font-medium transition-colors",
-                                                showCheatsheet ? "bg-purple-100 text-purple-700" : "hover:bg-slate-200 text-slate-500")}>
+                                                showCheatsheet ? "bg-[#f0f6ff] text-[#1e3a5f]" : "hover:bg-slate-200 text-slate-500")}>
                                             <HelpCircle className="h-3.5 w-3.5" />
                                             Guide
                                         </button>
@@ -1201,7 +1201,7 @@ export function SAWiki() {
                                     />
                                     {showCheatsheet && (
                                         <div className="w-56 shrink-0 border-l border-slate-200 bg-slate-50 overflow-y-auto p-3 text-micro text-slate-600 space-y-3">
-                                            <p className="text-micro font-bold text-purple-800 uppercase tracking-wide">Markdown Guide</p>
+                                            <p className="text-micro font-medium text-[#1e3a5f] uppercase tracking-wide">Markdown Guide</p>
                                             {[
                                                 { label: 'Headings', rows: ['# H1', '## H2', '### H3'] },
                                                 { label: 'Emphasis', rows: ['**bold**', '_italic_', '~~strikethrough~~'] },
@@ -1214,7 +1214,7 @@ export function SAWiki() {
                                                 { label: 'Mermaid diagram', rows: ['```mermaid', 'flowchart LR', '  A --> B', '```'] },
                                             ].map(section => (
                                                 <div key={section.label}>
-                                                    <p className="font-semibold text-slate-700 mb-1">{section.label}</p>
+                                                    <p className="font-medium text-slate-700 mb-1">{section.label}</p>
                                                     <div className="bg-white rounded border border-slate-200 px-2 py-1.5 space-y-0.5">
                                                         {section.rows.map((row, i) => (
                                                             <p key={i} className="font-mono text-body text-slate-500 leading-snug">{row}</p>
@@ -1231,7 +1231,7 @@ export function SAWiki() {
                             <div id="wiki-print-content" className="max-w-4xl mx-auto p-8 lg:p-12">
                                 {contentLoading ? (
                                     <div className="flex flex-col items-center justify-center h-64 gap-3">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f08a3c]"></div>
                                         <p className="text-body text-slate-500">Loading documentation...</p>
                                     </div>
                                 ) : (
@@ -1241,13 +1241,13 @@ export function SAWiki() {
                                             code: CodeBlock,
                                             a: WikiLink,
                                             h1: ({ children }) => (
-                                                <h1 className="text-display font-bold text-purple-900 mt-0 mb-4 pb-2 border-b border-purple-100">{children}</h1>
+                                                <h1 className="text-display font-medium text-[#1e3a5f] mt-0 mb-4 pb-2 border-b border-[rgba(30,58,95,0.10)]">{children}</h1>
                                             ),
                                             h2: ({ children }) => (
-                                                <h2 className="text-heading-1 font-semibold text-purple-800 mt-8 mb-3 pb-1 border-b border-purple-50">{children}</h2>
+                                                <h2 className="text-heading-1 font-medium text-[#1e3a5f] mt-8 mb-3 pb-1 border-b border-[rgba(30,58,95,0.06)]">{children}</h2>
                                             ),
                                             h3: ({ children }) => (
-                                                <h3 className="text-heading-2 font-semibold text-slate-700 mt-5 mb-2">{children}</h3>
+                                                <h3 className="text-heading-2 font-medium text-slate-700 mt-5 mb-2">{children}</h3>
                                             ),
                                             h4: ({ children }) => (
                                                 <h4 className="text-heading-3 font-medium text-slate-700 mt-4 mb-1">{children}</h4>
@@ -1265,11 +1265,11 @@ export function SAWiki() {
                                                 <li className="text-body text-slate-700">{children}</li>
                                             ),
                                             blockquote: ({ children }) => (
-                                                <blockquote className="border-l-4 border-purple-300 pl-4 my-4 text-body text-slate-500 italic">{children}</blockquote>
+                                                <blockquote className="border-l-4 border-[rgba(30,58,95,0.20)] pl-4 my-4 text-body text-slate-500 italic">{children}</blockquote>
                                             ),
                                             hr: () => <hr className="my-6 border-slate-200" />,
                                             strong: ({ children }) => (
-                                                <strong className="font-semibold text-slate-800">{children}</strong>
+                                                <strong className="font-medium text-slate-800">{children}</strong>
                                             ),
                                             em: ({ children }) => (
                                                 <em className="italic text-slate-600">{children}</em>
@@ -1282,10 +1282,10 @@ export function SAWiki() {
                                                 </div>
                                             ),
                                             thead: ({ children }) => (
-                                                <thead className="bg-purple-50">{children}</thead>
+                                                <thead className="bg-[#f0f6ff]">{children}</thead>
                                             ),
                                             th: ({ children }) => (
-                                                <th className="border border-slate-300 px-4 py-2 text-left text-body font-semibold text-purple-800">{children}</th>
+                                                <th className="border border-slate-300 px-4 py-2 text-left text-body font-medium text-[#1e3a5f]">{children}</th>
                                             ),
                                             td: ({ children }) => (
                                                 <td className="border border-slate-300 px-4 py-2 text-body">{children}</td>

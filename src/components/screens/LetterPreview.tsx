@@ -210,18 +210,18 @@ export function LetterPreview({
             if (e.key === 'Enter') { onSave((e.target as HTMLInputElement).value); setEditingField(null); setHasChanges(true); }
             if (e.key === 'Escape') setEditingField(null);
           }}
-          className={`${className} border-b-2 border-purple-400 outline-none bg-transparent w-full`}
+          className={`${className} border-b-2 border-[rgba(30,58,95,0.25)] outline-none bg-transparent w-full`}
         />
       );
     }
     return (
       <span
         onDoubleClick={() => setEditingField(key)}
-        className={`${className} cursor-pointer hover:bg-purple-50 rounded px-0.5 group relative inline-block`}
+        className={`${className} cursor-pointer hover:bg-[#f0f6ff] rounded px-0.5 group relative inline-block`}
         title="Double-click to edit"
       >
         {value || <span className="text-gray-400 italic">{placeholder}</span>}
-        <Edit2 className="h-3 w-3 absolute -right-4 top-0.5 opacity-0 group-hover:opacity-50 text-purple-500" />
+        <Edit2 className="h-3 w-3 absolute -right-4 top-0.5 opacity-0 group-hover:opacity-50 text-[#2a8fbd]" />
       </span>
     );
   };
@@ -248,18 +248,18 @@ export function LetterPreview({
             if (e.key === 'Enter') handleFieldChange(field, (e.target as HTMLInputElement).value);
             if (e.key === 'Escape') setEditingField(null);
           }}
-          className={`${className} border-b-2 border-purple-400 outline-none bg-transparent w-full`}
+          className={`${className} border-b-2 border-[rgba(30,58,95,0.25)] outline-none bg-transparent w-full`}
         />
       );
     }
     return (
       <span
         onDoubleClick={() => setEditingField(field)}
-        className={`${className} cursor-pointer hover:bg-purple-50 rounded px-0.5 group relative inline-block`}
+        className={`${className} cursor-pointer hover:bg-[#f0f6ff] rounded px-0.5 group relative inline-block`}
         title="Double-click to edit"
       >
         {value || <span className="text-gray-400 italic">{placeholder}</span>}
-        <Edit2 className="h-3 w-3 absolute -right-4 top-0.5 opacity-0 group-hover:opacity-50 text-purple-500" />
+        <Edit2 className="h-3 w-3 absolute -right-4 top-0.5 opacity-0 group-hover:opacity-50 text-[#2a8fbd]" />
       </span>
     );
   };
@@ -268,7 +268,7 @@ export function LetterPreview({
   const renderBodyField = () => {
     if (editingField === 'body') {
       return (
-        <div className="border-2 border-purple-400 rounded-xl overflow-hidden shadow-sm">
+        <div className="border-2 border-[rgba(30,58,95,0.25)] rounded-xl overflow-hidden shadow-sm">
           <div className="min-h-[220px]">
             <RichTextEditor
               value={richEditValue}
@@ -276,13 +276,13 @@ export function LetterPreview({
               placeholder={t('templates.letterBodyPlaceholder') || 'Type your letter content here...'}
             />
           </div>
-          <div className="flex items-center justify-between px-3 py-2 bg-purple-50 border-t border-purple-200">
+          <div className="flex items-center justify-between px-3 py-2 bg-[#f0f6ff] border-t border-[rgba(30,58,95,0.15)]">
             <Button
               size="sm"
               variant="outline"
               onClick={handleImproveWithAI}
               disabled={isImproving || !richEditValue?.trim()}
-              className="border-violet-300 text-violet-700 hover:bg-violet-50 gap-1.5"
+              className="border-[rgba(30,58,95,0.20)] text-[#1e3a5f] hover:bg-[#f0f6ff] gap-1.5"
               title="Rewrite the letter body using AI to make it more professional"
             >
               {isImproving
@@ -297,7 +297,7 @@ export function LetterPreview({
               </Button>
               <Button
                 size="sm"
-                className="bg-purple-600 text-white hover:bg-purple-700"
+                className="bg-[#f08a3c] text-white hover:bg-[#e07530]"
                 onClick={() => handleFieldChange('body', richEditValue)}
               >
                 <Check className="h-3 w-3 mr-1" />
@@ -312,7 +312,7 @@ export function LetterPreview({
     return (
       <div
         onDoubleClick={() => { setRichEditValue(letter.body || ''); setEditingField('body'); }}
-        className="cursor-pointer hover:bg-purple-50 rounded-lg group relative min-h-[160px] p-1 transition-colors"
+        className="cursor-pointer hover:bg-[#f0f6ff] rounded-lg group relative min-h-[160px] p-1 transition-colors"
         title="Double-click to edit"
       >
         {letter.body ? (
@@ -325,9 +325,9 @@ export function LetterPreview({
             {t('templates.letterBodyPlaceholder') || 'No letter content. Double-click to add.'}
           </p>
         )}
-        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white/80 rounded px-1.5 py-0.5 shadow-sm border border-purple-200">
-          <Edit2 className="h-3 w-3 text-purple-500" />
-          <span className="text-body text-purple-500 font-medium">Double-click to edit</span>
+        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white/80 rounded px-1.5 py-0.5 shadow-sm border border-[rgba(30,58,95,0.15)]">
+          <Edit2 className="h-3 w-3 text-[#2a8fbd]" />
+          <span className="text-body text-[#2a8fbd] font-medium">Double-click to edit</span>
         </div>
       </div>
     );
@@ -336,7 +336,7 @@ export function LetterPreview({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-4 pt-2 flex items-center justify-between border-b border-purple-50 shadow-sm -mx-2 px-2 mb-6">
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-4 pt-2 flex items-center justify-between border-b border-[rgba(30,58,95,0.06)] shadow-sm -mx-2 px-2 mb-6">
         <Button variant="outline" onClick={onBack}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('common.back')}
@@ -346,12 +346,12 @@ export function LetterPreview({
           {/* Template selector */}
           {sortedTemplates.length > 0 && (
             <div className="flex items-center gap-2">
-              <Layout className="h-4 w-4 text-purple-600" />
+              <Layout className="h-4 w-4 text-[#2a8fbd]" />
               <Select
                 value={currentTemplate?.id ?? ''}
                 onValueChange={handleTemplateChange}
               >
-                <SelectTrigger className="w-[200px] bg-white border-purple-100 shadow-sm hover:border-purple-300 transition-colors">
+                <SelectTrigger className="w-[200px] bg-white border-[rgba(30,58,95,0.10)] shadow-sm hover:border-[rgba(30,58,95,0.20)] transition-colors">
                   <SelectValue placeholder={t('previewModal.switchLayout') || 'Switch Template'} />
                 </SelectTrigger>
                 <SelectContent>
@@ -360,7 +360,7 @@ export function LetterPreview({
                       <span className="flex items-center gap-2">
                         {tmpl.name}
                         {tmpl.templateType === 'business_letter' && (
-                          <span className="text-body bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-medium">Letter</span>
+                          <span className="text-body bg-[#f0f6ff] text-[#2a8fbd] px-1.5 py-0.5 rounded font-medium">Letter</span>
                         )}
                       </span>
                     </SelectItem>
@@ -378,7 +378,7 @@ export function LetterPreview({
           <Button
             onClick={handleSave}
             disabled={isSaving || (!hasChanges && !String(letter.id ?? '').includes('_'))}
-            className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-md"
+            className="bg-gradient-to-r from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] text-white shadow-md"
           >
             <Save className="h-4 w-4 mr-2" />
             {isSaving ? (t('common.saving') || 'Saving...') : t('common.save')}
@@ -391,7 +391,7 @@ export function LetterPreview({
       </div>
 
       {/* Edit hint */}
-      <div className="mb-4 flex items-center gap-2 text-micro text-purple-500 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">
+      <div className="mb-4 flex items-center gap-2 text-micro text-[#2a8fbd] bg-[#f0f6ff] border border-[rgba(30,58,95,0.10)] rounded-lg px-3 py-2">
         <Edit2 className="h-3.5 w-3.5 shrink-0" />
         <span>Double-click any text field on the letter to edit it inline. Use the rich text editor for the body content.</span>
       </div>
@@ -421,9 +421,9 @@ export function LetterPreview({
                   ) : null;
 
                   if (type === 'title') return (
-                    <div key="title" className="flex justify-between items-start pb-8 border-b-2 border-purple-200">
+                    <div key="title" className="flex justify-between items-start pb-8 border-b-2 border-[rgba(30,58,95,0.15)]">
                       <div className="flex-1">
-                        <div className="text-display font-light text-purple-700 tracking-tight">
+                        <div className="text-display font-light text-[#1e3a5f] tracking-tight">
                           {renderField('title', (letter as any).title || '', '', 'Business Letter')}
                         </div>
                         <div className="mt-2 text-heading-2 text-gray-500 font-mono tracking-wider">
@@ -432,7 +432,7 @@ export function LetterPreview({
                       </div>
                       {isVisible('dates') && (
                         <div className="text-right space-y-1 shrink-0 ml-6">
-                          <p className="text-body text-gray-400 uppercase font-bold tracking-widest">
+                          <p className="text-body text-gray-400 uppercase font-medium tracking-widest">
                             {t('previewModal.issueDate') || 'ISSUE DATE'}
                           </p>
                           <div className="text-heading-2 text-gray-900">
@@ -449,12 +449,12 @@ export function LetterPreview({
                   if (type === 'sender') return (
                     <div key="sender" className="flex justify-end py-2">
                       <div className="w-64">
-                        <p className="text-body text-gray-400 uppercase font-bold tracking-widest mb-3 border-b border-gray-100 pb-2">
+                        <p className="text-body text-gray-400 uppercase font-medium tracking-widest mb-3 border-b border-gray-100 pb-2">
                           {t('previewModal.from') || 'FROM'}
                         </p>
                         <div className="text-body space-y-1">
-                          <div className="text-heading-2 font-semibold text-gray-900">
-                            {renderEditableText('seller.name', effectiveSeller.name, updateSeller.bind(null, 'name'), 'font-semibold text-gray-900', 'Sender name')}
+                          <div className="text-heading-2 font-medium text-gray-900">
+                            {renderEditableText('seller.name', effectiveSeller.name, updateSeller.bind(null, 'name'), 'font-medium text-gray-900', 'Sender name')}
                           </div>
                           <div className="text-gray-600">
                             {renderEditableText('seller.address.street', effectiveSeller.address?.street || '', updateSellerAddress.bind(null, 'street'), 'text-gray-600', 'Street')}
@@ -477,12 +477,12 @@ export function LetterPreview({
                   if (type === 'to') return (
                     <div key="to" className="py-4">
                       <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-                        <p className="text-body text-gray-400 uppercase font-bold tracking-widest">
+                        <p className="text-body text-gray-400 uppercase font-medium tracking-widest">
                           {t('editor.recipient') || 'TO'}
                         </p>
                         {buyers.length > 0 && (
                           <Select onValueChange={handleBuyerSelect}>
-                            <SelectTrigger className="h-7 w-auto border-none bg-purple-50 text-purple-700 text-body font-bold uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-purple-100 transition-colors">
+                            <SelectTrigger className="h-7 w-auto border-none bg-[#f0f6ff] text-[#1e3a5f] text-body font-medium uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-[#f0f6ff] transition-colors">
                               <Users className="h-3 w-3" />
                               <SelectValue placeholder={t('previewModal.selectFromDirectory') || 'Select from directory'} />
                             </SelectTrigger>
@@ -495,8 +495,8 @@ export function LetterPreview({
                         )}
                       </div>
                       <div className="text-body space-y-1">
-                        <div className="text-heading-3 font-bold text-gray-900">
-                          {renderEditableText('buyer.name', letter.buyer?.name || '', updateBuyer.bind(null, 'name'), 'font-bold text-gray-900', 'Recipient name')}
+                        <div className="text-heading-3 font-medium text-gray-900">
+                          {renderEditableText('buyer.name', letter.buyer?.name || '', updateBuyer.bind(null, 'name'), 'font-medium text-gray-900', 'Recipient name')}
                         </div>
                         <div className="text-gray-600">
                           {renderEditableText('buyer.address.street', letter.buyer?.address?.street || '', updateBuyerAddress.bind(null, 'street'), 'text-gray-600', 'Street')}
@@ -516,7 +516,7 @@ export function LetterPreview({
                     <div key="description" className="space-y-5 pt-2">
                       {/* Subject */}
                       <div className="py-2">
-                        <p className="text-body font-semibold text-gray-700">
+                        <p className="text-body font-medium text-gray-700">
                           {t('editor.letterSubject') || 'Re:'}{' '}
                           {renderField('note', letter.note || '', 'text-gray-700', 'e.g. Project Update, Meeting Follow-up')}
                         </p>

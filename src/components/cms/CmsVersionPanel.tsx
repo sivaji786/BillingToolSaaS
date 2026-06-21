@@ -64,15 +64,15 @@ export function CmsVersionPanel({ slug, lang }: CmsVersionPanelProps) {
             >
                 <div className="flex items-center gap-2">
                     <History className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-semibold text-sm">Version History</span>
+                    <span className="font-medium text-heading-3">Version History</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{open ? 'Hide' : 'Show'}</span>
+                <span className="text-body text-muted-foreground">{open ? 'Hide' : 'Show'}</span>
             </button>
 
             {open && (
                 <div className="border-t px-6 py-4 space-y-4">
                     <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">Save a snapshot before major edits to enable rollback.</p>
+                        <p className="text-body text-muted-foreground">Save a snapshot before major edits to enable rollback.</p>
                         <Button
                             type="button"
                             variant="outline"
@@ -85,24 +85,24 @@ export function CmsVersionPanel({ slug, lang }: CmsVersionPanelProps) {
                         </Button>
                     </div>
 
-                    {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+                    {isLoading && <p className="text-heading-3 text-muted-foreground">Loading…</p>}
 
                     {!isLoading && versions.length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center py-4">No versions saved yet.</p>
+                        <p className="text-heading-3 text-muted-foreground text-center py-4">No versions saved yet.</p>
                     )}
 
                     <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                         {(versions as any[]).map((v: any) => (
                             <div key={v.id} className="flex items-center justify-between rounded-lg border bg-slate-50 dark:bg-slate-900 px-3 py-2">
                                 <div>
-                                    <p className="text-xs font-medium">{relativeTime(v.saved_at)}</p>
-                                    <p className="text-xs text-muted-foreground">{v.saved_by_label} · {new Date(v.saved_at).toLocaleString()}</p>
+                                    <p className="text-body font-medium">{relativeTime(v.saved_at)}</p>
+                                    <p className="text-body text-muted-foreground">{v.saved_by_label} · {new Date(v.saved_at).toLocaleString()}</p>
                                 </div>
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="h-7 text-xs"
+                                    className="h-7 text-body"
                                     disabled={restoringId === v.id}
                                     onClick={() => handleRestore(v.id)}
                                 >

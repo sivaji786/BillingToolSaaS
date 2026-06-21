@@ -275,7 +275,7 @@ export function Workspace() {
             case 'svg': return <ImageIcon className="h-5 w-5 text-green-500" />;
             case 'mp4':
             case 'mov':
-            case 'avi': return <Video className="h-5 w-5 text-purple-500" />;
+            case 'avi': return <Video className="h-5 w-5 text-[#2a8fbd]" />;
             case 'zip':
             case 'rar':
             case '7z': return <FileArchive className="h-5 w-5 text-yellow-600" />;
@@ -383,7 +383,7 @@ export function Workspace() {
         <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-heading-1 font-bold text-purple-900 dark:text-purple-100">{t('nav.workspace')}</h1>
+                    <h1 className="text-heading-1 font-medium text-[#1e3a5f] dark:text-white">{t('nav.workspace')}</h1>
                     <p className="text-gray-600 dark:text-gray-400">Manage your project files and folders</p>
                 </div>
                 <div className="flex gap-2">
@@ -405,7 +405,7 @@ export function Workspace() {
                             onChange={handleUpload}
                             disabled={uploadProgress !== null}
                         />
-                        <Button asChild className={`bg-purple-600 hover:bg-purple-700 ${uploadProgress !== null ? 'opacity-70 pointer-events-none' : ''}`}>
+                        <Button asChild className={`bg-[#f08a3c] hover:bg-[#e07530] ${uploadProgress !== null ? 'opacity-70 pointer-events-none' : ''}`}>
                             <label htmlFor="file-upload" className="cursor-pointer flex items-center">
                                 {uploadProgress !== null ? (
                                     <>
@@ -429,14 +429,14 @@ export function Workspace() {
             </div>
 
             {uploadProgress !== null && (
-                <Card className="p-4 border-purple-200 bg-purple-50/50">
+                <Card className="p-4 border-[rgba(30,58,95,0.15)] bg-[#f0f6ff]/50">
                     <div className="space-y-2">
-                        <div className="flex justify-between text-body font-medium text-purple-800">
+                        <div className="flex justify-between text-body font-medium text-[#1e3a5f]">
                             <span>Uploading files to {currentPath || 'workspace root'}...</span>
                             <span>{uploadProgress}%</span>
                         </div>
-                        <div className="w-full bg-purple-200 rounded-full h-2 overflow-hidden">
-                            <div className="bg-purple-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                        <div className="w-full bg-[#dbe8f7] rounded-full h-2 overflow-hidden">
+                            <div className="bg-[#f08a3c] h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
                         </div>
                     </div>
                 </Card>
@@ -466,8 +466,8 @@ export function Workspace() {
                         </div>
 
                         {selectedItems.length > 0 && (
-                            <div className="flex items-center gap-2 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100">
-                                <span className="text-body font-medium text-purple-700 mr-2">
+                            <div className="flex items-center gap-2 bg-[#f0f6ff] px-3 py-1.5 rounded-lg border border-[rgba(30,58,95,0.10)]">
+                                <span className="text-body font-medium text-[#1e3a5f] mr-2">
                                     {selectedItems.length} selected
                                 </span>
                                 <Button variant="outline" size="sm" className="h-8 shadow-sm" onClick={handleBulkDownload}>
@@ -496,7 +496,7 @@ export function Workspace() {
                             <button
                                 onClick={() => setSearchMode('ai')}
                                 className={`px-4 py-1.5 rounded-md text-body font-medium transition-all flex items-center gap-1 ${searchMode === 'ai'
-                                    ? 'bg-purple-100 shadow-sm text-purple-700'
+                                    ? 'bg-[#f0f6ff] shadow-sm text-[#1e3a5f]'
                                     : 'text-gray-500 hover:text-gray-700'
                                     }`}
                             >
@@ -507,7 +507,7 @@ export function Workspace() {
 
                         <div className="relative flex items-center gap-2">
                             <div className="relative flex-1">
-                                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${searchMode === 'ai' ? 'text-purple-400' : 'text-gray-400'}`} />
+                                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${searchMode === 'ai' ? 'text-[#3d5a80]' : 'text-gray-400'}`} />
                                 <Input
                                     placeholder={searchMode === 'ai' ? "Ask AI to find files... (e.g. 'show me invoices from 2024')" : "Search files..."}
                                     value={searchQuery}
@@ -521,12 +521,12 @@ export function Workspace() {
                                             }
                                         }
                                     }}
-                                    className={`pl-10 ${searchMode === 'ai' ? 'border-purple-300 focus:border-purple-500 focus:ring-purple-500 bg-purple-50 dark:bg-purple-900/10' : ''}`}
+                                    className={`pl-10 ${searchMode === 'ai' ? 'border-[rgba(30,58,95,0.20)] focus:border-[#f08a3c] focus:ring-[#f08a3c] bg-[#f0f6ff] dark:bg-[#1e3a5f]/10' : ''}`}
                                 />
                             </div>
                             {searchMode === 'ai' && (
                                 <Button
-                                    className="bg-purple-600 hover:bg-purple-700 whitespace-nowrap"
+                                    className="bg-[#f08a3c] hover:bg-[#e07530] whitespace-nowrap"
                                     onClick={handleAiSearch}
                                     disabled={isAiLoading || !searchQuery.trim()}
                                 >
@@ -570,7 +570,7 @@ export function Workspace() {
                             <TableRow>
                                 <TableCell colSpan={6} className="h-64 text-center">
                                     <div className="flex flex-col items-center gap-2">
-                                        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                                        <Loader2 className="h-8 w-8 animate-spin text-[#2a8fbd]" />
                                         <p className="text-body text-gray-500">Loading workspace...</p>
                                     </div>
                                 </TableCell>
@@ -695,7 +695,7 @@ export function Workspace() {
                             Cancel
                         </Button>
                         <Button
-                            className="bg-purple-600 hover:bg-purple-700"
+                            className="bg-[#f08a3c] hover:bg-[#e07530]"
                             onClick={handleMkdir}
                             disabled={!newFolderName}
                         >
@@ -727,7 +727,7 @@ export function Workspace() {
                             Cancel
                         </Button>
                         <Button
-                            className="bg-purple-600 hover:bg-purple-700"
+                            className="bg-[#f08a3c] hover:bg-[#e07530]"
                             onClick={handleRename}
                             disabled={!newNameItem || newNameItem === renameTarget}
                         >

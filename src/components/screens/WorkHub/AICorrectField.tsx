@@ -80,7 +80,7 @@ export function AICorrectField({ value, onChange, minLength = 20, placeholder }:
                     disabled={loading || value.trim().length < 5}
                     onClick={handleCorrect}
                 >
-                    {loading ? <Loader2 className="animate-spin w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5 text-purple-500" />}
+                    {loading ? <Loader2 className="animate-spin w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5 text-[#2a8fbd]" />}
                     Correct with AI
                 </Button>
                 {value.trim().length < minLength && (
@@ -92,12 +92,12 @@ export function AICorrectField({ value, onChange, minLength = 20, placeholder }:
             {corrected !== null && changes.length > 0 && (
                 <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-caption font-semibold">AI Suggestions ({changes.length})</span>
+                        <span className="text-caption font-medium">AI Suggestions ({changes.length})</span>
                         <div className="flex gap-1.5">
                             <Button type="button" size="sm" variant="outline" className="gap-1 text-caption h-7" onClick={rejectAll}>
                                 <X className="w-3 h-3" /> Reject all
                             </Button>
-                            <Button type="button" size="sm" className="gap-1 text-caption h-7 bg-purple-600 hover:bg-purple-700" onClick={acceptAll}>
+                            <Button type="button" size="sm" className="gap-1 text-caption h-7 bg-[#f08a3c] hover:bg-[#e07530]" onClick={acceptAll}>
                                 <Check className="w-3 h-3" /> Accept all
                             </Button>
                         </div>
@@ -143,7 +143,7 @@ export function AICorrectField({ value, onChange, minLength = 20, placeholder }:
                     </div>
 
                     <div>
-                        <p className="text-caption font-semibold text-muted-foreground mb-1">Corrected preview:</p>
+                        <p className="text-caption font-medium text-muted-foreground mb-1">Corrected preview:</p>
                         <p className="text-body bg-white rounded p-2 border">{corrected}</p>
                     </div>
                 </div>

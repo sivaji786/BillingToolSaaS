@@ -47,17 +47,17 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="mx-auto h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center mb-4 text-purple-600">
+        <div className="mx-auto h-12 w-12 bg-[#f0f6ff] rounded-full flex items-center justify-center mb-4 text-[#2a8fbd]">
           <KeyRound className="h-6 w-6" />
         </div>
-        <h2 className="text-heading-1 font-extrabold text-slate-900 tracking-tight">Set new password</h2>
+        <h2 className="text-heading-1 font-medium text-slate-900 tracking-tight">Set new password</h2>
         <p className="mt-2 text-body text-slate-500 max-w-sm mx-auto">
           Please enter your new password below. Make sure it's strong and unique.
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <Card className="border-0 shadow-lg shadow-purple-900/5 ring-1 ring-slate-200">
+        <Card className="border-0 shadow-lg shadow-[rgba(30,58,95,0.05)] ring-1 ring-slate-200">
           <CardContent className="py-8 px-4 sm:px-10">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -123,7 +123,7 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
               <div className="pt-2">
                 <Button 
                   type="submit" 
-                  className="w-full h-11 text-heading-2 bg-purple-600 hover:bg-purple-700" 
+                  className="w-full h-11 text-heading-2 bg-[#f08a3c] hover:bg-[#e07530]" 
                   disabled={isLoading || !password || !confirmPassword}
                 >
                   {isLoading ? (
@@ -141,7 +141,7 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
             <div className="mt-6 text-center">
               <Button 
                 variant="link" 
-                className="text-body font-medium text-purple-600 hover:text-purple-500"
+                className="text-body font-medium text-[#2a8fbd] hover:text-[#2a8fbd]"
                 onClick={onComplete}
                 type="button"
               >

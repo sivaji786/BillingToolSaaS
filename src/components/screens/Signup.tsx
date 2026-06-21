@@ -225,7 +225,7 @@ export function Signup({ initialPlan }: SignupProps) {
         <div className="min-h-screen flex">
 
             {/* ── Left branding panel ─────────────────────────────────────── */}
-            <div className="hidden lg:flex lg:w-[42%] xl:w-[38%] flex-col bg-gradient-to-br from-violet-700 via-purple-700 to-fuchsia-700 relative overflow-hidden">
+            <div className="hidden lg:flex lg:w-[42%] xl:w-[38%] flex-col bg-gradient-to-br from-[#1e3a5f] via-[#2a8fbd] to-[#3d5a80] relative overflow-hidden">
 
                 {/* decorative blobs */}
                 <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -238,31 +238,31 @@ export function Signup({ initialPlan }: SignupProps) {
                         <div className="w-9 h-9 rounded-xl bg-white/20 group-hover:bg-white/30 transition-colors flex items-center justify-center">
                             <FileText className="h-5 w-5 text-white" />
                         </div>
-                        <span className="text-white font-bold text-heading-2 tracking-tight">BillingTool</span>
+                        <span className="text-white font-medium text-heading-2 tracking-tight">BillingTool</span>
                     </a>
 
                     {/* Hero copy — CMS-managed, live-editable by SA admins */}
                     <div className="flex-1 flex flex-col justify-center">
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-heading-1 font-bold text-white leading-snug whitespace-pre-line">
+                            <h2 className="text-heading-1 font-medium text-white leading-snug whitespace-pre-line">
                                 <InlineEditableText
                                     slug={CMS_SLUG}
                                     field="heading"
                                     lang={language}
                                     value={cmsContent.heading}
                                     multiline
-                                    className="text-heading-1 font-bold text-white leading-snug whitespace-pre-line"
+                                    className="text-heading-1 font-medium text-white leading-snug whitespace-pre-line"
                                 />
                             </h2>
-                            <p className="mt-3 text-violet-200 text-heading-2 leading-relaxed max-w-xs">
+                            <p className="mt-3 text-[rgba(255,255,255,0.8)] text-heading-2 leading-relaxed max-w-xs">
                                 <InlineEditableText
                                     slug={CMS_SLUG}
                                     field="subheading"
                                     lang={language}
                                     value={cmsContent.subheading}
                                     multiline
-                                    className="text-violet-200 text-heading-2 leading-relaxed"
+                                    className="text-[rgba(255,255,255,0.8)] text-heading-2 leading-relaxed"
                                 />
                             </p>
                         </div>
@@ -281,7 +281,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                             field={fieldKey}
                                             lang={language}
                                             value={cmsContent[fieldKey]}
-                                            className="text-violet-100 text-body leading-relaxed"
+                                            className="text-white text-body leading-relaxed"
                                         />
                                     </li>
                                 );
@@ -296,7 +296,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                 field="badge_text"
                                 lang={language}
                                 value={cmsContent.badge_text}
-                                className="text-violet-100 text-micro font-medium"
+                                className="text-white text-micro font-medium"
                             />
                         </div>
                     </div>
@@ -311,10 +311,10 @@ export function Signup({ initialPlan }: SignupProps) {
                 <div className="flex items-center justify-between px-6 sm:px-10 py-5 border-b border-gray-100">
                     {/* Mobile logo */}
                     <a href="#" onClick={goHome} className="flex items-center gap-2 lg:hidden group">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1e3a5f] to-[#3d5a80] flex items-center justify-center">
                             <FileText className="h-4 w-4 text-white" />
                         </div>
-                        <span className="font-bold text-gray-900">BillingTool</span>
+                        <span className="font-medium text-gray-900">BillingTool</span>
                     </a>
                     {/* Home link (desktop) */}
                     <a
@@ -332,7 +332,7 @@ export function Signup({ initialPlan }: SignupProps) {
                         <a
                             href="#login"
                             onClick={e => { e.preventDefault(); window.location.hash = 'login'; }}
-                            className="text-body font-medium text-violet-600 hover:text-violet-700 transition-colors"
+                            className="text-body font-medium text-[#2a8fbd] hover:text-[#1e3a5f] transition-colors"
                         >
                             {t('signup.login')}
                         </a>
@@ -348,7 +348,7 @@ export function Signup({ initialPlan }: SignupProps) {
                             <>
                                 {/* Page heading */}
                                 <div className="mb-8">
-                                    <h1 className="text-heading-1 font-bold text-gray-900">{t('signup.getStarted')}</h1>
+                                    <h1 className="text-heading-1 font-medium text-gray-900">{t('signup.getStarted')}</h1>
                                     <p className="text-body text-gray-500 mt-1">{t('signup.subtitle')}</p>
                                 </div>
 
@@ -367,24 +367,24 @@ export function Signup({ initialPlan }: SignupProps) {
                                                         key={plan.id}
                                                         className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 cursor-pointer transition-all duration-150 ${
                                                             active
-                                                                ? 'border-violet-500 bg-violet-50'
+                                                                ? 'border-[#f08a3c] bg-[#f0f6ff]'
                                                                 : 'border-gray-200 hover:border-gray-300 bg-white'
                                                         }`}
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                                                                active ? 'border-violet-500' : 'border-gray-300'
+                                                                active ? 'border-[#f08a3c]' : 'border-gray-300'
                                                             }`}>
-                                                                {active && <div className="w-2 h-2 rounded-full bg-violet-500" />}
+                                                                {active && <div className="w-2 h-2 rounded-full bg-[#f0f6ff]0" />}
                                                             </div>
                                                             <div>
-                                                                <span className="text-body font-semibold text-gray-800">{plan.name}</span>
+                                                                <span className="text-body font-medium text-gray-800">{plan.name}</span>
                                                                 {plan.description && (
                                                                     <p className="text-micro text-gray-400 mt-0.5">{plan.description}</p>
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <span className={`text-body font-bold whitespace-nowrap ml-3 ${active ? 'text-violet-600' : 'text-gray-600'}`}>
+                                                        <span className={`text-body font-medium whitespace-nowrap ml-3 ${active ? 'text-[#2a8fbd]' : 'text-gray-600'}`}>
                                                             {plan.currency === 'USD' ? '$' : '€'}{plan.price}
                                                             <span className="text-micro font-normal text-gray-400">{t('billing.perMonth')}</span>
                                                         </span>
@@ -412,7 +412,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                             <Input
                                                 id="company_name"
                                                 placeholder={t('signup.companyPlaceholder')}
-                                                className="pl-10 h-11 border-gray-200 focus-visible:ring-violet-500"
+                                                className="pl-10 h-11 border-gray-200 focus-visible:ring-[#f08a3c]"
                                                 value={formData.company_name}
                                                 onChange={e => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
                                                 required
@@ -443,7 +443,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                                     <RefreshCw className="h-3.5 w-3.5 text-gray-400 animate-spin flex-shrink-0" />
                                                 )}
                                                 {subdomainStatus === 'taken' && (
-                                                    <span className="text-red-500 font-semibold flex-shrink-0">✗</span>
+                                                    <span className="text-red-500 font-medium flex-shrink-0">✗</span>
                                                 )}
                                             </div>
                                         )}
@@ -466,7 +466,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                                 id="email"
                                                 type="email"
                                                 placeholder={t('signup.emailPlaceholder')}
-                                                className="pl-10 h-11 border-gray-200 focus-visible:ring-violet-500"
+                                                className="pl-10 h-11 border-gray-200 focus-visible:ring-[#f08a3c]"
                                                 value={formData.email}
                                                 onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
                                                 required
@@ -485,7 +485,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                                 id="password"
                                                 type={showPassword ? 'text' : 'password'}
                                                 placeholder={t('signup.passwordPlaceholder') || 'Min. 8 characters'}
-                                                className="pl-10 pr-10 h-11 border-gray-200 focus-visible:ring-violet-500"
+                                                className="pl-10 pr-10 h-11 border-gray-200 focus-visible:ring-[#f08a3c]"
                                                 minLength={8}
                                                 value={formData.password}
                                                 onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
@@ -507,7 +507,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                     {/* Submit */}
                                     <Button
                                         type="submit"
-                                        className="w-full h-11 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold shadow-md shadow-purple-200 mt-2"
+                                        className="w-full h-11 bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80] hover:from-[#e07530] hover:to-[#e07530] text-white font-medium shadow-md shadow-[rgba(30,58,95,0.10)] mt-2"
                                         disabled={isLoading || subdomainStatus === 'taken'}
                                     >
                                         {isLoading ? (
@@ -528,13 +528,13 @@ export function Signup({ initialPlan }: SignupProps) {
                             /* ── Email verification ─────────────────────────── */
                             <div className="space-y-6">
                                 <div className="text-center">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-50 mb-4">
-                                        <MailCheck className="h-8 w-8 text-violet-600" />
+                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#f0f6ff] mb-4">
+                                        <MailCheck className="h-8 w-8 text-[#2a8fbd]" />
                                     </div>
-                                    <h1 className="text-heading-1 font-bold text-gray-900">{t('signup.verifyEmailTitle')}</h1>
+                                    <h1 className="text-heading-1 font-medium text-gray-900">{t('signup.verifyEmailTitle')}</h1>
                                     <p className="text-body text-gray-500 mt-2 leading-relaxed">
                                         {t('signup.verifyEmailDesc')}{' '}
-                                        <span className="font-semibold text-gray-800 break-all">{pendingEmail}</span>
+                                        <span className="font-medium text-gray-800 break-all">{pendingEmail}</span>
                                     </p>
                                 </div>
 
@@ -549,7 +549,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                             pattern="[0-9]{6}"
                                             maxLength={6}
                                             placeholder="000000"
-                                            className="h-14 text-center text-heading-1 font-bold tracking-[0.6em] border-2 border-gray-200 focus-visible:ring-violet-500"
+                                            className="h-14 text-center text-heading-1 font-medium tracking-[0.6em] border-2 border-gray-200 focus-visible:ring-[#f08a3c]"
                                             value={verificationCode}
                                             onChange={e => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                             autoFocus
@@ -559,7 +559,7 @@ export function Signup({ initialPlan }: SignupProps) {
 
                                     <Button
                                         type="submit"
-                                        className="w-full h-11 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold shadow-md shadow-purple-200"
+                                        className="w-full h-11 bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80] hover:from-[#e07530] hover:to-[#e07530] text-white font-medium shadow-md shadow-[rgba(30,58,95,0.10)]"
                                         disabled={isVerifying || verificationCode.length !== 6}
                                     >
                                         {isVerifying ? (
@@ -583,7 +583,7 @@ export function Signup({ initialPlan }: SignupProps) {
                                             type="button"
                                             onClick={handleResend}
                                             disabled={resendCooldown > 0 || isResending}
-                                            className="text-violet-600 hover:text-violet-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                            className="text-[#2a8fbd] hover:text-[#1e3a5f] font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                         >
                                             {isResending
                                                 ? t('signup.resending')

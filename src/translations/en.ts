@@ -39,6 +39,7 @@ export const en = {
 
     // Navigation
     nav: {
+        home: 'Home',
         dashboard: 'Dashboard',
         templates: 'Templates',
         activity: 'Activity Log',
@@ -49,6 +50,88 @@ export const en = {
         workspace: 'My Workspace',
         invoices: 'Invoices',
         letters: 'Business Letters',
+    },
+
+    // Tenant Home screen
+    home: {
+        greeting: {
+            morning: 'Good morning, {name}',
+            afternoon: 'Good afternoon, {name}',
+            evening: 'Good evening, {name}',
+        },
+        section: {
+            today: 'What would you like to do today?',
+            todaySub: 'Create something new — or jump into what you already have.',
+        },
+        welcome: {
+            title: 'Welcome — what makes us different',
+            hint: 'Tour available anytime in Help.',
+            tour: 'Take the 2-min tour',
+            skip: 'Skip and explore',
+            pillar1: {
+                title: 'A full document platform',
+                text: 'Letters, billing, worksheets, templates — one workspace, fully customizable.',
+            },
+            pillar2: {
+                title: 'Real humans behind the product',
+                text: 'Talk to a real person, not a chatbot. We help you set up and grow.',
+            },
+            pillar3: {
+                title: 'Ticketing system included',
+                text: 'Open a support ticket from any document, track it to resolution.',
+            },
+        },
+        continue: {
+            title: 'Continue where you left off',
+            seeAll: 'See all →',
+            empty: 'Nothing yet — create your first document above.',
+        },
+        activity: {
+            title: 'Activity in your team',
+            seeAll: 'See all →',
+            empty: 'No recent activity yet.',
+        },
+        tickets: {
+            title: 'Your tickets',
+            new: '+ New ticket',
+            allGood: 'All systems operational',
+            cta: 'Need help? Open a support ticket and our team will respond within one business day.',
+            open: 'Open a ticket →',
+        },
+    },
+
+    // Launch tiles
+    tile: {
+        billing: {
+            title: 'Billing',
+            desc: 'Invoices, quotes, and reminders.',
+            new: '+ New invoice',
+            mine: 'My billing',
+        },
+        letter: {
+            title: 'Business Letter',
+            desc: 'Write professional correspondence.',
+            new: '+ New letter',
+            mine: 'My letters',
+        },
+        template: {
+            title: 'Template Editor',
+            desc: 'Reusable templates for any doc type.',
+            new: '+ New template',
+            mine: 'My templates',
+        },
+        workspace: {
+            title: 'Documents',
+            desc: 'Files and shared workspace.',
+            new: '+ Upload files',
+            mine: 'My workspace',
+        },
+        custom: {
+            title: 'Your custom document',
+            desc: "Build something the app doesn't have yet.",
+            new: '+ Start blank',
+            mine: 'My documents',
+        },
     },
 
     // Dashboard

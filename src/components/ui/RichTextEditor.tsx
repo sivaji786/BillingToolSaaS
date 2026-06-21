@@ -64,7 +64,7 @@ export function createEditorExtensions() {
         TextAlign.configure({ types: ['heading', 'paragraph'] }),
         Link.configure({
             openOnClick: false,
-            HTMLAttributes: { class: 'text-purple-600 underline cursor-pointer' },
+            HTMLAttributes: { class: 'text-[#2a8fbd] underline cursor-pointer' },
         }),
     ];
 }

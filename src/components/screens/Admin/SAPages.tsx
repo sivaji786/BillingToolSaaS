@@ -67,10 +67,10 @@ function NavSortableRow({ item, isSelected, onClick }: { item: CmsNavItem; isSel
     return (
         <div ref={setNodeRef} style={style}>
             <div className={cn(
-                'flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium transition-all',
+                'flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-heading-3 font-medium transition-all',
                 isSelected
-                    ? 'bg-purple-600 text-white shadow shadow-purple-200'
-                    : 'hover:bg-purple-50 dark:hover:bg-purple-900/20 text-muted-foreground hover:text-purple-600',
+                    ? 'bg-[#f08a3c] text-white shadow shadow-[rgba(30,58,95,0.10)]'
+                    : 'hover:bg-[#f0f6ff] dark:hover:bg-[#1e3a5f]/20 text-muted-foreground hover:text-[#f08a3c]',
             )}>
                 <button
                     type="button"
@@ -85,7 +85,7 @@ function NavSortableRow({ item, isSelected, onClick }: { item: CmsNavItem; isSel
                     {item.nav_label || item.title}
                 </button>
                 {item.nav_position === 'both' && (
-                    <span className={cn('text-xs px-1 rounded shrink-0', isSelected ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500')}>
+                    <span className={cn('text-body px-1 rounded shrink-0', isSelected ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500')}>
                         both
                     </span>
                 )}
@@ -207,7 +207,7 @@ export function SAPages() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center p-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#f08a3c]"></div>
             </div>
         );
     }
@@ -447,7 +447,7 @@ export function SAPages() {
                     <button
                         type="button"
                         onClick={() => setNavSectionOpen(o => !o)}
-                        className="flex items-center gap-1.5 w-full px-2 mb-1 text-body font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                        className="flex items-center gap-1.5 w-full px-2 mb-1 text-body font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
                     >
                         {navSectionOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRightIcon className="h-3.5 w-3.5" />}
                         Navigation
@@ -457,11 +457,11 @@ export function SAPages() {
                         <div className="space-y-3 mb-3">
                             {/* Top menu */}
                             <div>
-                                <p className="flex items-center gap-1 text-xs text-muted-foreground px-2 mb-1">
+                                <p className="flex items-center gap-1 text-body text-muted-foreground px-2 mb-1">
                                     <Globe className="h-3 w-3" /> Top Menu
                                 </p>
                                 {topItems.length === 0
-                                    ? <p className="text-xs text-muted-foreground px-4 py-1 italic">None — enable nav in page editor</p>
+                                    ? <p className="text-body text-muted-foreground px-4 py-1 italic">None — enable nav in page editor</p>
                                     : (
                                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTopNavDragEnd}>
                                             <SortableContext items={topItems.map(i => String(i.id))} strategy={verticalListSortingStrategy}>
@@ -481,11 +481,11 @@ export function SAPages() {
 
                             {/* Footer menu */}
                             <div>
-                                <p className="flex items-center gap-1 text-xs text-muted-foreground px-2 mb-1">
+                                <p className="flex items-center gap-1 text-body text-muted-foreground px-2 mb-1">
                                     <Footprints className="h-3 w-3" /> Footer
                                 </p>
                                 {bottomItems.length === 0
-                                    ? <p className="text-xs text-muted-foreground px-4 py-1 italic">None — enable nav in page editor</p>
+                                    ? <p className="text-body text-muted-foreground px-4 py-1 italic">None — enable nav in page editor</p>
                                     : (
                                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleBottomNavDragEnd}>
                                             <SortableContext items={bottomItems.map(i => String(i.id))} strategy={verticalListSortingStrategy}>
@@ -507,7 +507,7 @@ export function SAPages() {
                 </div>
 
                 <div className="border-t pt-2">
-                <h2 className="text-body font-semibold text-muted-foreground px-2 mb-2 uppercase tracking-wider">Built-in Pages</h2>
+                <h2 className="text-body font-medium text-muted-foreground px-2 mb-2 uppercase tracking-wider">Built-in Pages</h2>
                 {BUILTIN_PAGES.map((page) => (
                     <button
                         key={page.slug}
@@ -515,11 +515,11 @@ export function SAPages() {
                         className={cn(
                             "flex items-center gap-3 px-4 py-3 rounded-xl text-body font-medium transition-all group",
                             selectedSlug === page.slug
-                                ? "bg-purple-600 text-white shadow-lg shadow-purple-200 dark:shadow-none translate-x-1"
-                                : "hover:bg-purple-50 dark:hover:bg-purple-900/20 text-muted-foreground hover:text-purple-600"
+                                ? "bg-[#f08a3c] text-white shadow-lg shadow-[rgba(30,58,95,0.10)] dark:shadow-none translate-x-1"
+                                : "hover:bg-[#f0f6ff] dark:hover:bg-[#1e3a5f]/20 text-muted-foreground hover:text-[#f08a3c]"
                         )}
                     >
-                        <page.icon className={cn("h-4 w-4 shrink-0", selectedSlug === page.slug ? "text-white" : "text-muted-foreground group-hover:text-purple-600")} />
+                        <page.icon className={cn("h-4 w-4 shrink-0", selectedSlug === page.slug ? "text-white" : "text-muted-foreground group-hover:text-[#f08a3c]")} />
                         <span className="truncate">{page.title}</span>
                         {selectedSlug === page.slug && <ArrowRight className="ml-auto h-3 w-3 shrink-0" />}
                     </button>
@@ -528,7 +528,7 @@ export function SAPages() {
                 {/* Custom pages */}
                 {customPages.length > 0 && (
                     <>
-                        <h2 className="text-body font-semibold text-muted-foreground px-2 mt-4 mb-2 uppercase tracking-wider">Custom Pages</h2>
+                        <h2 className="text-body font-medium text-muted-foreground px-2 mt-4 mb-2 uppercase tracking-wider">Custom Pages</h2>
                         {customPages.map((page: any) => (
                             <button
                                 key={page.slug}
@@ -536,11 +536,11 @@ export function SAPages() {
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3 rounded-xl text-body font-medium transition-all group",
                                     selectedSlug === page.slug
-                                        ? "bg-purple-600 text-white shadow-lg shadow-purple-200 dark:shadow-none translate-x-1"
-                                        : "hover:bg-purple-50 dark:hover:bg-purple-900/20 text-muted-foreground hover:text-purple-600"
+                                        ? "bg-[#f08a3c] text-white shadow-lg shadow-[rgba(30,58,95,0.10)] dark:shadow-none translate-x-1"
+                                        : "hover:bg-[#f0f6ff] dark:hover:bg-[#1e3a5f]/20 text-muted-foreground hover:text-[#f08a3c]"
                                 )}
                             >
-                                <Globe className={cn("h-4 w-4 shrink-0", selectedSlug === page.slug ? "text-white" : "text-muted-foreground group-hover:text-purple-600")} />
+                                <Globe className={cn("h-4 w-4 shrink-0", selectedSlug === page.slug ? "text-white" : "text-muted-foreground group-hover:text-[#f08a3c]")} />
                                 <span className="truncate">{page.title || page.slug}</span>
                                 {selectedSlug === page.slug
                                     ? <ArrowRight className="ml-auto h-3 w-3 shrink-0" />
@@ -557,7 +557,7 @@ export function SAPages() {
                     <Button
                         type="button"
                         variant="outline"
-                        className="w-full border-dashed border-purple-300 text-purple-600 hover:bg-purple-50 hover:border-purple-400"
+                        className="w-full border-dashed border-[rgba(30,58,95,0.20)] text-[#2a8fbd] hover:bg-[#f0f6ff] hover:border-[rgba(30,58,95,0.25)]"
                         onClick={() => setShowNewModal(true)}
                     >
                         <Plus className="h-4 w-4 mr-2" />
@@ -574,9 +574,9 @@ export function SAPages() {
                         <div className="flex items-center justify-between gap-4">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <h1 className="text-heading-1 font-bold text-slate-900 dark:text-white">Edit {selectedPage.title}</h1>
+                                    <h1 className="text-heading-1 font-medium text-slate-900 dark:text-white">Edit {selectedPage.title}</h1>
                                     <span className={cn(
-                                        "text-micro font-semibold px-2 py-0.5 rounded-full border",
+                                        "text-micro font-medium px-2 py-0.5 rounded-full border",
                                         isPublished
                                             ? "bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400"
                                             : "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400"
@@ -607,7 +607,7 @@ export function SAPages() {
                                         Delete
                                     </Button>
                                 )}
-                                <Button type="submit" disabled={updateMutation.isPending} className="bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-200 dark:shadow-none">
+                                <Button type="submit" disabled={updateMutation.isPending} className="bg-[#f08a3c] hover:bg-[#e07530] shadow-lg shadow-[rgba(30,58,95,0.10)] dark:shadow-none">
                                     <Save className="mr-2 h-4 w-4" />
                                     {updateMutation.isPending ? 'Saving...' : `Save (${selectedLang.toUpperCase()})`}
                                 </Button>
@@ -624,7 +624,7 @@ export function SAPages() {
                                     className={cn(
                                         "flex items-center gap-2 px-4 py-2 rounded-lg text-body font-medium transition-all",
                                         selectedLang === lang.code
-                                            ? "bg-white dark:bg-slate-900 shadow text-purple-600 font-semibold"
+                                            ? "bg-white dark:bg-slate-900 shadow text-[#2a8fbd] font-medium"
                                             : "text-muted-foreground hover:text-slate-900 dark:hover:text-white"
                                     )}
                                 >
@@ -704,7 +704,7 @@ export function SAPages() {
                                                         type="button"
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="h-8 text-xs text-muted-foreground"
+                                                        className="h-8 text-body text-muted-foreground"
                                                         onClick={() => setScheduledOverrides(prev => ({ ...prev, [schedKey]: null }))}
                                                     >
                                                         Clear
@@ -780,7 +780,7 @@ export function SAPages() {
                                                                 [navKey]: { ...currentNavState, nav_position: e.target.value },
                                                             }))
                                                         }
-                                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-heading-3"
                                                     >
                                                         <option value="top">Top (header only)</option>
                                                         <option value="bottom">Footer only</option>
@@ -833,7 +833,7 @@ export function SAPages() {
                                                                 [navKey]: { ...currentNavState, link_target: e.target.value },
                                                             }))
                                                         }
-                                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-heading-3"
                                                     >
                                                         <option value="_self">Same tab (_self)</option>
                                                         <option value="_blank">New tab (_blank)</option>
@@ -915,10 +915,10 @@ export function SAPages() {
                                 {/* SERP Preview */}
                                 {(currentSeo.meta_title || selectedPage.title || currentSeo.og_description || selectedPage.meta_description) && (
                                     <div className="rounded-xl border bg-white p-4 space-y-1">
-                                        <p className="text-micro uppercase font-semibold text-muted-foreground mb-2">Search Preview</p>
-                                        <p className="text-sm font-medium text-blue-600 truncate">{currentSeo.meta_title || selectedPage.title}</p>
-                                        <p className="text-xs text-green-700 truncate">https://yourdomain.com/#{selectedSlug}</p>
-                                        <p className="text-xs text-muted-foreground line-clamp-2">{currentSeo.og_description || selectedPage.meta_description || 'No description set.'}</p>
+                                        <p className="text-micro uppercase font-medium text-muted-foreground mb-2">Search Preview</p>
+                                        <p className="text-heading-3 font-medium text-blue-600 truncate">{currentSeo.meta_title || selectedPage.title}</p>
+                                        <p className="text-body text-green-700 truncate">https://yourdomain.com/#{selectedSlug}</p>
+                                        <p className="text-body text-muted-foreground line-clamp-2">{currentSeo.og_description || selectedPage.meta_description || 'No description set.'}</p>
                                     </div>
                                 )}
                             </CardContent>
@@ -1058,7 +1058,7 @@ export function SAPages() {
 
                                 {/* Testimonials Section */}
                                 <SectionCard icon={<Quote className="h-4 w-4" />} title="Testimonials (Wall of Love)" desc="Customer quotes displayed on the landing page"
-                                    action={<Button type="button" variant="outline" size="sm" onClick={() => setTestimonials([...testimonials, { name: '', role: '', text: '' }])} className="h-8 border-purple-200 text-purple-600 hover:bg-purple-50">
+                                    action={<Button type="button" variant="outline" size="sm" onClick={() => setTestimonials([...testimonials, { name: '', role: '', text: '' }])} className="h-8 border-[rgba(30,58,95,0.15)] text-[#2a8fbd] hover:bg-[#f0f6ff]">
                                         <Plus className="h-3 w-3 mr-1" /> Add
                                     </Button>}
                                 >
@@ -1088,7 +1088,7 @@ export function SAPages() {
 
                                 {/* FAQ Section */}
                                 <SectionCard icon={<HelpCircle className="h-4 w-4" />} title="Frequently Asked Questions" desc="Questions and answers displayed below testimonials"
-                                    action={<Button type="button" variant="outline" size="sm" onClick={() => setFaqs([...faqs, { q: '', a: '' }])} className="h-8 border-purple-200 text-purple-600 hover:bg-purple-50">
+                                    action={<Button type="button" variant="outline" size="sm" onClick={() => setFaqs([...faqs, { q: '', a: '' }])} className="h-8 border-[rgba(30,58,95,0.15)] text-[#2a8fbd] hover:bg-[#f0f6ff]">
                                         <Plus className="h-3 w-3 mr-1" /> Add
                                     </Button>}
                                 >
@@ -1165,7 +1165,7 @@ export function SAPages() {
                                 <Images className="h-4 w-4 mr-2" />
                                 Media Library
                             </Button>
-                            <Button type="submit" disabled={updateMutation.isPending} className="bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-200 dark:shadow-none min-w-[200px]">
+                            <Button type="submit" disabled={updateMutation.isPending} className="bg-[#f08a3c] hover:bg-[#e07530] shadow-lg shadow-[rgba(30,58,95,0.10)] dark:shadow-none min-w-[200px]">
                                 <Save className="mr-2 h-4 w-4" />
                                 {updateMutation.isPending ? 'Saving...' : `Save (${selectedLang.toUpperCase()})`}
                             </Button>
@@ -1174,7 +1174,7 @@ export function SAPages() {
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center p-12 bg-slate-50 dark:bg-slate-900/20 rounded-2xl border-2 border-dashed">
                         <FileText className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
-                        <h3 className="text-heading-3 font-semibold">Select a page to edit</h3>
+                        <h3 className="text-heading-3 font-medium">Select a page to edit</h3>
                         <p className="text-body text-muted-foreground max-w-xs">Choose a page from the sidebar to modify its public content.</p>
                     </div>
                 )}
@@ -1244,7 +1244,7 @@ export function SAPages() {
                                 <select
                                     value={newNavPosition}
                                     onChange={e => setNewNavPosition(e.target.value as 'top' | 'bottom' | 'both')}
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-heading-3"
                                 >
                                     <option value="top">Top (header only)</option>
                                     <option value="bottom">Footer only</option>
@@ -1271,7 +1271,7 @@ export function SAPages() {
                         type="button"
                         disabled={isCreating || !newTitle.trim() || !newSlug.trim()}
                         onClick={handleCreatePage}
-                        className="bg-purple-600 hover:bg-purple-700"
+                        className="bg-[#f08a3c] hover:bg-[#e07530]"
                     >
                         {isCreating ? 'Creating...' : 'Create Page'}
                     </Button>
@@ -1319,7 +1319,7 @@ function SectionCard({
         <Card className="border-none shadow-xl bg-white/60 dark:bg-slate-900/60 backdrop-blur">
             <CardHeader>
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-purple-600 font-semibold">
+                    <div className="flex items-center gap-2 text-[#2a8fbd] font-medium">
                         {icon}
                         <CardTitle className="text-heading-3 text-foreground">{title}</CardTitle>
                     </div>

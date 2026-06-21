@@ -392,7 +392,7 @@ export function GlobalAIAssistant({ onGenerateInvoiceNumber, onGenerateLetterNum
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Sparkles style={{ width: '20px', height: '20px' }} />
-                    <h3 className="text-heading-1 font-semibold m-0">
+                    <h3 className="text-heading-1 font-medium m-0">
                         {isLetter ? (t('ai.assistantLetter') || 'AI Letter Assistant') : (t('ai.assistant') || 'AI Invoice Assistant')}
                     </h3>
                 </div>

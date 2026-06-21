@@ -38,13 +38,13 @@ export function CapacityCard({ worker, selected, onClick }: CapacityCardProps) {
             className={cn(
                 'border rounded-lg p-4 cursor-pointer transition-all',
                 selected
-                    ? 'border-purple-500 ring-2 ring-purple-300 bg-purple-50'
-                    : 'border-border hover:border-purple-300 hover:bg-muted/40',
+                    ? 'border-[#f08a3c] ring-2 ring-[rgba(30,58,95,0.20)] bg-[#f0f6ff]'
+                    : 'border-border hover:border-[rgba(30,58,95,0.20)] hover:bg-muted/40',
                 onClick ? 'cursor-pointer' : 'cursor-default'
             )}
         >
             <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-semibold text-body-lg flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#f0f6ff] text-[#1e3a5f] flex items-center justify-center font-medium text-body-lg flex-shrink-0">
                     {initials}
                 </div>
                 <div className="min-w-0">

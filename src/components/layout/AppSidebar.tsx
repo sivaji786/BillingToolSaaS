@@ -1,5 +1,6 @@
 import * as React from "react"
 import {
+    Home,
     LayoutDashboard,
     FileText,
     LayoutTemplate,
@@ -58,6 +59,12 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
     const workhubEnabled = Boolean((tenant as any)?.plan_features?.workhub_enabled);
 
     const navPlatform = [
+        {
+            title: t('nav.home') || 'Home',
+            url: 'home',
+            icon: Home,
+            isActive: currentScreen === 'home',
+        },
         {
             title: t('nav.dashboard') || "Dashboard",
             url: "dashboard",
@@ -153,28 +160,33 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
 
     return (
         <Sidebar collapsible="icon" {...props}>
-            <SidebarHeader className="h-16 border-b border-sidebar-border bg-purple-600 text-white">
+            <SidebarHeader className="h-16 border-b border-sidebar-border bg-sidebar text-sidebar-foreground">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" className="text-white hover:bg-white/10 hover:text-white data-[state=open]:bg-white/10 data-[state=open]:text-white">
-                            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-purple-600">
+                            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-[#2a8fbd]">
                                 <GalleryVerticalEnd className="size-4" />
                             </div>
                             <div className="grid flex-1 text-left text-body leading-tight">
-                                <span className="truncate font-semibold">{profile?.name || t('appName')}</span>
-                                <span className="truncate text-micro text-purple-100">{t('appSubtitle') || "Enterprise"}</span>
+                                <span className="truncate font-medium">{profile?.name || t('appName')}</span>
+                                <span className="truncate text-micro text-white">{t('appSubtitle') || "Enterprise"}</span>
                             </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent>
-                {navMain.map((group) => (
+                {navMain.map((group, gi) => (
                     <React.Fragment key={group.title}>
                         <SidebarMenu>
-                            <div className="px-4 py-2 text-micro font-semibold text-muted-foreground/70 uppercase tracking-wider">
-                                {group.title}
+                            {/* Section label — with accent stripe */}
+                            <div className="px-3 pt-3 pb-1 flex items-center gap-2">
+                                <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${gi === 0 ? 'bg-[#2a8fbd]' : 'bg-[#f08a3c]'}`} />
+                                <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-sidebar-foreground/60 select-none">
+                                    {group.title}
+                                </span>
                             </div>
+
                             {group.items.map((item) => {
                                 const isWorkhubLocked = (item as any).workhub && !workhubEnabled;
                                 return (
@@ -183,12 +195,23 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                                             tooltip={isWorkhubLocked ? "WorkHub — upgrade to unlock" : item.title}
                                             onClick={() => onNavigate(item.url)}
                                             isActive={item.isActive}
-                                            className={isWorkhubLocked ? "opacity-60" : undefined}
+                                            className={[
+                                                isWorkhubLocked ? 'opacity-60' : '',
+                                                item.isActive ? 'font-semibold' : 'font-medium',
+                                            ].join(' ')}
                                         >
-                                            {item.icon && <item.icon className={isWorkhubLocked ? "text-muted-foreground" : undefined} />}
-                                            <span>{item.title}</span>
+                                            {item.icon && (
+                                                <item.icon className={[
+                                                    'shrink-0',
+                                                    item.isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground/70',
+                                                    isWorkhubLocked ? 'text-muted-foreground' : '',
+                                                ].join(' ')} />
+                                            )}
+                                            <span className={item.isActive ? 'text-sidebar-primary-foreground' : ''}>
+                                                {item.title}
+                                            </span>
                                             {isWorkhubLocked && (
-                                                <span className="ml-auto text-[10px] font-medium text-muted-foreground border border-muted-foreground/30 rounded px-1 leading-4">
+                                                <span className="ml-auto text-[9px] font-bold text-[#f08a3c] border border-[#f08a3c]/40 rounded px-1 leading-4 bg-[#f08a3c]/10">
                                                     Pro
                                                 </span>
                                             )}
@@ -197,7 +220,7 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                                 );
                             })}
                         </SidebarMenu>
-                        <SidebarSeparator className="my-2" />
+                        {gi < navMain.length - 1 && <SidebarSeparator className="my-1 opacity-30" />}
                     </React.Fragment>
                 ))}
             </SidebarContent>
@@ -215,7 +238,7 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                                         <AvatarFallback className="rounded-lg">{user?.name?.substring(0, 2)?.toUpperCase() || 'US'}</AvatarFallback>
                                     </Avatar>
                                     <div className="grid flex-1 text-left text-body leading-tight">
-                                        <span className="truncate font-semibold">{user?.name || 'User'}</span>
+                                        <span className="truncate font-medium">{user?.name || 'User'}</span>
                                         <span className="truncate text-micro">{user?.email || 'example@humpl.org'}</span>
                                     </div>
                                     <ChevronsUpDown className="ml-auto size-4" />
@@ -234,7 +257,7 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                                             <AvatarFallback className="rounded-lg">{user?.name?.substring(0, 2)?.toUpperCase() || 'US'}</AvatarFallback>
                                         </Avatar>
                                         <div className="grid flex-1 text-left text-body leading-tight">
-                                            <span className="truncate font-semibold">{user?.name}</span>
+                                            <span className="truncate font-medium">{user?.name}</span>
                                             <span className="truncate text-micro">{user?.email}</span>
                                         </div>
                                     </div>

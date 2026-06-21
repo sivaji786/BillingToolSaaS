@@ -76,7 +76,7 @@ function DesktopDropdown({ item, onNavigate }: { item: CmsNavItem; onNavigate: (
             <NavItemLink
                 item={item}
                 onNavigate={onNavigate}
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors px-1 py-0.5"
+                className="text-heading-3 font-medium text-muted-foreground hover:text-primary transition-colors px-1 py-0.5"
             />
         );
     }
@@ -91,7 +91,7 @@ function DesktopDropdown({ item, onNavigate }: { item: CmsNavItem; onNavigate: (
                 onMouseLeave={() => setOpen(false)}
                 onFocus={() => setOpen(true)}
                 onKeyDown={handleKeyDown}
-                className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary transition-colors px-1 py-0.5"
+                className="flex items-center gap-1 text-heading-3 font-medium text-muted-foreground hover:text-primary transition-colors px-1 py-0.5"
             >
                 {item.nav_label || item.title}
                 <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180')} />
@@ -109,7 +109,7 @@ function DesktopDropdown({ item, onNavigate }: { item: CmsNavItem; onNavigate: (
                             key={child.id}
                             item={child}
                             onNavigate={(s, sl) => { onNavigate(s, sl); setOpen(false); }}
-                            className="block w-full text-left px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                            className="block w-full text-left px-4 py-2 text-heading-3 hover:bg-accent hover:text-accent-foreground transition-colors"
                         />
                     ))}
                 </div>
@@ -123,7 +123,7 @@ function DesktopDropdown({ item, onNavigate }: { item: CmsNavItem; onNavigate: (
 function MobileAccordion({ item, onNavigate, onClose }: { item: CmsNavItem; onNavigate: (s: string, sl?: string) => void; onClose: () => void }) {
     const [open, setOpen] = useState(false);
     const hasChildren = item.children && item.children.length > 0;
-    const linkClass = 'block w-full text-left px-4 py-3 text-sm font-medium hover:bg-accent transition-colors';
+    const linkClass = 'block w-full text-left px-4 py-3 text-heading-3 font-medium hover:bg-accent transition-colors';
 
     if (!hasChildren) {
         return (
@@ -152,7 +152,7 @@ function MobileAccordion({ item, onNavigate, onClose }: { item: CmsNavItem; onNa
                             key={child.id}
                             item={child}
                             onNavigate={(s, sl) => { onNavigate(s, sl); onClose(); }}
-                            className="block w-full text-left px-4 py-2.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                            className="block w-full text-left px-4 py-2.5 text-heading-3 text-muted-foreground hover:text-primary transition-colors"
                         />
                     ))}
                 </div>

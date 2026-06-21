@@ -346,7 +346,7 @@ ${invoice.lines
               </Button>
               <Button
                 variant="default"
-                className="gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 shadow-sm border-0"
+                className="gap-2 bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80] text-white hover:from-[#e07530] hover:to-[#e07530] shadow-sm border-0"
                 onClick={() => {
                   const xml = generateUBL();
                   if (onDownloadUBL) {

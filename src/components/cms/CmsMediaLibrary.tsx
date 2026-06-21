@@ -78,7 +78,7 @@ export function CmsMediaLibrary({ open, onClose, onSelect }: CmsMediaLibraryProp
                     {!isLoading && (media as any[]).length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                             <Images className="h-10 w-10 mb-3 opacity-30" />
-                            <p className="text-sm">No images uploaded yet.</p>
+                            <p className="text-heading-3">No images uploaded yet.</p>
                         </div>
                     )}
 
@@ -112,7 +112,7 @@ export function CmsMediaLibrary({ open, onClose, onSelect }: CmsMediaLibraryProp
 
                                 {/* Action bar */}
                                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-between gap-1">
-                                    <span className="text-xs truncate flex-1">{item.filename}</span>
+                                    <span className="text-body truncate flex-1">{item.filename}</span>
                                     <div className="flex gap-1">
                                         <button
                                             type="button"
@@ -149,19 +149,19 @@ export function CmsMediaLibrary({ open, onClose, onSelect }: CmsMediaLibraryProp
                                         className="absolute inset-0 bg-black/80 flex flex-col gap-2 items-center justify-center p-3"
                                         onClick={e => e.stopPropagation()}
                                     >
-                                        <p className="text-white text-xs font-medium">Alt text</p>
+                                        <p className="text-white text-body font-medium">Alt text</p>
                                         <Input
                                             value={editAlt}
                                             onChange={e => setEditAlt(e.target.value)}
                                             placeholder="Describe the image…"
-                                            className="text-xs h-8"
+                                            className="text-body h-8"
                                             autoFocus
                                         />
                                         <div className="flex gap-2">
                                             <Button
                                                 type="button"
                                                 size="sm"
-                                                className="h-7 text-xs"
+                                                className="h-7 text-body"
                                                 onClick={() => altMutation.mutate({ id: item.id, alt: editAlt })}
                                                 disabled={altMutation.isPending}
                                             >
@@ -171,7 +171,7 @@ export function CmsMediaLibrary({ open, onClose, onSelect }: CmsMediaLibraryProp
                                                 type="button"
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-7 text-xs text-white"
+                                                className="h-7 text-body text-white"
                                                 onClick={() => setEditingId(null)}
                                             >
                                                 Cancel
@@ -186,7 +186,7 @@ export function CmsMediaLibrary({ open, onClose, onSelect }: CmsMediaLibraryProp
 
                 {/* Footer */}
                 <div className="border-t pt-4 flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-body text-muted-foreground">
                         {(media as any[]).length} image{(media as any[]).length !== 1 ? 's' : ''} ·
                         {selected ? ' 1 selected' : ' none selected'}
                     </p>

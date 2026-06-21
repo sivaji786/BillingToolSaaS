@@ -36,6 +36,7 @@ const LetterPreview = lazy(() => import('./components/screens/LetterPreview').th
 const CmsPageView = lazy(() => import('./components/screens/CmsPageView').then(module => ({ default: module.CmsPageView })));
 const SharedInvoiceView = lazy(() => import('./components/screens/SharedInvoiceView').then(module => ({ default: module.SharedInvoiceView })));
 const WorkHubLayout = lazy(() => import('./pages/WorkHub/WorkHubLayout').then(module => ({ default: module.WorkHubLayout })));
+const TenantHome = lazy(() => import('./components/screens/TenantHome').then(module => ({ default: module.TenantHome })));
 
 // Admin Portal Components
 const SALogin = lazy(() => import('./components/screens/Admin/SALogin').then(module => ({ default: module.SALogin })));
@@ -123,7 +124,7 @@ import { QueryProvider } from './providers/QueryProvider';
 import { useAdminStore } from './stores/adminStore';
 import { useAuthStore } from './stores/authStore';
 import { InlineCmsProvider } from './contexts/InlineCmsContext';
-import { FloatingDockProvider } from './contexts/FloatingDockContext';
+import { FloatingDockProvider, useFloatingDock } from './contexts/FloatingDockContext';
 import { FloatingDock } from './components/FloatingDock';
 import { EditModeBar } from './components/cms/EditModeBar';
 import { AdminLayout as AdminLayoutWrapper } from './components/admin/AdminLayout';
@@ -148,7 +149,7 @@ import { toast } from 'sonner';
 import { authService, invoiceService, letterService } from './services/api';
 import { PLATFORM_TEMPLATES } from './utils/invoice-templates-defaults';
 
-type Screen = 'landing' | 'login' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'workhub' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAMenus' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage' | 'sharedInvoice';
+type Screen = 'landing' | 'login' | 'home' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'workhub' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAMenus' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage' | 'sharedInvoice';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -161,7 +162,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace(/^#\/?/, '');
-      if (hash && ['landing', 'login', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'workhub', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'].includes(hash)) {
+      if (hash && ['landing', 'login', 'home', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'workhub', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'].includes(hash)) {
         return hash as Screen;
       }
       // Handle parameterized routes like designLayout/123 or reset-password/123 or cms/slug
@@ -242,8 +243,8 @@ function AppContent() {
           // already have hydrated user/tenant data (including plan_features) from the persisted store.
           const hasPlanFeatures = !!(storeState.tenant as any)?.plan_features;
           if (hasPersistedUser && isJwtValid(token) && hasPlanFeatures) {
-            if (currentScreen === 'landing' || currentScreen === 'login') {
-              setCurrentScreen('dashboard');
+            if (currentScreen === 'landing' || currentScreen === 'login' || currentScreen === 'dashboard') {
+              setCurrentScreen('home');
             }
             setIsCheckingAuth(false);
             return;
@@ -255,9 +256,9 @@ function AppContent() {
           // Update store with full user/tenant data
           login(token, userData, userData.tenant || {} as any);
 
-          // If we were on landing or login, go to dashboard
-          if (currentScreen === 'landing' || currentScreen === 'login') {
-            setCurrentScreen('dashboard');
+          // If we were on landing, login, or dashboard, go to home
+          if (currentScreen === 'landing' || currentScreen === 'login' || currentScreen === 'dashboard') {
+            setCurrentScreen('home');
           }
         } catch (e) {
           console.error('Auth check failed:', e);
@@ -277,7 +278,7 @@ function AppContent() {
     const handleHashChange = () => {
       const hash = window.location.hash.replace(/^#\/?/, '');
       if (hash && [
-        'landing', 'login', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'workhub', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison', 'SAPages'
+        'landing', 'login', 'home', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'workhub', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison', 'SAPages'
       ].includes(hash)) {
         setCurrentScreen(hash as Screen);
       } else if (hash.startsWith('cms/')) {
@@ -318,10 +319,10 @@ function AppContent() {
         } catch (e) {
           console.error('Failed to parse invoice data for preview', e);
           toast.error('Failed to load invoice data');
-          setCurrentScreen('dashboard');
+          setCurrentScreen('home');
         }
       } else if (!hash) {
-        setCurrentScreen('dashboard');
+        setCurrentScreen('home');
       }
     };
 
@@ -329,10 +330,21 @@ function AppContent() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  // Redirect authenticated users away from public-only screens
+  useEffect(() => {
+    if (isAuthenticated && (currentScreen === 'landing' || currentScreen === 'login')) {
+      setCurrentScreen('home');
+    }
+  }, [isAuthenticated, currentScreen]);
+
+  // Keep FloatingDock aware of the current screen (e.g. to lift above WorkHub mobile nav)
+  const { setScreen: setDockScreen } = useFloatingDock();
+  useEffect(() => { setDockScreen(currentScreen); }, [currentScreen, setDockScreen]);
+
   // Update hash when screen changes
   useEffect(() => {
     if ([
-      'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory', 'packageComparison',
+      'home', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory', 'packageComparison',
       'signup', 'login', 'landing', 'billing', 'buyers', 'workhub', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison',
     ].includes(currentScreen)) {
       if (window.location.hash.replace('#', '') !== currentScreen) {
@@ -382,8 +394,15 @@ function AppContent() {
     try {
       const data = await authService.login(email, password);
 
-      const targetUrl = new URL(data.redirect_url);
-      const isSameHost = targetUrl.host === window.location.host;
+      let isSameHost = true;
+      if (data.redirect_url) {
+        try {
+          const targetUrl = new URL(data.redirect_url);
+          isSameHost = targetUrl.host === window.location.host;
+        } catch {
+          isSameHost = true;
+        }
+      }
 
       // Always update state first
       login(data.token, data.user, data.tenant || {} as any);
@@ -409,7 +428,7 @@ function AppContent() {
         return;
       }
 
-      setCurrentScreen('dashboard');
+      setCurrentScreen('home');
     } catch (error: unknown) {
       console.error('Login error:', error);
       // Requirement: form should inform "email/ password wrong" on incorrect credentials
@@ -424,7 +443,7 @@ function AppContent() {
   const handleLogout = async () => {
     await authService.logout();        // destroys server-side session
     useAuthStore.getState().logout();  // clears Zustand + localStorage + redirects
-    setCurrentScreen('dashboard');
+    setCurrentScreen('landing');
     setCurrentInvoice(null);
   };
 
@@ -804,7 +823,7 @@ function AppContent() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#f08a3c]"></div>
           <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
         <Toaster />
@@ -895,7 +914,7 @@ function AppContent() {
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
           <QuickAccessInvoice
             onLogin={() => setCurrentScreen('login')}
-            onComplete={() => setCurrentScreen('dashboard')}
+            onComplete={() => setCurrentScreen('home')}
             onNavigate={(screen) => setCurrentScreen(screen as Parameters<typeof setCurrentScreen>[0])}
           />
           <Toaster />
@@ -967,21 +986,21 @@ function AppContent() {
         collapsible="icon"
       />
       <SidebarInset>
-        {currentScreen !== 'designLayout' && (
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-data-[collapsible=icon]:h-16 sticky top-0 bg-purple-600 text-white z-10 shadow-md">
+        {currentScreen !== 'designLayout' && currentScreen !== 'home' && (
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-data-[collapsible=icon]:h-16 sticky top-0 bg-[#1e3a5f] text-white z-10 shadow-md">
             <div className="flex items-center gap-2 px-4">
               <SidebarTrigger className="-ml-1 text-white hover:bg-white/10 hover:text-white" />
               <Separator orientation="vertical" className="mr-2 h-4 bg-white/30" />
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="#" onClick={() => setCurrentScreen('dashboard')} className="text-white/90 hover:text-white">
+                    <BreadcrumbLink href="#" onClick={() => setCurrentScreen('home')} className="text-white/90 hover:text-white">
                       {t('appName')}
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="hidden md:block" />
                   <BreadcrumbItem>
-                    <BreadcrumbPage className="capitalize text-white font-semibold">{currentScreen === 'invoices' ? 'Invoices' : currentScreen}</BreadcrumbPage>
+                    <BreadcrumbPage className="capitalize text-white font-medium">{currentScreen === 'invoices' ? 'Invoices' : currentScreen}</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
@@ -991,11 +1010,16 @@ function AppContent() {
             </div>
           </header>
         )}
-        <div className={`flex flex-1 flex-col gap-4 ${currentScreen === 'designLayout' ? 'p-0' : 'p-4 pt-0'}`}>
+        <div className={`flex flex-1 flex-col ${
+          currentScreen === 'home' ? 'p-0 bg-[#dbe8f7] min-h-screen' :
+          currentScreen === 'designLayout' ? 'p-0' :
+          currentScreen === 'workhub' ? 'p-0 overflow-hidden' :
+          'bg-[#dbe8f7] gap-4 p-4 pt-0'
+        }`}>
           <Suspense fallback={
             <div className="flex h-[50vh] items-center justify-center">
               <div className="flex flex-col items-center gap-2">
-                <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#2a8fbd]" />
                 <p className="text-body text-gray-500">Loading module...</p>
               </div>
             </div>
@@ -1088,6 +1112,22 @@ function AppContent() {
               <DesignLayoutPage />
             ) : (
               <div>
+                {currentScreen === 'home' && (
+                  <TenantHome
+                    invoices={invoices}
+                    logEntries={logEntries}
+                    onNewInvoice={handleNewInvoice}
+                    onNavigate={(screen) => setCurrentScreen(screen as Screen)}
+                    onNewLetter={handleNewBusinessLetter}
+                    onOpenInvoice={handlePreviewInvoice}
+                    onOpenTicket={() => {
+                      const btn = document.querySelector<HTMLElement>('[data-dock-id="support-ticket"]');
+                      btn?.click();
+                    }}
+                    onTour={() => setCurrentScreen('quickAccess')}
+                  />
+                )}
+
                 {currentScreen === 'dashboard' && (
                   <Dashboard
                     invoices={invoices}
