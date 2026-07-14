@@ -13,15 +13,19 @@ class RoleController extends BaseController
     public function index()
     {
         $model = new RoleModel();
-        // optionally filter by company_type_id if passed
         $companyTypeId = $this->request->getGet('company_type_id');
-        
+
         if ($companyTypeId) {
-            $roles = $model->where('company_type_id', $companyTypeId)->findAll();
+            // Include roles for the requested type AND global roles (company_type_id IS NULL)
+            $roles = $model->groupStart()
+                           ->where('company_type_id', $companyTypeId)
+                           ->orWhere('company_type_id IS NULL', null, false)
+                           ->groupEnd()
+                           ->findAll();
         } else {
             $roles = $model->findAll();
         }
-        
+
         return $this->response->setJSON($roles)->setStatusCode(200);
     }
 

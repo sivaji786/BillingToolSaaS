@@ -23,30 +23,24 @@ export function RoleList({ onCreate, onEdit, companyTypeId: initialCompanyTypeId
     const { t } = useLanguage();
     const [roles, setRoles] = useState<any[]>([]);
     const [companyTypes, setCompanyTypes] = useState<any[]>([]);
-    const [selectedType, setSelectedType] = useState<string>('all');
+
+    // When parent provides a company type, use it directly; otherwise allow local dropdown selection
+    const controlled = initialCompanyTypeId != null && initialCompanyTypeId !== 'null' && initialCompanyTypeId !== 'undefined';
+    const [selectedType, setSelectedType] = useState<string>(controlled ? initialCompanyTypeId : 'all');
 
     useEffect(() => {
-        loadCompanyTypes();
+        companyTypeService.getAll()
+            .then(setCompanyTypes)
+            .catch(() => {});
     }, []);
 
     useEffect(() => {
-        if (initialCompanyTypeId) {
-            setSelectedType(initialCompanyTypeId);
-        }
+        if (controlled) setSelectedType(initialCompanyTypeId);
     }, [initialCompanyTypeId]);
 
     useEffect(() => {
         loadRoles();
     }, [selectedType]);
-
-    const loadCompanyTypes = async () => {
-        try {
-            const types = await companyTypeService.getAll();
-            setCompanyTypes(types);
-        } catch (error) {
-            console.error('Failed to load company types', error);
-        }
-    };
 
     const loadRoles = async () => {
         try {
@@ -77,19 +71,21 @@ export function RoleList({ onCreate, onEdit, companyTypeId: initialCompanyTypeId
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <h2 className="text-heading-2 font-medium">{t('admin.roles.title')}</h2>
-                    <Select value={selectedType} onValueChange={setSelectedType}>
-                        <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder={t('admin.roles.filterByType')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">{t('admin.roles.allTypes')}</SelectItem>
-                            {companyTypes.map(type => (
-                                <SelectItem key={type.id} value={String(type.id)}>
-                                    {type.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    {!controlled && (
+                        <Select value={selectedType} onValueChange={setSelectedType}>
+                            <SelectTrigger className="w-[200px]">
+                                <SelectValue placeholder={t('admin.roles.filterByType')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">{t('admin.roles.allTypes')}</SelectItem>
+                                {companyTypes.map(type => (
+                                    <SelectItem key={type.id} value={String(type.id)}>
+                                        {type.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
                 </div>
                 <Button onClick={onCreate}><Plus className="h-4 w-4 mr-2" /> {t('admin.roles.newRole')}</Button>
             </div>

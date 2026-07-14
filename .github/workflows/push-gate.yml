@@ -1,0 +1,114 @@
+name: Push Gate (Unit + API Tests)
+
+# Runs on every push. Must pass in < 3 minutes.
+# Blocks merges if any test fails.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['main']
+
+jobs:
+  unit-and-api:
+    name: Unit + TypeScript + API contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: billingtool_test
+          MYSQL_USER: billingtool
+          MYSQL_PASSWORD: billingtool_test
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - uses: actions/checkout@v4
+
+      # ── Node.js ─────────────────────────────────────────────────────────────
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      # ── TypeScript type check ────────────────────────────────────────────────
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      # ── Vitest unit tests ────────────────────────────────────────────────────
+      - name: Run unit tests
+        run: npm run test -- --reporter=verbose
+        env:
+          CI: true
+
+      # ── PHP setup ───────────────────────────────────────────────────────────
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_mysql, intl, curl, gd, fileinfo
+          coverage: none
+
+      - name: Install Composer dependencies
+        working-directory: api
+        run: composer install --no-dev --no-interaction --prefer-dist
+
+      # ── CI4 environment ──────────────────────────────────────────────────────
+      - name: Configure CI4 .env
+        working-directory: api
+        run: |
+          cp env .env
+          sed -i 's/# CI_ENVIRONMENT = production/CI_ENVIRONMENT = testing/' .env
+          sed -i "s/database.default.hostname.*/database.default.hostname = 127.0.0.1/" .env
+          sed -i "s/database.default.database.*/database.default.database = billingtool_test/" .env
+          sed -i "s/database.default.username.*/database.default.username = billingtool/" .env
+          sed -i "s/database.default.password.*/database.default.password = billingtool_test/" .env
+          sed -i "s/database.default.port.*/database.default.port = 3306/" .env
+
+      - name: Run database migrations
+        working-directory: api
+        run: php spark migrate --all
+
+      - name: Run database seeders
+        working-directory: api
+        run: php spark db:seed MainSeeder || echo "Seeder failed — continuing"
+
+      # ── Start CI4 API server ─────────────────────────────────────────────────
+      - name: Start API server
+        working-directory: api
+        run: php spark serve --host 127.0.0.1 --port 8080 &
+        env:
+          CI: true
+
+      - name: Wait for API server to be ready
+        run: |
+          for i in $(seq 1 15); do
+            curl -sf http://127.0.0.1:8080/ping && break
+            sleep 2
+          done
+
+      # ── Install Playwright (API project only — no browser install needed) ───
+      - name: Install Playwright
+        run: npx playwright install chromium --with-deps
+
+      # ── API contract tests ───────────────────────────────────────────────────
+      - name: Run API contract tests
+        run: npx playwright test --project=api
+        env:
+          CI: true
+          API_URL: http://127.0.0.1:8080
+          FRONTEND_URL: http://localhost:3000
+
+      # ── Upload report ────────────────────────────────────────────────────────
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: push-gate-report
+          path: playwright-report/
+          retention-days: 7

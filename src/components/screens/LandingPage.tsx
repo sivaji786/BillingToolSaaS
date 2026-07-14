@@ -747,7 +747,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             <p className="text-white text-heading-3 md:text-heading-2 mb-10 max-w-[600px] mx-auto">
                                 <InlineEditableText slug="home" field="cta_subtitle" lang={language} value={cmsContent?.cta_subtitle || t('landing.bottomCta.subtitle')} multiline />
                             </p>
-                            <Button size="lg" className="bg-white text-[#2a8fbd] hover:bg-slate-50 h-14 px-10 text-heading-3 shadow-2xl rounded-full transition-transform hover:scale-105" onClick={() => onSignup()}>
+                            <Button size="lg" className="bg-white !text-[#1e3a5f] hover:bg-slate-50 h-14 px-10 text-heading-3 shadow-2xl rounded-full transition-transform hover:scale-105" onClick={() => onSignup()}>
                                 {t('landing.hero.getStarted')}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>
@@ -822,6 +822,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 <button onClick={() => onNavigate('privacyPolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.privacy')}</button>
                                 <button onClick={() => onNavigate('termsAndConditions')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.terms')}</button>
                                 <button onClick={() => onNavigate('cookiePolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.cookies')}</button>
+                                <button onClick={() => onNavigate('mockups')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.mockups')}</button>
                             </div>
                         )}
                     </div>

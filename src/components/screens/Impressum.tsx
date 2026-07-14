@@ -145,6 +145,7 @@ export function Impressum({ onBack, onNavigate }: ImpressumProps) {
                     <button onClick={() => onNavigate('privacyPolicy')} className="hover:text-[#f08a3c] transition-colors">{t('legal.footer.privacy')}</button>
                     <button onClick={() => onNavigate('termsAndConditions')} className="hover:text-[#f08a3c] transition-colors">{t('legal.footer.terms')}</button>
                     <button onClick={() => onNavigate('cookiePolicy')} className="hover:text-[#f08a3c] transition-colors">{t('legal.footer.cookies')}</button>
+                    <button onClick={() => onNavigate('mockups')} className="hover:text-[#f08a3c] transition-colors">{t('legal.footer.mockups')}</button>
                 </div>
                 <p className="text-center text-micro text-gray-300 mt-3">© 2026 BillingTool Inc. · [mn]medianet</p>
             </footer>

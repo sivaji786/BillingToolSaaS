@@ -89,6 +89,9 @@ export interface WHWorker {
     capacity_hours_per_week?: number;
     hourly_rate_override?: number | null;
     utilisation_pct?: number;
+    utilisation_pct_today?: number;
+    logged_hours_week?: number;
+    logged_hours_today?: number;
     queue_depth?: number;
     free_from_date?: string;
 }
@@ -158,7 +161,10 @@ export const taskService = {
         location_tag?: string;
         date_from?: string;
         date_to?: string;
+        sort?: 'due_date' | 'created_at' | 'title' | 'priority';
+        sort_dir?: 'asc' | 'desc';
         page?: number;
+        per_page?: number;
     }) => {
         const r = await api.get<{ data: WHTask[]; total: number; unread_inbox_count: number }>('/tasks', { params });
         return r.data;
@@ -200,8 +206,8 @@ export const timerService = {
         const r = await api.post(`/tasks/${taskId}/timer/pause`);
         return r.data;
     },
-    stop: async (taskId: number) => {
-        const r = await api.post(`/tasks/${taskId}/timer/stop`);
+    stop: async (taskId: number, capSeconds?: number) => {
+        const r = await api.post(`/tasks/${taskId}/timer/stop`, capSeconds != null ? { cap_seconds: capSeconds } : undefined);
         return r.data;
     },
 };

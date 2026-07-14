@@ -22,6 +22,7 @@ export const en = {
         welcomeDemo: 'Welcome to Demo!',
         welcomeDemoDesc: 'Logged in with demo credentials.',
         loginFailed: 'Login failed',
+        success: 'Login successful',
         loginFailedDesc: 'Please enter your email and password.',
         loggedOut: 'Logged out successfully',
         loggedOutDesc: 'You have been logged out of your account.',
@@ -47,7 +48,7 @@ export const en = {
         products: 'Packages',
         clients: 'Clients',
         reports: 'Reports',
-        workspace: 'My Workspace',
+        workspace: 'Manage Files',
         invoices: 'Invoices',
         letters: 'Business Letters',
     },
@@ -174,11 +175,13 @@ export const en = {
         paid: 'Paid',
         cancelled: 'Cancelled',
         signed: 'Signed',
+        overdue: 'Overdue',
     },
 
     // Invoice Editor
     editor: {
         title: 'Invoice Editor',
+        name: 'Name',
         letterEditor: 'Letter Editor',
         back: 'Back',
         newInvoice: 'New Invoice',
@@ -705,6 +708,9 @@ export const en = {
         invoices: 'invoices',
         updateStatus: 'Update Status',
         statusChangeNote: 'This will update the status of all selected invoices. This action can be reverted by changing the status again.',
+        fetchError: 'Failed to load invoices',
+        exportError: 'Export failed',
+        status: 'Status',
     },
 
     // Address book
@@ -736,6 +742,9 @@ export const en = {
 
     // Design Layout
     designLayout: {
+        designMode: 'Design Mode',
+        editingLayout: 'Pixel-Perfect Coordinate Editor',
+        newTemplate: 'New Template',
         elementLibrary: 'Element Library',
         inspector: 'Inspector',
         resetLayout: 'Reset Layout',
@@ -832,6 +841,11 @@ export const en = {
         copied: 'Copied',
         downloaded: 'Downloaded',
         discard: 'Discard',
+        new: 'New',
+        saving: 'Saving...',
+        noPermission: 'No permission',
+        confirmDelete: 'Confirm Delete',
+        deleted: 'Deleted',
         doubleClickToAdd: 'Double-click to add',
         content: 'Content',
         theme: {
@@ -906,6 +920,7 @@ export const en = {
         common: {
             failedToLoadProfile: 'Failed to load company profile',
             loading: 'Loading...',
+            save: 'Save',
         },
         logout: 'Logout',
         adminPortal: 'Admin Portal',
@@ -1372,7 +1387,16 @@ export const en = {
             privacy: 'Privacy Policy',
             terms: 'Terms & Conditions',
             cookies: 'Cookie Settings',
+            mockups: 'Mockups',
         },
+    },
+
+    mockups: {
+        title: 'Mockups',
+        subtitle: 'Browse example screens and prototypes shared by our team.',
+        empty: 'No mockups available yet.',
+        error: "Couldn't load mockups right now. Please try again later.",
+        selectPrompt: 'Select a mockup from the list to preview it.',
     },
 
     // Privacy Policy

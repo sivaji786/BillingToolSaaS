@@ -13,8 +13,10 @@ class UserController extends BaseController
     public function index()
     {
         $model = new UserModel();
-        // For admin listing, we might want pagination, but findAll is fine for MVP
-        $users = $model->select('id, name, email, created_at')->findAll();
+        $tenantId = $this->request->tenantId ?? null;
+        $users = $model->select('id, name, email, created_at')
+                       ->where('tenant_id', $tenantId)
+                       ->findAll();
 
         // Optionally fetch roles for each user (n+1 issue, but acceptable for small scale or can be optimized with join)
         $userRoleModel = new UserRoleModel();

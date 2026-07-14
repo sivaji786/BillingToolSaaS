@@ -5,7 +5,6 @@ import {
     FileText,
     LayoutTemplate,
     Activity,
-    ShieldAlert,
     Settings as SettingsIcon,
     LogOut,
     CreditCard,
@@ -26,7 +25,6 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarRail,
-    SidebarSeparator,
 } from "../ui/sidebar"
 import {
     DropdownMenu,
@@ -72,7 +70,7 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
             isActive: currentScreen === "dashboard",
         },
         {
-            title: t('nav.workspace') || "My Workspace",
+            title: t('nav.workspace') || "Manage Files",
             url: "workspace",
             icon: Folder,
             isActive: currentScreen === "workspace",
@@ -124,16 +122,6 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
             isActive: currentScreen === "workhub",
             workhub: true,
         },
-    ].filter(item => !item.permission || hasPermissionSync(item.permission));
-
-    const navManagement = [
-        {
-            title: "Admin",
-            url: "admin",
-            icon: ShieldAlert,
-            isActive: currentScreen === "admin",
-            permission: ['users.manage', 'roles.manage']
-        },
         {
             title: t('nav.settings') || "Settings",
             url: "settings",
@@ -141,20 +129,12 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
             isActive: currentScreen === "settings",
             permission: 'company_profiles.read'
         },
-    ].filter(item => {
-        if (!item.permission) return true;
-        if (Array.isArray(item.permission)) return item.permission.some(p => hasPermissionSync(p));
-        return hasPermissionSync(item.permission as string);
-    });
+    ].filter(item => !item.permission || hasPermissionSync(item.permission as string));
 
     const navMain = [
         {
             title: "Platform",
             items: navPlatform,
-        },
-        {
-            title: "Management",
-            items: navManagement,
         },
     ]
 
@@ -178,15 +158,14 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
             <SidebarContent>
                 {navMain.map((group, gi) => (
                     <React.Fragment key={group.title}>
+                        {/* Section label — must sit outside <ul> (SidebarMenu) to keep valid list structure */}
+                        <div className="px-3 pt-3 pb-1 flex items-center gap-2">
+                            <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${gi === 0 ? 'bg-[#2a8fbd]' : 'bg-[#f08a3c]'}`} />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-sidebar-foreground/60 select-none">
+                                {group.title}
+                            </span>
+                        </div>
                         <SidebarMenu>
-                            {/* Section label — with accent stripe */}
-                            <div className="px-3 pt-3 pb-1 flex items-center gap-2">
-                                <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${gi === 0 ? 'bg-[#2a8fbd]' : 'bg-[#f08a3c]'}`} />
-                                <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-sidebar-foreground/60 select-none">
-                                    {group.title}
-                                </span>
-                            </div>
-
                             {group.items.map((item) => {
                                 const isWorkhubLocked = (item as any).workhub && !workhubEnabled;
                                 return (
@@ -220,7 +199,6 @@ export function AppSidebar({ currentScreen, onNavigate, onLogout, user, profile,
                                 );
                             })}
                         </SidebarMenu>
-                        {gi < navMain.length - 1 && <SidebarSeparator className="my-1 opacity-30" />}
                     </React.Fragment>
                 ))}
             </SidebarContent>

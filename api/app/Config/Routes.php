@@ -23,6 +23,7 @@ $routes->get('api/countries', '\App\Controllers\CountryController::index');
 $routes->get('api/public/cms/nav', '\App\Controllers\CmsController::nav');
 $routes->get('api/public/cms/(:segment)', '\App\Controllers\CmsController::getPage/$1');
 $routes->get('api/public/invoices/(:segment)', '\App\Controllers\InvoiceController::showByToken/$1');
+$routes->get('api/public/mockups', '\App\Controllers\AdminWiki::publicListMockups');
 $routes->group('onboarding', function($routes) {
     $routes->get('check-subdomain', '\App\Controllers\Onboarding::checkSubdomain');
     $routes->post('signup', '\App\Controllers\Onboarding::signup');
@@ -79,12 +80,8 @@ $routes->group('invoice-templates', ['filter' => ['auth', 'rbac:company_profiles
 $routes->get('company-profiles', '\App\Controllers\CompanyProfileController::index', ['filter' => ['auth', 'rbac:company_profiles.read']]);
 $routes->put('company-profiles/(:segment)', '\App\Controllers\CompanyProfileController::update/$1', ['filter' => ['auth', 'rbac:company_profiles.update']]);
 
-$routes->group('company-types', ['filter' => 'rbac:company_profiles.read'], function($routes) {
-    $routes->get('', '\App\Controllers\CompanyTypeController::index'); // Changed to company_profiles.read for wider access
-    $routes->post('', '\App\Controllers\CompanyTypeController::create');
-    $routes->put('(:segment)', '\App\Controllers\CompanyTypeController::update/$1');
-    $routes->delete('(:segment)', '\App\Controllers\CompanyTypeController::delete/$1');
-});
+// Company Types — read is public to authenticated tenants; mutations are SA-admin only
+$routes->get('company-types', '\App\Controllers\CompanyTypeController::index', ['filter' => 'auth']);
 
 // Audit Logs (supports both JWT and session auth)
 $routes->get('audit-logs', '\App\Controllers\AuditLogController::index', ['filter' => ['auth', 'rbac:audit_logs.read']]);
@@ -260,6 +257,12 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     $routes->post('auth/logout', '\App\Controllers\AdminAuth::logout');
     $routes->post('auth/refresh', '\App\Controllers\AdminAuth::refresh');
     
+    // Company Types (mutations SA-admin only; GET is open to tenants via /company-types)
+    $routes->get('company-types', '\App\Controllers\CompanyTypeController::index');
+    $routes->post('company-types', '\App\Controllers\CompanyTypeController::create');
+    $routes->put('company-types/(:segment)', '\App\Controllers\CompanyTypeController::update/$1');
+    $routes->delete('company-types/(:segment)', '\App\Controllers\CompanyTypeController::delete/$1');
+
     // Admin Packages
     $routes->get('packages', '\App\Controllers\AdminPackages::index');
     $routes->get('packages/(:segment)', '\App\Controllers\AdminPackages::show/$1');
@@ -385,6 +388,8 @@ $routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.timer.start']], fu
     $routes->post('tasks/(:num)/timer/start', '\App\Controllers\WorkHub\TimerController::start/$1');
     $routes->post('tasks/(:num)/timer/pause', '\App\Controllers\WorkHub\TimerController::pause/$1');
     $routes->post('tasks/(:num)/timer/stop',  '\App\Controllers\WorkHub\TimerController::stop/$1');
+    $routes->post('timer/stop-current',       '\App\Controllers\WorkHub\TimerController::stopCurrent');
+    $routes->get('timer/active',              '\App\Controllers\WorkHub\TimerController::active');
 });
 
 // Completion records — Worker
@@ -473,8 +478,11 @@ $routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], func
 });
 
 // Sprint 4: WorkHub Settings (WH-061)
+// GET available to all WorkHub users; PUT restricted to managers/admins
 $routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.task.view']], function ($routes) {
     $routes->get('settings', '\App\Controllers\WorkHub\SettingsController::index');
+});
+$routes->group('workhub', ['filter' => ['auth', 'rbac:workhub.admin.manage']], function ($routes) {
     $routes->put('settings', '\App\Controllers\WorkHub\SettingsController::update');
 });
 

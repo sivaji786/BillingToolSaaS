@@ -6,11 +6,14 @@ import { Card, CardContent } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { useWorkhubTimerStore, formatHMS } from '../../../stores/workhubTimerStore';
 import { timerService } from '../../../services/workhubApi';
+import {
+    ARBZG_LIMIT_SECONDS,
+    ARBZG_WARN_MINUTES as WARN_MINUTES,
+    BREAK_FORGOTTEN_THRESHOLD_SECONDS,
+    MAX_REMINDERS,
+} from '../../../hooks/useWorkhubTimerGuardian';
 import { toast } from 'sonner';
 
-// §16 ArbZG: auto-pause at 6h (360 min), warn starting 30 min before
-const ARBZG_LIMIT_SECONDS = 6 * 3600; // 6 hours
-const WARN_MINUTES = 360;
 const MIN_BREAK_SECONDS = 30 * 60; // 30 minutes
 
 interface Props {
@@ -55,47 +58,11 @@ export function TimerWidget({ onViewTask }: Props) {
         }
     }, []); // intentionally runs only on mount
 
-    // --- Change 1: auto-pause at 6h (ArbZG) ---
-    const autoPausedRef = useRef(false);
-    useEffect(() => {
-        if (timer.state === 'running' && elapsed >= ARBZG_LIMIT_SECONDS && !autoPausedRef.current) {
-            autoPausedRef.current = true;
-            // Fire-and-forget pause API call; update local state regardless
-            isRequestInFlight.current = true;
-            timerService.pause(timer.activeTaskId!)
-                .catch(() => {
-                    // Server call failed but we still pause locally to enforce the law
-                })
-                .finally(() => {
-                    isRequestInFlight.current = false;
-                });
-            timer.pause();
-            qc.invalidateQueries({ queryKey: ['wh-tasks'] });
-            toast.error('Break required by law (§16 ArbZG). Timer paused automatically.');
-        }
-        // Reset auto-pause gate when a new work session starts (elapsed resets below limit)
-        if (elapsed < ARBZG_LIMIT_SECONDS) {
-            autoPausedRef.current = false;
-        }
-    }, [elapsed, timer.state]);
-
-    // Near-limit toast warning (30 min before) — only while running, not after auto-pause
-    const nearWarnedRef = useRef(false);
-    useEffect(() => {
-        const workedMinutes = Math.floor(elapsed / 60);
-        if (
-            timer.state === 'running' &&
-            workedMinutes >= WARN_MINUTES - 30 &&
-            workedMinutes < WARN_MINUTES &&
-            !nearWarnedRef.current
-        ) {
-            nearWarnedRef.current = true;
-            toast.warning(`§16 ArbZG: Break required in ${WARN_MINUTES - workedMinutes} min.`);
-        }
-        if (workedMinutes < WARN_MINUTES - 30) {
-            nearWarnedRef.current = false;
-        }
-    }, [elapsed, timer.state]);
+    // Auto-pause (§16 ArbZG), the target-time/break-forgotten reminder ladders, and their
+    // auto-stop/auto-resume fallback actions all run once in useWorkhubTimerGuardian,
+    // mounted at the WorkHub layout root — so they keep firing regardless of which timer
+    // UI (this widget, the floating pip, or neither) happens to be on screen. This
+    // component only derives what to *display*.
 
     const pauseMut = useMutation({
         mutationFn: () => {
@@ -187,6 +154,23 @@ export function TimerWidget({ onViewTask }: Props) {
     const breakMinutesRemaining = Math.max(0, Math.ceil((MIN_BREAK_SECONDS - breakElapsed) / 60));
     const breakSufficient = breakElapsed >= MIN_BREAK_SECONDS;
 
+    // Target-time overrun (only when the task has an estimate) — mirrors useWorkhubTimerGuardian.
+    const targetSeconds = timer.activeTaskEstHours != null
+        ? Math.max(0, (timer.activeTaskEstHours - timer.activeTaskLoggedBaselineHours) * 3600)
+        : null;
+    const targetOverrunSeconds = targetSeconds != null ? elapsed - targetSeconds : -1;
+    const targetReached = timer.state === 'running' && targetSeconds != null && targetOverrunSeconds >= 0;
+    const targetReminderNumber = targetReached
+        ? Math.min(MAX_REMINDERS, Math.floor(targetOverrunSeconds / (30 * 60)) + 1)
+        : 0;
+
+    // Break-forgotten overrun — mirrors useWorkhubTimerGuardian.
+    const breakOverrunSeconds = breakElapsed - BREAK_FORGOTTEN_THRESHOLD_SECONDS;
+    const breakForgotten = timer.state === 'break' && breakOverrunSeconds >= 0;
+    const breakReminderNumber = breakForgotten
+        ? Math.min(MAX_REMINDERS, Math.floor(breakOverrunSeconds / (30 * 60)) + 1)
+        : 0;
+
     return (
         <Card className={overBreakLimit ? 'border-red-400' : nearBreakLimit ? 'border-amber-400' : ''}>
             <CardContent className="p-4 space-y-3">
@@ -226,6 +210,26 @@ export function TimerWidget({ onViewTask }: Props) {
                         {overBreakLimit
                             ? '§16 ArbZG: 6 hours reached — break required now.'
                             : `§16 ArbZG: Break required in ${WARN_MINUTES - workedMinutes} min.`}
+                    </div>
+                )}
+
+                {/* Target-time reached banner — task's estimated hours exceeded */}
+                {targetReached && (
+                    <div className="flex items-center gap-2 rounded-md px-3 py-2 text-caption bg-red-50 text-red-700">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        {timer.activeTaskEstHours}h target reached — please stop the timer.
+                        {' '}({targetReminderNumber}/{MAX_REMINDERS} reminders
+                        {targetReminderNumber >= MAX_REMINDERS ? ' — auto-stopping' : ''})
+                    </div>
+                )}
+
+                {/* Break-forgotten banner — break running well past the required minimum */}
+                {breakForgotten && (
+                    <div className="flex items-center gap-2 rounded-md px-3 py-2 text-caption bg-red-50 text-red-700">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        Still on break? Over 60 min elapsed.
+                        {' '}({breakReminderNumber}/{MAX_REMINDERS} reminders
+                        {breakReminderNumber >= MAX_REMINDERS ? ' — auto-resuming' : ''})
                     </div>
                 )}
 

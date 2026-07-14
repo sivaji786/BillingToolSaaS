@@ -493,4 +493,20 @@ export const adminCmsService = {
     },
 };
 
+export const adminCompanyTypeService = {
+    getAll: async (): Promise<{ id: string; name: string }[]> => {
+        const response = await adminApi.get<{ id: string; name: string }[]>('/company-types');
+        return response.data;
+    },
+    create: async (data: { name: string }): Promise<void> => {
+        await adminApi.post('/company-types', data);
+    },
+    update: async (id: string, data: { name: string }): Promise<void> => {
+        await adminApi.put(`/company-types/${id}`, data);
+    },
+    delete: async (id: string): Promise<void> => {
+        await adminApi.delete(`/company-types/${id}`);
+    },
+};
+
 export default adminApi;

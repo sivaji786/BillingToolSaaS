@@ -1,28 +1,26 @@
-import { ClipboardList, Timer, FileText, Inbox, User, Settings } from 'lucide-react';
+import { ClipboardList, Timer, FileText, Inbox, User } from 'lucide-react';
 import { useWorkhubTimerStore } from '../../../stores/workhubTimerStore';
 
-export type WHTab = 'tasks' | 'timer' | 'reports' | 'inbox' | 'profile' | 'settings';
+export type WHTab = 'tasks' | 'timer' | 'reports' | 'inbox' | 'profile';
 
 interface Props {
     active: WHTab;
     onNavigate: (tab: WHTab) => void;
     openTaskCount?: number;
     unreadCount?: number;
-    canAccessSettings?: boolean;
 }
 
-const ALL_TABS: { id: WHTab; label: string; Icon: React.ElementType; privileged?: boolean }[] = [
-    { id: 'tasks',    label: 'Tasks',    Icon: ClipboardList },
-    { id: 'timer',    label: 'Timer',    Icon: Timer },
-    { id: 'reports',  label: 'Reports',  Icon: FileText },
-    { id: 'inbox',    label: 'Inbox',    Icon: Inbox },
-    { id: 'profile',  label: 'Profile',  Icon: User },
-    { id: 'settings', label: 'Settings', Icon: Settings, privileged: true },
+const ALL_TABS: { id: WHTab; label: string; Icon: React.ElementType }[] = [
+    { id: 'tasks',   label: 'Tasks',   Icon: ClipboardList },
+    { id: 'timer',   label: 'Timer',   Icon: Timer },
+    { id: 'reports', label: 'Reports', Icon: FileText },
+    { id: 'inbox',   label: 'Inbox',   Icon: Inbox },
+    { id: 'profile', label: 'Profile', Icon: User },
 ];
 
-export function WorkHubMobileNav({ active, onNavigate, openTaskCount = 0, unreadCount = 0, canAccessSettings = false }: Props) {
+export function WorkHubMobileNav({ active, onNavigate, openTaskCount = 0, unreadCount = 0 }: Props) {
     const timerState = useWorkhubTimerStore((s) => s.state);
-    const TABS = ALL_TABS.filter((t) => !t.privileged || canAccessSettings);
+    const TABS = ALL_TABS;
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t flex md:hidden" role="navigation" aria-label="WorkHub navigation">

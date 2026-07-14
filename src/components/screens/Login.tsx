@@ -296,6 +296,7 @@ export function Login({ onLogin, onSignup, onGoHome }: LoginProps) {
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                         >
                           {showPassword ? (

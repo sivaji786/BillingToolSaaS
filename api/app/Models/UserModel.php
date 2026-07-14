@@ -114,6 +114,12 @@ class UserModel extends BaseModel
         if ($builder->countAllResults() > 0) {
             return true;
         }
+
+        // Fallback: users.role = 'admin' bypasses all right checks
+        $userRow = $db->table('users')->select('role')->where('id', (int) $userId)->get()->getRow();
+        if ($userRow && $userRow->role === 'admin') {
+            return true;
+        }
         
         // 2. Check Specific Right
         // Link: users -> user_roles -> roles -> role_rights -> rights where code = $rightCode
@@ -130,14 +136,20 @@ class UserModel extends BaseModel
     public function getRights($userId)
     {
         $db = \Config\Database::connect();
-        
-        // 1. Check Super Admin Role
+
+        // 1. Check Super Admin Role via user_roles table
         $builder = $db->table('user_roles');
         $builder->join('roles', 'roles.id = user_roles.role_id');
         $builder->where('user_roles.user_id', $userId);
         $builder->where('roles.is_super_admin', 1);
         if ($builder->countAllResults() > 0) {
             return ['*']; // Wildcard for super admin
+        }
+
+        // Fallback: users.role = 'admin' is treated as super admin
+        $userRow = $db->table('users')->select('role')->where('id', (int) $userId)->get()->getRow();
+        if ($userRow && $userRow->role === 'admin') {
+            return ['*'];
         }
 
         // 2. Fetch all rights codes

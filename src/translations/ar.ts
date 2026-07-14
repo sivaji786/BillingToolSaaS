@@ -22,6 +22,7 @@ export const ar = {
         welcomeDemo: 'مرحباً بك في النسخة التجريبية!',
         welcomeDemoDesc: 'تم تسجيل الدخول ببيانات الاعتماد التجريبية.',
         loginFailed: 'فشل تسجيل الدخول',
+        success: 'تم تسجيل الدخول بنجاح',
         loginFailedDesc: 'يرجى إدخال البريد الإلكتروني وكلمة المرور.',
         loggedOut: 'تم تسجيل الخروج بنجاح',
         loggedOutDesc: 'لقد قمت بتسجيل الخروج من حسابك.',
@@ -30,10 +31,16 @@ export const ar = {
         backToHome: 'العودة للرئيسية',
         pendingActionBanner: 'تم العثور على الحساب! سجل الدخول أدناه للمتابعة مع فاتورتك.',
         resumingAction: 'جاري استئناف إجراءات فاتورتك...',
+        orContinueWith: 'أو تابع مع',
+        continueWith: 'تابع مع',
+        ssoRequired: 'يتطلب هذا الحساب تسجيل الدخول عبر SSO. يرجى استخدام أحد الخيارات أدناه.',
+        ssoFailed: 'فشل بدء تشغيل SSO. يرجى المحاولة مرة أخرى.',
+        redirecting: 'جاري إعادة التوجيه…',
     },
 
     // Navigation
     nav: {
+        home: 'الرئيسية',
         dashboard: 'لوحة التحكم',
         templates: 'القوالب',
         activity: 'سجل النشاط',
@@ -41,9 +48,91 @@ export const ar = {
         products: 'الحزم',
         clients: 'العملاء',
         reports: 'التقارير',
-        workspace: 'مساحة العمل',
+        workspace: 'إدارة الملفات',
         invoices: 'الفواتير',
         letters: 'الرسائل التجارية',
+    },
+
+    // Tenant Home screen
+    home: {
+        greeting: {
+            morning: 'صباح الخير، {name}',
+            afternoon: 'مساء الخير، {name}',
+            evening: 'مساء النور، {name}',
+        },
+        section: {
+            today: 'ماذا تريد أن تفعل اليوم؟',
+            todaySub: 'أنشئ شيئاً جديداً — أو انتقل إلى ما لديك بالفعل.',
+        },
+        welcome: {
+            title: 'مرحباً — ما الذي يميزنا',
+            hint: 'الجولة متاحة في أي وقت في قسم المساعدة.',
+            tour: 'ابدأ الجولة لمدة دقيقتين',
+            skip: 'تخطَّ واستكشف',
+            pillar1: {
+                title: 'منصة وثائق متكاملة',
+                text: 'خطابات، فواتير، أوراق عمل، قوالب — مساحة عمل واحدة قابلة للتخصيص بالكامل.',
+            },
+            pillar2: {
+                title: 'بشر حقيقيون خلف المنتج',
+                text: 'تحدث مع شخص حقيقي وليس روبوتاً. نساعدك في الإعداد والنمو.',
+            },
+            pillar3: {
+                title: 'نظام تذاكر مدمج',
+                text: 'افتح تذكرة دعم من أي مستند وتابعها حتى الحل.',
+            },
+        },
+        continue: {
+            title: 'تابع من حيث توقفت',
+            seeAll: 'عرض الكل ←',
+            empty: 'لا يوجد شيء بعد — أنشئ مستندك الأول أعلاه.',
+        },
+        activity: {
+            title: 'النشاط في فريقك',
+            seeAll: 'عرض الكل ←',
+            empty: 'لا يوجد نشاط حديث بعد.',
+        },
+        tickets: {
+            title: 'تذاكرك',
+            new: '+ تذكرة جديدة',
+            allGood: 'جميع الأنظمة تعمل بشكل طبيعي',
+            cta: 'هل تحتاج مساعدة؟ افتح تذكرة دعم وسيرد فريقنا خلال يوم عمل واحد.',
+            open: 'فتح تذكرة ←',
+        },
+    },
+
+    // Launch tiles
+    tile: {
+        billing: {
+            title: 'الفواتير',
+            desc: 'فواتير، عروض أسعار، وتذكيرات.',
+            new: '+ فاتورة جديدة',
+            mine: 'فواتيري',
+        },
+        letter: {
+            title: 'الخطاب التجاري',
+            desc: 'كتابة مراسلات احترافية.',
+            new: '+ خطاب جديد',
+            mine: 'خطاباتي',
+        },
+        template: {
+            title: 'محرر القوالب',
+            desc: 'قوالب قابلة لإعادة الاستخدام لأي نوع من المستندات.',
+            new: '+ قالب جديد',
+            mine: 'قوالبي',
+        },
+        workspace: {
+            title: 'المستندات',
+            desc: 'الملفات ومساحة العمل المشتركة.',
+            new: '+ رفع الملفات',
+            mine: 'مساحة عملي',
+        },
+        custom: {
+            title: 'مستندك المخصص',
+            desc: 'أنشئ شيئاً لا يوفره التطبيق بعد.',
+            new: '+ ابدأ فارغاً',
+            mine: 'مستنداتي',
+        },
     },
 
     // Dashboard
@@ -86,11 +175,13 @@ export const ar = {
         paid: 'مدفوعة',
         cancelled: 'ملغاة',
         signed: 'موقعة',
+        overdue: 'متأخر',
     },
 
     // Invoice Editor
     editor: {
         title: 'محرر الفواتير',
+        name: 'الاسم',
         letterEditor: 'محرر الخطابات',
         back: 'رجوع',
         newInvoice: 'فاتورة جديدة',
@@ -477,6 +568,23 @@ export const ar = {
         saveChanges: 'حفظ التغييرات',
         settingsSaved: 'تم حفظ الإعدادات',
         settingsSavedDesc: 'تم تحديث إعداداتك بنجاح.',
+        connectedAccounts: 'الحسابات المرتبطة',
+        connectedAccountsDesc: 'اربط حساباتك الاجتماعية لتسجيل الدخول بنقرة واحدة. يمكنك ربط عدة مزودين.',
+        connect: 'ربط',
+        disconnect: 'فصل',
+        ssoSaml: 'SSO وSAML',
+        ssoSamlDesc: 'تكوين SSO للمؤسسات في مؤسستك. يمكن للمستخدمين تسجيل الدخول عبر مزود الهوية الخاص بك.',
+        ssoProvider: 'بروتوكول SSO',
+        ssoEnabled: 'SSO مفعّل',
+        ssoDisabled: 'SSO معطّل',
+        ssoOnly: 'وضع SSO فقط',
+        ssoOnlyDesc: 'منع تسجيل الدخول بكلمة المرور لجميع المستخدمين — يجب المصادقة عبر SSO.',
+        samlRoleMapping: 'تعيين الأدوار (JSON)',
+        spMetadata: 'رابط بيانات SP',
+        downloadMetadata: 'فتح',
+        testConnection: 'اختبار',
+        ssoSaved: 'تم حفظ تكوين SSO.',
+        ssoSaveFailed: 'فشل حفظ تكوين SSO.',
         defaultFormat: 'تنسيق التصدير الافتراضي',
         autoValidate: 'تحقق تلقائي عند الحفظ',
         autoValidateDesc: 'التحقق تلقائياً من الفواتير عند الحفظ',
@@ -600,6 +708,9 @@ export const ar = {
         invoices: 'فواتير',
         updateStatus: 'تحديث الحالة',
         statusChangeNote: 'سيؤدي هذا إلى تحديث حالة جميع الفواتير المختارة. يمكن التراجع عن هذا الإجراء بتغيير الحالة مرة أخرى.',
+        fetchError: 'فشل تحميل الفواتير',
+        exportError: 'فشل التصدير',
+        status: 'الحالة',
     },
 
     // Address book
@@ -631,6 +742,9 @@ export const ar = {
 
     // Design Layout
     designLayout: {
+        designMode: 'وضع التصميم',
+        editingLayout: 'محرر إحداثيات دقيق للبكسل',
+        newTemplate: 'قالب جديد',
         elementLibrary: 'مكتبة العناصر',
         inspector: 'المفتش',
         resetLayout: 'إعادة تعيين التخطيط',
@@ -727,6 +841,11 @@ export const ar = {
         copied: 'تم النسخ',
         downloaded: 'تم التحميل',
         discard: 'تجاهل',
+        new: 'جديد',
+        saving: 'جارٍ الحفظ...',
+        noPermission: 'لا إذن',
+        confirmDelete: 'تأكيد الحذف',
+        deleted: 'تم الحذف',
         doubleClickToAdd: 'انقر مرتين للإضافة',
         content: 'المحتوى',
         theme: {
@@ -801,6 +920,7 @@ export const ar = {
         common: {
             failedToLoadProfile: 'فشل تحميل ملف الشركة',
             loading: 'جاري التحميل...',
+            save: 'حفظ',
         },
         logout: 'تسجيل الخروج',
         adminPortal: 'بوابة الإدارة',
@@ -1265,7 +1385,16 @@ export const ar = {
             privacy: 'سياسة الخصوصية',
             terms: 'الشروط والأحكام',
             cookies: 'إعدادات الكوكيز',
+            mockups: 'نماذج',
         },
+    },
+
+    mockups: {
+        title: 'نماذج',
+        subtitle: 'استعرض شاشات نموذجية ونماذج أولية شارك بها فريقنا.',
+        empty: 'لا توجد نماذج متاحة حاليًا.',
+        error: 'تعذر تحميل النماذج في الوقت الحالي. يرجى المحاولة مرة أخرى لاحقًا.',
+        selectPrompt: 'اختر نموذجًا من القائمة لمعاينته.',
     },
 
     // Privacy Policy
@@ -1409,5 +1538,67 @@ export const ar = {
         restart: 'إعادة البدء',
         close: 'إغلاق',
         sendAria: 'إرسال',
+    },
+
+    // WorkHub module (WH-056)
+    workhub: {
+        moduleName: 'WorkHub',
+        tasks: 'المهام',
+        timer: 'المؤقت',
+        reports: 'التقارير',
+        inbox: 'صندوق الوارد',
+        profile: 'الملف الشخصي',
+        newTask: 'مهمة جديدة',
+        startTimer: 'بدء المؤقت',
+        stopTimer: 'إيقاف المؤقت',
+        pauseTimer: 'إيقاف مؤقت',
+        resumeTimer: 'استئناف المؤقت',
+        taskStatus: {
+            open: 'مفتوح',
+            in_progress: 'قيد التنفيذ',
+            done: 'منجز',
+            problem: 'مشكلة',
+        },
+        taskPriority: {
+            low: 'منخفض',
+            medium: 'متوسط',
+            high: 'مرتفع',
+            urgent: 'عاجل',
+        },
+        doneReport: 'تقرير الإنجاز',
+        completionNote: 'ملاحظة الإنجاز',
+        correctWithAi: 'تصحيح بالذكاء الاصطناعي',
+        materials: 'المواد',
+        addMaterial: 'إضافة مادة',
+        photos: 'الصور',
+        signature: 'التوقيع',
+        workerSignature: 'توقيع العامل',
+        customerSignature: 'توقيع العميل',
+        gdprConsent: 'موافقة GDPR',
+        submitReport: 'إرسال التقرير',
+        workOrder: 'أمر العمل',
+        completionCertificate: 'شهادة الإنجاز',
+        timesheet: 'جدول الوقت',
+        projectStatus: 'حالة المشروع',
+        consentForm: 'نموذج الموافقة',
+        downloadPdf: 'تحميل PDF',
+        generatePdf: 'إنشاء PDF',
+        capacityPlanning: 'تخطيط الطاقة',
+        utilisation: 'نسبة الاستخدام',
+        queueDepth: 'عمق قائمة الانتظار',
+        freeFrom: 'متاح من',
+        settings: 'إعدادات WorkHub',
+        hourlyRate: 'الأجر بالساعة',
+        upgradeRequired: 'ترقية مطلوبة',
+        planLimitReached: 'تم الوصول إلى حد الخطة',
+        upgradeNow: 'الترقية الآن',
+        offlineBanner: 'غير متصل — ستتزامن التغييرات عند إعادة الاتصال.',
+        arbzgWarning: 'عمل 6 ساعات بدون استراحة — §16 ArbZG يتطلب استراحة لا تقل عن 30 دقيقة.',
+        dualSigned: 'موقّع من الطرفين',
+        eiadasNotice: 'بالتوقيع، تؤكد قبول العمل المنجز (eIDAS 910/2014 التوقيع الإلكتروني البسيط).',
+        translationLabel: 'ترجمة',
+        showOriginal: 'عرض الأصل',
+        translated: 'مترجم',
+        cached: 'محفوظ',
     },
 };

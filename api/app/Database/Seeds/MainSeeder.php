@@ -15,10 +15,14 @@ class MainSeeder extends Seeder
         // Clear all tables to be seeded
         echo "Cleaning existing data...\n";
         $tables = [
-            'plans', 'countries', 'rights', 'roles', 'role_rights', 'user_roles', 
-            'admin_users', 'tenants', 'users', 'company_profiles', 'invoices', 
+            'plans', 'countries', 'rights', 'roles', 'role_rights', 'user_roles',
+            'admin_users', 'tenants', 'users', 'company_profiles', 'invoices',
             'invoice_lines', 'invoice_templates', 'subscriptions', 'company_types',
-            'audit_logs', 'projects', 'tickets', 'platform_company_details', 'api_keys'
+            'audit_logs', 'projects', 'tickets', 'platform_company_details', 'api_keys',
+            // WorkHub tables — must also be reset so PHPUnit-created tenant IDs don't conflict
+            'workhub_usage_monthly', 'workhub_tasks', 'workhub_workers',
+            'workhub_time_entries', 'workhub_completion_records', 'workhub_task_photos',
+            'workhub_material_entries', 'workhub_customers',
         ];
         foreach ($tables as $table) {
             $db->table($table)->truncate();
@@ -81,7 +85,7 @@ class MainSeeder extends Seeder
                     ['name' => 'AI Voice Input', 'value' => 'No', 'type' => 'feature'],
                     ['name' => 'Analytics & Reports', 'value' => 'Basic', 'type' => 'feature'],
                 ]),
-                'limits' => json_encode(['invoices' => 50, 'users' => 1, 'storage' => 2000000000, 'bandwidth' => 10000000000, 'api_calls' => 1000]),
+                'limits' => json_encode(['workhub_enabled' => true, 'invoices' => 50, 'users' => 1, 'storage' => 2000000000, 'bandwidth' => 10000000000, 'api_calls' => 1000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
@@ -107,7 +111,7 @@ class MainSeeder extends Seeder
                     ['name' => 'AI Voice Input', 'value' => 'No', 'type' => 'feature'],
                     ['name' => 'Analytics & Reports', 'value' => 'Advanced', 'type' => 'feature'],
                 ]),
-                'limits' => json_encode(['invoices' => 500, 'users' => 3, 'storage' => 10000000000, 'bandwidth' => 50000000000, 'api_calls' => 10000]),
+                'limits' => json_encode(['workhub_enabled' => true, 'invoices' => 500, 'users' => 3, 'storage' => 10000000000, 'bandwidth' => 50000000000, 'api_calls' => 10000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
@@ -133,7 +137,7 @@ class MainSeeder extends Seeder
                     ['name' => 'AI Voice Input', 'value' => 'Yes', 'type' => 'feature'],
                     ['name' => 'Analytics & Reports', 'value' => 'Advanced', 'type' => 'feature'],
                 ]),
-                'limits' => json_encode(['invoices' => 2000, 'users' => 10, 'storage' => 50000000000, 'bandwidth' => 200000000000, 'api_calls' => 100000]),
+                'limits' => json_encode(['workhub_enabled' => true, 'invoices' => 2000, 'users' => 10, 'storage' => 50000000000, 'bandwidth' => 200000000000, 'api_calls' => 100000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
@@ -159,7 +163,7 @@ class MainSeeder extends Seeder
                     ['name' => 'AI Voice Input', 'value' => 'Yes', 'type' => 'feature'],
                     ['name' => 'Analytics & Reports', 'value' => 'Full', 'type' => 'feature'],
                 ]),
-                'limits' => json_encode(['invoices' => -1, 'users' => -1, 'storage' => 1000000000000, 'bandwidth' => 10000000000000, 'api_calls' => 1000000]),
+                'limits' => json_encode(['workhub_enabled' => true, 'invoices' => -1, 'users' => -1, 'storage' => 1000000000000, 'bandwidth' => 10000000000000, 'api_calls' => 1000000]),
                 'is_active' => 1, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')
             ]
         ];

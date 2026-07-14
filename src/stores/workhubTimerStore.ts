@@ -7,13 +7,15 @@ interface WorkhubTimerStore {
     state: TimerState;
     activeTaskId: number | null;
     activeTaskTitle: string;
+    activeTaskEstHours: number | null;       // task's target/estimated hours, if set
+    activeTaskLoggedBaselineHours: number;   // hours already logged on this task before this session
     startedAt: number | null;       // Date.now() when current period began
     accumulatedSeconds: number;     // seconds banked before current period
     breakStartedAt: number | null;  // Date.now() when break began
     accumulatedBreakSeconds: number;
     needsServerSync: boolean;
 
-    start: (taskId: number, title: string) => void;
+    start: (taskId: number, title: string, estHours?: number | null, loggedBaselineHours?: number) => void;
     pause: () => void;
     resume: () => void;
     stop: () => void;
@@ -28,16 +30,20 @@ export const useWorkhubTimerStore = create<WorkhubTimerStore>()(
             state: 'idle',
             activeTaskId: null,
             activeTaskTitle: '',
+            activeTaskEstHours: null,
+            activeTaskLoggedBaselineHours: 0,
             startedAt: null,
             accumulatedSeconds: 0,
             breakStartedAt: null,
             accumulatedBreakSeconds: 0,
             needsServerSync: false,
 
-            start: (taskId, title) => set({
+            start: (taskId, title, estHours = null, loggedBaselineHours = 0) => set({
                 state: 'running',
                 activeTaskId: taskId,
                 activeTaskTitle: title,
+                activeTaskEstHours: estHours ?? null,
+                activeTaskLoggedBaselineHours: loggedBaselineHours ?? 0,
                 startedAt: Date.now(),
                 accumulatedSeconds: 0,
                 breakStartedAt: null,
@@ -71,6 +77,8 @@ export const useWorkhubTimerStore = create<WorkhubTimerStore>()(
                 state: 'idle',
                 activeTaskId: null,
                 activeTaskTitle: '',
+                activeTaskEstHours: null,
+                activeTaskLoggedBaselineHours: 0,
                 startedAt: null,
                 accumulatedSeconds: 0,
                 breakStartedAt: null,
@@ -101,6 +109,8 @@ export const useWorkhubTimerStore = create<WorkhubTimerStore>()(
                 state: s.state,
                 activeTaskId: s.activeTaskId,
                 activeTaskTitle: s.activeTaskTitle,
+                activeTaskEstHours: s.activeTaskEstHours,
+                activeTaskLoggedBaselineHours: s.activeTaskLoggedBaselineHours,
                 startedAt: s.startedAt,
                 accumulatedSeconds: s.accumulatedSeconds,
                 breakStartedAt: s.breakStartedAt,

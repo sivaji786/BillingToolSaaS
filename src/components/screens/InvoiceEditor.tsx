@@ -457,7 +457,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
                   id="invoiceNumber"
                   value={invoice.invoiceNumber}
                   onChange={(e) => handleUpdateInvoice({ invoiceNumber: e.target.value })}
-                  placeholder={isTemplateMode ? t('templates.templateNamePlaceholder') || "My Template Name" : (isBusinessLetter ? "LTR-2026-001" : "INV-2025-00123")}
+                  placeholder={isTemplateMode ? t('templates.namePlaceholder') || "My Template Name" : (isBusinessLetter ? "LTR-2026-001" : "INV-2025-00123")}
                   className="mt-1"
                 />
                 <p className="text-micro text-muted-foreground mt-1">

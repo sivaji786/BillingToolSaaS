@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Play, CheckSquare, AlertTriangle, Clock, MapPin, Package, Image, Link2, User, Pencil } from 'lucide-react';
+import { ArrowLeft, Play, CheckSquare, AlertTriangle, Clock, MapPin, Package, Image, Link2, User, Pencil, FileText } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
 import { Card, CardContent } from '../../ui/card';
@@ -8,6 +8,7 @@ import { taskService, timerService, WHTask, WHWorker, TaskStatus } from '../../.
 import { useWorkhubTimerStore } from '../../../stores/workhubTimerStore';
 import { DoneReportModal } from './DoneReportModal';
 import { TaskEditModal } from './TaskEditModal';
+import { TaskDocumentsTab } from './TaskDocumentsTab';
 import { BatchLocationPanel } from './BatchLocationPanel';
 import { toast } from 'sonner';
 
@@ -40,7 +41,7 @@ export function TaskDetail({ taskId, onBack, onUpdated, workers = [], canEdit = 
     const startMut = useMutation({
         mutationFn: () => timerService.start(taskId),
         onSuccess: () => {
-            timer.start(taskId, task?.title ?? '');
+            timer.start(taskId, task?.title ?? '', task?.est_hours ?? null, task?.logged_hours ?? 0);
             qc.invalidateQueries({ queryKey: ['wh-task', taskId] });
             qc.invalidateQueries({ queryKey: ['wh-tasks'] });
             onUpdated();
@@ -176,6 +177,21 @@ export function TaskDetail({ taskId, onBack, onUpdated, workers = [], canEdit = 
                         <p className="text-caption text-muted-foreground italic">No completion record yet</p>
                     )}
                 </div>
+
+                {/* Documents / PDF download */}
+                {task.completion_record && (
+                    <div>
+                        <div className="flex items-center gap-1.5 mb-2 text-body font-medium">
+                            <FileText className="w-4 h-4" />
+                            Documents
+                        </div>
+                        <TaskDocumentsTab
+                            taskId={task.id}
+                            hasCompletionRecord={!!task.completion_record}
+                            isDualSigned={!!task.completion_record?.is_dual_signed}
+                        />
+                    </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2">

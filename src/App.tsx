@@ -26,6 +26,7 @@ const Impressum = lazy(() => import('./components/screens/Impressum').then(modul
 const PrivacyPolicy = lazy(() => import('./components/screens/PrivacyPolicy').then(module => ({ default: module.PrivacyPolicy })));
 const TermsAndConditions = lazy(() => import('./components/screens/TermsAndConditions').then(module => ({ default: module.TermsAndConditions })));
 const CookiePolicy = lazy(() => import('./components/screens/CookiePolicy').then(module => ({ default: module.CookiePolicy })));
+const Mockups = lazy(() => import('./components/screens/Mockups').then(module => ({ default: module.Mockups })));
 const Buyers = lazy(() => import('./components/screens/Buyers').then(module => ({ default: module.Buyers })));
 const Workspace = lazy(() => import('./components/screens/Workspace').then(module => ({ default: module.Workspace })));
 const AIHistory = lazy(() => import('./components/screens/AIHistory').then(module => ({ default: module.AIHistory })));
@@ -55,6 +56,7 @@ const SATicketDetails = lazy(() => import('./components/screens/Admin/SATicketDe
 const SAWiki = lazy(() => import('./components/screens/Admin/SAWiki').then(module => ({ default: module.SAWiki })));
 const SAPages = lazy(() => import('./components/screens/Admin/SAPages').then(module => ({ default: module.SAPages })));
 const SAMenus = lazy(() => import('./components/screens/Admin/SAMenus').then(module => ({ default: module.SAMenus })));
+const SACompanyTypes = lazy(() => import('./components/screens/Admin/SACompanyTypes').then(module => ({ default: module.SACompanyTypes })));
 
 
 const TicketingWidget = lazy(() => import('./components/TicketingWidget').then(m => ({ default: m.TicketingWidget })));
@@ -149,7 +151,7 @@ import { toast } from 'sonner';
 import { authService, invoiceService, letterService } from './services/api';
 import { PLATFORM_TEMPLATES } from './utils/invoice-templates-defaults';
 
-type Screen = 'landing' | 'login' | 'home' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'workhub' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAMenus' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'packageComparison' | 'resetPassword' | 'cmsPage' | 'sharedInvoice';
+type Screen = 'landing' | 'login' | 'home' | 'dashboard' | 'invoices' | 'letters' | 'editor' | 'preview' | 'templates' | 'templateEditor' | 'designLayout' | 'activity' | 'settings' | 'admin' | 'signup' | 'billing' | 'buyers' | 'workspace' | 'workhub' | 'SALogin' | 'SAdashboard' | 'SApackages' | 'SAPackageServices' | 'SAPackageForm' | 'SAASusers' | 'SAUserDetails' | 'SAbilling' | 'SAusage' | 'SAsettings' | 'SAPages' | 'SAMenus' | 'SAInvoiceForm' | 'SATickets' | 'SATicketDetails' | 'SAWiki' | 'SACompanyTypes' | 'aiHistory' | 'quickAccess' | 'impressum' | 'privacyPolicy' | 'termsAndConditions' | 'cookiePolicy' | 'mockups' | 'packageComparison' | 'resetPassword' | 'cmsPage' | 'sharedInvoice';
 type EditorMode = 'invoice' | 'template';
 
 function AppContent() {
@@ -162,7 +164,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace(/^#\/?/, '');
-      if (hash && ['landing', 'login', 'home', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'workhub', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison'].includes(hash)) {
+      if (hash && ['landing', 'login', 'home', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'workhub', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'mockups', 'packageComparison'].includes(hash)) {
         return hash as Screen;
       }
       // Handle parameterized routes like designLayout/123 or reset-password/123 or cms/slug
@@ -278,7 +280,7 @@ function AppContent() {
     const handleHashChange = () => {
       const hash = window.location.hash.replace(/^#\/?/, '');
       if (hash && [
-        'landing', 'login', 'home', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'workhub', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison', 'SAPages'
+        'landing', 'login', 'home', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'designLayout', 'admin', 'SAWiki', 'signup', 'buyers', 'workspace', 'workhub', 'aiHistory', 'quickAccess', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'mockups', 'packageComparison', 'SAPages'
       ].includes(hash)) {
         setCurrentScreen(hash as Screen);
       } else if (hash.startsWith('cms/')) {
@@ -345,7 +347,7 @@ function AppContent() {
   useEffect(() => {
     if ([
       'home', 'dashboard', 'invoices', 'letters', 'templates', 'activity', 'settings', 'admin', 'workspace', 'aiHistory', 'packageComparison',
-      'signup', 'login', 'landing', 'billing', 'buyers', 'workhub', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'packageComparison',
+      'signup', 'login', 'landing', 'billing', 'buyers', 'workhub', 'impressum', 'privacyPolicy', 'termsAndConditions', 'cookiePolicy', 'mockups', 'packageComparison',
     ].includes(currentScreen)) {
       if (window.location.hash.replace('#', '') !== currentScreen) {
         window.location.hash = currentScreen;
@@ -434,7 +436,7 @@ function AppContent() {
       // Requirement: form should inform "email/ password wrong" on incorrect credentials
       const errorMessage = error.response?.status === 401 
         ? "email/ password wrong" 
-        : (t('login.failed') || 'Login failed');
+        : (t('login.loginFailed') || 'Login failed');
       
       toast.error(errorMessage);
     }
@@ -884,6 +886,14 @@ function AppContent() {
       </Suspense>
     );
   }
+  if (currentScreen === 'mockups') {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <Mockups onBack={() => setCurrentScreen('landing')} onNavigate={navigate} />
+        <EditModeBar />
+      </Suspense>
+    );
+  }
 
   if (currentScreen === 'sharedInvoice') {
     const parts = window.location.hash.replace(/^#\/?/, '').split('/');
@@ -1124,7 +1134,7 @@ function AppContent() {
                       const btn = document.querySelector<HTMLElement>('[data-dock-id="support-ticket"]');
                       btn?.click();
                     }}
-                    onTour={() => setCurrentScreen('quickAccess')}
+                    onTour={() => {}}
                   />
                 )}
 
@@ -1257,7 +1267,7 @@ function AdminPortalRouter() {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
       // Check if it's an admin route
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages', 'SAMenus'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages', 'SAMenus', 'SACompanyTypes'].includes(hash)) {
         return hash as Screen;
       }
     }
@@ -1274,7 +1284,7 @@ function AdminPortalRouter() {
     if (!_hasHydrated) return;
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').replace(/^\//, ''); // Remove # and leading /
-      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages', 'SAMenus'].includes(hash)) {
+      if (hash && ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages', 'SAMenus', 'SACompanyTypes'].includes(hash)) {
         setCurrentScreen(hash as Screen);
       } else {
         // Non-admin hash (e.g. #/ or #landing) — exit admin portal
@@ -1293,7 +1303,7 @@ function AdminPortalRouter() {
   };
 
   // Admin Portal Routes
-  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages', 'SAMenus'].includes(currentScreen);
+  const isAdminRoute = ['SALogin', 'SAdashboard', 'SApackages', 'SAPackageServices', 'SAPackageForm', 'SAASusers', 'SAUserDetails', 'SAbilling', 'SAusage', 'SAsettings', 'SAInvoiceForm', 'SATickets', 'SATicketDetails', 'SAWiki', 'SAPages', 'SAMenus', 'SACompanyTypes'].includes(currentScreen);
 
   if (isAdminRoute) {
     // Wait for hydration before checking auth
@@ -1357,6 +1367,7 @@ function AdminPortalRouter() {
           {currentScreen === 'SAWiki' && <SAWiki />}
           {currentScreen === 'SAPages' && <SAPages />}
           {currentScreen === 'SAMenus' && <SAMenus />}
+          {currentScreen === 'SACompanyTypes' && <SACompanyTypes />}
         </AdminLayoutWrapper>
         <HelpChatBot config={ADMIN_HELP_CONFIG} currentScreen={currentScreen} />
         <Toaster />

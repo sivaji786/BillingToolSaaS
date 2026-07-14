@@ -56,14 +56,23 @@ class RbacFilter implements FilterInterface
                 return response()->setJSON(['error' => 'Authentication required'])->setStatusCode(401);
             }
 
-            // 2. Skip RBAC for users assigned to a super-admin role (is_super_admin = 1).
-            //    This is the authoritative check — we no longer rely on users.role shortcut.
+            // 2. Skip RBAC for super-admin users.
+            //    Primary check: user_roles → roles.is_super_admin = 1 (RBAC table)
+            //    Fallback: users.role = 'admin' (legacy column, covers newly created tenants
+            //              whose user_roles entry may not exist yet or seeding hasn't run)
             $db          = \Config\Database::connect();
             $isSuperAdmin = $db->table('user_roles')
                 ->join('roles', 'roles.id = user_roles.role_id')
                 ->where('user_roles.user_id', (int) $userId)
                 ->where('roles.is_super_admin', 1)
                 ->countAllResults() > 0;
+
+            if (!$isSuperAdmin) {
+                $userRow = $db->table('users')->select('role')->where('id', (int) $userId)->get()->getRow();
+                if ($userRow && $userRow->role === 'admin') {
+                    $isSuperAdmin = true;
+                }
+            }
 
             if ($isSuperAdmin) {
                 return; // Super-admin: unrestricted access

@@ -23,16 +23,15 @@ export function UserForm({ userId, onBack, companyTypeId }: UserFormProps) {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        if (companyTypeId) {
-            loadData();
-        }
+        loadData();
     }, [userId, companyTypeId]);
 
     const loadData = async () => {
         setIsLoading(true);
         try {
+            const roleParams = companyTypeId ? { company_type_id: companyTypeId } : {};
             const [rolesData, typesData, usersData] = await Promise.all([
-                roleService.getAll({ company_type_id: companyTypeId! }),
+                roleService.getAll(roleParams),
                 companyTypeService.getAll(),
                 userId ? userService.getAll() : Promise.resolve([])
             ]);

@@ -63,7 +63,7 @@ export function UserList({ onCreate, onEdit, companyTypeId }: UserListProps) {
                                 <TableCell className="font-medium">{user.name}</TableCell>
                                 <TableCell>{user.email}</TableCell>
                                 <TableCell>
-                                    <div className="flex flex-wrap gap-1">
+                                    <div className="flex flex-col gap-1">
                                         {user.roles && user.roles
                                             .filter((r: any) => !companyTypeId || String(r.company_type_id) === String(companyTypeId))
                                             .map((r: any) => (

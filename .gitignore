@@ -6,6 +6,14 @@ node_modules/
 # Testing
 coverage/
 
+# Playwright — generated artifacts (reports, videos, traces, screenshots)
+playwright-report/
+test-results/
+.playwright-mcp/
+
+# Local notes / temp files
+translations.md
+
 # Production
 dist/
 build/
@@ -37,6 +45,7 @@ api/writable/uploads/*
 api/writable/ratelimits/*
 !api/writable/**/index.html
 api/public/uploads/tickets/*
+api/*.log
 scratch/
 tobe_delete/
 .~lock.*

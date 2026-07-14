@@ -10,6 +10,7 @@ interface User {
     name: string;
     role: string;
     is_super_admin?: boolean;
+    rights?: string[];
 }
 
 interface Tenant {

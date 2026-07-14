@@ -72,6 +72,9 @@ export function PhotoUploadGrid({ taskId, existingPhotos = [], onUploaded, onRem
             toast.error(e.response?.data?.message ?? 'Upload failed');
         } finally {
             setUploading(false);
+            // Reset inputs so the same file can be re-selected after an error
+            if (fileInputRef.current)   fileInputRef.current.value = '';
+            if (cameraInputRef.current) cameraInputRef.current.value = '';
         }
     };
 

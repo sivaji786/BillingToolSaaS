@@ -14,7 +14,8 @@ import { ProjectModal } from '../../components/screens/WorkHub/ProjectModal';
 import { WorkHubInbox } from './WorkHubInbox';
 import { WorkHubProfile } from './WorkHubProfile';
 import { WorkHubTimesheet } from './WorkHubTimesheet';
-import { WorkHubSettings } from './WorkHubSettings';
+import { DEFAULT_SORT, SORT_OPTS, SortValue, computeDateRange } from '../../components/screens/WorkHub/taskFilterOptions';
+import { useWorkhubTimerGuardian } from '../../hooks/useWorkhubTimerGuardian';
 
 const TaskList   = lazy(() => import('../../components/screens/WorkHub/TaskList').then(m => ({ default: m.TaskList })));
 const TaskDetail = lazy(() => import('../../components/screens/WorkHub/TaskDetail').then(m => ({ default: m.TaskDetail })));
@@ -30,6 +31,9 @@ const spin = <div className="flex h-40 items-center justify-center"><Loader2 cla
 
 export function WorkHubLayout({ onNavigate }: Props) {
     const qc = useQueryClient();
+    // Runs reminder ladders (target-time overrun, forgotten break) + their auto-stop/auto-resume
+    // fallback once here, regardless of which timer UI or tab is currently visible.
+    useWorkhubTimerGuardian();
     const [activeTab, setActiveTab] = useState<WHTab>('tasks');
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
@@ -37,9 +41,11 @@ export function WorkHubLayout({ onNavigate }: Props) {
     const [datePreset,   setDatePreset]   = useState<string>('');
     const [customFrom,   setCustomFrom]   = useState<string>('');
     const [customTo,     setCustomTo]     = useState<string>('');
+    const [workerFilter, setWorkerFilter] = useState<number | ''>('');
+    const [sortValue,    setSortValue]    = useState<SortValue>(DEFAULT_SORT);
     const [projectModalOpen, setProjectModalOpen] = useState(false);
     const [editingProject, setEditingProject] = useState<WHProject | null>(null);
-    const [desktopPanel, setDesktopPanel] = useState<'tasks' | 'settings' | 'profile' | 'timer' | 'reports' | 'inbox'>('tasks');
+    const [desktopPanel, setDesktopPanel] = useState<'tasks' | 'profile' | 'timer' | 'reports' | 'inbox'>('tasks');
 
     const { data: myProfile } = useQuery({
         queryKey: ['wh-profile'],
@@ -58,54 +64,23 @@ export function WorkHubLayout({ onNavigate }: Props) {
     const seesAllTasks = myProfile?.is_admin || ['planner', 'manager', 'finance'].includes(role);
 
     // Compute effective date range from the active preset
-    const { dateFrom, dateTo } = useMemo(() => {
-        const fmt = (d: Date) => d.toISOString().split('T')[0];
-        const now  = new Date();
-        const dow  = now.getDay(); // 0 = Sun
-        const mondayOffset = dow === 0 ? -6 : 1 - dow;
+    const { dateFrom, dateTo } = useMemo(
+        () => computeDateRange(datePreset, customFrom, customTo),
+        [datePreset, customFrom, customTo]
+    );
 
-        switch (datePreset) {
-            case 'today':
-                return { dateFrom: fmt(now), dateTo: fmt(now) };
-            case 'yesterday': {
-                const d = new Date(now); d.setDate(d.getDate() - 1);
-                return { dateFrom: fmt(d), dateTo: fmt(d) };
-            }
-            case 'this_week': {
-                const mon = new Date(now); mon.setDate(now.getDate() + mondayOffset);
-                const sun = new Date(mon);  sun.setDate(mon.getDate() + 6);
-                return { dateFrom: fmt(mon), dateTo: fmt(sun) };
-            }
-            case 'last_week': {
-                const mon = new Date(now); mon.setDate(now.getDate() + mondayOffset - 7);
-                const sun = new Date(mon);  sun.setDate(mon.getDate() + 6);
-                return { dateFrom: fmt(mon), dateTo: fmt(sun) };
-            }
-            case 'this_month': {
-                const first = new Date(now.getFullYear(), now.getMonth(), 1);
-                const last  = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                return { dateFrom: fmt(first), dateTo: fmt(last) };
-            }
-            case 'last_month': {
-                const first = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                const last  = new Date(now.getFullYear(), now.getMonth(), 0);
-                return { dateFrom: fmt(first), dateTo: fmt(last) };
-            }
-            case 'custom':
-                return { dateFrom: customFrom, dateTo: customTo };
-            default:
-                return { dateFrom: '', dateTo: '' };
-        }
-    }, [datePreset, customFrom, customTo]);
+    const activeSort = SORT_OPTS.find((o) => o.value === sortValue) ?? SORT_OPTS[0];
 
     const { data: tasksData } = useQuery({
-        queryKey: ['wh-tasks', selectedProjectId, statusFilter, dateFrom, dateTo, myProfile?.id, seesAllTasks],
+        queryKey: ['wh-tasks', selectedProjectId, statusFilter, dateFrom, dateTo, workerFilter, sortValue, myProfile?.id, seesAllTasks],
         queryFn: () => taskService.list({
             project_id: selectedProjectId ?? undefined,
             status: statusFilter || undefined,
-            assigned_worker_id: seesAllTasks ? undefined : myProfile?.id,
+            assigned_worker_id: seesAllTasks ? (workerFilter || undefined) : myProfile?.id,
             date_from: dateFrom || undefined,
             date_to:   dateTo   || undefined,
+            sort:      activeSort.sort,
+            sort_dir:  activeSort.dir,
         }),
         enabled: !!myProfile,
         staleTime: 60 * 1000,
@@ -160,6 +135,8 @@ export function WorkHubLayout({ onNavigate }: Props) {
     const handleTaskUpdated = () => {
         qc.invalidateQueries({ queryKey: ['wh-tasks'] });
         qc.invalidateQueries({ queryKey: ['wh-task', selectedTaskId] });
+        // Task create/update/delete (incl. reassigning a task's project) can shift per-project counts.
+        qc.invalidateQueries({ queryKey: ['wh-projects'] });
     };
 
     const handleApproveReport = () => {
@@ -193,6 +170,11 @@ export function WorkHubLayout({ onNavigate }: Props) {
                                 customFrom={customFrom}
                                 customTo={customTo}
                                 onCustomRange={(f, t) => { setCustomFrom(f); setCustomTo(t); }}
+                                workers={workers}
+                                workerFilter={workerFilter}
+                                onWorkerFilter={setWorkerFilter}
+                                sortValue={sortValue}
+                                onSort={setSortValue}
                                 onSelectTask={handleTaskSelect}
                                 onUpdated={handleTaskUpdated}
                             />
@@ -206,7 +188,6 @@ export function WorkHubLayout({ onNavigate }: Props) {
                     {activeTab === 'inbox'    && <WorkHubInbox />}
                     {activeTab === 'reports'  && <WorkHubTimesheet />}
                     {activeTab === 'profile'  && <WorkHubProfile />}
-                    {activeTab === 'settings' && seesAllTasks && <WorkHubSettings />}
                 </Suspense>
             </div>
 
@@ -226,14 +207,12 @@ export function WorkHubLayout({ onNavigate }: Props) {
                     onEdit={role !== 'client' && role !== 'finance' ? openEditProject : undefined}
                     onDelete={role !== 'client' && role !== 'finance' ? (id) => deleteProjectMut.mutate(id) : undefined}
                     onProfile={() => setDesktopPanel('profile')}
-                    onSettings={seesAllTasks ? () => setDesktopPanel('settings') : undefined}
                     onInbox={() => setDesktopPanel('inbox')}
                     onTimer={role !== 'client' && role !== 'finance' ? () => setDesktopPanel('timer') : undefined}
                     onReports={() => setDesktopPanel('reports')}
                     unreadCount={unreadCount}
                     activePanel={desktopPanel}
                     taskList={
-                        desktopPanel === 'settings' ? <WorkHubSettings /> :
                         desktopPanel === 'profile'  ? <WorkHubProfile /> :
                         desktopPanel === 'inbox'    ? <WorkHubInbox /> :
                         desktopPanel === 'reports'  ? <WorkHubTimesheet /> :
@@ -245,11 +224,22 @@ export function WorkHubLayout({ onNavigate }: Props) {
                             <KanbanBoard
                                 tasks={tasks}
                                 workers={workers}
+                                projects={projects}
                                 onSelectTask={handleTaskSelect}
                                 onUpdated={handleTaskUpdated}
                                 readOnly={false}
                                 selectedProjectId={selectedProjectId}
                                 role={role}
+                                isAdmin={!!myProfile?.is_admin}
+                                datePreset={datePreset}
+                                onDatePreset={setDatePreset}
+                                customFrom={customFrom}
+                                customTo={customTo}
+                                onCustomRange={(f, t) => { setCustomFrom(f); setCustomTo(t); }}
+                                workerFilter={workerFilter}
+                                onWorkerFilter={setWorkerFilter}
+                                sortValue={sortValue}
+                                onSort={setSortValue}
                             />
                         ) : role === 'client' ? (
                             <TaskList
@@ -261,6 +251,11 @@ export function WorkHubLayout({ onNavigate }: Props) {
                                 customFrom={customFrom}
                                 customTo={customTo}
                                 onCustomRange={(f, t) => { setCustomFrom(f); setCustomTo(t); }}
+                                workers={workers}
+                                workerFilter={workerFilter}
+                                onWorkerFilter={setWorkerFilter}
+                                sortValue={sortValue}
+                                onSort={setSortValue}
                                 onSelectTask={handleTaskSelect}
                                 onUpdated={handleTaskUpdated}
                                 readOnly
@@ -276,6 +271,11 @@ export function WorkHubLayout({ onNavigate }: Props) {
                                 customFrom={customFrom}
                                 customTo={customTo}
                                 onCustomRange={(f, t) => { setCustomFrom(f); setCustomTo(t); }}
+                                workers={workers}
+                                workerFilter={workerFilter}
+                                onWorkerFilter={setWorkerFilter}
+                                sortValue={sortValue}
+                                onSort={setSortValue}
                                 onSelectTask={handleTaskSelect}
                                 onUpdated={handleTaskUpdated}
                             />
@@ -300,7 +300,7 @@ export function WorkHubLayout({ onNavigate }: Props) {
                 onNavigate={setActiveTab}
                 openTaskCount={openCount}
                 unreadCount={unreadCount}
-                canAccessSettings={seesAllTasks}
+
             />
 
             <TimerPip onViewTask={handleTaskSelect} />

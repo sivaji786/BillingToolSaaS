@@ -134,6 +134,10 @@ class Auth extends ResourceController
             // Generate JWT token
             $token = JWTHelper::generateToken($userId, $tenantId, $user['email'], $user['name']);
 
+            $this->sendAdminNotification($data['company_name'], $data['email'], $subdomain, $tenantId);
+            $telegram = new \App\Services\TelegramService();
+            $telegram->tenantRegistered($data['company_name'], $data['email'], $subdomain, $tenantId);
+
             return $this->respondCreated([
                 'success' => true,
                 'message' => 'Account created successfully',
@@ -202,6 +206,9 @@ class Auth extends ResourceController
         // Record last login timestamp
         $this->userModel->withoutTenant()->update($user['id'], ['last_login' => date('Y-m-d H:i:s')]);
 
+        // Embed rights so the frontend usePermission hook has data immediately
+        $user['rights'] = $this->userModel->getRights($user['id']);
+
         // Generate CUSTOMER JWT token (type='customer')
         $token = JWTHelper::generateToken($user['id'], $user['tenant_id'], $user['email'], $user['name'], 'customer');
 
@@ -267,6 +274,9 @@ class Auth extends ResourceController
             ->where('user_roles.user_id', (int) $user['id'])
             ->where('roles.is_super_admin', 1)
             ->countAllResults();
+
+        // Embed rights array so usePermission() works for non-admin users
+        $user['rights'] = $this->userModel->getRights($user['id']);
 
         // Get tenant
         $tenant = $this->tenantModel->find($user['tenant_id']);
@@ -403,6 +413,51 @@ class Auth extends ResourceController
         if (!$email->send()) {
             log_message('error', 'Failed to send password reset email to: ' . $toEmail);
             log_message('error', $email->printDebugger(['headers']));
+        }
+    }
+
+    private function sendAdminNotification(string $companyName, string $email, string $subdomain, int $tenantId): void
+    {
+        try {
+            $emailLib = \Config\Services::email();
+            $emailLib->initialize($this->smtpConfig());
+            $emailLib->setFrom(
+                getenv('MAIL_FROM_EMAIL') ?: 'noreply@billingtool.app',
+                getenv('MAIL_FROM_NAME')  ?: 'BillingTool'
+            );
+            $emailLib->setTo(['sivaji@medianet-home.de', 'bhnida@medianet-home.de']);
+            $emailLib->setSubject('New Tenant Registered: ' . $companyName);
+            $date = date('Y-m-d H:i:s');
+            $emailLib->setMessage(<<<HTML
+<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f5f3ff;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center" style="padding:40px 20px;">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,.12);">
+  <tr><td style="background:linear-gradient(135deg,#7c3aed,#c026d3);padding:32px 48px;text-align:center;">
+    <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;">New Tenant Registered</h1>
+    <p style="margin:8px 0 0;color:#e9d5ff;font-size:14px;">BillingTool Admin Notification</p>
+  </td></tr>
+  <tr><td style="padding:36px 48px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;width:140px;">Company</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;font-weight:600;">{$companyName}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;">Email</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">{$email}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;">Subdomain</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">{$subdomain}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;">Tenant ID</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">#{$tenantId}</td></tr>
+      <tr><td style="padding:10px 0;color:#6b7280;font-size:14px;">Registered At</td><td style="padding:10px 0;color:#111827;font-size:14px;">{$date}</td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="background:#f9fafb;border-top:1px solid #f3f4f6;padding:20px 48px;text-align:center;">
+    <p style="margin:0;color:#9ca3af;font-size:12px;">BillingTool · Admin Notification</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>
+HTML);
+            $emailLib->send();
+        } catch (\Exception $e) {
+            log_message('error', '[Auth] sendAdminNotification: ' . $e->getMessage());
         }
     }
 

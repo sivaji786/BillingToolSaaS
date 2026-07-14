@@ -35,9 +35,26 @@ export const createTicket = async (data: TicketData, options: CreateTicketOption
         form.append(`attachments[${i}]`, file, file.name);
     });
 
-    const response = await axios.post(`${baseUrl}/tickets`, form, {
-        headers: { 'X-API-Key': options.apiKey },
+    console.debug('[TicketService] POST', `${baseUrl}/tickets`, {
+        subject: data.subject,
+        priority: data.priority,
+        type: data.type,
+        domain: data.domain,
+        page: data.page,
+        hasScreenshot: !!data.screenshot,
+        attachmentCount: data.attachments?.length ?? 0,
     });
 
-    return response.data;
+    try {
+        const response = await axios.post(`${baseUrl}/tickets`, form, {
+            headers: { 'X-API-Key': options.apiKey },
+        });
+        console.debug('[TicketService] success', response.data);
+        return response.data;
+    } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+            console.error('[TicketService] HTTP', err.response?.status, err.response?.data);
+        }
+        throw err;
+    }
 };

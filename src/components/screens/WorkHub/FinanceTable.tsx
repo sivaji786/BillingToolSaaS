@@ -1,20 +1,57 @@
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { taskService, settingsService, WHTask } from '../../../services/workhubApi';
+import { taskService, settingsService, workerService, WHTask } from '../../../services/workhubApi';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Skeleton } from '../../ui/skeleton';
 import { DollarSign, ExternalLink, TrendingUp, AlertCircle } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { DATE_OPTS, SORT_OPTS, DEFAULT_SORT, SortValue, computeDateRange } from './taskFilterOptions';
 
 interface Props {
     onSelectTask: (id: number) => void;
 }
 
+const STATUS_FILTER_OPTS = [
+    { label: 'All Status',   value: '' },
+    { label: 'Open',         value: 'open' },
+    { label: 'In Progress',  value: 'in_progress' },
+    { label: 'Done',         value: 'done' },
+    { label: 'Problem',      value: 'problem' },
+];
+
 export function FinanceTable({ onSelectTask }: Props) {
+    const [statusFilter, setStatusFilter] = useState('');
+    const [datePreset,   setDatePreset]   = useState('');
+    const [customFrom,   setCustomFrom]   = useState('');
+    const [customTo,     setCustomTo]     = useState('');
+    const [workerFilter, setWorkerFilter] = useState<number | ''>('');
+    const [sortValue,    setSortValue]    = useState<SortValue>(DEFAULT_SORT);
+
+    const { dateFrom, dateTo } = useMemo(
+        () => computeDateRange(datePreset, customFrom, customTo),
+        [datePreset, customFrom, customTo]
+    );
+    const activeSort = SORT_OPTS.find((o) => o.value === sortValue) ?? SORT_OPTS[0];
+
+    const { data: workers = [] } = useQuery({
+        queryKey: ['wh-workers'],
+        queryFn: workerService.list,
+        staleTime: 5 * 60 * 1000,
+    });
+
     const { data: tasksData, isLoading: tasksLoading } = useQuery({
-        queryKey: ['wh-tasks-finance'],
-        queryFn: () => taskService.list({}),
+        queryKey: ['wh-tasks-finance', statusFilter, dateFrom, dateTo, workerFilter, sortValue],
+        queryFn: () => taskService.list({
+            status: statusFilter || undefined,
+            assigned_worker_id: workerFilter || undefined,
+            date_from: dateFrom || undefined,
+            date_to:   dateTo   || undefined,
+            sort:      activeSort.sort,
+            sort_dir:  activeSort.dir,
+            per_page:  100,
+        }),
         staleTime: 60 * 1000,
     });
 
@@ -67,6 +104,74 @@ export function FinanceTable({ onSelectTask }: Props) {
 
     return (
         <div className="p-4 space-y-4">
+            {/* Filter toolbar */}
+            <div className="flex flex-wrap items-center gap-2">
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    aria-label="Filter by status"
+                    className="text-body border border-[rgba(30,58,95,0.20)] rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)]"
+                >
+                    {STATUS_FILTER_OPTS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                </select>
+
+                {workers.length > 0 && (
+                    <select
+                        value={workerFilter}
+                        onChange={(e) => setWorkerFilter(e.target.value === '' ? '' : Number(e.target.value))}
+                        aria-label="Filter by worker"
+                        className="text-body border border-[rgba(30,58,95,0.20)] rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)]"
+                    >
+                        <option value="">All workers</option>
+                        {workers.map((w) => (
+                            <option key={w.id} value={w.id}>{w.name}</option>
+                        ))}
+                    </select>
+                )}
+
+                <select
+                    value={datePreset || '__all__'}
+                    onChange={(e) => setDatePreset(e.target.value === '__all__' ? '' : e.target.value)}
+                    aria-label="Filter by date"
+                    className="text-body border border-[rgba(30,58,95,0.20)] rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)]"
+                >
+                    {DATE_OPTS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                </select>
+
+                {datePreset === 'custom' && (
+                    <div className="flex items-center gap-1.5">
+                        <input
+                            type="date"
+                            value={customFrom}
+                            onChange={(e) => setCustomFrom(e.target.value)}
+                            className="h-[34px] rounded-lg border border-[rgba(30,58,95,0.20)] bg-white px-2 text-caption focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)]"
+                        />
+                        <span className="text-caption text-muted-foreground">to</span>
+                        <input
+                            type="date"
+                            value={customTo}
+                            onChange={(e) => setCustomTo(e.target.value)}
+                            className="h-[34px] rounded-lg border border-[rgba(30,58,95,0.20)] bg-white px-2 text-caption focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)]"
+                        />
+                    </div>
+                )}
+
+                <select
+                    value={sortValue}
+                    onChange={(e) => setSortValue(e.target.value as SortValue)}
+                    aria-label="Sort tasks"
+                    className="text-body border border-[rgba(30,58,95,0.20)] rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)] ml-auto"
+                >
+                    {SORT_OPTS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                </select>
+            </div>
+
             {/* Summary cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Invoice, AuditLogEntry } from '../../types/invoice';
@@ -7,6 +7,7 @@ import { LaunchTiles } from './TenantHome/LaunchTiles';
 import { RecentDocsRow } from './TenantHome/RecentDocsRow';
 import { ActivityPanel } from './TenantHome/ActivityPanel';
 import { TicketSummaryPanel } from './TenantHome/TicketSummaryPanel';
+import { TenantTour } from './TenantHome/TenantTour';
 import { SidebarTrigger } from '../ui/sidebar';
 import { Plus, Bell, Activity } from 'lucide-react';
 
@@ -42,6 +43,7 @@ export function TenantHome({
   const user = useAuthStore((s) => s.user);
   const tenant = useAuthStore((s) => s.tenant);
   const { t } = useLanguage();
+  const [showTour, setShowTour] = useState(false);
 
   const greeting = useMemo(
     () => getGreeting(user?.name || ''),
@@ -125,6 +127,7 @@ export function TenantHome({
             </button>
             {/* + New */}
             <button
+              id="ht-tour-new"
               onClick={onNewInvoice}
               aria-label="Create new document"
               style={{
@@ -150,7 +153,7 @@ export function TenantHome({
         style={{ padding: '28px 24px', maxWidth: 1400, width: '100%', margin: '0 auto' }}
       >
         {/* Welcome banner */}
-        <WelcomeBanner onTourClick={onTour} />
+        <WelcomeBanner onTourClick={() => setShowTour(true)} />
 
         {/* Section heading */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -163,33 +166,43 @@ export function TenantHome({
         </div>
 
         {/* Launch tiles */}
-        <LaunchTiles
-          onNewInvoice={onNewInvoice}
-          onMyInvoices={() => onNavigate('invoices')}
-          onNewLetter={onNewLetter}
-          onMyLetters={() => onNavigate('letters')}
-          onNewTemplate={() => onNavigate('templates')}
-          onMyTemplates={() => onNavigate('templates')}
-          onWorkspace={() => onNavigate('workspace')}
-          onMyDocuments={() => onNavigate('workspace')}
-        />
+        <div id="ht-tour-tiles">
+          <LaunchTiles
+            onNewInvoice={onNewInvoice}
+            onMyInvoices={() => onNavigate('invoices')}
+            onNewLetter={onNewLetter}
+            onMyLetters={() => onNavigate('letters')}
+            onNewTemplate={() => onNavigate('templates')}
+            onMyTemplates={() => onNavigate('templates')}
+            onWorkspace={() => onNavigate('workspace')}
+            onMyDocuments={() => onNavigate('workspace')}
+          />
+        </div>
 
         {/* Recent docs */}
-        <RecentDocsRow
-          invoices={invoices}
-          onOpenInvoice={onOpenInvoice}
-          onNavigateLetters={() => onNavigate('invoices')}
-        />
+        <div id="ht-tour-recent">
+          <RecentDocsRow
+            invoices={invoices}
+            onOpenInvoice={onOpenInvoice}
+            onNavigateLetters={() => onNavigate('invoices')}
+          />
+        </div>
 
         {/* Activity + tickets */}
         <section
           className="ht-bottom-row"
           style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 14 }}
         >
-          <ActivityPanel entries={sortedEntries} onSeeAll={() => onNavigate('activity')} />
-          <TicketSummaryPanel onNewTicket={onOpenTicket} />
+          <div id="ht-tour-activity" style={{ minWidth: 0 }}>
+            <ActivityPanel entries={sortedEntries} onSeeAll={() => onNavigate('activity')} />
+          </div>
+          <div id="ht-tour-tickets">
+            <TicketSummaryPanel onNewTicket={onOpenTicket} />
+          </div>
         </section>
       </div>
+
+      {showTour && <TenantTour forceShow onClose={() => setShowTour(false)} />}
 
       <style>{`
         @media (max-width: 1200px) { .ht-tiles { grid-template-columns: repeat(3, 1fr) !important; } }

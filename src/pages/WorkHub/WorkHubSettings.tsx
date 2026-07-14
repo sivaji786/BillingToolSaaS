@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Settings, Save, Loader2, Users, Trash2, UserPlus } from 'lucide-react';
+import { Save, Loader2, Users, Trash2, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -162,17 +162,7 @@ export function WorkHubSettings() {
     }
 
     return (
-        <div className="p-6 max-w-2xl space-y-6">
-            <div>
-                <h1 className="text-heading-1 font-medium flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-[#2a8fbd]" />
-                    WorkHub Settings
-                </h1>
-                <p className="text-muted-foreground text-body mt-1">
-                    Manage workers and configure billing defaults.
-                </p>
-            </div>
-
+        <div className="max-w-2xl space-y-6">
             {/* Workers */}
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-3">

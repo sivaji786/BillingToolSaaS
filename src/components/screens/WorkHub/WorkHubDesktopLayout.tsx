@@ -1,5 +1,5 @@
 import { useState, useRef, ReactNode } from 'react';
-import { ChevronLeft, ChevronRight, FolderOpen, FolderPlus, Pencil, Trash2, User, Settings, Inbox, Timer, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FolderOpen, FolderPlus, Pencil, Trash2, User, Inbox, Timer, FileText } from 'lucide-react';
 import { WHProject } from '../../../services/workhubApi';
 import { cn } from '../../../lib/utils';
 
@@ -76,12 +76,11 @@ interface Props {
     onEdit?: (project: WHProject) => void;
     onDelete?: (projectId: number) => void;
     onProfile?: () => void;
-    onSettings?: () => void;
     onInbox?: () => void;
     onTimer?: () => void;
     onReports?: () => void;
     unreadCount?: number;
-    activePanel?: 'tasks' | 'settings' | 'profile' | 'timer' | 'reports' | 'inbox';
+    activePanel?: 'tasks' | 'profile' | 'timer' | 'reports' | 'inbox';
 }
 
 export function WorkHubDesktopLayout({
@@ -96,7 +95,6 @@ export function WorkHubDesktopLayout({
     onEdit,
     onDelete,
     onProfile,
-    onSettings,
     onInbox,
     onTimer,
     onReports,
@@ -327,10 +325,10 @@ export function WorkHubDesktopLayout({
                     )}
 
                     {/* Account section */}
-                    {!sidebarCollapsed && (onProfile || onSettings) && (
+                    {!sidebarCollapsed && onProfile && (
                         <SectionLabel accent="#f08a3c">Account</SectionLabel>
                     )}
-                    {(onProfile || onSettings) && (onTimer || onReports || onInbox) && sidebarCollapsed && (
+                    {onProfile && (onTimer || onReports || onInbox) && sidebarCollapsed && (
                         <div className="my-1 mx-3 border-t border-[rgba(30,58,95,0.09)]" />
                     )}
 
@@ -342,16 +340,6 @@ export function WorkHubDesktopLayout({
                             label="Profile"
                             collapsed={sidebarCollapsed}
                             title="My Worker Profile"
-                        />
-                    )}
-                    {onSettings && (
-                        <NavBtn
-                            active={activePanel === 'settings'}
-                            onClick={onSettings!}
-                            icon={Settings}
-                            label="Settings"
-                            collapsed={sidebarCollapsed}
-                            title="WorkHub Settings"
                         />
                     )}
                 </div>

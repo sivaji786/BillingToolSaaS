@@ -69,7 +69,8 @@ class UnifiedAuthFilter implements FilterInterface
         }
 
         // Special fallback for localhost dev
-        if (!$tenant && ($_SERVER['HTTP_HOST'] === 'localhost:8080' || $_SERVER['HTTP_HOST'] === 'localhost')) {
+        $httpHost = $_SERVER['HTTP_HOST'] ?? $request->getUri()->getHost() ?? '';
+        if (!$tenant && ($httpHost === 'localhost:8080' || $httpHost === 'localhost')) {
             $tenant = $db->table('tenants')->where('status', 'active')->limit(1)->get()->getRow();
         }
 
@@ -198,10 +199,12 @@ class UnifiedAuthFilter implements FilterInterface
             '/billing/package-services',
             '/tickets',
             '/api/public/cms/',
+            '/api/public/mockups', // Guest-visible mirror of the admin Wiki's Mockups tab
             '/ping',               // OfflineBanner health check – no auth, no tenant
             '/auth/sso/',          // SSO redirect, callback, and providers endpoints
             '/auth/saml/',         // SAML 2.0 — IdP-initiated and SP-initiated flows
             '/auth/oidc/',         // Generic OIDC redirect and callback
+            '/workhub/files/proxy', // HMAC-signed presign URL — auth IS the signature, no session needed
         ];
         foreach ($publicPatterns as $pattern) {
             if (strpos($uri, $pattern) !== false) return true;
@@ -211,7 +214,7 @@ class UnifiedAuthFilter implements FilterInterface
 
     private function fail(string $message, int $code)
     {
-        log_message('error', "UnifiedAuthFilter Failure [$code]: $message. URI: " . $_SERVER['REQUEST_URI']);
+        log_message('error', "UnifiedAuthFilter Failure [$code]: $message. URI: " . ($_SERVER['REQUEST_URI'] ?? ''));
         return Services::response()
             ->setJSON(['success' => false, 'message' => $message])
             ->setStatusCode($code);

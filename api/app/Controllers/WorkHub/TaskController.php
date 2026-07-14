@@ -46,6 +46,17 @@ class TaskController extends BaseController
         $page             = max(1, (int) ($this->request->getGet('page') ?? 1));
         $perPage          = min(100, max(1, (int) ($this->request->getGet('per_page') ?? 20)));
 
+        // WH-030: sortable task list — whitelist columns to avoid injecting arbitrary SQL
+        $sortColumns = [
+            'due_date'   => 'due_date',
+            'created_at' => 'created_at',
+            'title'      => 'title',
+            'priority'   => "CASE priority WHEN 'urgent' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END",
+        ];
+        $sortKey  = $this->request->getGet('sort') ?: 'due_date';
+        $sortExpr = $sortColumns[$sortKey] ?? $sortColumns['due_date'];
+        $sortDir  = strtolower((string) $this->request->getGet('sort_dir')) === 'desc' ? 'DESC' : 'ASC';
+
         if ($status)      $model->where('status', $status);
         if ($projectId)   $model->where('project_id', (int) $projectId);
         if ($priority)    $model->where('priority', $priority);
@@ -100,7 +111,7 @@ class TaskController extends BaseController
         }
 
         $total = $model->countAllResults(false);
-        $tasks = $model->orderBy('due_date', 'ASC')
+        $tasks = $model->orderBy($sortExpr, $sortDir)
                        ->findAll($perPage, ($page - 1) * $perPage);
 
         $inboxModel = new WorkhubInboxMessageModel();
@@ -310,8 +321,19 @@ class TaskController extends BaseController
             }
         }
 
+        if (array_key_exists('project_id', $data) && $data['project_id'] !== null) {
+            $projectExists = $db->table('workhub_projects')
+                ->where('id', (int) $data['project_id'])
+                ->where('tenant_id', $this->tenantId)
+                ->countAllResults() > 0;
+
+            if (!$projectExists) {
+                return $this->fail('Invalid project_id.', 422);
+            }
+        }
+
         $updateData = array_intersect_key($data, array_flip([
-            'title', 'description', 'status', 'priority',
+            'title', 'description', 'status', 'priority', 'project_id',
             'est_hours', 'assigned_worker_id', 'location_tag', 'due_date',
         ]));
 

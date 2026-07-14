@@ -137,10 +137,23 @@ class TimerController extends BaseController
         $entryModel = new WorkhubTimeEntryModel();
         $now        = date('Y-m-d H:i:s');
 
+        // Optional: cap how much of THIS open work entry gets logged, so an auto-stop
+        // (e.g. worker forgot to stop and the task's target time has long passed) never
+        // logs more than intended. Computed against the entry's own started_at — a client
+        // can only ever shorten the logged duration this way, never extend it.
+        $capSeconds = $this->request->getJSON(true)['cap_seconds'] ?? null;
+
         // End any open work entry for this worker on this task
         $activeWork = $entryModel->getActiveEntry($this->tenantId, $this->userId);
         if ($activeWork && (int) $activeWork['task_id'] === $taskId) {
-            $entryModel->update($activeWork['id'], ['ended_at' => $now]);
+            $endedAt = $now;
+            if ($capSeconds !== null && is_numeric($capSeconds)) {
+                $maxEndedAt = date('Y-m-d H:i:s', strtotime($activeWork['started_at']) + (int) $capSeconds);
+                if ($maxEndedAt < $endedAt) {
+                    $endedAt = $maxEndedAt;
+                }
+            }
+            $entryModel->update($activeWork['id'], ['ended_at' => $endedAt]);
         }
 
         // Also end any open break entry
@@ -171,6 +184,62 @@ class TimerController extends BaseController
             'stopped_at'           => $now,
             'arbzg_status'         => $arbzgStatus,
             'message'              => 'Timer stopped.',
+        ]);
+    }
+
+    // WH-022: GET /workhub/timer/active — returns the current active timer for this worker (or null)
+    public function active(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        $this->boot();
+        $entryModel  = new WorkhubTimeEntryModel();
+        $activeEntry = $entryModel->getActiveEntry($this->tenantId, $this->userId);
+
+        if (!$activeEntry) {
+            return $this->respond(['active' => null]);
+        }
+
+        return $this->respond([
+            'active' => [
+                'entry_id'   => (int) $activeEntry['id'],
+                'task_id'    => (int) $activeEntry['task_id'],
+                'started_at' => $activeEntry['started_at'],
+            ],
+        ]);
+    }
+
+    // WH-023: POST /workhub/timer/stop-current — stop the active timer regardless of task_id
+    public function stopCurrent(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        $this->boot();
+
+        $entryModel  = new WorkhubTimeEntryModel();
+        $activeEntry = $entryModel->getActiveEntry($this->tenantId, $this->userId);
+
+        if (!$activeEntry) {
+            return $this->respond(['stopped' => false, 'message' => 'No active timer running.']);
+        }
+
+        $taskId = (int) $activeEntry['task_id'];
+        $now    = date('Y-m-d H:i:s');
+
+        $entryModel->update($activeEntry['id'], ['ended_at' => $now]);
+        $this->endOpenBreak($entryModel);
+
+        // Recalculate logged_hours for the task
+        $netSeconds  = $entryModel->getNetSecondsForTask($taskId);
+        $loggedHours = round($netSeconds / 3600, 4);
+        $taskModel   = new WorkhubTaskModel();
+        $taskModel->update($taskId, ['logged_hours' => $loggedHours]);
+
+        $this->logAction('workhub.timer.stopped', 'WH-' . $taskId, 'Timer force-stopped for user ' . $this->userId);
+
+        return $this->respond([
+            'stopped'      => true,
+            'task_id'      => $taskId,
+            'entry_id'     => (int) $activeEntry['id'],
+            'stopped_at'   => $now,
+            'logged_hours' => $loggedHours,
+            'message'      => 'Active timer stopped.',
         ]);
     }
 

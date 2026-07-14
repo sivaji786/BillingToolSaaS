@@ -159,7 +159,7 @@ class TimesheetController extends BaseController
         [$startDate, $endDate] = $this->resolveDateRange($week, null);
 
         $row = $db->table('workhub_time_entries')
-            ->selectSum('TIMESTAMPDIFF(SECOND, started_at, COALESCE(ended_at, NOW()))', 'total_seconds')
+            ->select('SUM(TIMESTAMPDIFF(SECOND, started_at, COALESCE(ended_at, NOW()))) AS total_seconds', false)
             ->where('tenant_id', $this->tenantId)
             ->where('worker_id', $workerId)
             ->where('entry_type', 'work')

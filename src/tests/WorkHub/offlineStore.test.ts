@@ -18,7 +18,7 @@ describe('workhubOfflineStore', () => {
             created_at: '', updated_at: '',
         }));
 
-        store.cacheTasks(tasks);
+        store.setCachedTasks(tasks);
 
         const state = useWorkhubOfflineStore.getState();
         expect(state.cachedTasks.length).toBeLessThanOrEqual(50);
@@ -40,7 +40,7 @@ describe('workhubOfflineStore', () => {
         const { useWorkhubOfflineStore } = await import('../../stores/workhubOfflineStore');
         const store = useWorkhubOfflineStore.getState();
 
-        store.saveDraftNote(42, 'Work in progress on panel 3');
+        store.setDraftNote(42, 'Work in progress on panel 3');
         const state = useWorkhubOfflineStore.getState();
         expect(state.draftNotes[42]).toBe('Work in progress on panel 3');
     });
@@ -49,7 +49,7 @@ describe('workhubOfflineStore', () => {
         const { useWorkhubOfflineStore } = await import('../../stores/workhubOfflineStore');
         const store = useWorkhubOfflineStore.getState();
 
-        store.saveDraftNote(7, 'Draft note to clear');
+        store.setDraftNote(7, 'Draft note to clear');
         store.clearDraftNote(7);
 
         const state = useWorkhubOfflineStore.getState();
@@ -71,7 +71,7 @@ describe('workhubOfflineStore', () => {
         const store = useWorkhubOfflineStore.getState();
 
         store.setActiveTimer(5, new Date().toISOString());
-        store.clearTimer();
+        store.setActiveTimer(null, null);
 
         const state = useWorkhubOfflineStore.getState();
         expect(state.activeTimerTaskId).toBeNull();

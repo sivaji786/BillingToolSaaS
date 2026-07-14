@@ -62,7 +62,14 @@ class CreateSsoTables extends Migration
     {
         $this->forge->dropTable('user_sso_identities', true);
         $this->forge->dropTable('tenant_sso_configs', true);
-        $this->db->query('ALTER TABLE users DROP COLUMN IF EXISTS sso_only');
-        $this->db->query('ALTER TABLE users DROP COLUMN IF EXISTS avatar_url');
+        $db   = $this->db->database;
+        $rows = $this->db->query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{$db}' AND TABLE_NAME = 'users' AND COLUMN_NAME IN ('sso_only','avatar_url')")->getResultArray();
+        $existing = array_column($rows, 'COLUMN_NAME');
+        if (in_array('sso_only', $existing)) {
+            $this->db->query('ALTER TABLE users DROP COLUMN sso_only');
+        }
+        if (in_array('avatar_url', $existing)) {
+            $this->db->query('ALTER TABLE users DROP COLUMN avatar_url');
+        }
     }
 }

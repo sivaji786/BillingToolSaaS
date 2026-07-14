@@ -1,20 +1,33 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, Clock, Loader2, MapPin, Plus } from 'lucide-react';
-import { WHTask, WHWorker, TaskStatus, taskService } from '../../../services/workhubApi';
+import { AlertCircle, Clock, ExternalLink, Folder, Loader2, MapPin, Plus } from 'lucide-react';
+import { WHTask, WHWorker, WHProject, TaskStatus, TaskPriority, taskService } from '../../../services/workhubApi';
 import { cn } from '../../../lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { NewTaskModal } from './NewTaskModal';
+import { DATE_OPTS, SORT_OPTS, DEFAULT_SORT, SortValue } from './taskFilterOptions';
+import { HoverCard, HoverCardTrigger, HoverCardContent } from '../../ui/hover-card';
 
 interface Props {
     tasks: WHTask[];
     workers?: WHWorker[];
+    projects?: WHProject[];
     onSelectTask: (id: number) => void;
     onUpdated: () => void;
     readOnly?: boolean;
     selectedProjectId?: number | null;
     role?: string;
+    isAdmin?: boolean;
+    datePreset?: string;
+    onDatePreset?: (preset: string) => void;
+    customFrom?: string;
+    customTo?: string;
+    onCustomRange?: (from: string, to: string) => void;
+    workerFilter?: number | '';
+    onWorkerFilter?: (id: number | '') => void;
+    sortValue?: SortValue;
+    onSort?: (value: SortValue) => void;
 }
 
 /* ── Column definitions ──────────────────────────────────────────────── */
@@ -49,6 +62,16 @@ function avatarColor(name: string) {
     for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffff;
     return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
 }
+function toNum(v: unknown, fallback = 0): number {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+}
+function occupancyColour(pct: number | undefined): string {
+    if (pct === undefined) return 'text-[#3d5a80]';
+    if (pct > 90) return 'text-red-600';
+    if (pct > 70) return 'text-amber-600';
+    return 'text-green-600';
+}
 function workerInitials(name: string) {
     return name.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase();
 }
@@ -58,12 +81,16 @@ const STATUS_TRANSITIONS: Record<TaskStatus, TaskStatus | null> = {
     open: 'in_progress', in_progress: 'done', done: null, problem: 'in_progress',
 };
 
-export function KanbanBoard({ tasks, workers = [], onSelectTask, onUpdated, readOnly = false, selectedProjectId = null, role = 'manager' }: Props) {
+export function KanbanBoard({
+    tasks, workers = [], projects = [], onSelectTask, onUpdated, readOnly = false, selectedProjectId = null, role = 'manager', isAdmin = false,
+    datePreset = '', onDatePreset, customFrom = '', customTo = '', onCustomRange,
+    workerFilter = '', onWorkerFilter, sortValue = DEFAULT_SORT, onSort,
+}: Props) {
     const qc = useQueryClient();
     const [showNew, setShowNew] = useState(false);
-    const [workerFilter, setWorkerFilter] = useState<number | ''>('');
 
     const workerMap = new Map(workers.map((w) => [Number(w.id), w]));
+    const projectMap = new Map(projects.map((p) => [Number(p.id), p]));
 
     const moveMut = useMutation({
         mutationFn: ({ id, status }: { id: number; status: TaskStatus }) =>
@@ -72,25 +99,74 @@ export function KanbanBoard({ tasks, workers = [], onSelectTask, onUpdated, read
         onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to move task'),
     });
 
-    const visibleTasks = workerFilter !== ''
-        ? tasks.filter((t) => Number(t.assigned_worker_id) === Number(workerFilter))
-        : tasks;
+    const updateFieldMut = useMutation({
+        mutationFn: ({ id, patch }: { id: number; patch: Record<string, unknown> }) =>
+            taskService.update(id, patch as Partial<WHTask>),
+        onSuccess: () => { onUpdated(); },
+        onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to update task'),
+    });
+    const handleUpdateField = (id: number, patch: Record<string, unknown>) => updateFieldMut.mutate({ id, patch });
+
+    // Server already applies worker/date filters + sort; `tasks` arrives pre-filtered and pre-ordered.
+    const visibleTasks = tasks;
 
     const tasksByStatus = (status: TaskStatus) => visibleTasks.filter((t) => t.status === status);
 
     return (
         <div className="flex flex-col flex-1 min-h-0 bg-[#dbe8f7]">
             {/* Top toolbar */}
-            <div className="flex items-center gap-3 px-4 py-2.5 border-b bg-white shrink-0">
-                {workers.length > 0 && ['planner', 'manager'].includes(role) && (
+            <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 border-b bg-white shrink-0">
+                {workers.length > 0 && (['planner', 'manager'].includes(role) || isAdmin) && onWorkerFilter && (
                     <select
                         value={workerFilter}
-                        onChange={(e) => setWorkerFilter(e.target.value === '' ? '' : Number(e.target.value))}
+                        onChange={(e) => onWorkerFilter(e.target.value === '' ? '' : Number(e.target.value))}
+                        aria-label="Filter by worker"
                         className="text-body border border-[rgba(30,58,95,0.20)] rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)]"
                     >
                         <option value="">All workers</option>
                         {workers.map((w) => (
                             <option key={w.id} value={w.id}>{w.name}</option>
+                        ))}
+                    </select>
+                )}
+                {onDatePreset && (
+                    <select
+                        value={datePreset || '__all__'}
+                        onChange={(e) => onDatePreset(e.target.value === '__all__' ? '' : e.target.value)}
+                        aria-label="Filter by date"
+                        className="text-body border border-[rgba(30,58,95,0.20)] rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)]"
+                    >
+                        {DATE_OPTS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                    </select>
+                )}
+                {datePreset === 'custom' && onCustomRange && (
+                    <div className="flex items-center gap-1.5">
+                        <input
+                            type="date"
+                            value={customFrom}
+                            onChange={(e) => onCustomRange(e.target.value, customTo)}
+                            className="h-[34px] rounded-lg border border-[rgba(30,58,95,0.20)] bg-white px-2 text-caption focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)]"
+                        />
+                        <span className="text-caption text-[#3d5a80]">to</span>
+                        <input
+                            type="date"
+                            value={customTo}
+                            onChange={(e) => onCustomRange(customFrom, e.target.value)}
+                            className="h-[34px] rounded-lg border border-[rgba(30,58,95,0.20)] bg-white px-2 text-caption focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)]"
+                        />
+                    </div>
+                )}
+                {onSort && (
+                    <select
+                        value={sortValue}
+                        onChange={(e) => onSort(e.target.value as SortValue)}
+                        aria-label="Sort tasks"
+                        className="text-body border border-[rgba(30,58,95,0.20)] rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)]"
+                    >
+                        {SORT_OPTS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                     </select>
                 )}
@@ -139,7 +215,12 @@ export function KanbanBoard({ tasks, workers = [], onSelectTask, onUpdated, read
                                         task={task}
                                         col={col}
                                         worker={task.assigned_worker_id != null ? workerMap.get(Number(task.assigned_worker_id)) : undefined}
+                                        project={task.project_id != null ? projectMap.get(Number(task.project_id)) : undefined}
+                                        showProject={!selectedProjectId}
+                                        workers={workers}
+                                        projects={projects}
                                         onSelect={() => onSelectTask(task.id)}
+                                        onUpdateField={handleUpdateField}
                                         nextStatus={STATUS_TRANSITIONS[task.status]}
                                         onMove={(ns) => moveMut.mutate({ id: task.id, status: ns })}
                                         isMoving={moveMut.isPending && moveMut.variables?.id === task.id}
@@ -173,21 +254,53 @@ export function KanbanBoard({ tasks, workers = [], onSelectTask, onUpdated, read
     );
 }
 
+type EditableField = 'title' | 'priority' | 'project' | 'worker';
+
 interface CardProps {
     task: WHTask;
     col: ColDef;
     worker?: WHWorker;
+    project?: WHProject;
+    showProject?: boolean;
+    workers?: WHWorker[];
+    projects?: WHProject[];
     onSelect: () => void;
+    onUpdateField?: (id: number, patch: Record<string, unknown>) => void;
     nextStatus: TaskStatus | null;
     onMove: (status: TaskStatus) => void;
     isMoving: boolean;
     readOnly: boolean;
 }
 
-const KanbanCard = memo(function KanbanCard({ task, col, worker, onSelect, nextStatus, onMove, isMoving, readOnly }: CardProps) {
+const PRIORITY_CHOICES: TaskPriority[] = ['low', 'medium', 'high', 'urgent'];
+
+const KanbanCard = memo(function KanbanCard({
+    task, col, worker, project, showProject = false, workers = [], projects = [],
+    onSelect, onUpdateField, nextStatus, onMove, isMoving, readOnly,
+}: CardProps) {
     const overrun = task.logged_hours && task.est_hours && task.logged_hours > task.est_hours;
     const priority = task.priority as string | undefined;
     const pStyle = priority ? (PRIORITY_STYLE[priority] ?? PRIORITY_STYLE.low) : null;
+    const canEdit = !readOnly && !!onUpdateField;
+
+    const [editingField, setEditingField] = useState<EditableField | null>(null);
+    const [titleDraft, setTitleDraft] = useState(task.title);
+
+    useEffect(() => { setTitleDraft(task.title); }, [task.title]);
+
+    const startEdit = (field: EditableField) => (e: React.MouseEvent) => {
+        if (!canEdit) return;
+        e.stopPropagation();
+        if (field === 'title') setTitleDraft(task.title);
+        setEditingField(field);
+    };
+
+    const commitTitle = () => {
+        const trimmed = titleDraft.trim();
+        setEditingField(null);
+        if (trimmed && trimmed !== task.title) onUpdateField?.(task.id, { title: trimmed });
+        else setTitleDraft(task.title);
+    };
 
     return (
         <div
@@ -195,14 +308,104 @@ const KanbanCard = memo(function KanbanCard({ task, col, worker, onSelect, nextS
             className="bg-white border border-[rgba(30,58,95,0.10)] rounded-lg p-3 cursor-pointer hover:shadow-md transition-all group"
             onClick={onSelect}
         >
-            {/* Title */}
-            <p className="text-body font-medium text-[#1e3a5f] leading-snug line-clamp-2 mb-2">{task.title}</p>
+            {/* Title + details link */}
+            <div className="flex items-start justify-between gap-1 mb-2">
+                {editingField === 'title' ? (
+                    <input
+                        autoFocus
+                        value={titleDraft}
+                        onChange={(e) => setTitleDraft(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        onBlur={commitTitle}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); commitTitle(); }
+                            if (e.key === 'Escape') { e.preventDefault(); setTitleDraft(task.title); setEditingField(null); }
+                        }}
+                        className="flex-1 min-w-0 text-body font-medium text-[#1e3a5f] border border-[#f08a3c] rounded px-1 py-0 -my-0.5 focus:outline-none"
+                    />
+                ) : (
+                    <p
+                        onClick={startEdit('title')}
+                        title={canEdit ? 'Click to rename' : undefined}
+                        className={cn(
+                            'flex-1 min-w-0 text-body font-medium text-[#1e3a5f] leading-snug line-clamp-2',
+                            canEdit && 'cursor-text hover:bg-[#f4f8fd] rounded -mx-0.5 px-0.5'
+                        )}
+                    >
+                        {task.title}
+                    </p>
+                )}
+                <button
+                    onClick={(e) => { e.stopPropagation(); onSelect(); }}
+                    title="View task details"
+                    className="shrink-0 p-0.5 rounded text-[#3d5a80] opacity-50 hover:opacity-100 hover:text-[#f08a3c] hover:bg-[#f4f8fd] transition-all"
+                >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                </button>
+            </div>
+
+            {/* Project */}
+            {showProject && (
+                editingField === 'project' ? (
+                    <select
+                        autoFocus
+                        value={project?.id ?? ''}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                            const v = e.target.value;
+                            onUpdateField?.(task.id, { project_id: v === '' ? null : Number(v) });
+                            setEditingField(null);
+                        }}
+                        onBlur={() => setEditingField(null)}
+                        className="w-full text-[10px] border border-[#f08a3c] rounded px-1 py-0.5 mb-1.5 focus:outline-none"
+                    >
+                        <option value="">No Project</option>
+                        {projects.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                    </select>
+                ) : (
+                    <div
+                        onClick={startEdit('project')}
+                        title={canEdit ? 'Click to change project' : (project?.name ?? 'No Project')}
+                        className={cn('flex items-center gap-1 mb-1.5', canEdit && 'cursor-pointer hover:opacity-70')}
+                    >
+                        <Folder className="w-2.5 h-2.5 text-[#3d5a80] shrink-0" />
+                        <span className={cn('text-[10px] truncate', project ? 'text-[#3d5a80]' : 'text-[#3d5a80] italic opacity-60')}>
+                            {project?.name ?? 'No Project'}
+                        </span>
+                    </div>
+                )
+            )}
 
             {/* Priority + location */}
             <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                {pStyle && priority && (
-                    <span style={{ background: pStyle.bg, color: pStyle.color }}
-                        className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide">
+                {editingField === 'priority' ? (
+                    <select
+                        autoFocus
+                        value={priority ?? 'medium'}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                            onUpdateField?.(task.id, { priority: e.target.value });
+                            setEditingField(null);
+                        }}
+                        onBlur={() => setEditingField(null)}
+                        className="text-[10px] font-medium px-1.5 py-0.5 rounded border border-[#f08a3c] uppercase tracking-wide focus:outline-none"
+                    >
+                        {PRIORITY_CHOICES.map((p) => (
+                            <option key={p} value={p}>{p}</option>
+                        ))}
+                    </select>
+                ) : pStyle && priority && (
+                    <span
+                        style={{ background: pStyle.bg, color: pStyle.color }}
+                        onClick={startEdit('priority')}
+                        title={canEdit ? 'Click to change priority' : undefined}
+                        className={cn(
+                            'text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wide',
+                            canEdit && 'cursor-pointer hover:opacity-70'
+                        )}
+                    >
                         {priority}
                     </span>
                 )}
@@ -215,16 +418,101 @@ const KanbanCard = memo(function KanbanCard({ task, col, worker, onSelect, nextS
             </div>
 
             {/* Assigned worker */}
-            {worker ? (
-                <div className="flex items-center gap-1.5 mb-2">
-                    <div style={{ background: avatarColor(worker.name), color: '#fff' }}
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-medium shrink-0">
-                        {workerInitials(worker.name)}
-                    </div>
-                    <span className="text-caption text-[#3d5a80] truncate">{worker.name}</span>
-                </div>
+            {editingField === 'worker' ? (
+                <select
+                    autoFocus
+                    value={worker?.id ?? ''}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                        const v = e.target.value;
+                        onUpdateField?.(task.id, { assigned_worker_id: v === '' ? null : Number(v) });
+                        setEditingField(null);
+                    }}
+                    onBlur={() => setEditingField(null)}
+                    className="w-full text-caption border border-[#f08a3c] rounded px-1 py-0.5 mb-2 focus:outline-none"
+                >
+                    <option value="">Unassigned</option>
+                    {workers.map((w) => (
+                        <option key={w.id} value={w.id}>{w.name}</option>
+                    ))}
+                </select>
+            ) : worker ? (
+                <HoverCard openDelay={150} closeDelay={100}>
+                    <HoverCardTrigger asChild>
+                        <div
+                            onClick={startEdit('worker')}
+                            title={canEdit ? 'Click to reassign' : undefined}
+                            className={cn('flex items-center gap-1.5 mb-2 w-fit max-w-full', canEdit && 'cursor-pointer hover:opacity-70')}
+                        >
+                            <div style={{ background: avatarColor(worker.name), color: '#fff' }}
+                                className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-medium shrink-0">
+                                {workerInitials(worker.name)}
+                            </div>
+                            <span className="text-caption text-[#3d5a80] truncate">{worker.name}</span>
+                        </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent
+                        side="right"
+                        className="w-60 p-3"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center gap-2 mb-2.5">
+                            <div style={{ background: avatarColor(worker.name), color: '#fff' }}
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-medium shrink-0">
+                                {workerInitials(worker.name)}
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-body font-medium text-[#1e3a5f] truncate">{worker.name}</p>
+                                {worker.role && <p className="text-caption text-muted-foreground truncate capitalize">{worker.role}</p>}
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-caption">
+                                <span className="text-muted-foreground">Today</span>
+                                <span className={cn('font-medium', occupancyColour(toNum(worker.utilisation_pct_today)))}>
+                                    {toNum(worker.utilisation_pct_today).toFixed(0)}%
+                                    <span className="text-muted-foreground font-normal ml-1">
+                                        ({toNum(worker.logged_hours_today).toFixed(1)}h / {(toNum(worker.capacity_hours_per_week, 40) / 5).toFixed(1)}h)
+                                    </span>
+                                </span>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-1.5">
+                                <div
+                                    className={cn('h-1.5 rounded-full', occupancyColour(toNum(worker.utilisation_pct_today)).replace('text-', 'bg-'))}
+                                    style={{ width: `${Math.min(toNum(worker.utilisation_pct_today), 100)}%` }}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between text-caption pt-1">
+                                <span className="text-muted-foreground">This week</span>
+                                <span className={cn('font-medium', occupancyColour(toNum(worker.utilisation_pct)))}>
+                                    {toNum(worker.utilisation_pct).toFixed(0)}%
+                                    <span className="text-muted-foreground font-normal ml-1">
+                                        ({toNum(worker.logged_hours_week).toFixed(1)}h / {toNum(worker.capacity_hours_per_week, 40).toFixed(1)}h)
+                                    </span>
+                                </span>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-1.5">
+                                <div
+                                    className={cn('h-1.5 rounded-full', occupancyColour(toNum(worker.utilisation_pct)).replace('text-', 'bg-'))}
+                                    style={{ width: `${Math.min(toNum(worker.utilisation_pct), 100)}%` }}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between text-caption pt-1 border-t mt-1.5">
+                                <span className="text-muted-foreground">Open queue</span>
+                                <span className="font-medium text-[#1e3a5f]">{toNum(worker.queue_depth)} task{toNum(worker.queue_depth) !== 1 ? 's' : ''}</span>
+                            </div>
+                        </div>
+                    </HoverCardContent>
+                </HoverCard>
             ) : (
-                <div className="mb-2">
+                <div
+                    onClick={startEdit('worker')}
+                    title={canEdit ? 'Click to assign' : undefined}
+                    className={cn('mb-2', canEdit && 'cursor-pointer hover:opacity-70')}
+                >
                     <span className="text-[10px] text-[#3d5a80] italic opacity-60">Unassigned</span>
                 </div>
             )}
@@ -255,7 +543,7 @@ const KanbanCard = memo(function KanbanCard({ task, col, worker, onSelect, nextS
                 >
                     {isMoving
                         ? <Loader2 className="w-3 h-3 animate-spin mx-auto" />
-                        : `→ Move to ${nextStatus.replace('_', ' ')}`
+                        : nextStatus === 'in_progress' ? '▶ Start task' : nextStatus === 'done' ? '✓ End task' : `→ Move to ${nextStatus.replace('_', ' ')}`
                     }
                 </button>
             )}

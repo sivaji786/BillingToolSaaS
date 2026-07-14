@@ -27,8 +27,7 @@ export function AdminLayout() {
     const loadCompanyProfile = async () => {
         try {
             const profiles = await companyProfileService.getAll();
-            if (profiles && profiles.length > 0) {
-                // Assuming single company profile or using the first one
+            if (profiles && profiles.length > 0 && profiles[0].companyTypeId != null) {
                 setCompanyTypeId(String(profiles[0].companyTypeId));
             }
         } catch (error) {
@@ -98,7 +97,7 @@ export function AdminLayout() {
                 </TabsContent>
 
                 <TabsContent value="roles">
-                    <RoleList onCreate={handleCreateRole} onEdit={handleEditRole} companyTypeId={companyTypeId} />
+                    <RoleList onCreate={handleCreateRole} onEdit={handleEditRole} companyTypeId={null} />
                 </TabsContent>
 
                 <TabsContent value="company-types">

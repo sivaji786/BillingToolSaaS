@@ -53,7 +53,7 @@ class LifecycleTest extends CIUnitTestCase
 
         // 2. Create User
         $userModel = new UserModel();
-        $email = 'test-' . time() . '@lifecycle.com';
+        $email = 'test-' . uniqid() . '@lifecycle.com';
         $password = 'password123';
         
         $userId = $userModel->insert([
@@ -61,8 +61,7 @@ class LifecycleTest extends CIUnitTestCase
             'name' => 'Test User',
             'email' => $email,
             'password_hash' => password_hash($password, PASSWORD_BCRYPT),
-            'role' => 'admin',
-            'status' => 'active'
+            'role' => 'admin'
         ]);
         
         // Check for company type
@@ -96,7 +95,7 @@ class LifecycleTest extends CIUnitTestCase
         $result = $this->withBody(json_encode([
             'email' => $email,
             'password' => $password
-        ]))->post('api/auth/login');
+        ]))->post('auth/login');
         
         $json = json_decode($result->getJSON(), true);
         
@@ -157,17 +156,26 @@ class LifecycleTest extends CIUnitTestCase
         $json = json_decode($result->getJSON(), true);
         $invoiceId = $json['id'];
         
-        // B. UPDATE (Validate/Send)
+        // B. Validate first (draft → validated)
+        $validateData = $invoiceData;
+        $validateData['status'] = 'validated';
+
+        $result = $this->withHeaders($this->headers)
+                       ->withBody(json_encode($validateData))
+                       ->put('invoices/' . $invoiceId);
+        $result->assertStatus(200);
+
+        // C. UPDATE status to sent (validated → sent)
         $updateData = $invoiceData;
         $updateData['status'] = 'sent';
-        
+
         $result = $this->withHeaders($this->headers)
                        ->withBody(json_encode($updateData))
                        ->put('invoices/' . $invoiceId);
-                       
+
         $result->assertStatus(200);
-        
-        // C. VERIFY DB ISOLATION
+
+        // D. VERIFY DB ISOLATION
         $model = new InvoiceModel();
         $invoice = $model->find($invoiceId);
         $this->assertEquals('sent', $invoice['status']);

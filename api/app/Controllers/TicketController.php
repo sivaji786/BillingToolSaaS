@@ -154,7 +154,8 @@ class TicketController extends ResourceController
     public function create()
     {
         $model = new TicketModel();
-        $data  = $this->request->getJSON(true) ?: $this->request->getPost();
+        $isJson = str_contains($this->request->getHeaderLine('Content-Type'), 'application/json');
+        $data   = $isJson ? ($this->request->getJSON(true) ?? []) : $this->request->getPost();
 
         if (empty($data['subject']) || empty($data['description'])) {
             return $this->fail('Subject and description are required', 400);
@@ -170,17 +171,23 @@ class TicketController extends ResourceController
         $year       = date('Y');
         $month      = strtoupper(date('M'));
         $uploadPath = FCPATH . 'uploads/tickets/' . $year . '/' . $month . '/';
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0777, true);
+        if (!is_dir($uploadPath) && !mkdir($uploadPath, 0755, true) && !is_dir($uploadPath)) {
+            log_message('error', '[TicketCreate] Cannot create upload dir: ' . $uploadPath);
         }
 
         // Screenshot (base64 data-URL → JPG)
-        if (!empty($data['screenshot'])) {
+        // Hard cap: skip GD decoding for large screenshots to avoid OOM fatal errors.
+        // A base64 PNG > 3 MB decoded = ~2.25 MB, which means GD may need 8+ MB in RAM.
+        $screenshotRaw = $data['screenshot'] ?? '';
+        $screenshotB64Len = strlen($screenshotRaw);
+        if ($screenshotB64Len > 0) {
+            log_message('info', '[TicketCreate] screenshot b64 size: ' . $screenshotB64Len . ' bytes');
+        }
+        if (!empty($screenshotRaw) && $screenshotB64Len < 3 * 1024 * 1024) {
             try {
-                $screenshotData = $data['screenshot'];
-                if (preg_match('/^data:image\/(\w+);base64,/', $screenshotData)) {
-                    $screenshotData = substr($screenshotData, strpos($screenshotData, ',') + 1);
-                    $decoded        = base64_decode($screenshotData);
+                if (preg_match('/^data:image\/(\w+);base64,/', $screenshotRaw)) {
+                    $b64      = substr($screenshotRaw, strpos($screenshotRaw, ',') + 1);
+                    $decoded  = base64_decode($b64);
                     if ($decoded !== false) {
                         $img = imagecreatefromstring($decoded);
                         if ($img !== false) {
@@ -192,8 +199,11 @@ class TicketController extends ResourceController
                     }
                 }
             } catch (\Throwable $e) {
-                log_message('error', '[TicketController] Screenshot: ' . $e->getMessage());
+                log_message('error', '[TicketCreate] screenshot GD error: ' . $e->getMessage());
             }
+        } elseif ($screenshotB64Len >= 3 * 1024 * 1024) {
+            // Screenshot too large for in-process GD — skip to avoid OOM fatal
+            log_message('warning', '[TicketCreate] screenshot too large (' . $screenshotB64Len . ' bytes), skipping GD');
         }
         unset($data['screenshot']);
 
@@ -234,32 +244,52 @@ class TicketController extends ResourceController
         }
 
         try {
-            if ($model->save($data)) {
-                $ticketId      = $model->getInsertID();
-                $trackingModel = new TicketTrackingModel();
-                $trackingModel->save((object)[
-                    'ticket_id' => $ticketId,
-                    'action'    => 'created',
-                    'new_value' => 'Ticket created',
-                    'comment'   => 'Initial creation',
-                ]);
-
-                $this->notifySuperAdmins($data, $ticketId);
-                $this->telegram()->ticketCreated($data, $ticketId);
-
-                return $this->respondCreated([
-                    'status'      => 'success',
-                    'message'     => 'Ticket created successfully',
-                    'id'          => $ticketId,
-                    'path'        => $data['screenshot_path'] ?? null,
-                    'attachments' => $attachmentPaths,
-                ]);
+            if (!$model->save($data)) {
+                $errors = $model->errors();
+                log_message('error', '[TicketCreate] validation failed: ' . json_encode($errors));
+                return $this->fail($errors);
             }
-            return $this->fail($model->errors());
         } catch (\Throwable $e) {
-            log_message('error', '[TicketCreate] ' . $e->getMessage());
-            return $this->failServerError('Server Error: ' . $e->getMessage());
+            $msg = $e->getMessage();
+            log_message('error', '[TicketCreate] save exception: ' . $msg);
+            // Return the raw DB error in the response body so it appears in console
+            return $this->failServerError('[TicketCreate] ' . $msg);
         }
+
+        // Ticket saved — run post-save steps independently so a notification
+        // failure never rolls back or blocks the created response.
+        $ticketId = $model->getInsertID();
+
+        try {
+            (new TicketTrackingModel())->save([
+                'ticket_id' => $ticketId,
+                'action'    => 'created',
+                'new_value' => 'Ticket created',
+                'comment'   => 'Initial creation',
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', '[TicketCreate] tracking insert failed: ' . $e->getMessage());
+        }
+
+        try {
+            $this->notifySuperAdmins($data, $ticketId);
+        } catch (\Throwable $e) {
+            log_message('error', '[TicketCreate] admin notify failed: ' . $e->getMessage());
+        }
+
+        try {
+            $this->telegram()->ticketCreated($data, $ticketId);
+        } catch (\Throwable $e) {
+            log_message('error', '[TicketCreate] telegram notify failed: ' . $e->getMessage());
+        }
+
+        return $this->respondCreated([
+            'status'      => 'success',
+            'message'     => 'Ticket created successfully',
+            'id'          => $ticketId,
+            'path'        => $data['screenshot_path'] ?? null,
+            'attachments' => $attachmentPaths,
+        ]);
     }
 
     // ── Admin: list tickets ───────────────────────────────────────────────────

@@ -40,10 +40,9 @@ class AggregateController extends BaseController
             ->select('t.id, t.title, t.status, t.priority, t.est_hours, t.logged_hours, t.due_date, t.location_tag, t.assigned_worker_id, t.project_id, t.task_type, t.source_module, w.user_id AS worker_user_id')
             ->join('workhub_workers w', 'w.id = t.assigned_worker_id', 'left')
             ->where('t.tenant_id', $this->tenantId)
-            ->whereNull('t.deleted_at')
+            ->where('t.deleted_at IS NULL')
             ->whereIn('t.status', ['open', 'in_progress', 'problem', 'done'])
-            ->orderBy('t.priority = "urgent"', 'DESC')
-            ->orderBy('t.priority = "high"', 'DESC')
+            ->orderBy('FIELD(t.priority, "urgent", "high", "medium", "low")', 'DESC', false)
             ->orderBy('t.due_date', 'ASC');
 
         if ($projectId > 0) {
@@ -100,7 +99,7 @@ class AggregateController extends BaseController
 
         // All workers for this tenant
         $workers = $db->table('workhub_workers w')
-            ->select('w.id, w.user_id, w.role, w.capacity_hours_per_week, u.name, u.email')
+            ->select('w.id, w.user_id, w.wh_role AS role, w.capacity_hours_per_week, u.name, u.email')
             ->join('users u', 'u.id = w.user_id', 'left')
             ->where('w.tenant_id', $this->tenantId)
             ->get()->getResultArray();
@@ -131,7 +130,7 @@ class AggregateController extends BaseController
             ->select('assigned_worker_id, COUNT(*) AS queue_depth')
             ->where('tenant_id', $this->tenantId)
             ->whereIn('status', ['open', 'in_progress'])
-            ->whereNull('deleted_at')
+            ->where('deleted_at IS NULL')
             ->whereIn('assigned_worker_id', $workerIds)
             ->groupBy('assigned_worker_id')
             ->get()->getResultArray();
@@ -146,7 +145,7 @@ class AggregateController extends BaseController
             ->select('assigned_worker_id, MAX(due_date) AS free_from_date')
             ->where('tenant_id', $this->tenantId)
             ->where('status', 'in_progress')
-            ->whereNull('deleted_at')
+            ->where('deleted_at IS NULL')
             ->whereIn('assigned_worker_id', $workerIds)
             ->groupBy('assigned_worker_id')
             ->get()->getResultArray();
@@ -213,7 +212,7 @@ class AggregateController extends BaseController
             ->join('workhub_completion_records cr', 'cr.task_id = t.id', 'left')
             ->where('t.tenant_id', $this->tenantId)
             ->where('t.status', 'done')
-            ->whereNull('t.deleted_at')
+            ->where('t.deleted_at IS NULL')
             ->orderBy('cr.customer_signed_at', 'DESC')
             ->get()->getResultArray();
 

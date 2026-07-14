@@ -441,7 +441,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
           {/* Source Filter — WH-060 */}
           {!isLetter && (
             <Select value={sourceFilter} onValueChange={(v) => setSourceFilter(v as 'all' | 'workhub' | 'manual')}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Filter by source">
                 <SelectValue placeholder="All sources" />
               </SelectTrigger>
               <SelectContent>
@@ -454,7 +454,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
 
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
+            <SelectTrigger aria-label="Filter by status">
               <SelectValue placeholder={t('invoiceList.filterByStatus')} />
             </SelectTrigger>
             <SelectContent>
@@ -472,7 +472,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
           <Select value={dateFilter} onValueChange={(value: string) => {
             setDateFilter(value as DateFilter);
           }}>
-            <SelectTrigger>
+            <SelectTrigger aria-label="Filter by date">
               <SelectValue placeholder={t('invoiceList.filterByDate')} />
             </SelectTrigger>
             <SelectContent>
@@ -553,7 +553,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
         <div className="flex items-center justify-between mt-4 pt-4 border-t">
           {/* Sort */}
           <Select value={sortBy} onValueChange={(value: string) => setSortBy(value as SortOption)}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[200px]" aria-label="Sort invoices">
               <SelectValue placeholder={t('invoiceList.sortBy')} />
             </SelectTrigger>
             <SelectContent>
@@ -613,6 +613,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
                 <Checkbox
                   checked={selectedInvoices.size === paginatedInvoices.length && paginatedInvoices.length > 0}
                   onCheckedChange={handleSelectAll}
+                  aria-label="Select all"
                 />
               </TableHead>
               <TableHead>{isLetter ? t('editor.letterNumber') : t('editor.invoiceNumber')}</TableHead>
@@ -699,7 +700,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
                     setCurrentPage(1);
                   }}
                 >
-                  <SelectTrigger className="w-20">
+                  <SelectTrigger className="w-20" aria-label="Rows per page">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -718,6 +719,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
                   size="sm"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
+                  aria-label="Previous page"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -729,6 +731,7 @@ export function InvoiceList({ onSelectInvoice, onEditInvoice, onNewInvoice, temp
                   size="sm"
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
+                  aria-label="Next page"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -1003,6 +1006,7 @@ const InvoiceRow = memo(({
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onSelect(invoice.id)}
+          aria-label={`Select ${invoice.invoiceNumber || 'invoice'}`}
         />
       </TableCell>
       <TableCell>
@@ -1034,7 +1038,7 @@ const InvoiceRow = memo(({
       <TableCell className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" aria-label={`Actions for ${invoice.invoiceNumber || 'invoice'}`}>
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

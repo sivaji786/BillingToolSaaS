@@ -88,6 +88,18 @@ class TelegramService
 
     // ── Convenience builders ──────────────────────────────────────────────────
 
+    public function tenantRegistered(string $companyName, string $email, string $subdomain, int $tenantId): void
+    {
+        $msg = "🏢 <b>New Tenant Registered</b>\n\n"
+             . "🏷 <b>Company:</b> " . htmlspecialchars($companyName) . "\n"
+             . "📧 <b>Email:</b> " . htmlspecialchars($email) . "\n"
+             . "🌐 <b>Subdomain:</b> " . htmlspecialchars($subdomain) . "\n"
+             . "🆔 <b>Tenant ID:</b> #{$tenantId}\n"
+             . "🕐 <b>Time:</b> " . date('Y-m-d H:i:s');
+
+        $this->send($msg);
+    }
+
     public function ticketCreated(array $ticket, int $ticketId): void
     {
         $priority    = strtoupper($ticket['priority'] ?? 'medium');

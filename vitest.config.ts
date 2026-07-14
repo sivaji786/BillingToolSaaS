@@ -20,11 +20,19 @@ export default defineConfig({
         include: ['src/tests/**/*.{test,spec}.{ts,tsx}'],
         coverage: {
             provider: 'v8',
-            reporter: ['text', 'lcov'],
+            reporter: ['text', 'lcov', 'html'],
+            reportsDirectory: './coverage',
             include: [
-                'src/components/screens/WorkHub/**',
-                'src/pages/WorkHub/**',
-                'src/stores/workhub*',
+                'src/components/screens/**',
+                'src/pages/**',
+                'src/stores/**',
+                'src/services/**',
+                'src/translations/**',
+            ],
+            exclude: [
+                'src/components/ui/**',  // shadcn — not authored here
+                'src/**/*.d.ts',
+                'src/main.tsx',
             ],
         },
     },

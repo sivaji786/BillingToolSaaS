@@ -83,7 +83,7 @@ class CustomerController extends BaseController
         // Attach projects for this customer
         $db = \Config\Database::connect();
         $customer['projects'] = $db->table('workhub_projects')
-                                   ->select('id, name, status, colour_accent, progress_pct')
+                                   ->select('id, name, status, colour_accent')
                                    ->where('tenant_id', $this->tenantId)
                                    ->where('customer_id', $id)
                                    ->where('deleted_at IS NULL', null, false)

@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Invoice, InvoiceTemplate, CompanyProfile, AuditLogEntry, AIPromptRequest, AIPromptResponse, Buyer, CompanyType, Role, Right, UserRecord } from '../types/invoice';
 import { getApiBaseUrl } from '../utils/config';
 import { useAuthStore } from '../stores/authStore';
+import type { MockupItem } from './adminApi';
 
 const API_URL = getApiBaseUrl();
 
@@ -538,5 +539,13 @@ export const publicCmsService = {
     getNavPages: async (lang = 'en') => {
         const nav = await publicCmsService.getNav(lang);
         return { data: nav.top };
+    },
+};
+
+export const publicMockupService = {
+    /** Guest-visible mirror of the admin Wiki's Mockups tab. */
+    list: async (): Promise<MockupItem[]> => {
+        const response = await api.get<MockupItem[]>('/api/public/mockups');
+        return response.data;
     },
 };

@@ -22,6 +22,7 @@ export const de = {
         welcomeDemo: 'Willkommen zur Demo!',
         welcomeDemoDesc: 'Mit Demo-Zugangsdaten angemeldet.',
         loginFailed: 'Anmeldung fehlgeschlagen',
+        success: 'Anmeldung erfolgreich',
         loginFailedDesc: 'Bitte geben Sie Ihre E-Mail und Ihr Passwort ein.',
         loggedOut: 'Erfolgreich abgemeldet',
         loggedOutDesc: 'Sie wurden von Ihrem Konto abgemeldet.',
@@ -47,7 +48,7 @@ export const de = {
         products: 'Pakete',
         clients: 'Kunden',
         reports: 'Berichte',
-        workspace: 'Mein Workspace',
+        workspace: 'Dateien verwalten',
         invoices: 'Rechnungen',
         letters: 'Geschäftsbriefe',
     },
@@ -174,11 +175,13 @@ export const de = {
         paid: 'Bezahlt',
         cancelled: 'Storniert',
         signed: 'Signiert',
+        overdue: 'Überfällig',
     },
 
     // Invoice Editor
     editor: {
         title: 'Rechnungseditor',
+        name: 'Name',
         letterEditor: 'Brief-Editor',
         back: 'Zurück',
         newInvoice: 'Neue Rechnung',
@@ -705,6 +708,9 @@ export const de = {
         invoices: 'Rechnungen',
         updateStatus: 'Status aktualisieren',
         statusChangeNote: 'Dies aktualisiert den Status aller ausgewählten Rechnungen. Dieser Vorgang kann rückgängig gemacht werden, indem der Status erneut geändert wird.',
+        fetchError: 'Rechnungen konnten nicht geladen werden',
+        exportError: 'Export fehlgeschlagen',
+        status: 'Status',
     },
 
     // Address book
@@ -736,6 +742,9 @@ export const de = {
 
     // Design Layout
     designLayout: {
+        designMode: 'Designmodus',
+        editingLayout: 'Pixelgenaue Koordinaten-Editor',
+        newTemplate: 'Neue Vorlage',
         elementLibrary: 'Element-Bibliothek',
         inspector: 'Inspektor',
         resetLayout: 'Layout zurücksetzen',
@@ -832,6 +841,11 @@ export const de = {
         copied: 'Kopiert',
         downloaded: 'Heruntergeladen',
         discard: 'Verwerfen',
+        new: 'Neu',
+        saving: 'Speichern...',
+        noPermission: 'Keine Berechtigung',
+        confirmDelete: 'Löschen bestätigen',
+        deleted: 'Gelöscht',
         doubleClickToAdd: 'Doppelklicken zum Hinzufügen',
         content: 'Inhalt',
         theme: {
@@ -906,6 +920,7 @@ export const de = {
         common: {
             failedToLoadProfile: 'Firmenprofil konnte nicht geladen werden',
             loading: 'Laden...',
+            save: 'Speichern',
         },
         logout: 'Abmelden',
         adminPortal: 'Admin-Portal',
@@ -1370,7 +1385,16 @@ export const de = {
             privacy: 'Datenschutzerklärung',
             terms: 'AGB',
             cookies: 'Cookie-Einstellungen',
+            mockups: 'Mockups',
         },
+    },
+
+    mockups: {
+        title: 'Mockups',
+        subtitle: 'Durchsuchen Sie Beispielbildschirme und Prototypen, die unser Team freigegeben hat.',
+        empty: 'Noch keine Mockups verfügbar.',
+        error: 'Mockups konnten derzeit nicht geladen werden. Bitte versuchen Sie es später erneut.',
+        selectPrompt: 'Wählen Sie ein Mockup aus der Liste aus, um es in der Vorschau anzuzeigen.',
     },
 
     // Privacy Policy

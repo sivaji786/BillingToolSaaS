@@ -35,7 +35,8 @@ class WorkhubWorkerModel extends BaseModel
     public function getWithCapacity(int $tenantId): array
     {
         $db      = \Config\Database::connect();
-        $weekStart = date('Y-m-d 00:00:00', strtotime('monday this week'));
+        $weekStart  = date('Y-m-d 00:00:00', strtotime('monday this week'));
+        $todayStart = date('Y-m-d 00:00:00');
 
         $workers = $this->where('tenant_id', $tenantId)->where('active', 1)->findAll();
 
@@ -51,8 +52,26 @@ class WorkhubWorkerModel extends BaseModel
                 ->get()->getRow();
             $loggedThisWeek = (float) ($hoursRow->hours ?? 0);
 
-            $cap = (float) ($w['capacity_hours_per_week'] ?: 40);
-            $w['utilisation_pct'] = $cap > 0 ? min(round(($loggedThisWeek / $cap) * 100), 999) : 0;
+            // Hours logged today for this worker
+            $todayRow = $db->table('workhub_time_entries')
+                ->select('SUM(TIMESTAMPDIFF(SECOND, started_at, COALESCE(ended_at, NOW())) / 3600) AS hours', false)
+                ->where('worker_id', $w['user_id'])
+                ->where('tenant_id', $tenantId)
+                ->where('entry_type', 'work')
+                ->where('started_at >=', $todayStart)
+                ->get()->getRow();
+            $loggedToday = (float) ($todayRow->hours ?? 0);
+
+            $cap      = (float) ($w['capacity_hours_per_week'] ?: 40);
+            $dailyCap = $cap / 5;
+
+            // capacity_hours_per_week is a DECIMAL column — MySQLi returns it as a string, breaking
+            // frontend code that expects a number (e.g. Number.prototype.toFixed).
+            $w['capacity_hours_per_week'] = $cap;
+            $w['logged_hours_week']    = round($loggedThisWeek, 2);
+            $w['logged_hours_today']   = round($loggedToday, 2);
+            $w['utilisation_pct']      = $cap > 0 ? min(round(($loggedThisWeek / $cap) * 100), 999) : 0;
+            $w['utilisation_pct_today'] = $dailyCap > 0 ? min(round(($loggedToday / $dailyCap) * 100), 999) : 0;
             $w['utilisation_colour'] = $w['utilisation_pct'] <= 70 ? 'green'
                 : ($w['utilisation_pct'] <= 90 ? 'amber' : 'red');
 

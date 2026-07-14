@@ -22,6 +22,7 @@ export const pl = {
         welcomeDemo: 'Witaj w Demo!',
         welcomeDemoDesc: 'Zalogowano z danymi demo.',
         loginFailed: 'Błąd logowania',
+        success: 'Logowanie pomyślne',
         loginFailedDesc: 'Proszę wpisać adres e-mail i hasło.',
         loggedOut: 'Pomyślnie wylogowano',
         loggedOutDesc: 'Zostałeś wylogowany ze swojego konta.',
@@ -39,6 +40,7 @@ export const pl = {
 
     // Navigation
     nav: {
+        home: 'Strona główna',
         dashboard: 'Panel',
         templates: 'Szablony',
         activity: 'Dziennik aktywności',
@@ -46,9 +48,91 @@ export const pl = {
         products: 'Pakiety',
         clients: 'Klienci',
         reports: 'Raporty',
-        workspace: 'Mój obszar roboczy',
+        workspace: 'Zarządzaj plikami',
         invoices: 'Faktury',
         letters: 'Pisma biznesowe',
+    },
+
+    // Tenant Home screen
+    home: {
+        greeting: {
+            morning: 'Dzień dobry, {name}',
+            afternoon: 'Dzień dobry, {name}',
+            evening: 'Dobry wieczór, {name}',
+        },
+        section: {
+            today: 'Co chcesz dzisiaj zrobić?',
+            todaySub: 'Stwórz coś nowego — lub wróć do tego, co już masz.',
+        },
+        welcome: {
+            title: 'Witaj — co nas wyróżnia',
+            hint: 'Wycieczka dostępna w każdej chwili w sekcji Pomoc.',
+            tour: 'Zrób 2-minutową wycieczkę',
+            skip: 'Pomiń i odkrywaj',
+            pillar1: {
+                title: 'Pełna platforma dokumentów',
+                text: 'Pisma, fakturowanie, arkusze robocze, szablony — jedno miejsce pracy, w pełni konfigurowalne.',
+            },
+            pillar2: {
+                title: 'Prawdziwi ludzie za produktem',
+                text: 'Rozmawiaj z prawdziwą osobą, nie chatbotem. Pomagamy w konfiguracji i rozwoju.',
+            },
+            pillar3: {
+                title: 'System zgłoszeń w cenie',
+                text: 'Otwórz zgłoszenie pomocy technicznej z dowolnego dokumentu i śledź je do rozwiązania.',
+            },
+        },
+        continue: {
+            title: 'Kontynuuj od miejsca, w którym skończyłeś',
+            seeAll: 'Zobacz wszystkie →',
+            empty: 'Jeszcze nic — utwórz swój pierwszy dokument powyżej.',
+        },
+        activity: {
+            title: 'Aktywność w Twoim zespole',
+            seeAll: 'Zobacz wszystkie →',
+            empty: 'Brak ostatniej aktywności.',
+        },
+        tickets: {
+            title: 'Twoje zgłoszenia',
+            new: '+ Nowe zgłoszenie',
+            allGood: 'Wszystkie systemy działają prawidłowo',
+            cta: 'Potrzebujesz pomocy? Otwórz zgłoszenie pomocy technicznej, a nasz zespół odpowie w ciągu jednego dnia roboczego.',
+            open: 'Otwórz zgłoszenie →',
+        },
+    },
+
+    // Launch tiles
+    tile: {
+        billing: {
+            title: 'Fakturowanie',
+            desc: 'Faktury, oferty i przypomnienia.',
+            new: '+ Nowa faktura',
+            mine: 'Moje faktury',
+        },
+        letter: {
+            title: 'Pismo biznesowe',
+            desc: 'Pisz profesjonalną korespondencję.',
+            new: '+ Nowe pismo',
+            mine: 'Moje pisma',
+        },
+        template: {
+            title: 'Edytor szablonów',
+            desc: 'Szablony wielokrotnego użytku dla każdego typu dokumentu.',
+            new: '+ Nowy szablon',
+            mine: 'Moje szablony',
+        },
+        workspace: {
+            title: 'Dokumenty',
+            desc: 'Pliki i wspólny obszar roboczy.',
+            new: '+ Prześlij pliki',
+            mine: 'Mój obszar roboczy',
+        },
+        custom: {
+            title: 'Twój dokument niestandardowy',
+            desc: 'Stwórz coś, czego aplikacja jeszcze nie ma.',
+            new: '+ Zacznij od zera',
+            mine: 'Moje dokumenty',
+        },
     },
 
     // Dashboard
@@ -91,11 +175,13 @@ export const pl = {
         paid: 'Opłacone',
         cancelled: 'Anulowane',
         signed: 'Podpisane',
+        overdue: 'Przeterminowane',
     },
 
     // Invoice Editor
     editor: {
         title: 'Edytor faktur',
+        name: 'Nazwa',
         letterEditor: 'Edytor pism',
         back: 'Wstecz',
         newInvoice: 'Nowa faktura',
@@ -622,6 +708,9 @@ export const pl = {
         invoices: 'faktury',
         updateStatus: 'Aktualizuj status',
         statusChangeNote: 'Spowoduje to aktualizację statusu wszystkich zaznaczonych faktur. Tę operację można cofnąć, zmieniając status ponownie.',
+        fetchError: 'Nie udało się załadować faktur',
+        exportError: 'Eksport nie powiódł się',
+        status: 'Status',
     },
 
     // Address book
@@ -653,6 +742,9 @@ export const pl = {
 
     // Design Layout
     designLayout: {
+        designMode: 'Tryb projektowania',
+        editingLayout: 'Edytor współrzędnych piksel po pikselu',
+        newTemplate: 'Nowy szablon',
         elementLibrary: 'Biblioteka elementów',
         inspector: 'Inspektor',
         resetLayout: 'Resetuj układ',
@@ -749,6 +841,11 @@ export const pl = {
         copied: 'Skopiowano',
         downloaded: 'Pobrano',
         discard: 'Odrzuć',
+        new: 'Nowy',
+        saving: 'Zapisywanie...',
+        noPermission: 'Brak uprawnień',
+        confirmDelete: 'Potwierdź usunięcie',
+        deleted: 'Usunięto',
         doubleClickToAdd: 'Kliknij dwukrotnie, aby dodać',
         content: 'Zawartość',
         theme: {
@@ -823,6 +920,7 @@ export const pl = {
         common: {
             failedToLoadProfile: 'Nie udało się załadować profilu firmy',
             loading: 'Ładowanie...',
+            save: 'Zapisz',
         },
         logout: 'Wyloguj',
         adminPortal: 'Portal administratora',
@@ -1287,7 +1385,16 @@ export const pl = {
             privacy: 'Polityka prywatności',
             terms: 'Regulamin',
             cookies: 'Ustawienia plików cookie',
+            mockups: 'Makiety',
         },
+    },
+
+    mockups: {
+        title: 'Makiety',
+        subtitle: 'Przeglądaj przykładowe ekrany i prototypy udostępnione przez nasz zespół.',
+        empty: 'Brak dostępnych makiet.',
+        error: 'Nie można teraz wczytać makiet. Spróbuj ponownie później.',
+        selectPrompt: 'Wybierz makietę z listy, aby ją wyświetlić.',
     },
 
     // Privacy Policy

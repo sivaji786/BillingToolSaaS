@@ -86,11 +86,10 @@ class WorkHubPackagesSeeder extends Seeder
             }
 
             $db->table('plans')->insert([
-                'name'        => $tier['name'],
-                'slug'        => $tier['slug'],
-                'description' => $tier['description'],
-                'price'       => $tier['price'],
-                'interval'    => $tier['interval'],
+                'name'           => $tier['name'],
+                'slug'           => $tier['slug'],
+                'price'          => $tier['price'],
+                'billing_period' => 'monthly',
                 'limits'      => json_encode($tier['limits']),
                 'features'    => json_encode([
                     'workhub' => true,

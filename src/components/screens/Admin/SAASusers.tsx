@@ -64,14 +64,6 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
         }
     });
 
-    const toggleWorkhubMutation = useMutation({
-        mutationFn: (userId: string) => adminUserService.toggleWorkhub(userId),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
-            toast.success(`WorkHub ${data.workhub_enabled ? 'enabled' : 'disabled'} for tenant`);
-        },
-        onError: () => toast.error('Failed to toggle WorkHub'),
-    });
 
     const handleExportCsv = async () => {
         try {
@@ -169,7 +161,7 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                     <TableHead>Status</TableHead>
                                     <TableHead>Joined</TableHead>
                                     <TableHead>Last Login</TableHead>
-                                    <TableHead className="text-center">WorkHub</TableHead>
+                                    <TableHead className="text-center" title="Controlled by package — change via Company Types or package limits">WorkHub</TableHead>
                                     <TableHead className="text-center">SSO</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -195,19 +187,13 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                         <TableCell>{format(new Date(user.joinedDate), 'MMM dd, yyyy')}</TableCell>
                                         <TableCell>{user.lastLogin ? format(new Date(user.lastLogin), 'MMM dd, yyyy') : 'Never'}</TableCell>
                                         <TableCell className="text-center">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                title={`WorkHub: ${(user as any).workhub_enabled ? 'enabled — click to disable' : 'disabled — click to enable'}`}
-                                                disabled={toggleWorkhubMutation.isPending}
-                                                onClick={() => toggleWorkhubMutation.mutate(user.id)}
-                                                className="gap-1.5"
+                                            <span
+                                                title="WorkHub access is controlled by the tenant's package"
+                                                className={`inline-flex items-center gap-1.5 text-body font-medium ${(user as any).workhub_enabled ? 'text-[#2a8fbd]' : 'text-muted-foreground'}`}
                                             >
-                                                <Briefcase className={`h-4 w-4 shrink-0 ${(user as any).workhub_enabled ? 'text-[#2a8fbd]' : 'text-muted-foreground'}`} />
-                                                <span className={`text-body font-medium ${(user as any).workhub_enabled ? 'text-[#2a8fbd]' : 'text-muted-foreground'}`}>
-                                                    {(user as any).workhub_enabled ? 'On' : 'Off'}
-                                                </span>
-                                            </Button>
+                                                <Briefcase className="h-4 w-4 shrink-0" />
+                                                {(user as any).workhub_enabled ? 'On' : 'Off'}
+                                            </span>
                                         </TableCell>
                                         <TableCell className="text-center">
                                             {(user as any).saml_enabled ? (

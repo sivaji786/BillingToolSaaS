@@ -6,7 +6,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import { taskService, workerService, WHTask, WHWorker } from '../../../services/workhubApi';
+import { taskService, workerService, projectService, WHTask, WHWorker } from '../../../services/workhubApi';
 import { toast } from 'sonner';
 import { cn } from '../../../lib/utils';
 
@@ -46,13 +46,20 @@ export function TaskEditModal({ task, onClose, onSaved }: Props) {
     const [estHours,    setEstHours]    = useState(task.est_hours != null ? String(task.est_hours) : '');
     const [locationTag, setLocationTag] = useState(task.location_tag ?? '');
     const [dueDate,     setDueDate]     = useState(task.due_date ?? '');
-    const [workerId,    setWorkerId]    = useState<number | null>(
+    const [workerId,   setWorkerId]   = useState<number | null>(
         task.assigned_worker_id != null ? Number(task.assigned_worker_id) : null
     );
+    const [projectId,  setProjectId]  = useState<string>(
+        task.project_id != null ? String(task.project_id) : ''
+    );
 
-    const { data: workers = [], isPending: workersLoading } = useQuery<WHWorker[]>({
+    const { data: workers  = [], isPending: workersLoading } = useQuery<WHWorker[]>({
         queryKey: ['wh-workers'],
         queryFn: workerService.list,
+    });
+    const { data: projects = [] } = useQuery({
+        queryKey: ['wh-projects'],
+        queryFn: projectService.list,
     });
 
     const saveMut = useMutation({
@@ -65,8 +72,7 @@ export function TaskEditModal({ task, onClose, onSaved }: Props) {
             if (estHours)           payload.est_hours = Number(estHours);
             if (locationTag.trim()) payload.location_tag = locationTag.trim();
             if (dueDate)            payload.due_date = dueDate;
-            // Only include project_id if the task already has one (preserve it)
-            if (task.project_id != null) payload.project_id = task.project_id;
+            payload.project_id = projectId ? Number(projectId) : null;
             // Only send assigned_worker_id when it's a real number; omit when null
             if (workerId != null) payload.assigned_worker_id = workerId;
             console.debug('[TaskEditModal] PUT payload:', payload);
@@ -193,6 +199,30 @@ export function TaskEditModal({ task, onClose, onSaved }: Props) {
                             onChange={(e) => setLocationTag(e.target.value)}
                             placeholder="e.g. Berlin-Nord-03"
                         />
+                    </div>
+
+                    {/* Project */}
+                    <div className="space-y-1">
+                        <Label>Project</Label>
+                        <Select
+                            value={projectId || '__none__'}
+                            onValueChange={(v) => setProjectId(v === '__none__' ? '' : v)}
+                            disabled={(projects as any[]).length === 0}
+                        >
+                            <SelectTrigger><SelectValue placeholder="(none)" /></SelectTrigger>
+                            <SelectContent>
+                                {(projects as any[]).length === 0 ? (
+                                    <SelectItem value="__none__" disabled>No projects — create one first</SelectItem>
+                                ) : (
+                                    <>
+                                        <SelectItem value="__none__">None</SelectItem>
+                                        {(projects as any[]).map((p: any) => (
+                                            <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                                        ))}
+                                    </>
+                                )}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {/* Worker assignment */}

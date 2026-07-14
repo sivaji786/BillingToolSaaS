@@ -3,9 +3,10 @@ import { Plus, Search, X, CheckCircle2, Clock, AlertCircle, Circle } from 'lucid
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import { WHTask, TaskStatus } from '../../../services/workhubApi';
+import { WHTask, WHWorker, TaskStatus } from '../../../services/workhubApi';
 import { NewTaskModal } from './NewTaskModal';
 import { cn } from '../../../lib/utils';
+import { DATE_OPTS, SORT_OPTS, DEFAULT_SORT, SortValue } from './taskFilterOptions';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -15,17 +16,6 @@ const STATUS_OPTS = [
     { label: 'In Progress',  value: 'in_progress', icon: Clock,       dot: 'bg-amber-500' },
     { label: 'Done',         value: 'done',    icon: CheckCircle2,    dot: 'bg-green-500' },
     { label: 'Problem',      value: 'problem', icon: AlertCircle,     dot: 'bg-red-500' },
-];
-
-const DATE_OPTS = [
-    { label: 'All time',    value: '__all__' },
-    { label: 'Today',       value: 'today' },
-    { label: 'Yesterday',   value: 'yesterday' },
-    { label: 'This Week',   value: 'this_week' },
-    { label: 'Last Week',   value: 'last_week' },
-    { label: 'This Month',  value: 'this_month' },
-    { label: 'Last Month',  value: 'last_month' },
-    { label: 'Custom range…', value: 'custom' },
 ];
 
 const STATUS_PILL: Record<TaskStatus, string> = {
@@ -67,6 +57,11 @@ interface Props {
     customFrom?: string;
     customTo?: string;
     onCustomRange?: (from: string, to: string) => void;
+    workers?: WHWorker[];
+    workerFilter?: number | '';
+    onWorkerFilter?: (id: number | '') => void;
+    sortValue?: SortValue;
+    onSort?: (value: SortValue) => void;
     onSelectTask: (id: number) => void;
     onUpdated: () => void;
     readOnly?: boolean;
@@ -76,6 +71,8 @@ export function TaskList({
     tasks, statusFilter, onStatusFilter,
     datePreset = '', onDatePreset,
     customFrom = '', customTo = '', onCustomRange,
+    workers = [], workerFilter = '', onWorkerFilter,
+    sortValue = DEFAULT_SORT, onSort,
     onSelectTask, onUpdated, readOnly = false,
 }: Props) {
     const [search, setSearch] = useState('');
@@ -87,11 +84,13 @@ export function TaskList({
         (t.location_tag ?? '').toLowerCase().includes(search.toLowerCase())
     );
 
-    const hasFilters = !!(statusFilter || datePreset);
+    const hasFilters = !!(statusFilter || datePreset || workerFilter);
     const activeStatus = STATUS_OPTS.find(o => o.value === statusFilter);
     const activeDateLabel = DATE_OPTS.find(o => o.value === (datePreset || '__all__'))?.label ?? 'All time';
+    const activeSortLabel = SORT_OPTS.find(o => o.value === sortValue)?.label ?? SORT_OPTS[0].label;
+    const activeWorkerName = workers.find(w => Number(w.id) === Number(workerFilter))?.name;
 
-    const clearFilters = () => { onStatusFilter(''); onDatePreset?.(''); };
+    const clearFilters = () => { onStatusFilter(''); onDatePreset?.(''); onWorkerFilter?.(''); };
 
     return (
         <div className="flex flex-col h-full bg-[#f4f8fd]">
@@ -191,6 +190,51 @@ export function TaskList({
                         </SelectContent>
                     </Select>
                 </div>
+
+                {/* Worker + Sort selects */}
+                {(workers.length > 0 || onSort) && (
+                    <div className="grid grid-cols-2 gap-2">
+                        {workers.length > 0 && onWorkerFilter ? (
+                            <Select
+                                value={workerFilter === '' ? '__all__' : String(workerFilter)}
+                                onValueChange={v => onWorkerFilter(v === '__all__' ? '' : Number(v))}
+                            >
+                                <SelectTrigger
+                                    className={cn(
+                                        'h-8 text-caption font-medium',
+                                        workerFilter !== ''
+                                            ? 'border-[#f08a3c] text-[#f08a3c] bg-[#fff8f3]'
+                                            : 'border-[rgba(30,58,95,0.15)] text-muted-foreground'
+                                    )}
+                                >
+                                    <span className="truncate">{activeWorkerName ?? 'All users'}</span>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="__all__">All users</SelectItem>
+                                    {workers.map(w => (
+                                        <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        ) : <div />}
+
+                        {onSort && (
+                            <Select
+                                value={sortValue}
+                                onValueChange={v => onSort(v as SortValue)}
+                            >
+                                <SelectTrigger className="h-8 text-caption font-medium border-[rgba(30,58,95,0.15)] text-muted-foreground">
+                                    <span className="truncate">{activeSortLabel}</span>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {SORT_OPTS.map(o => (
+                                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    </div>
+                )}
 
                 {/* Custom date range */}
                 {datePreset === 'custom' && onCustomRange && (

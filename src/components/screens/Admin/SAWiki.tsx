@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { adminWikiService } from '../../../services/adminApi';
 import type { MockupItem } from '../../../services/adminApi';
-import { getApiBaseUrl } from '../../../utils/config';
+import { getMockupUrl } from '../../../utils/mockupUrl';
 import { Card, CardContent } from '../../ui/card';
 import { ScrollArea } from '../../ui/scroll-area';
 import { Input } from '../../ui/input';
@@ -122,22 +122,6 @@ function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-/**
- * Build the correct URL for a mockup file across dev and production.
- * Strips /index.php if present (CI4 without clean URL rewriting in production),
- * then appends /uploads/mockups/path.
- *
- * Dev:  http://localhost:8080          → http://localhost:8080/uploads/mockups/…
- * Prod: https://humpl.org/api/public/index.php
- *                                      → https://humpl.org/api/public/uploads/mockups/…
- */
-function getMockupUrl(path: string): string {
-    const base = getApiBaseUrl()
-        .replace(/\/index\.php$/, '')
-        .replace(/\/$/, '');
-    return `${base}/uploads/mockups/${path}`;
 }
 
 function MockupsPanel() {

@@ -15,8 +15,19 @@ class AdminWorkHub extends BaseController
 {
     use ResponseTrait;
 
+    private function requireSaAdmin(): ?\CodeIgniter\HTTP\ResponseInterface
+    {
+        $user = \App\Controllers\AdminAuth::getAuthenticatedUser($this->request);
+        if (!$user) {
+            return $this->response->setStatusCode(403)->setJSON(['message' => 'SA admin access required']);
+        }
+        return null;
+    }
+
     public function complianceReport(): \CodeIgniter\HTTP\ResponseInterface
     {
+        if ($deny = $this->requireSaAdmin()) return $deny;
+
         $tenantId = (int) ($this->request->getGet('tenant_id') ?? 0);
         if (!$tenantId) {
             return $this->failValidationError('tenant_id required');
@@ -84,6 +95,8 @@ class AdminWorkHub extends BaseController
      */
     public function toggleTenant(int $tenantId): \CodeIgniter\HTTP\ResponseInterface
     {
+        if ($deny = $this->requireSaAdmin()) return $deny;
+
         $db = \Config\Database::connect();
 
         $tenant = $db->table('tenants')
@@ -122,6 +135,8 @@ class AdminWorkHub extends BaseController
      */
     public function overrideQuota(int $tenantId): \CodeIgniter\HTTP\ResponseInterface
     {
+        if ($deny = $this->requireSaAdmin()) return $deny;
+
         $db = \Config\Database::connect();
 
         $tenant = $db->table('tenants')

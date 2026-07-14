@@ -101,7 +101,7 @@ PROMPT;
         $data       = $this->request->getJSON(true) ?? [];
         $text       = trim($data['text'] ?? '');
         $sourceLang = trim($data['source_lang'] ?? 'auto');
-        $targetLang = trim($data['target_lang'] ?? '');
+        $targetLang = trim($data['target_lang'] ?? $data['target_language'] ?? '');
 
         if (strlen($text) < 1) {
             return $this->fail('text is required.', 422);

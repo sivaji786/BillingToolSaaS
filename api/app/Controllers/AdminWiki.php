@@ -239,6 +239,13 @@ class AdminWiki extends ResourceController
         return $this->respond($this->scanMockupsDir($this->mockupsDir()));
     }
 
+    // Public, read-only mirror of listMockups() — lets guests browse the mockups an
+    // admin has uploaded via the Wiki's Mockups tab, without needing to log in.
+    public function publicListMockups(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        return $this->respond($this->scanMockupsDir($this->mockupsDir()));
+    }
+
     public function uploadMockup(): \CodeIgniter\HTTP\ResponseInterface
     {
         $file        = $this->request->getFile('file');

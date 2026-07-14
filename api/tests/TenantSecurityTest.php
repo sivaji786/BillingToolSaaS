@@ -53,6 +53,15 @@ class TenantSecurityTest extends CIUnitTestCase
 
         // 2. Setup Tenant B
         $this->tenantB = $tenantModel->where('subdomain', 'tenant-b')->first();
+        if (!$this->tenantB) {
+            $id = $tenantModel->insert([
+                'company_name' => 'Tenant B Corp',
+                'subdomain' => 'tenant-b',
+                'plan_id' => $this->planStarter['id'],
+                'status' => 'active'
+            ]);
+            $this->tenantB = $tenantModel->find($id);
+        }
         // 3. Reset Starter Plan Limits to avoid interference
         $planModel->update($this->planStarter['id'], [
             'limits' => json_encode(['invoices' => 50, 'users' => 10])

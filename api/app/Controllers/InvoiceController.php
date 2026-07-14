@@ -177,8 +177,9 @@ class InvoiceController extends BaseController
             'currency' => $invoice['currency'],
             'status' => $invoice['status'],
             'payableAmount' => (float)$invoice['payable_amount'],
-            'note' => $invoice['note'] ?? null,
-            'body' => $invoice['body'] ?? null,
+            'note'    => $invoice['note'] ?? null,
+            'subject' => $invoice['note'] ?? null,
+            'body'    => $invoice['body'] ?? null,
             'salutation' => $invoice['salutation'] ?? null,
             'closing' => $invoice['closing'] ?? null,
             'seller' => [
@@ -336,40 +337,43 @@ class InvoiceController extends BaseController
 
     protected function mapInvoiceData($data)
     {
+        $seller = $data['seller'] ?? [];
+        $buyer  = $data['buyer']  ?? [];
+
         return [
-            'invoice_number' => $data['invoiceNumber'],
-            'issue_date' => $data['issueDate'],
-            'due_date' => $data['dueDate'] ?? null,
-            'currency' => $data['currency'],
-            'status' => $data['status'],
-            'seller_name' => $data['seller']['name'],
-            'seller_vat_id' => $data['seller']['vatId'] ?? null,
-            'seller_address_json' => json_encode($data['seller']['address']),
-            'seller_contact_json' => json_encode([
-                'email' => $data['seller']['contactEmail'] ?? null,
-                'phone' => $data['seller']['contactPhone'] ?? null,
+            'invoice_number'       => $data['invoiceNumber'] ?? $data['invoice_number'] ?? ('INV-' . strtoupper(substr(uniqid(), -6))),
+            'issue_date'           => $data['issueDate']     ?? $data['issue_date']     ?? $data['date'] ?? date('Y-m-d'),
+            'due_date'             => $data['dueDate']       ?? $data['due_date']       ?? null,
+            'currency'             => $data['currency']      ?? 'EUR',
+            'status'               => $data['status']        ?? 'draft',
+            'seller_name'          => $seller['name']        ?? $data['seller_name']    ?? '',
+            'seller_vat_id'        => $seller['vatId']       ?? $data['seller_vat_id']  ?? null,
+            'seller_address_json'  => json_encode($seller['address']   ?? $data['seller_address']  ?? []),
+            'seller_contact_json'  => json_encode([
+                'email' => $seller['contactEmail'] ?? null,
+                'phone' => $seller['contactPhone'] ?? null,
             ]),
-            'buyer_name' => $data['buyer']['name'],
-            'buyer_vat_id' => $data['buyer']['vatId'] ?? null,
-            'buyer_address_json' => json_encode($data['buyer']['address']),
-            'buyer_contact_json' => json_encode([
-                'email' => $data['buyer']['contactEmail'] ?? null,
-                'phone' => $data['buyer']['contactPhone'] ?? null,
+            'buyer_name'           => $buyer['name']         ?? $data['buyer_name']     ?? $data['recipient_name']    ?? '',
+            'buyer_vat_id'         => $buyer['vatId']        ?? $data['buyer_vat_id']   ?? null,
+            'buyer_address_json'   => json_encode($buyer['address']    ?? $data['buyer_address']   ?? $data['recipient_address'] ?? []),
+            'buyer_contact_json'   => json_encode([
+                'email' => $buyer['contactEmail'] ?? null,
+                'phone' => $buyer['contactPhone'] ?? null,
             ]),
-            'line_extension_amount' => $data['lineExtensionAmount'],
-            'tax_exclusive_amount' => $data['taxExclusiveAmount'],
-            'tax_inclusive_amount' => $data['taxInclusiveAmount'],
-            'payable_amount' => $data['payableAmount'],
-            'template_type' => $data['templateType'] ?? 'invoice',
-            'template_id' => $data['templateId'] ?? null,
-            'payment_terms_json' => isset($data['paymentTerms']) ? json_encode($data['paymentTerms']) : null,
-            'payment_means_json' => isset($data['paymentMeans']) ? json_encode($data['paymentMeans']) : null,
-            'note' => $data['note'] ?? null,
-            'body' => $data['body'] ?? null,
-            'salutation' => $data['salutation'] ?? null,
-            'closing' => $data['closing'] ?? null,
-            'signed' => $data['signed'] ?? 0,
-            'signature_date' => $data['signatureDate'] ?? null,
+            'line_extension_amount'=> $data['lineExtensionAmount'] ?? $data['line_extension_amount'] ?? 0,
+            'tax_exclusive_amount' => $data['taxExclusiveAmount']  ?? $data['tax_exclusive_amount']  ?? 0,
+            'tax_inclusive_amount' => $data['taxInclusiveAmount']  ?? $data['tax_inclusive_amount']  ?? 0,
+            'payable_amount'       => $data['payableAmount']       ?? $data['payable_amount']        ?? 0,
+            'template_type'        => $data['templateType']        ?? $data['template_type']         ?? 'invoice',
+            'template_id'          => $data['templateId']          ?? $data['template_id']           ?? null,
+            'payment_terms_json'   => isset($data['paymentTerms'])  ? json_encode($data['paymentTerms'])  : null,
+            'payment_means_json'   => isset($data['paymentMeans'])  ? json_encode($data['paymentMeans'])  : null,
+            'note'                 => $data['note']            ?? $data['subject'] ?? null,
+            'body'                 => $data['body']           ?? null,
+            'salutation'           => $data['salutation']     ?? null,
+            'closing'              => $data['closing']        ?? null,
+            'signed'               => $data['signed']         ?? 0,
+            'signature_date'       => $data['signatureDate']  ?? $data['signature_date'] ?? null,
         ];
     }
 

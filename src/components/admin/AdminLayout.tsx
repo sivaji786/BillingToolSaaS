@@ -45,6 +45,7 @@ export function AdminLayout({ children, currentScreen, onNavigate, onLogout }: A
                                     case 'SATickets': return 'Support Tickets';
                                     case 'SAWiki': return 'Platform Wiki';
                                     case 'SAsettings': return 'System Settings';
+                                    case 'SACompanyTypes': return 'Company Types';
                                     default: return currentScreen.replace(/^SA+/, '').replace(/([A-Z])/g, ' $1').trim();
                                 }
                             })()}

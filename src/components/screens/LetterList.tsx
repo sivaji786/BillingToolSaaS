@@ -162,10 +162,10 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="dateDesc">{t('invoiceList.sortDateDesc') || 'Date (Newest)'}</SelectItem>
-              <SelectItem value="dateAsc">{t('invoiceList.sortDateAsc') || 'Date (Oldest)'}</SelectItem>
-              <SelectItem value="numberDesc">{t('invoiceList.sortNumberDesc') || 'Number (Z-A)'}</SelectItem>
-              <SelectItem value="numberAsc">{t('invoiceList.sortNumberAsc') || 'Number (A-Z)'}</SelectItem>
+              <SelectItem value="dateDesc">{t('invoiceList.dateDesc') || 'Date (Newest)'}</SelectItem>
+              <SelectItem value="dateAsc">{t('invoiceList.dateAsc') || 'Date (Oldest)'}</SelectItem>
+              <SelectItem value="numberDesc">{t('invoiceList.numberDesc') || 'Number (Z-A)'}</SelectItem>
+              <SelectItem value="numberAsc">{t('invoiceList.numberAsc') || 'Number (A-Z)'}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -264,7 +264,7 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
         onOpenChange={open => !open && setDeleteTarget(null)}
         onConfirm={handleDelete}
         title={t('common.confirmDelete') || 'Delete Letter'}
-        description={t('invoiceList.deleteConfirm') || 'This action cannot be undone.'}
+        description={t('invoiceList.confirmDeleteDesc') || 'This action cannot be undone.'}
         confirmLabel={t('common.delete')}
       />
     </div>

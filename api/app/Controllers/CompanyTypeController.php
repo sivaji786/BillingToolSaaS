@@ -67,15 +67,23 @@ class CompanyTypeController extends BaseController
     public function delete($id = null)
     {
         $model = new CompanyTypeModel();
-        
+
         if (!$model->find($id)) {
             return $this->failNotFound('Company type not found');
         }
 
-        // TODO: Check for dependencies (Roles, CompanyProfiles) before deleting?
-        // For now, let's assume DB constraints or manual check is needed, 
-        // but as per basic requirement, we allow delete.
-        
+        $db = \Config\Database::connect();
+
+        $roleCount = $db->table('roles')->where('company_type_id', $id)->countAllResults();
+        if ($roleCount > 0) {
+            return $this->fail("Cannot delete: {$roleCount} role(s) are scoped to this company type.", 409);
+        }
+
+        $profileCount = $db->table('company_profiles')->where('company_type_id', $id)->countAllResults();
+        if ($profileCount > 0) {
+            return $this->fail("Cannot delete: {$profileCount} company profile(s) reference this type.", 409);
+        }
+
         $model->delete($id);
 
         return $this->respondDeleted(['id' => $id, 'message' => 'Company type deleted']);

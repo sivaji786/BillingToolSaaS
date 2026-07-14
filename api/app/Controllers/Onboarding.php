@@ -165,6 +165,9 @@ class Onboarding extends BaseController
 
             $this->sendWelcomeEmail($input['email'], $input['company_name']);
             $this->sendVerificationEmail($input['email'], $input['company_name'], $verificationCode);
+            $this->sendAdminNotification($input['company_name'], $input['email'], $subdomain, $tenantId);
+            $telegram = new \App\Services\TelegramService();
+            $telegram->tenantRegistered($input['company_name'], $input['email'], $subdomain, $tenantId);
 
             return $this->response->setJSON([
                 'success'          => true,
@@ -361,6 +364,56 @@ class Onboarding extends BaseController
             'created_at' => date('Y-m-d H:i:s'),
         ]);
         return $code;
+    }
+
+    private function sendAdminNotification(string $companyName, string $email, string $subdomain, int $tenantId): void
+    {
+        try {
+            $emailLib = \Config\Services::email();
+            $emailLib->initialize($this->smtpConfig());
+            $emailLib->setFrom(
+                getenv('MAIL_FROM_EMAIL') ?: 'noreply@billingtool.app',
+                getenv('MAIL_FROM_NAME')  ?: 'BillingTool'
+            );
+            $emailLib->setTo(['sivaji@medianet-home.de', 'bhnida@medianet-home.de']);
+            $emailLib->setSubject('New Tenant Registered: ' . $companyName);
+            $emailLib->setMessage($this->buildAdminNotificationHtml($companyName, $email, $subdomain, $tenantId));
+            $emailLib->send();
+        } catch (\Exception $e) {
+            log_message('error', '[Onboarding] sendAdminNotification: ' . $e->getMessage());
+        }
+    }
+
+    private function buildAdminNotificationHtml(string $companyName, string $email, string $subdomain, int $tenantId): string
+    {
+        $date = date('Y-m-d H:i:s');
+        return <<<HTML
+<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f5f3ff;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center" style="padding:40px 20px;">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,.12);">
+  <tr><td style="background:linear-gradient(135deg,#7c3aed,#c026d3);padding:32px 48px;text-align:center;">
+    <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;">New Tenant Registered</h1>
+    <p style="margin:8px 0 0;color:#e9d5ff;font-size:14px;">BillingTool Admin Notification</p>
+  </td></tr>
+  <tr><td style="padding:36px 48px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;width:140px;">Company</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;font-weight:600;">{$companyName}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;">Email</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">{$email}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;">Subdomain</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">{$subdomain}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;">Tenant ID</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">#{$tenantId}</td></tr>
+      <tr><td style="padding:10px 0;color:#6b7280;font-size:14px;">Registered At</td><td style="padding:10px 0;color:#111827;font-size:14px;">{$date}</td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="background:#f9fafb;border-top:1px solid #f3f4f6;padding:20px 48px;text-align:center;">
+    <p style="margin:0;color:#9ca3af;font-size:12px;">BillingTool · Admin Notification</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>
+HTML;
     }
 
     private function smtpConfig(): array

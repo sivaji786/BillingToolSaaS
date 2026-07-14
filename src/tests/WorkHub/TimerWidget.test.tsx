@@ -1,21 +1,35 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Mock the timer store
 const mockTimerStore = {
-    isRunning: false,
-    isOnBreak: false,
+    state: 'idle' as 'idle' | 'running' | 'break',
     activeTaskId: null as number | null,
-    startedAt: null as string | null,
-    elapsedSeconds: 0,
-    startTimer: vi.fn(),
-    pauseTimer: vi.fn(),
-    stopTimer: vi.fn(),
+    activeTaskTitle: '',
+    needsServerSync: false,
+    accumulatedSeconds: 0,
+    startedAt: null as number | null,
+    breakStartedAt: null as number | null,
+    accumulatedBreakSeconds: 0,
+    start: vi.fn(),
+    pause: vi.fn(),
+    resume: vi.fn(),
+    stop: vi.fn(),
+    markSynced: vi.fn(),
+    getElapsedSeconds: vi.fn(() => 0),
+    getBreakSeconds: vi.fn(() => 0),
 };
 
 vi.mock('../../stores/workhubTimerStore', () => ({
-    useWorkhubTimerStore: () => mockTimerStore,
+    useWorkhubTimerStore: Object.assign(() => mockTimerStore, {
+        getState: () => mockTimerStore,
+    }),
+    formatHMS: (totalSeconds: number) => {
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
+    },
 }));
 
 vi.mock('../../services/workhubApi', () => ({
@@ -43,50 +57,64 @@ function wrap(ui: React.ReactElement) {
 describe('TimerWidget', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockTimerStore.isRunning  = false;
-        mockTimerStore.isOnBreak  = false;
+        mockTimerStore.state = 'idle';
         mockTimerStore.activeTaskId = null;
-        mockTimerStore.elapsedSeconds = 0;
+        mockTimerStore.activeTaskTitle = '';
+        mockTimerStore.needsServerSync = false;
+        mockTimerStore.getElapsedSeconds = vi.fn(() => 0);
+        mockTimerStore.getBreakSeconds = vi.fn(() => 0);
     });
 
-    it('shows Idle state with Start button when not running', async () => {
+    it('shows idle state with "No timer running" when not active', async () => {
         const TimerWidget = await loadTimerWidget();
         wrap(<TimerWidget onViewTask={vi.fn()} />);
-        expect(screen.getByRole('button', { name: /start/i })).toBeInTheDocument();
+        expect(screen.getByText(/no timer running/i)).toBeInTheDocument();
     });
 
-    it('shows elapsed time and Pause/Stop when running', async () => {
-        mockTimerStore.isRunning   = true;
+    it('shows Break and Stop buttons when running', async () => {
+        mockTimerStore.state = 'running';
         mockTimerStore.activeTaskId = 42;
-        mockTimerStore.elapsedSeconds = 3661; // 1h 1m 1s
+        mockTimerStore.activeTaskTitle = 'Fix the pump';
+        mockTimerStore.getElapsedSeconds = vi.fn(() => 3661); // 1h 1m 1s
 
         const TimerWidget = await loadTimerWidget();
         wrap(<TimerWidget onViewTask={vi.fn()} />);
 
-        expect(screen.getByRole('button', { name: /pause/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /break/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /stop/i })).toBeInTheDocument();
-        // Should show formatted time
+        expect(screen.getByText(/running/i)).toBeInTheDocument();
         expect(screen.getByText(/01:01/)).toBeInTheDocument();
     });
 
-    it('shows Break state with Resume button when on break', async () => {
-        mockTimerStore.isRunning   = false;
-        mockTimerStore.isOnBreak   = true;
+    it('shows End Break and Stop buttons when on break', async () => {
+        mockTimerStore.state = 'break';
         mockTimerStore.activeTaskId = 42;
+        mockTimerStore.activeTaskTitle = 'Fix the pump';
+        mockTimerStore.getElapsedSeconds = vi.fn(() => 1800);
+        mockTimerStore.getBreakSeconds = vi.fn(() => 600);
 
         const TimerWidget = await loadTimerWidget();
         wrap(<TimerWidget onViewTask={vi.fn()} />);
-        expect(screen.getByRole('button', { name: /resume/i })).toBeInTheDocument();
+
+        expect(screen.getByRole('button', { name: /end break/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /stop/i })).toBeInTheDocument();
     });
 
-    it('calls startTimer when Start is clicked', async () => {
+    it('calls timerService.pause when Break is clicked while running', async () => {
+        mockTimerStore.state = 'running';
+        mockTimerStore.activeTaskId = 42;
+        mockTimerStore.activeTaskTitle = 'Fix the pump';
+
         const TimerWidget = await loadTimerWidget();
+        const { timerService } = await import('../../services/workhubApi');
         wrap(<TimerWidget onViewTask={vi.fn()} />);
 
         await act(async () => {
-            fireEvent.click(screen.getByRole('button', { name: /start/i }));
+            fireEvent.click(screen.getByRole('button', { name: /break/i }));
         });
-        // startTimer is called via the component
-        expect(mockTimerStore.startTimer).toHaveBeenCalled();
+
+        await waitFor(() => {
+            expect(timerService.pause).toHaveBeenCalledWith(42);
+        });
     });
 });

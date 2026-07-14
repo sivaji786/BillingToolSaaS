@@ -9,6 +9,7 @@ use App\Models\WorkhubTaskModel;
 use App\Models\WorkhubCompletionRecordModel;
 use App\Models\WorkhubMaterialEntryModel;
 use App\Models\WorkhubTaskPhotoModel;
+use App\Services\WorkHubStorageService;
 
 class CompletionController extends BaseController
 {
@@ -33,6 +34,13 @@ class CompletionController extends BaseController
         $task      = $taskModel->where('tenant_id', $this->tenantId)->find($taskId);
 
         if (!$task) return $this->failNotFound('Task not found.');
+
+        $completionModel = new WorkhubCompletionRecordModel();
+
+        // Guard: only one completion record per task (checked before status to return 409 not 422)
+        if ($completionModel->getByTask($taskId)) {
+            return $this->fail('A completion record already exists for this task.', 409);
+        }
 
         if (!in_array($task['status'], ['open', 'in_progress'], true)) {
             return $this->fail('Completion can only be submitted for open or in-progress tasks.', 422);
@@ -64,13 +72,6 @@ class CompletionController extends BaseController
 
         if ($errors) {
             return $this->fail($errors, 422);
-        }
-
-        $completionModel = new WorkhubCompletionRecordModel();
-
-        // Guard: only one completion record per task
-        if ($completionModel->getByTask($taskId)) {
-            return $this->fail('A completion record already exists for this task.', 409);
         }
 
         $now = date('Y-m-d H:i:s');
@@ -209,7 +210,16 @@ class CompletionController extends BaseController
 
         $record['materials']     = $materialModel->getForTask((int) $record['task_id'], $completionId);
         $record['material_total'] = $materialModel->getTotalForTask((int) $record['task_id']);
-        $record['photos']        = $photoModel->getForTask((int) $record['task_id']);
+
+        $storage = new WorkHubStorageService();
+        $record['photos'] = array_map(function (array $p) use ($storage): array {
+            return [
+                'id'         => $p['id'],
+                'photo_type' => $p['photo_type'],
+                'url'        => $storage->presignUrl($p['storage_path']),
+                'created_at' => $p['created_at'],
+            ];
+        }, $photoModel->getForTask((int) $record['task_id']));
         $record['is_dual_signed'] = $completionModel->isDualSigned($record);
 
         return $this->respond(['data' => $record]);

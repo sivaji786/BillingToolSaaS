@@ -14,6 +14,7 @@ import {
     ExternalLink,
     ChevronLeft,
     ChevronRight,
+    Building2,
 } from 'lucide-react';
 import { useAdminStore } from '../../stores/adminStore';
 import { cn } from '../../lib/utils';
@@ -43,6 +44,7 @@ export function AdminSidebar({ currentScreen, onNavigate, onLogout }: AdminSideb
         { id: 'SAusage', label: t('nav.reports'), icon: BarChart3 },
         { id: 'SATickets', label: 'Tickets', icon: Ticket },
         { id: 'SAWiki', label: 'Wiki', icon: BookOpen },
+        { id: 'SACompanyTypes', label: 'Company Types', icon: Building2 },
         { id: 'SAPages', label: 'CMS & Navigation', icon: Globe },
         { id: 'SAsettings', label: t('nav.settings'), icon: Settings },
     ];
