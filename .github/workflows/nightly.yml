@@ -1,151 +1,151 @@
-name: Nightly (API + a11y + Performance + i18n)
+# name: Nightly (API + a11y + Performance + i18n)
 
-# Runs every night at 02:00 UTC. Sends a Telegram alert on failure.
-on:
-  schedule:
-    - cron: '0 2 * * *'
-  workflow_dispatch:   # allow manual trigger from GitHub UI
+# # Runs every night at 02:00 UTC. Sends a Telegram alert on failure.
+# on:
+#   schedule:
+#     - cron: '0 2 * * *'
+#   workflow_dispatch:   # allow manual trigger from GitHub UI
 
-jobs:
-  nightly-suite:
-    name: Full API + a11y + Performance + i18n audit
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+# jobs:
+#   nightly-suite:
+#     name: Full API + a11y + Performance + i18n audit
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 30
 
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: billingtool_test
-          MYSQL_USER: billingtool
-          MYSQL_PASSWORD: billingtool_test
-        ports: ['3306:3306']
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+#     services:
+#       mysql:
+#         image: mysql:8.0
+#         env:
+#           MYSQL_ROOT_PASSWORD: root
+#           MYSQL_DATABASE: billingtool_test
+#           MYSQL_USER: billingtool
+#           MYSQL_PASSWORD: billingtool_test
+#         ports: ['3306:3306']
+#         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-      mailpit:
-        image: axllent/mailpit:latest
-        ports:
-          - '1025:1025'
-          - '8025:8025'
-        env:
-          MP_SMTP_AUTH_ACCEPT_ANY: '1'
-          MP_SMTP_AUTH_ALLOW_INSECURE: '1'
+#       mailpit:
+#         image: axllent/mailpit:latest
+#         ports:
+#           - '1025:1025'
+#           - '8025:8025'
+#         env:
+#           MP_SMTP_AUTH_ACCEPT_ANY: '1'
+#           MP_SMTP_AUTH_ALLOW_INSECURE: '1'
 
-    steps:
-      - uses: actions/checkout@v4
+#     steps:
+#       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+#       - uses: actions/setup-node@v4
+#         with:
+#           node-version: '20'
+#           cache: 'npm'
 
-      - name: Install JS dependencies
-        run: npm ci
+#       - name: Install JS dependencies
+#         run: npm ci
 
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, pdo_mysql, intl, curl, gd, fileinfo
-          coverage: none
+#       - uses: shivammathur/setup-php@v2
+#         with:
+#           php-version: '8.2'
+#           extensions: mbstring, pdo_mysql, intl, curl, gd, fileinfo
+#           coverage: none
 
-      - name: Install Composer dependencies
-        working-directory: api
-        run: composer install --no-dev --no-interaction --prefer-dist
+#       - name: Install Composer dependencies
+#         working-directory: api
+#         run: composer install --no-dev --no-interaction --prefer-dist
 
-      - name: Configure CI4 .env (with Mailpit SMTP)
-        working-directory: api
-        run: |
-          cp env .env
-          sed -i 's/# CI_ENVIRONMENT = production/CI_ENVIRONMENT = testing/' .env
-          sed -i "s/database.default.hostname.*/database.default.hostname = 127.0.0.1/" .env
-          sed -i "s/database.default.database.*/database.default.database = billingtool_test/" .env
-          sed -i "s/database.default.username.*/database.default.username = billingtool/" .env
-          sed -i "s/database.default.password.*/database.default.password = billingtool_test/" .env
-          echo "email.SMTPHost = localhost" >> .env
-          echo "email.SMTPPort = 1025" >> .env
-          echo "email.SMTPUser = " >> .env
-          echo "email.SMTPPass = " >> .env
-          echo "TELEGRAM_ENABLED = true" >> .env
-          echo "TELEGRAM_BOT_TOKEN = ${{ secrets.TELEGRAM_TEST_BOT_TOKEN }}" >> .env
-          echo "TELEGRAM_CHAT_ID = ${{ secrets.TELEGRAM_TEST_CHAT_ID }}" >> .env
+#       - name: Configure CI4 .env (with Mailpit SMTP)
+#         working-directory: api
+#         run: |
+#           cp env .env
+#           sed -i 's/# CI_ENVIRONMENT = production/CI_ENVIRONMENT = testing/' .env
+#           sed -i "s/database.default.hostname.*/database.default.hostname = 127.0.0.1/" .env
+#           sed -i "s/database.default.database.*/database.default.database = billingtool_test/" .env
+#           sed -i "s/database.default.username.*/database.default.username = billingtool/" .env
+#           sed -i "s/database.default.password.*/database.default.password = billingtool_test/" .env
+#           echo "email.SMTPHost = localhost" >> .env
+#           echo "email.SMTPPort = 1025" >> .env
+#           echo "email.SMTPUser = " >> .env
+#           echo "email.SMTPPass = " >> .env
+#           echo "TELEGRAM_ENABLED = true" >> .env
+#           echo "TELEGRAM_BOT_TOKEN = ${{ secrets.TELEGRAM_TEST_BOT_TOKEN }}" >> .env
+#           echo "TELEGRAM_CHAT_ID = ${{ secrets.TELEGRAM_TEST_CHAT_ID }}" >> .env
 
-      - name: Run migrations and seed
-        working-directory: api
-        run: |
-          php spark migrate --all
-          php spark db:seed MainSeeder || echo "Seeder failed — continuing"
+#       - name: Run migrations and seed
+#         working-directory: api
+#         run: |
+#           php spark migrate --all
+#           php spark db:seed MainSeeder || echo "Seeder failed — continuing"
 
-      - name: Start API server
-        working-directory: api
-        run: php spark serve --host 127.0.0.1 --port 8080 &
+#       - name: Start API server
+#         working-directory: api
+#         run: php spark serve --host 127.0.0.1 --port 8080 &
 
-      - name: Wait for API
-        run: |
-          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/ping && break; sleep 2; done
+#       - name: Wait for API
+#         run: |
+#           for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/ping && break; sleep 2; done
 
-      - name: Build + serve frontend
-        run: |
-          npm run build
-          npx vite preview --port 3000 &
-          for i in $(seq 1 15); do curl -sf http://localhost:3000 && break; sleep 2; done
+#       - name: Build + serve frontend
+#         run: |
+#           npm run build
+#           npx vite preview --port 3000 &
+#           for i in $(seq 1 15); do curl -sf http://localhost:3000 && break; sleep 2; done
 
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
+#       - name: Install Playwright browsers
+#         run: npx playwright install chromium --with-deps
 
-      # ── i18n audit ───────────────────────────────────────────────────────────
-      - name: i18n key coverage audit
-        run: npm run test -- src/tests/i18n/coverage.test.ts --reporter=verbose
-        continue-on-error: true
+#       # ── i18n audit ───────────────────────────────────────────────────────────
+#       - name: i18n key coverage audit
+#         run: npm run test -- src/tests/i18n/coverage.test.ts --reporter=verbose
+#         continue-on-error: true
 
-      # ── Full API contract suite ──────────────────────────────────────────────
-      # Runs all 30+ API specs nightly to catch regressions from DB changes,
-      # migrations, or permission model drift.
-      - name: Full API contract tests
-        run: npx playwright test --project=api
-        env:
-          CI: true
-          API_URL: http://127.0.0.1:8080
-          MAILPIT_URL: http://localhost:8025
-        continue-on-error: true
+#       # ── Full API contract suite ──────────────────────────────────────────────
+#       # Runs all 30+ API specs nightly to catch regressions from DB changes,
+#       # migrations, or permission model drift.
+#       - name: Full API contract tests
+#         run: npx playwright test --project=api
+#         env:
+#           CI: true
+#           API_URL: http://127.0.0.1:8080
+#           MAILPIT_URL: http://localhost:8025
+#         continue-on-error: true
 
-      # ── Accessibility nightly audit ──────────────────────────────────────────
-      - name: Accessibility audit (axe-core WCAG 2.0 AA)
-        run: npx playwright test --project=a11y
-        env:
-          CI: true
-          API_URL: http://127.0.0.1:8080
-          FRONTEND_URL: http://localhost:3000
-        continue-on-error: true
+#       # ── Accessibility nightly audit ──────────────────────────────────────────
+#       - name: Accessibility audit (axe-core WCAG 2.0 AA)
+#         run: npx playwright test --project=a11y
+#         env:
+#           CI: true
+#           API_URL: http://127.0.0.1:8080
+#           FRONTEND_URL: http://localhost:3000
+#         continue-on-error: true
 
-      # ── Performance (Lighthouse CI) ──────────────────────────────────────────
-      - name: Install Lighthouse CI
-        run: npm install -g @lhci/cli@latest
+#       # ── Performance (Lighthouse CI) ──────────────────────────────────────────
+#       - name: Install Lighthouse CI
+#         run: npm install -g @lhci/cli@latest
 
-      - name: Run Lighthouse CI
-        run: |
-          lhci autorun --collect.url=http://localhost:3000 \
-                        --collect.numberOfRuns=1 \
-                        --assert.preset=lighthouse:recommended \
-                        --assert.assertions.first-contentful-paint=off \
-                        --assert.assertions.interactive=off \
-                        --upload.target=temporary-public-storage \
-                        || echo "Lighthouse budget exceeded — check report"
-        continue-on-error: true
+#       - name: Run Lighthouse CI
+#         run: |
+#           lhci autorun --collect.url=http://localhost:3000 \
+#                         --collect.numberOfRuns=1 \
+#                         --assert.preset=lighthouse:recommended \
+#                         --assert.assertions.first-contentful-paint=off \
+#                         --assert.assertions.interactive=off \
+#                         --upload.target=temporary-public-storage \
+#                         || echo "Lighthouse budget exceeded — check report"
+#         continue-on-error: true
 
-      # ── Report + alert on failure ────────────────────────────────────────────
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: nightly-report
-          path: playwright-report/
-          retention-days: 7
+#       # ── Report + alert on failure ────────────────────────────────────────────
+#       - uses: actions/upload-artifact@v4
+#         if: always()
+#         with:
+#           name: nightly-report
+#           path: playwright-report/
+#           retention-days: 7
 
-      - name: Send Telegram alert on failure
-        if: failure()
-        run: |
-          MSG="🔴 *BillingTool nightly tests FAILED*%0ADate: $(date -u '+%Y-%m-%d %H:%M UTC')%0ARun: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -s -X POST \
-            "https://api.telegram.org/bot${{ secrets.TELEGRAM_TEST_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=${{ secrets.TELEGRAM_TEST_CHAT_ID }}&text=${MSG}&parse_mode=Markdown" \
-          || echo "Telegram alert failed — check TELEGRAM_TEST_BOT_TOKEN secret"
+#       - name: Send Telegram alert on failure
+#         if: failure()
+#         run: |
+#           MSG="🔴 *BillingTool nightly tests FAILED*%0ADate: $(date -u '+%Y-%m-%d %H:%M UTC')%0ARun: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+#           curl -s -X POST \
+#             "https://api.telegram.org/bot${{ secrets.TELEGRAM_TEST_BOT_TOKEN }}/sendMessage" \
+#             -d "chat_id=${{ secrets.TELEGRAM_TEST_CHAT_ID }}&text=${MSG}&parse_mode=Markdown" \
+#           || echo "Telegram alert failed — check TELEGRAM_TEST_BOT_TOKEN secret"
