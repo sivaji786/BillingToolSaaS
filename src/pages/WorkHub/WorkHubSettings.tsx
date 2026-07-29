@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, Loader2, Users, Trash2, UserPlus } from 'lucide-react';
+import { Save, Loader2, Users, Trash2, UserPlus, LayoutGrid, List } from 'lucide-react';
+import { CapacityGrid } from '../../components/screens/WorkHub/CapacityCard';
+import { QuotaMeters } from '../../components/screens/WorkHub/QuotaMeters';
+import { UpgradePrompt } from '../../components/screens/WorkHub/UpgradePrompt';
 import { useAuthStore } from '../../stores/authStore';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -14,7 +17,7 @@ import {
     SelectValue,
 } from '../../components/ui/select';
 import { Separator } from '../../components/ui/separator';
-import { settingsService, workerService, WHWorker } from '../../services/workhubApi';
+import { settingsService, workerService, profileService, WHWorker } from '../../services/workhubApi';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
 
@@ -32,10 +35,22 @@ export function WorkHubSettings() {
     const qc = useQueryClient();
     const currentUserId = useAuthStore((s) => s.user?.id);
 
+    // Role assignment is stricter than the rest of this screen (Planner/Finance can reach
+    // Settings, but only a Manager or super-admin may change WHO holds manager/finance/planner
+    // — mirrors the server-side check in WorkerController::setRole()).
+    const { data: whProfile } = useQuery({
+        queryKey: ['wh-profile'],
+        queryFn: profileService.get,
+        staleTime: 10 * 60 * 1000,
+    });
+    const canManageRoles = Boolean(whProfile?.is_admin) || whProfile?.role === 'manager';
+
     // ---- Workers ----
+    const [viewMode,        setViewMode]        = useState<'list' | 'capacity'>('list');
     const [addingWorker,    setAddingWorker]    = useState(false);
     const [selectedUserId,  setSelectedUserId]  = useState('');
     const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
+    const [upgradeLimitType, setUpgradeLimitType] = useState<string | null>(null);
     const [workerRates,     setWorkerRates]     = useState<Record<number, string>>({});
 
     const { data: workers = [], isLoading: workersLoading } = useQuery({
@@ -60,7 +75,13 @@ export function WorkHubSettings() {
             qc.invalidateQueries({ queryKey: ['wh-workers'] });
             qc.invalidateQueries({ queryKey: ['wh-available-users'] });
         },
-        onError: (e: any) => toast.error(e.response?.data?.message ?? 'Failed to add worker'),
+        onError: (e: any) => {
+            if (e.response?.data?.error === 'workhub_workers') {
+                setUpgradeLimitType('workhub_workers');
+                return;
+            }
+            toast.error(e.response?.data?.message ?? 'Failed to add worker');
+        },
     });
 
     const removeWorkerMut = useMutation({
@@ -170,17 +191,29 @@ export function WorkHubSettings() {
                         <Users className="w-4 h-4 text-[#2a8fbd]" />
                         Workers
                     </CardTitle>
-                    {!addingWorker && (
+                    <div className="flex items-center gap-2">
                         <Button
                             size="sm"
                             variant="outline"
-                            className="gap-1.5 h-8"
-                            onClick={() => { setAddingWorker(true); setSelectedUserId(''); }}
+                            className="h-8 w-8 p-0"
+                            onClick={() => setViewMode((m) => (m === 'list' ? 'capacity' : 'list'))}
+                            title={viewMode === 'list' ? 'Switch to capacity view' : 'Switch to list view'}
+                            aria-label={viewMode === 'list' ? 'Switch to capacity view' : 'Switch to list view'}
                         >
-                            <UserPlus className="w-3.5 h-3.5" />
-                            Add Worker
+                            {viewMode === 'list' ? <LayoutGrid className="w-3.5 h-3.5" /> : <List className="w-3.5 h-3.5" />}
                         </Button>
-                    )}
+                        {!addingWorker && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 h-8"
+                                onClick={() => { setAddingWorker(true); setSelectedUserId(''); }}
+                            >
+                                <UserPlus className="w-3.5 h-3.5" />
+                                Add Worker
+                            </Button>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {/* Add worker row */}
@@ -233,6 +266,8 @@ export function WorkHubSettings() {
                         <div className="flex items-center gap-2 text-muted-foreground py-4 justify-center">
                             <Loader2 className="animate-spin w-4 h-4" /> Loading workers…
                         </div>
+                    ) : viewMode === 'capacity' ? (
+                        <CapacityGrid workers={workers} />
                     ) : workers.length === 0 ? (
                         <p className="text-body text-muted-foreground py-4 text-center">
                             No workers yet. Click <strong>Add Worker</strong> above, or visit your{' '}
@@ -286,23 +321,32 @@ export function WorkHubSettings() {
                                         </div>
                                         {/* Row 2: role, rate, task count */}
                                         <div className="flex items-center gap-2 pl-11 flex-wrap">
-                                            <select
-                                                value={w.wh_role ?? ''}
-                                                onChange={(e) => setRoleMut.mutate({
-                                                    id: w.id,
-                                                    wh_role: (e.target.value || null) as WHWorker['wh_role'],
-                                                })}
-                                                disabled={setRoleMut.isPending}
-                                                className="text-caption border rounded px-1.5 py-1 bg-background focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)] shrink-0"
-                                                title="WorkHub role (overrides system role)"
-                                            >
-                                                <option value="">Auto</option>
-                                                <option value="worker">Worker</option>
-                                                <option value="planner">Planner</option>
-                                                <option value="manager">Manager</option>
-                                                <option value="finance">Finance</option>
-                                                <option value="client">Client</option>
-                                            </select>
+                                            {canManageRoles ? (
+                                                <select
+                                                    value={w.wh_role ?? ''}
+                                                    onChange={(e) => setRoleMut.mutate({
+                                                        id: w.id,
+                                                        wh_role: (e.target.value || null) as WHWorker['wh_role'],
+                                                    })}
+                                                    disabled={setRoleMut.isPending}
+                                                    className="text-caption border rounded px-1.5 py-1 bg-background focus:outline-none focus:ring-2 focus:ring-[rgba(30,58,95,0.25)] shrink-0"
+                                                    title="WorkHub role (overrides system role)"
+                                                >
+                                                    <option value="">Auto</option>
+                                                    <option value="worker">Worker</option>
+                                                    <option value="planner">Planner</option>
+                                                    <option value="manager">Manager</option>
+                                                    <option value="finance">Finance</option>
+                                                    <option value="client">Client</option>
+                                                </select>
+                                            ) : (
+                                                <span
+                                                    className="text-caption border rounded px-1.5 py-1 bg-muted text-muted-foreground shrink-0"
+                                                    title="Only a Manager can change WorkHub roles"
+                                                >
+                                                    {w.wh_role ? w.wh_role.charAt(0).toUpperCase() + w.wh_role.slice(1) : 'Auto'}
+                                                </span>
+                                            )}
                                             <input
                                                 type="number"
                                                 min="0"
@@ -329,6 +373,8 @@ export function WorkHubSettings() {
                     )}
                 </CardContent>
             </Card>
+
+            <QuotaMeters />
 
             {/* Billing configuration */}
             <Card>
@@ -416,6 +462,14 @@ export function WorkHubSettings() {
                 {saveMut.isPending ? <Loader2 className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
                 Save Settings
             </Button>
+
+            {upgradeLimitType && (
+                <UpgradePrompt
+                    limitType={upgradeLimitType}
+                    onClose={() => setUpgradeLimitType(null)}
+                    onUpgrade={() => { window.location.hash = 'billing'; setUpgradeLimitType(null); }}
+                />
+            )}
         </div>
     );
 }

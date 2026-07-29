@@ -171,7 +171,7 @@ export function TenantTour({ forceShow, onClose }: { forceShow?: boolean; onClos
                         </h3>
                         <button
                             onClick={finish}
-                            className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors flex-shrink-0"
+                            className="text-gray-500 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors flex-shrink-0"
                         >
                             <X className="w-3.5 h-3.5" />
                         </button>

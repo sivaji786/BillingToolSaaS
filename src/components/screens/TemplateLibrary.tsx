@@ -3,7 +3,8 @@ import { InvoiceTemplate, TemplateType } from '../../types/invoice';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { FileText, Plus, Edit, Trash2, Layout, Mail } from 'lucide-react';
+import { Input } from '../ui/input';
+import { FileText, Plus, Edit, Trash2, Layout, Mail, Search } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { PLATFORM_TEMPLATES } from '../../utils/invoice-templates-defaults';
 
@@ -135,8 +136,11 @@ export function TemplateLibrary({
 }: TemplateLibraryProps) {
   const { t } = useLanguage();
   const [activeFilter, setActiveFilter] = useState<TemplateType>(initialFilterType);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const filtered = templates.filter(t => t.templateType === activeFilter || !t.templateType && activeFilter === 'invoice');
+  const filtered = templates
+    .filter(t => t.templateType === activeFilter || !t.templateType && activeFilter === 'invoice')
+    .filter(t => t.name.toLowerCase().includes(searchQuery.trim().toLowerCase()));
 
   return (
     <div className="space-y-6">
@@ -184,6 +188,18 @@ export function TemplateLibrary({
             {templates.filter(t => t.templateType === 'business_letter').length}
           </Badge>
         </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={t('templates.searchPlaceholder') || 'Search templates...'}
+          className="pl-9"
+          aria-label={t('templates.searchPlaceholder') || 'Search templates'}
+        />
       </div>
 
       {/* Templates Grid */}

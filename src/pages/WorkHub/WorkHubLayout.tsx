@@ -81,6 +81,11 @@ export function WorkHubLayout({ onNavigate }: Props) {
             date_to:   dateTo   || undefined,
             sort:      activeSort.sort,
             sort_dir:  activeSort.dir,
+            // Backend hard-caps per_page at 100 (see TaskController::index) — ask for that
+            // max explicitly instead of the 20-row default so realistic tenant task counts
+            // aren't silently cut off. The true count is still read from `pagination.total`
+            // below (never from the returned array's length) since even 100 can truncate.
+            per_page:  100,
         }),
         enabled: !!myProfile,
         staleTime: 60 * 1000,
@@ -101,6 +106,8 @@ export function WorkHubLayout({ onNavigate }: Props) {
 
     const tasks: WHTask[] = tasksData?.data ?? [];
     const openCount = tasks.filter((t) => t.status === 'open').length;
+    // True count from the backend, not the (possibly per_page-truncated) fetched array length.
+    const tasksTotal = tasksData?.pagination?.total ?? tasks.length;
 
     const deleteProjectMut = useMutation({
         mutationFn: (id: number) => projectService.delete(id),
@@ -163,6 +170,7 @@ export function WorkHubLayout({ onNavigate }: Props) {
                         ) : (
                             <TaskList
                                 tasks={tasks}
+                                total={tasksTotal}
                                 statusFilter={statusFilter}
                                 onStatusFilter={setStatusFilter}
                                 datePreset={datePreset}
@@ -223,6 +231,7 @@ export function WorkHubLayout({ onNavigate }: Props) {
                         ) : (role === 'planner' || role === 'manager' || myProfile?.is_admin) ? (
                             <KanbanBoard
                                 tasks={tasks}
+                                total={tasksTotal}
                                 workers={workers}
                                 projects={projects}
                                 onSelectTask={handleTaskSelect}
@@ -244,6 +253,7 @@ export function WorkHubLayout({ onNavigate }: Props) {
                         ) : role === 'client' ? (
                             <TaskList
                                 tasks={tasks}
+                                total={tasksTotal}
                                 statusFilter={statusFilter}
                                 onStatusFilter={setStatusFilter}
                                 datePreset={datePreset}
@@ -264,6 +274,7 @@ export function WorkHubLayout({ onNavigate }: Props) {
                             // Worker (default)
                             <TaskList
                                 tasks={tasks}
+                                total={tasksTotal}
                                 statusFilter={statusFilter}
                                 onStatusFilter={setStatusFilter}
                                 datePreset={datePreset}

@@ -23,10 +23,11 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import {
-  Plus, MoreVertical, Eye, Edit, Trash2,
+  Plus, MoreVertical, Eye, Edit, Trash2, Download,
   ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportInvoicesBulk } from '../../utils/invoice-export';
 
 interface LetterListProps {
   onSelectLetter?: (letter: Invoice) => void;
@@ -84,6 +85,16 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
     }
   };
 
+  const handleExportSelected = async () => {
+    const toExport = letters.filter(l => l.id && selectedLetters.has(l.id));
+    if (toExport.length === 0) return;
+    try {
+      await exportInvoicesBulk(toExport, 'csv');
+    } catch {
+      toast.error(t('common.error'));
+    }
+  };
+
   const handleBulkDelete = async () => {
     if (!hasPermissionSync('invoices.delete')) {
       toast.error(t('common.noPermission') || 'No permission');
@@ -135,7 +146,7 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
             className="flex-1"
           />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[160px]" aria-label={t('invoiceList.allStatuses') || 'Filter by status'}>
               <SelectValue placeholder={t('invoiceList.allStatuses') || 'All Statuses'} />
             </SelectTrigger>
             <SelectContent>
@@ -146,7 +157,7 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
             </SelectContent>
           </Select>
           <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[160px]" aria-label={t('invoiceList.anyDate') || 'Filter by date'}>
               <SelectValue placeholder={t('invoiceList.anyDate') || 'Any Date'} />
             </SelectTrigger>
             <SelectContent>
@@ -158,7 +169,7 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
             </SelectContent>
           </Select>
           <Select value={sortOption} onValueChange={v => setSortOption(v as SortOption)}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]" aria-label={t('invoiceList.sortBy') || 'Sort letters'}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -173,6 +184,9 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
         {isSomeSelected && (
           <div className="flex items-center gap-3 mt-3 pt-3 border-t">
             <span className="text-body text-muted-foreground">{selectedLetters.size} selected</span>
+            <Button variant="outline" size="sm" onClick={handleExportSelected}>
+              <Download className="h-4 w-4 mr-2" /> {t('invoiceList.exportSelected') || 'Export Selected'}
+            </Button>
             {hasPermissionSync('invoices.delete') && (
               <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
                 <Trash2 className="h-4 w-4 mr-2" /> Delete Selected
@@ -189,7 +203,7 @@ export function LetterList({ onSelectLetter, onEditLetter, onNewLetter }: Letter
           <TableHeader>
             <TableRow>
               <TableHead className="w-10">
-                <Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} />
+                <Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} aria-label={t('invoiceList.selectAll') || 'Select all letters'} />
               </TableHead>
               <TableHead>{t('editor.letterNumber') || 'Letter Number'}</TableHead>
               <TableHead>{t('editor.recipient') || 'Recipient (To)'}</TableHead>

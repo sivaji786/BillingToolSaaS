@@ -7,7 +7,7 @@ const INK      = '#1e3a5f';
 const INK_SOFT = '#3d5a80';
 const PAPER    = '#ffffff';
 const ACCENT   = '#f08a3c';
-const GOLD     = '#2a8fbd';
+const GOLD     = '#1e6f96'; // >=4.5:1 on white (was #2a8fbd, ~3.64:1 — fails WCAG normal-text threshold)
 const RULE_SOFT = 'rgba(30,58,95,0.10)';
 
 interface WelcomeBannerProps {

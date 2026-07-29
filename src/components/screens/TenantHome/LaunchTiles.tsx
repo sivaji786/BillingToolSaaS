@@ -8,7 +8,7 @@ const PAPER_SOFT = '#f0f6ff';
 const ACCENT     = '#f08a3c';
 const ACCENT_SOFT = '#ff9d52';
 const ACCENT_TINT = '#fff5ec';
-const GOLD       = '#2a8fbd';
+const GOLD       = '#1e6f96'; // >=4.5:1 on white (was #2a8fbd, ~3.64:1 — fails WCAG normal-text threshold)
 const RULE_SOFT  = 'rgba(30,58,95,0.10)';
 const RULE       = 'rgba(30,58,95,0.20)';
 const SHADOW     = '0 1px 2px rgba(30,58,95,0.04)';

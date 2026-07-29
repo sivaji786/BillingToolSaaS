@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Invoice, InvoiceTemplate, TemplateType } from './types/invoice';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
+import { isEffectiveSuperAdmin } from './hooks/usePermission';
 import { Loader2 } from 'lucide-react';
 
 // Lazy load screen components
@@ -60,6 +61,7 @@ const SACompanyTypes = lazy(() => import('./components/screens/Admin/SACompanyTy
 
 
 const TicketingWidget = lazy(() => import('./components/TicketingWidget').then(m => ({ default: m.TicketingWidget })));
+const WorkHubQuickActions = lazy(() => import('./components/screens/WorkHub/WorkHubQuickActions').then(m => ({ default: m.WorkHubQuickActions })));
 const GlobalAIAssistant = lazy(() => import('./components/GlobalAIAssistant').then(m => ({ default: m.GlobalAIAssistant })));
 const HelpChatBot = lazy(() => import('./components/HelpChatBot').then(m => ({ default: m.HelpChatBot })));
 
@@ -357,7 +359,9 @@ function AppContent() {
 
   // Billing access: super-admins (tenant owners) have full RBAC rights.
   // WorkHub-only workers have no billing permissions and must not trigger these calls.
-  const hasBillingAccess = isAuthenticated && (user?.is_super_admin === true || user?.role === 'admin');
+  // Uses the same isEffectiveSuperAdmin() check as usePermission()/AppSidebar, so this
+  // and the sidebar's Settings link can never disagree again.
+  const hasBillingAccess = isAuthenticated && isEffectiveSuperAdmin(user);
 
   // React Query for data fetching
   const { data: invoices = [], refetch: refetchInvoices } = useQuery({
@@ -384,8 +388,8 @@ function AppContent() {
   });
 
   const { data: logEntries = [] } = useQuery({
-    queryKey: ['audit-logs'],
-    queryFn: () => auditLogService.getAll(),
+    queryKey: ['audit-logs', 'recent'],
+    queryFn: async () => (await auditLogService.getAll({ limit: 20 })).data,
     enabled: hasBillingAccess,
     staleTime: 5 * 60 * 1000,
   });
@@ -1143,6 +1147,7 @@ function AppContent() {
                     invoices={invoices}
                     onNewInvoice={handleNewInvoice}
                     onOpenInvoice={handlePreviewInvoice}
+                    onNavigate={(screen) => setCurrentScreen(screen as Screen)}
                   />
                 )}
 
@@ -1173,7 +1178,7 @@ function AppContent() {
                   />
                 )}
 
-                {currentScreen === 'activity' && <ActivityLog entries={logEntries} />}
+                {currentScreen === 'activity' && <ActivityLog />}
 
                 {currentScreen === 'SAWiki' && <SAWiki />}
 
@@ -1238,6 +1243,7 @@ function AppContent() {
             apiBaseUrl={getApiBaseUrl()}
             userId={user?.id}
           />
+          <WorkHubQuickActions onNavigate={(screen) => setCurrentScreen(screen as Screen)} />
           <HelpChatBot config={TENANT_HELP_CONFIG} currentScreen={currentScreen} />
         </Suspense>
         <Toaster />

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Invoice, InvoiceTemplate, CompanyProfile, Buyer } from '../../types/invoice';
 import { letterService, buyerService } from '../../services/api';
+import { sanitizeHtml } from '../../utils/sanitize-html';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import {
@@ -220,7 +221,7 @@ export function LetterPreview({
         className={`${className} cursor-pointer hover:bg-[#f0f6ff] rounded px-0.5 group relative inline-block`}
         title="Double-click to edit"
       >
-        {value || <span className="text-gray-400 italic">{placeholder}</span>}
+        {value || <span className="text-gray-500 italic">{placeholder}</span>}
         <Edit2 className="h-3 w-3 absolute -right-4 top-0.5 opacity-0 group-hover:opacity-50 text-[#2a8fbd]" />
       </span>
     );
@@ -258,7 +259,7 @@ export function LetterPreview({
         className={`${className} cursor-pointer hover:bg-[#f0f6ff] rounded px-0.5 group relative inline-block`}
         title="Double-click to edit"
       >
-        {value || <span className="text-gray-400 italic">{placeholder}</span>}
+        {value || <span className="text-gray-500 italic">{placeholder}</span>}
         <Edit2 className="h-3 w-3 absolute -right-4 top-0.5 opacity-0 group-hover:opacity-50 text-[#2a8fbd]" />
       </span>
     );
@@ -318,10 +319,10 @@ export function LetterPreview({
         {letter.body ? (
           <div
             className="text-body text-gray-700 leading-relaxed prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: letter.body }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(letter.body) }}
           />
         ) : (
-          <p className="text-gray-400 italic text-body min-h-[160px] flex items-start pt-2">
+          <p className="text-gray-500 italic text-body min-h-[160px] flex items-start pt-2">
             {t('templates.letterBodyPlaceholder') || 'No letter content. Double-click to add.'}
           </p>
         )}
@@ -415,8 +416,8 @@ export function LetterPreview({
                   ) : null;
 
                   if (type === 'header') return effectiveHeader ? (
-                    <div key="header" className="text-center text-micro text-gray-400 italic">
-                      <div dangerouslySetInnerHTML={{ __html: effectiveHeader }} />
+                    <div key="header" className="text-center text-micro text-gray-500 italic">
+                      <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(effectiveHeader) }} />
                     </div>
                   ) : null;
 
@@ -432,7 +433,7 @@ export function LetterPreview({
                       </div>
                       {isVisible('dates') && (
                         <div className="text-right space-y-1 shrink-0 ml-6">
-                          <p className="text-body text-gray-400 uppercase font-medium tracking-widest">
+                          <p className="text-body text-gray-500 uppercase font-medium tracking-widest">
                             {t('previewModal.issueDate') || 'ISSUE DATE'}
                           </p>
                           <div className="text-heading-2 text-gray-900">
@@ -449,7 +450,7 @@ export function LetterPreview({
                   if (type === 'sender') return (
                     <div key="sender" className="flex justify-end py-2">
                       <div className="w-64">
-                        <p className="text-body text-gray-400 uppercase font-medium tracking-widest mb-3 border-b border-gray-100 pb-2">
+                        <p className="text-body text-gray-500 uppercase font-medium tracking-widest mb-3 border-b border-gray-100 pb-2">
                           {t('previewModal.from') || 'FROM'}
                         </p>
                         <div className="text-body space-y-1">
@@ -477,7 +478,7 @@ export function LetterPreview({
                   if (type === 'to') return (
                     <div key="to" className="py-4">
                       <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-                        <p className="text-body text-gray-400 uppercase font-medium tracking-widest">
+                        <p className="text-body text-gray-500 uppercase font-medium tracking-widest">
                           {t('editor.recipient') || 'TO'}
                         </p>
                         {buyers.length > 0 && (
@@ -543,8 +544,8 @@ export function LetterPreview({
                   );
 
                   if (type === 'footer') return effectiveFooter ? (
-                    <div key="footer" className="mt-12 pt-8 border-t border-gray-100 text-body text-gray-400 text-center leading-relaxed">
-                      <div dangerouslySetInnerHTML={{ __html: effectiveFooter }} />
+                    <div key="footer" className="mt-12 pt-8 border-t border-gray-100 text-body text-gray-500 text-center leading-relaxed">
+                      <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(effectiveFooter) }} />
                     </div>
                   ) : null;
 

@@ -270,7 +270,7 @@ export function TimerWidget({ onViewTask }: Props) {
                     ) : (
                         <>
                             <Button
-                                className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
+                                className="flex-1 gap-1 bg-green-700 hover:bg-green-800"
                                 onClick={() => !anyPending && !isRequestInFlight.current && resumeMut.mutate()}
                                 disabled={anyPending || resumeMut.isPending}
                             >

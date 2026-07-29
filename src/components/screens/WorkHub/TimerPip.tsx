@@ -47,15 +47,17 @@ export function TimerPip({ onViewTask }: Props) {
                 {formatHMS(elapsed)}
             </button>
             <button
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground p-2 -m-1 rounded-full"
                 title="Open task"
+                aria-label="Open task"
                 onClick={() => timer.activeTaskId && onViewTask?.(timer.activeTaskId)}
             >
                 <ExternalLink className="w-3.5 h-3.5" />
             </button>
             <button
-                className="text-destructive hover:text-destructive/80"
+                className="text-destructive hover:text-destructive/80 p-2 -m-1 rounded-full"
                 title="Stop timer"
+                aria-label="Stop timer"
                 onClick={() => stopMut.mutate()}
                 disabled={stopMut.isPending}
             >

@@ -29,6 +29,45 @@ class WorkerController extends BaseController
         $this->userId   = (int) ($this->request->userId ?? session()->get('userId') ?? 0);
     }
 
+    private function isSuperAdmin(): bool
+    {
+        $db = \Config\Database::connect();
+        return (bool) $db->table('user_roles ur')
+            ->join('roles r', 'r.id = ur.role_id')
+            ->where('ur.user_id', $this->userId)
+            ->where('r.is_super_admin', 1)
+            ->countAllResults();
+    }
+
+    private function callerWhRole(): ?string
+    {
+        $db  = \Config\Database::connect();
+        $row = $db->table('workhub_workers')
+            ->select('wh_role')
+            ->where('user_id', $this->userId)
+            ->where('tenant_id', $this->tenantId)
+            ->get()->getRowArray();
+
+        return $row['wh_role'] ?? null;
+    }
+
+    // Onboarding/offboarding a worker — same privilege bar as WorkHub Settings
+    // (SettingsController::isPrivilegedUser()): planner/manager/finance or super-admin.
+    private function isPrivilegedUser(): bool
+    {
+        if ($this->isSuperAdmin()) return true;
+        return in_array($this->callerWhRole() ?? '', ['planner', 'manager', 'finance'], true);
+    }
+
+    // Changing WHO holds manager/finance/planner is a stricter action than onboarding a
+    // worker — only an existing Manager (or super-admin) may grant it, otherwise any
+    // privileged-but-lesser role (e.g. Finance) could PATCH its own wh_role to escalate.
+    private function isManagerOrSuperAdmin(): bool
+    {
+        if ($this->isSuperAdmin()) return true;
+        return $this->callerWhRole() === 'manager';
+    }
+
     // WH-031: GET /workhub/workers
     public function index(): \CodeIgniter\HTTP\ResponseInterface
     {
@@ -94,6 +133,10 @@ class WorkerController extends BaseController
     {
         $this->boot();
 
+        if (!$this->isPrivilegedUser()) {
+            return $this->failForbidden('Only planners, managers, finance, or super-admins may add workers.');
+        }
+
         $data   = $this->request->getJSON(true) ?? [];
         $userId = (int) ($data['user_id'] ?? 0);
 
@@ -124,12 +167,18 @@ class WorkerController extends BaseController
             $model->update($existing['id'], ['active' => 1]);
             $workerId = $existing['id'];
         } else {
-            $workerId = $model->insert([
-                'tenant_id'               => $this->tenantId,
-                'user_id'                 => $userId,
-                'capacity_hours_per_week' => (float) ($data['capacity_hours_per_week'] ?? 40),
-                'active'                  => 1,
-            ], true);
+            try {
+                $workerId = $model->insert([
+                    'tenant_id'               => $this->tenantId,
+                    'user_id'                 => $userId,
+                    'capacity_hours_per_week' => (float) ($data['capacity_hours_per_week'] ?? 40),
+                    'active'                  => 1,
+                ], true);
+            } catch (\RuntimeException $e) {
+                // Thrown by UsageEnforcement::checkLimits() when the tenant's plan
+                // worker-seat limit is reached.
+                return $this->fail($e->getMessage(), 422, 'workhub_workers');
+            }
         }
 
         $this->assignWorkerRole($db, $userId);
@@ -143,6 +192,10 @@ class WorkerController extends BaseController
     public function setRole(int $id): \CodeIgniter\HTTP\ResponseInterface
     {
         $this->boot();
+
+        if (!$this->isManagerOrSuperAdmin()) {
+            return $this->failForbidden('Only a Manager or super-admin may change a worker\'s WorkHub role.');
+        }
 
         $model  = new WorkhubWorkerModel();
         $worker = $model->where('id', $id)
@@ -170,6 +223,10 @@ class WorkerController extends BaseController
     public function destroy(int $id): \CodeIgniter\HTTP\ResponseInterface
     {
         $this->boot();
+
+        if (!$this->isPrivilegedUser()) {
+            return $this->failForbidden('Only planners, managers, finance, or super-admins may remove workers.');
+        }
 
         $model  = new WorkhubWorkerModel();
         $worker = $model->where('id', $id)

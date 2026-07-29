@@ -300,12 +300,12 @@ export function SAbilling() {
                     )}
 
                     {/* Pagination */}
-                    {invoicesData && invoicesData.pagination.totalPages > 1 && (
+                    {invoicesData && invoicesData.pagination.totalItems > 0 && (
                         <div className="flex items-center justify-between mt-4">
                             <p className="text-body text-muted-foreground">
-                                Page {invoicesData.pagination.currentPage} of {invoicesData.pagination.totalPages}
+                                Showing {((invoicesData.pagination.currentPage - 1) * invoicesData.pagination.itemsPerPage) + 1} to {Math.min(invoicesData.pagination.currentPage * invoicesData.pagination.itemsPerPage, invoicesData.pagination.totalItems)} of {invoicesData.pagination.totalItems} entries
                             </p>
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -314,6 +314,9 @@ export function SAbilling() {
                                 >
                                     Previous
                                 </Button>
+                                <span className="flex items-center px-2 text-body">
+                                    Page {invoicesData.pagination.currentPage} of {invoicesData.pagination.totalPages}
+                                </span>
                                 <Button
                                     variant="outline"
                                     size="sm"

@@ -152,6 +152,20 @@ export interface WHTimerStatus {
 
 // ---- Tasks ----
 
+export interface WHTaskListResponse {
+    data: WHTask[];
+    unread_inbox_count: number;
+    // Backend (TaskController::index) always returns the true, unfiltered-by-page-size
+    // count under `pagination.total` — `data` itself is capped at `per_page` (server max 100).
+    // Never treat `data.length` as the true count; read `pagination.total` instead.
+    pagination: {
+        page: number;
+        per_page: number;
+        total: number;
+        last_page: number;
+    };
+}
+
 export const taskService = {
     list: async (params?: {
         status?: string;
@@ -166,7 +180,7 @@ export const taskService = {
         page?: number;
         per_page?: number;
     }) => {
-        const r = await api.get<{ data: WHTask[]; total: number; unread_inbox_count: number }>('/tasks', { params });
+        const r = await api.get<WHTaskListResponse>('/tasks', { params });
         return r.data;
     },
 

@@ -98,13 +98,20 @@ class Auth extends ResourceController
                 throw new \Exception('Failed to create user');
             }
 
-            // Assign super-admin role so RBAC checks pass for the tenant owner
+            // Assign super-admin role so RBAC checks pass for the tenant owner.
+            // Which specific is_super_admin=1 role gets picked doesn't matter functionally —
+            // that flag alone bypasses all right checks regardless of the role's own rights/name.
             $superAdminRole = $db->table('roles')->where('is_super_admin', 1)->get()->getRowArray();
             if ($superAdminRole) {
                 $db->table('user_roles')->insert([
                     'user_id' => $userId,
                     'role_id' => $superAdminRole['id'],
                 ]);
+            } else {
+                // No is_super_admin role exists yet (e.g. seeds never ran). The owner still gets
+                // full access via the users.role === 'owner' fallback in UserModel/RbacFilter, but
+                // log this so the missing RBAC-table seed doesn't go unnoticed.
+                log_message('critical', "[Auth::signup] No role with is_super_admin=1 found — tenant owner (user_id={$userId}, tenant_id={$tenantId}) created without a user_roles super-admin link.");
             }
 
             // Create subscription
@@ -208,6 +215,14 @@ class Auth extends ResourceController
 
         // Embed rights so the frontend usePermission hook has data immediately
         $user['rights'] = $this->userModel->getRights($user['id']);
+
+        // Add is_super_admin flag so the frontend can gate billing queries (mirrors Auth::me()).
+        $db = \Config\Database::connect();
+        $user['is_super_admin'] = (bool) $db->table('user_roles')
+            ->join('roles', 'roles.id = user_roles.role_id')
+            ->where('user_roles.user_id', (int) $user['id'])
+            ->where('roles.is_super_admin', 1)
+            ->countAllResults();
 
         // Generate CUSTOMER JWT token (type='customer')
         $token = JWTHelper::generateToken($user['id'], $user['tenant_id'], $user['email'], $user['name'], 'customer');

@@ -17,6 +17,7 @@ import {
 import { formatCurrency, formatDate } from '../../utils/invoice-calculations';
 import { isInvoiceValid } from '../../utils/invoice-validation';
 import { importInvoices } from '../../utils/invoice-import';
+import { WorkHubDashboardWidget } from './Dashboard/WorkHubDashboardWidget';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -27,9 +28,10 @@ interface DashboardProps {
   onOpenInvoice: (invoice: Invoice) => void;
   onImportInvoices?: (invoices: Invoice[]) => void;
   onUpdateInvoice?: (invoice: Invoice) => void;
+  onNavigate?: (screen: string) => void;
 }
 
-export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoices, onUpdateInvoice }: DashboardProps) {
+export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoices, onUpdateInvoice, onNavigate }: DashboardProps) {
   const { t } = useLanguage();
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -279,6 +281,8 @@ export function Dashboard({ invoices, onNewInvoice, onOpenInvoice, onImportInvoi
           </div>
         </Card>
       </div>
+
+      {onNavigate && <WorkHubDashboardWidget onNavigate={onNavigate} />}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

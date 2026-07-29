@@ -176,7 +176,7 @@ export function ProjectModal({ project, onClose, onSaved }: Props) {
                     <div className="flex justify-end gap-2 pt-1">
                         <Button variant="outline" onClick={onClose}>Cancel</Button>
                         <Button
-                            className="bg-[#f08a3c] hover:bg-[#e07530]"
+                            className="bg-[#c2410c] hover:bg-[#9a3412]"
                             disabled={!canSave || saveMut.isPending}
                             onClick={() => saveMut.mutate()}
                         >

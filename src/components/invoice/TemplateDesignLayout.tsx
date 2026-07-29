@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { InvoiceTemplate, TemplateLayoutElement, CompanyProfile } from '../../types/invoice';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -8,8 +8,10 @@ import { Layout as LayoutIcon, Settings as SettingsIcon, Eye, EyeOff, RotateCcw,
 import { InvoiceQRCode } from './InvoiceQRCode';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { DEFAULT_LAYOUT, DEFAULT_LETTER_LAYOUT } from '../../utils/invoice-templates-defaults';
+import { sanitizeHtml } from '../../utils/sanitize-html';
 import { Switch } from '../ui/switch';
 import { Textarea } from '../ui/textarea';
+import { SplitPaneGroup, SplitPane, SplitPaneHandle, type ImperativePanelHandle } from '../ui/split-pane';
 
 // DEFAULT_LAYOUT moved to src/utils/invoice-templates-defaults.ts
 
@@ -35,6 +37,8 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
     const [draggingId, setDraggingId] = useState<string | null>(null);
     const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
     const [elementStartPos, setElementStartPos] = useState({ x: 0, y: 0 });
+    const leftPanelRef = useRef<ImperativePanelHandle>(null);
+    const rightPanelRef = useRef<ImperativePanelHandle>(null);
     const GRID_SIZE = 10;
     const CANVAS_W = 595;
     const CANVAS_H = 842;
@@ -176,10 +180,10 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
             </div>
 
             {/* Main Workspace */}
-            <div className="flex-1 flex overflow-hidden">
+            <SplitPaneGroup storageKey="template-design-layout" direction="horizontal" className="flex-1 overflow-hidden gap-0">
 
                 {/* Left Sidebar: Element Library */}
-                <div className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-[20px_0_50px_-20px_rgba(0,0,0,0.05)] z-0">
+                <SplitPane ref={leftPanelRef} defaultSize={22} minSize={14} maxSize={35} collapsible collapsedSize={4} className="bg-white border-r border-slate-200 flex flex-col shadow-[20px_0_50px_-20px_rgba(0,0,0,0.05)] z-0 min-w-0">
                     <div className="p-7 border-b border-slate-100 bg-slate-50/50 space-y-2">
                         <h3 className="text-body-lg font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
                             <div className="h-6 w-6 rounded-lg bg-indigo-50 flex items-center justify-center">
@@ -275,10 +279,15 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                             {t('designLayout.resetLayout')}
                         </Button>
                     </div>
-                </div>
+                </SplitPane>
+
+                <SplitPaneHandle
+                    targetPanelRef={leftPanelRef}
+                    label={t('designLayout.elementLibrary') || 'Element Library'}
+                />
 
                 {/* Center: Canvas Area */}
-                <div className="flex-1 overflow-auto bg-slate-100 relative">
+                <SplitPane defaultSize={56} minSize={30} className="overflow-auto bg-slate-100 relative">
                     {/* Top Ruler Helper */}
                     <div className="sticky top-0 h-8 w-full bg-white/90 border-b border-slate-200 backdrop-blur-md z-40 flex items-center px-[calc(50%-297px)] shadow-sm">
                         <div className="w-[595px] h-full relative flex items-end overflow-hidden">
@@ -440,13 +449,13 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
 
                                                     if (el.type === 'header') return (
                                                         <div className="w-full h-full text-center flex flex-col justify-start items-center p-[0.8em] opacity-60">
-                                                            <div className="text-[1em] text-slate-600 italic font-medium" dangerouslySetInnerHTML={{ __html: el.content || headerText }}></div>
+                                                            <div className="text-[1em] text-slate-600 italic font-medium" dangerouslySetInnerHTML={{ __html: sanitizeHtml(el.content || headerText) }}></div>
                                                         </div>
                                                     );
 
                                                     if (el.type === 'footer') return (
                                                         <div className="w-full h-full text-center flex flex-col justify-start items-center p-[0.8em] border-t border-slate-300/50 mt-[0.2em]">
-                                                            <div className="text-[0.9em] text-slate-500 font-medium tracking-wide mt-[0.4em]" dangerouslySetInnerHTML={{ __html: el.content || footerText || 'Company Registration: 12345 • VAT: DE123456789' }}></div>
+                                                            <div className="text-[0.9em] text-slate-500 font-medium tracking-wide mt-[0.4em]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(el.content || footerText || 'Company Registration: 12345 • VAT: DE123456789') }}></div>
                                                         </div>
                                                     );
 
@@ -563,10 +572,15 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                             ))}
                         </div>
                     </div>
-                </div>
+                </SplitPane>
+
+                <SplitPaneHandle
+                    targetPanelRef={rightPanelRef}
+                    label={t('designLayout.inspector') || 'Property Inspector'}
+                />
 
                 {/* Right Sidebar: Property Inspector */}
-                <div className="w-80 bg-white border-l border-slate-200 flex flex-col shadow-[-20px_0_50px_-20px_rgba(0,0,0,0.05)] z-0">
+                <SplitPane ref={rightPanelRef} defaultSize={22} minSize={14} maxSize={35} collapsible collapsedSize={4} className="bg-white border-l border-slate-200 flex flex-col shadow-[-20px_0_50px_-20px_rgba(0,0,0,0.05)] z-0 min-w-0">
                     <div className="p-7 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                         <h3 className="text-body-lg font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
                             <div className="h-6 w-6 rounded-lg bg-indigo-50 flex items-center justify-center">
@@ -761,8 +775,8 @@ export function TemplateDesignLayout({ template, profile, onLayoutChange, onSave
                             </div>
                         )}
                     </div>
-                </div>
-            </div>
+                </SplitPane>
+            </SplitPaneGroup>
         </div>
     );
 }

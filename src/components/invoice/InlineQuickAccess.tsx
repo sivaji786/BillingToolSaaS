@@ -121,12 +121,11 @@ export function InlineQuickAccess({
                 description: t('inlineQuickAccess.toast.codeSent').replace('{email}', email),
             });
         } catch {
-            // Fallback: simulate for dev/demo
-            setSessionToken(`demo_session_${Date.now()}`);
-            setStep('otp');
-            toast.info(t('inlineQuickAccess.toast.demoMode'), {
-                description: t('inlineQuickAccess.toast.demoNoEmail'),
-            });
+            // A genuine backend/network failure must surface as an error the guest can act
+            // on (retry) — silently switching to a fabricated demo session would mask a real
+            // outage as a success, leaving the guest thinking their invoice/account is saved
+            // server-side when nothing was ever sent.
+            toast.error(t('inlineQuickAccess.toast.sendFailed') || 'Something went wrong sending your code. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -169,21 +168,7 @@ export function InlineQuickAccess({
                 }, 900);
             }
         } catch {
-            // Demo fallback: any code works
-            if (sessionToken.startsWith('demo_session_')) {
-                const demoUser: QuickAccessUser = {
-                    id: `demo_${Date.now()}`,
-                    email,
-                    name: sellerName || email.split('@')[0],
-                };
-                setAuthToken(`demo_token_${Date.now()}`);
-                setAuthUser(demoUser);
-                setAuthTenant({ id: 'demo_tenant', name: sellerName });
-                // new user in demo mode — show password step
-                setStep('password');
-            } else {
-                toast.error(t('inlineQuickAccess.toast.invalidCode'));
-            }
+            toast.error(t('inlineQuickAccess.toast.invalidCode'));
         } finally {
             setIsLoading(false);
         }

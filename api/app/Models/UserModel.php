@@ -14,7 +14,7 @@ class UserModel extends BaseModel
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['tenant_id', 'email', 'password', 'password_hash', 'name', 'role', 'last_login', 'email_verified', 'avatar_url', 'sso_only'];
+    protected $allowedFields    = ['tenant_id', 'email', 'password', 'password_hash', 'name', 'role', 'last_login', 'email_verified', 'must_set_password', 'avatar_url', 'sso_only'];
 
     protected bool $allowEmptyInserts = false;
 
@@ -33,8 +33,8 @@ class UserModel extends BaseModel
 
     // Callbacks
     protected $allowCallbacks = true;
-    protected $beforeInsert   = ['hashPassword'];
-    protected $beforeUpdate   = ['hashPassword'];
+    protected $beforeInsert   = ['beforeInsert', 'checkLimits', 'hashPassword'];
+    protected $beforeUpdate   = ['beforeUpdate', 'hashPassword'];
     protected $afterInsert    = [];
     protected $afterUpdate    = [];
     protected $afterFind      = [];
@@ -96,6 +96,34 @@ class UserModel extends BaseModel
     }
 
     /**
+     * Canonical "does this user bypass all right checks" test — the single source of
+     * truth for the super-admin bypass. Everything else that needs this decision
+     * (hasRight(), getRights(), RbacFilter) calls this instead of re-deriving it.
+     *
+     * True if either:
+     *  - the user is linked (via user_roles) to a role with roles.is_super_admin = 1, or
+     *  - the legacy users.role column is 'admin' or 'owner' (covers accounts created
+     *    before the RBAC tables existed, or whose user_roles link is missing/broken).
+     */
+    public function isEffectiveSuperAdmin($userId): bool
+    {
+        $db = \Config\Database::connect();
+
+        $hasSuperAdminRole = $db->table('user_roles')
+            ->join('roles', 'roles.id = user_roles.role_id')
+            ->where('user_roles.user_id', $userId)
+            ->where('roles.is_super_admin', 1)
+            ->countAllResults() > 0;
+
+        if ($hasSuperAdminRole) {
+            return true;
+        }
+
+        $userRow = $db->table('users')->select('role')->where('id', (int) $userId)->get()->getRow();
+        return $userRow && in_array($userRow->role, ['admin', 'owner'], true);
+    }
+
+    /**
      * Check if user has a specific right (permission).
      *
      * @param int|string $userId (ID or 'current' implicitly if we tracked it, but better explicit)
@@ -104,65 +132,40 @@ class UserModel extends BaseModel
      */
     public function hasRight($userId, $rightCode)
     {
+        if ($this->isEffectiveSuperAdmin($userId)) {
+            return true;
+        }
+
+        // Check specific right: users -> user_roles -> roles -> role_rights -> rights where code = $rightCode
         $db = \Config\Database::connect();
-
-        // 1. Check Super Admin Role via user_roles → roles (is_super_admin = 1)
-        $builder = $db->table('user_roles');
-        $builder->join('roles', 'roles.id = user_roles.role_id');
-        $builder->where('user_roles.user_id', $userId);
-        $builder->where('roles.is_super_admin', 1);
-        if ($builder->countAllResults() > 0) {
-            return true;
-        }
-
-        // Fallback: users.role = 'admin' bypasses all right checks
-        $userRow = $db->table('users')->select('role')->where('id', (int) $userId)->get()->getRow();
-        if ($userRow && $userRow->role === 'admin') {
-            return true;
-        }
-        
-        // 2. Check Specific Right
-        // Link: users -> user_roles -> roles -> role_rights -> rights where code = $rightCode
         $builder = $db->table('user_roles');
         $builder->join('roles', 'roles.id = user_roles.role_id');
         $builder->join('role_rights', 'role_rights.role_id = roles.id');
         $builder->join('rights', 'rights.id = role_rights.right_id');
         $builder->where('user_roles.user_id', $userId);
         $builder->where('rights.code', $rightCode);
-        
+
         return $builder->countAllResults() > 0;
     }
 
     public function getRights($userId)
     {
-        $db = \Config\Database::connect();
-
-        // 1. Check Super Admin Role via user_roles table
-        $builder = $db->table('user_roles');
-        $builder->join('roles', 'roles.id = user_roles.role_id');
-        $builder->where('user_roles.user_id', $userId);
-        $builder->where('roles.is_super_admin', 1);
-        if ($builder->countAllResults() > 0) {
+        if ($this->isEffectiveSuperAdmin($userId)) {
             return ['*']; // Wildcard for super admin
         }
 
-        // Fallback: users.role = 'admin' is treated as super admin
-        $userRow = $db->table('users')->select('role')->where('id', (int) $userId)->get()->getRow();
-        if ($userRow && $userRow->role === 'admin') {
-            return ['*'];
-        }
-
-        // 2. Fetch all rights codes
+        // Fetch all rights codes
+        $db = \Config\Database::connect();
         $builder = $db->table('user_roles');
         $builder->select('rights.code');
         $builder->join('roles', 'roles.id = user_roles.role_id');
         $builder->join('role_rights', 'role_rights.role_id = roles.id');
         $builder->join('rights', 'rights.id = role_rights.right_id');
         $builder->where('user_roles.user_id', $userId);
-        
+
         $query = $builder->get();
         $results = $query->getResultArray();
-        
+
         return array_column($results, 'code');
     }
 }

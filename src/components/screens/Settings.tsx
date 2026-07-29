@@ -13,6 +13,7 @@ import { Building2, FileText, Upload, X, Shield, CheckCircle2, Loader2, External
 import { useLanguage } from '../../contexts/LanguageContext';
 import { RichTextEditor } from '../ui/RichTextEditor';
 import { useAuthStore } from '../../stores/authStore';
+import { isEffectiveSuperAdmin } from '../../hooks/usePermission';
 import { Switch } from '../ui/switch';
 import { toast } from 'sonner';
 import { UserList } from './Admin/UserList';
@@ -111,7 +112,7 @@ export function Settings({ profile, onUpdateProfile }: SettingsProps) {
   const [ssoConfigSaving, setSsoConfigSaving] = useState(false);
   const [oidcTesting, setOidcTesting] = useState(false);
 
-  const isAdmin = (user as any)?.role === 'admin' || (user as any)?.role === 'owner';
+  const isAdmin = isEffectiveSuperAdmin(user as any);
   const tenant = useAuthStore((s) => s.tenant);
   const workhubEnabled = Boolean((tenant as any)?.plan_features?.workhub_enabled);
 

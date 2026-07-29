@@ -82,6 +82,11 @@ export function Workspace() {
     const [searchMode, setSearchMode] = useState<'standard' | 'ai'>('standard');
     const [isAiLoading, setIsAiLoading] = useState(false);
 
+    // Server-side "search everywhere" state — a distinct, explicit broadening of scope,
+    // separate from the live client-side narrowing done by typing in the search box.
+    const [isServerSearchActive, setIsServerSearchActive] = useState(false);
+    const [isServerSearchLoading, setIsServerSearchLoading] = useState(false);
+
     const loadItems = async (path: string) => {
         setIsLoading(true);
         try {
@@ -133,6 +138,7 @@ export function Workspace() {
     const handleFolderClick = (folderName: string) => {
         const newPath = currentPath ? `${currentPath}/${folderName}` : folderName;
         setSelectedItems([]);
+        setIsServerSearchActive(false);
         loadItems(newPath);
     };
 
@@ -140,11 +146,13 @@ export function Workspace() {
         const parts = currentPath.split('/').filter(Boolean);
         const newPath = parts.slice(0, index + 1).join('/');
         setSelectedItems([]);
+        setIsServerSearchActive(false);
         loadItems(newPath);
     };
 
     const handleGoHome = () => {
         setSelectedItems([]);
+        setIsServerSearchActive(false);
         loadItems('');
     };
 
@@ -355,6 +363,30 @@ export function Workspace() {
         }
     };
 
+    // Explicit, separately-labeled action: a real server-side search across the whole
+    // workspace (all subfolders, file contents included), not just a refinement of what's
+    // currently on screen. Distinct from the live client-side filter that runs as you type.
+    const handleSearchEverywhere = async () => {
+        if (!searchQuery.trim()) return;
+        setIsServerSearchLoading(true);
+        setIsLoading(true);
+        try {
+            const data = await workspaceService.search(searchQuery, currentPath);
+            setItems(data);
+            setIsServerSearchActive(true);
+        } catch (error) {
+            toast.error('Search failed');
+        } finally {
+            setIsServerSearchLoading(false);
+            setIsLoading(false);
+        }
+    };
+
+    const handleExitServerSearch = () => {
+        setIsServerSearchActive(false);
+        loadItems(currentPath);
+    };
+
     const handleAiSearch = async () => {
         if (!searchQuery.trim()) {
             loadItems(currentPath);
@@ -446,7 +478,7 @@ export function Workspace() {
                 <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-body text-gray-500 overflow-x-auto pb-2">
-                            <Button variant="ghost" size="sm" onClick={handleGoHome} className="h-8 w-8 p-0">
+                            <Button variant="ghost" size="icon" onClick={handleGoHome} aria-label={t('nav.home')}>
                                 <Home className="h-4 w-4" />
                             </Button>
                             {pathParts.length > 0 && <ChevronRight className="h-4 w-4" />}
@@ -513,13 +545,13 @@ export function Workspace() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            if (searchMode === 'ai') {
-                                                handleAiSearch();
-                                            } else {
-                                                workspaceService.search(searchQuery, currentPath).then(data => setItems(data));
-                                            }
+                                        if (e.key === 'Enter' && searchMode === 'ai') {
+                                            handleAiSearch();
                                         }
+                                        // Standard mode: Enter intentionally does nothing extra here —
+                                        // typing already narrows the currently-loaded items live (see
+                                        // filteredItems below). A fresh, unscoped server query is a
+                                        // separate action — the "Search everywhere" button.
                                     }}
                                     className={`pl-10 ${searchMode === 'ai' ? 'border-[rgba(30,58,95,0.20)] focus:border-[#f08a3c] focus:ring-[#f08a3c] bg-[#f0f6ff] dark:bg-[#1e3a5f]/10' : ''}`}
                                 />
@@ -534,7 +566,30 @@ export function Workspace() {
                                     Ask AI
                                 </Button>
                             )}
+                            {searchMode === 'standard' && (
+                                <Button
+                                    variant="outline"
+                                    className="whitespace-nowrap"
+                                    onClick={handleSearchEverywhere}
+                                    disabled={isServerSearchLoading || !searchQuery.trim()}
+                                    title={t('workspace.searchEverywhereHint') || 'Search all subfolders and file contents, not just this folder'}
+                                >
+                                    {isServerSearchLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
+                                    {t('workspace.searchEverywhere') || 'Search everywhere'}
+                                </Button>
+                            )}
                         </div>
+
+                        {isServerSearchActive && (
+                            <div className="flex items-center justify-between gap-2 text-body bg-[#f0f6ff] border border-[rgba(30,58,95,0.15)] rounded-lg px-3 py-2">
+                                <span className="text-[#1e3a5f]">
+                                    {t('workspace.searchEverywhereActive', { query: searchQuery }) || `Showing results for "${searchQuery}" from your entire workspace`}
+                                </span>
+                                <Button variant="ghost" size="sm" onClick={handleExitServerSearch} className="h-7">
+                                    {t('workspace.backToFolder') || 'Back to folder'}
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </Card>
@@ -580,7 +635,7 @@ export function Workspace() {
                                 <TableCell colSpan={6} className="h-64 text-center">
                                     <div className="flex flex-col items-center gap-2">
                                         <Folder className="h-12 w-12 text-gray-200" />
-                                        <p className="text-heading-3 font-medium text-gray-400">This folder is empty</p>
+                                        <p className="text-heading-3 font-medium text-gray-500">This folder is empty</p>
                                         <p className="text-body text-gray-500">Upload files or create a new folder to get started</p>
                                     </div>
                                 </TableCell>
@@ -671,6 +726,14 @@ export function Workspace() {
                         )}
                     </TableBody>
                 </Table>
+                {!isLoading && items.length > 0 && (
+                    <div className="flex items-center justify-between px-6 py-3 border-t text-body text-gray-600">
+                        <span>
+                            {t('workspace.showingCount', { shown: String(filteredItems.length), total: String(items.length) })
+                                || `Showing ${filteredItems.length} of ${items.length}`}
+                        </span>
+                    </div>
+                )}
             </Card>
 
             <Dialog open={isMkdirOpen} onOpenChange={setIsMkdirOpen}>

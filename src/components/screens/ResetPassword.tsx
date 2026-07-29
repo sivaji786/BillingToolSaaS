@@ -61,7 +61,7 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
           <CardContent className="py-8 px-4 sm:px-10">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-body font-medium text-slate-700 mb-1">
+                <label htmlFor="new-password" className="block text-body font-medium text-slate-700 mb-1">
                   New Password
                 </label>
                 <div className="relative">
@@ -69,6 +69,7 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
                     <Lock className="h-5 w-5" />
                   </div>
                   <Input
+                    id="new-password"
                     type={showPassword ? "text" : "password"}
                     required
                     value={password}
@@ -91,7 +92,7 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
               </div>
 
               <div>
-                <label className="block text-body font-medium text-slate-700 mb-1">
+                <label htmlFor="confirm-password" className="block text-body font-medium text-slate-700 mb-1">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -99,6 +100,7 @@ export default function ResetPassword({ token, onComplete }: ResetPasswordProps)
                     <Lock className="h-5 w-5" />
                   </div>
                   <Input
+                    id="confirm-password"
                     type={showConfirmPassword ? "text" : "password"}
                     required
                     value={confirmPassword}

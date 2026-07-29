@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Invoice, InvoiceLine, InvoiceTemplate, CompanyProfile, Buyer } from '../../types/invoice';
 import { buyerService } from '../../services/api';
 import { Button } from '../ui/button';
@@ -41,6 +41,7 @@ import { TaxSummaryPanel } from '../invoice/TaxSummaryPanel';
 import { ValidationPanel } from '../invoice/ValidationPanel';
 import { ExportModal } from '../invoice/ExportModal';
 import { ValidationChip } from '../invoice/ValidationChip';
+import { SplitPaneGroup, SplitPane, SplitPaneHandle, type ImperativePanelHandle } from '../ui/split-pane';
 import { calculateInvoiceTotals } from '../../utils/invoice-calculations';
 import { validateInvoice, isInvoiceValid } from '../../utils/invoice-validation';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -67,6 +68,7 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
+  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
 
   useEffect(() => {
     const fetchBuyers = async () => {
@@ -431,9 +433,9 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
       </Card>
 
       <fieldset disabled={isLocked} className="contents">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <SplitPaneGroup storageKey="invoice-editor-layout" direction="horizontal" className="gap-0 items-start min-h-[600px]">
         {/* Main Editor */}
-        <div className="lg:col-span-2 space-y-6">
+        <SplitPane defaultSize={66} minSize={40} className="space-y-6 pr-6">
           {/* Invoice / Letter Metadata */}
           <Card className="p-6 space-y-4">
             <h2>
@@ -680,10 +682,15 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
               )}
             </Card>
           )}
-        </div>
+        </SplitPane>
+
+        <SplitPaneHandle
+          targetPanelRef={sidebarPanelRef}
+          label={t('editor.summarySidebar') || 'Summary'}
+        />
 
         {/* Right Sidebar */}
-        <div className="space-y-6">
+        <SplitPane ref={sidebarPanelRef} defaultSize={34} minSize={15} collapsible collapsedSize={4} className="space-y-6 pl-6">
           {/* Tax Summary — invoices only */}
           {!isBusinessLetter && <TaxSummaryPanel invoice={calculatedInvoice} />}
 
@@ -718,8 +725,8 @@ export function InvoiceEditor({ invoice: initialInvoice, onSave, onBack, onPrevi
               </div>
             </Card>
           )}
-        </div>
-      </div>
+        </SplitPane>
+      </SplitPaneGroup>
 
       {/* Bottom Actions */}
       <div className="flex justify-end items-center gap-4">

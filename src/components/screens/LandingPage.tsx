@@ -345,7 +345,18 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             backgroundPosition: 'center',
                         }}
                     />
-                    {/* Overlay removed — landing_bg shows at full opacity */}
+                    {/* Targeted readability scrim: a soft radial gradient sits only behind the text column
+                        (not a full-image dim, which would obscure the photo everywhere), and every text
+                        element carries a tight glyph-level text-shadow so contrast holds up regardless of
+                        what part of the background image ends up behind it. */}
+                    <div
+                        className="absolute inset-0 z-[1] pointer-events-none dark:hidden"
+                        style={{ background: 'radial-gradient(ellipse 70% 65% at 50% 42%, rgba(255,255,255,0.68) 0%, rgba(255,255,255,0) 72%)' }}
+                    />
+                    <div
+                        className="absolute inset-0 z-[1] pointer-events-none hidden dark:block"
+                        style={{ background: 'radial-gradient(ellipse 70% 65% at 50% 42%, rgba(2,6,23,0.60) 0%, rgba(2,6,23,0) 72%)' }}
+                    />
 
                     <div className="container px-4 md:px-6 relative z-10">
                         <motion.div
@@ -354,11 +365,11 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                             variants={containerVariants}
                             className="flex flex-col items-center space-y-6 text-center"
                         >
-                            <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-4 py-1.5 text-micro font-medium border-[rgba(30,58,95,0.10)] bg-[#f0f6ff]/50 text-[#1e3a5f] backdrop-blur-sm shadow-sm transition-all hover:bg-[#f0f6ff]/50">
+                            <motion.div variants={itemVariants} className="inline-flex items-center rounded-full border px-4 py-1.5 text-micro font-medium border-[rgba(30,58,95,0.10)] bg-[#f0f6ff]/50 text-[#1e3a5f] backdrop-blur-sm shadow-sm transition-all hover:bg-[#f0f6ff]/50 [text-shadow:_0_1px_2px_rgba(255,255,255,0.9)] dark:[text-shadow:_0_1px_2px_rgba(0,0,0,0.7)]">
                                 <Sparkles className="mr-2 h-3.5 w-3.5 text-[#2a8fbd]" />
                                 <InlineEditableText slug="home" field="hero_badge" lang={language} value={cmsContent?.hero_badge || t('landing.hero.badge')} />
                             </motion.div>
-                            <motion.h1 variants={itemVariants} className="text-5xl font-medium tracking-tight lg:text-6xl xl:text-7xl max-w-4xl text-slate-900 dark:text-white pb-2 leading-[1.1]">
+                            <motion.h1 variants={itemVariants} className="text-5xl font-medium tracking-tight lg:text-6xl xl:text-7xl max-w-4xl text-slate-900 dark:text-white pb-2 leading-[1.1] [text-shadow:_0_2px_10px_rgba(255,255,255,0.85)] dark:[text-shadow:_0_2px_10px_rgba(0,0,0,0.6)]">
                                 <InlineEditableText slug="home" field="hero_title" lang={language} value={cmsContent?.hero_title || t('landing.hero.title')} />{' '}
                                 <br className="hidden sm:inline" />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1e3a5f] to-[#3d5a80]">
@@ -366,7 +377,7 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 </span>{' '}
                                 <InlineEditableText slug="home" field="hero_title_suffix" lang={language} value={cmsContent?.hero_title_suffix || t('landing.hero.titleSuffix')} />
                             </motion.h1>
-                            <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2 dark:text-gray-400">
+                            <motion.p variants={itemVariants} className="mx-auto max-w-[700px] text-gray-500 md:text-heading-2 dark:text-gray-400 [text-shadow:_0_1px_4px_rgba(255,255,255,0.85)] dark:[text-shadow:_0_1px_4px_rgba(0,0,0,0.6)]">
                                 <InlineEditableText slug="home" field="hero_subtitle" lang={language} value={cmsContent?.hero_subtitle || t('landing.hero.subtitle')} multiline />
                             </motion.p>
                             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 min-w-[300px] justify-center pt-4">
@@ -497,16 +508,17 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                                 <motion.div variants={itemVariants} className="space-y-4 text-gray-500 md:text-heading-3 dark:text-gray-400">
                                     <InlineEditableRich slug="home" field="about_text" lang={language} value={cmsContent?.about_text || t('landing.about.desc1')} />
                                     <InlineEditableRich slug="home" field="about_text2" lang={language} value={cmsContent?.about_text2 || t('landing.about.desc2')} />
-                                    <div className="flex gap-4 pt-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-heading-1 font-medium text-[#2a8fbd]">10k+</span>
-                                            <span className="text-body">
+                                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 pt-4">
+                                        {/* Qualitative value props instead of unsourced precise figures (no verified user/invoice counts exist) */}
+                                        <div className="flex items-center gap-2">
+                                            <Check className="h-5 w-5 text-[#2a8fbd] flex-shrink-0" />
+                                            <span className="text-body font-medium text-slate-700 dark:text-slate-300">
                                                 <InlineEditableText slug="home" field="about_stat1_label" lang={language} value={cmsContent?.about_stat1_label || t('landing.about.activeUsers')} />
                                             </span>
                                         </div>
-                                        <div className="border-l pl-4 flex flex-col">
-                                            <span className="text-heading-1 font-medium text-[#2a8fbd]">500k+</span>
-                                            <span className="text-body">
+                                        <div className="flex items-center gap-2">
+                                            <Check className="h-5 w-5 text-[#2a8fbd] flex-shrink-0" />
+                                            <span className="text-body font-medium text-slate-700 dark:text-slate-300">
                                                 <InlineEditableText slug="home" field="about_stat2_label" lang={language} value={cmsContent?.about_stat2_label || t('landing.about.invoicesSent')} />
                                             </span>
                                         </div>
@@ -815,16 +827,19 @@ export function LandingPage({ onLogin, onSignup, onTryNow, onNavigate }: Landing
                         <p className="text-body text-muted-foreground">
                             © 2026 BillingTool Inc. {t('landing.footer.rights')}
                         </p>
-                        {/* Fallback legal links — only shown if CMS has no bottom nav items */}
-                        {bottomNav.length === 0 && (
-                            <div className="flex flex-wrap gap-4">
-                                <button onClick={() => onNavigate('impressum')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.impressum')}</button>
-                                <button onClick={() => onNavigate('privacyPolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.privacy')}</button>
-                                <button onClick={() => onNavigate('termsAndConditions')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.terms')}</button>
-                                <button onClick={() => onNavigate('cookiePolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.cookies')}</button>
-                                <button onClick={() => onNavigate('mockups')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.mockups')}</button>
-                            </div>
-                        )}
+                        <div className="flex flex-wrap gap-4">
+                            {/* Fallback legal links — only shown if CMS has no bottom nav items */}
+                            {bottomNav.length === 0 && (
+                                <>
+                                    <button onClick={() => onNavigate('impressum')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.impressum')}</button>
+                                    <button onClick={() => onNavigate('privacyPolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.privacy')}</button>
+                                    <button onClick={() => onNavigate('termsAndConditions')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.terms')}</button>
+                                    <button onClick={() => onNavigate('cookiePolicy')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.cookies')}</button>
+                                </>
+                            )}
+                            {/* Mockups isn't CMS content — always show it regardless of CMS bottom-nav config */}
+                            <button onClick={() => onNavigate('mockups')} className="text-body text-muted-foreground hover:text-primary transition-colors">{t('legal.footer.mockups')}</button>
+                        </div>
                     </div>
                 </div>
             </footer>

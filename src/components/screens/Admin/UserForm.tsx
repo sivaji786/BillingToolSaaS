@@ -56,19 +56,15 @@ export function UserForm({ userId, onBack, companyTypeId }: UserFormProps) {
 
     const handleSave = async () => {
         try {
-            const payload = { ...formData, roles: selectedRoles };
-
             if (userId) {
-                const updatePayload: any = { ...payload };
+                const updatePayload: any = { ...formData, roles: selectedRoles };
                 if (!updatePayload.password) delete updatePayload.password;
 
                 await userService.update(userId, updatePayload);
                 toast.success(t('admin.users.userUpdated'));
             } else {
-                if (!formData.password) {
-                    toast.error(t('admin.users.passwordRequired'));
-                    return;
-                }
+                const { password, ...createPayload } = formData;
+                const payload = { ...createPayload, roles: selectedRoles };
                 await userService.create(payload);
                 toast.success(t('admin.users.userCreated'));
             }
@@ -124,16 +120,22 @@ export function UserForm({ userId, onBack, companyTypeId }: UserFormProps) {
                             type="email"
                         />
                     </div>
-                    <div className="space-y-2">
-                        <Label>{t('login.password')} {userId && `(${t('admin.users.leaveBlank')})`}</Label>
-                        <Input
-                            value={formData.password}
-                            onChange={e => setFormData({ ...formData, password: e.target.value })}
-                            type="password"
-                            placeholder={t('admin.users.passwordPlaceholder')}
-                        />
-                    </div>
+                    {userId && (
+                        <div className="space-y-2">
+                            <Label>{t('login.password')} ({t('admin.users.leaveBlank')})</Label>
+                            <Input
+                                value={formData.password}
+                                onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                type="password"
+                                placeholder={t('admin.users.passwordPlaceholder')}
+                            />
+                        </div>
+                    )}
                 </div>
+
+                {!userId && (
+                    <p className="text-body-sm text-muted-foreground">{t('admin.users.inviteEmailNotice')}</p>
+                )}
 
                 <div>
                     <Label className="mb-2 block">{t('admin.users.assignRoles')}</Label>

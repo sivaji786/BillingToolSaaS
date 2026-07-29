@@ -233,35 +233,79 @@ function exportAsJSON(invoice: Invoice): Promise<void> {
 }
 
 /**
- * Export invoice line items as CSV
+ * Export invoice as CSV.
+ *
+ * Uses the SAME flat-row schema as `generateImportTemplate()` in
+ * `invoice-import.ts` (one row per line item, invoice/seller/buyer metadata
+ * repeated on every row) so that a CSV exported here can be re-imported via
+ * the bulk-import feature without any transformation. Do not diverge the
+ * header list from `generateImportTemplate` without updating both.
  */
 function exportAsCSV(invoice: Invoice): Promise<void> {
   return new Promise((resolve) => {
-    const headers = ['Line', 'Description', 'Quantity', 'Unit', 'Unit Price', 'Tax %', 'Tax Category', 'Line Total'];
-    const rows = invoice.lines.map((line, idx) => [
-      (idx + 1).toString(),
+    const headers = [
+      'invoiceNumber',
+      'issueDate',
+      'dueDate',
+      'currency',
+      'sellerName',
+      'sellerVatId',
+      'sellerStreet',
+      'sellerCity',
+      'sellerPostalCode',
+      'sellerCountry',
+      'sellerEmail',
+      'buyerName',
+      'buyerVatId',
+      'buyerStreet',
+      'buyerCity',
+      'buyerPostalCode',
+      'buyerCountry',
+      'buyerEmail',
+      'description',
+      'quantity',
+      'unitCode',
+      'unitPrice',
+      'taxPercent',
+      'taxCategory',
+      'note',
+      'paymentTerms',
+      'status',
+    ];
+
+    const rows = invoice.lines.map((line) => [
+      invoice.invoiceNumber,
+      invoice.issueDate,
+      invoice.dueDate || '',
+      invoice.currency,
+      invoice.seller.name,
+      invoice.seller.vatId || '',
+      invoice.seller.address?.street || '',
+      invoice.seller.address?.city || '',
+      invoice.seller.address?.postalCode || '',
+      invoice.seller.address?.country || '',
+      invoice.seller.contactEmail || '',
+      invoice.buyer.name,
+      invoice.buyer.vatId || '',
+      invoice.buyer.address?.street || '',
+      invoice.buyer.address?.city || '',
+      invoice.buyer.address?.postalCode || '',
+      invoice.buyer.address?.country || '',
+      invoice.buyer.contactEmail || '',
       line.description,
       line.quantity.toString(),
       line.unitCode,
       line.unitPrice.toFixed(2),
       line.taxPercent.toString(),
       line.taxCategory,
-      (line.quantity * line.unitPrice).toFixed(2),
+      invoice.note || '',
+      invoice.paymentTerms?.note || '',
+      invoice.status || 'draft',
     ]);
 
     const csv = [
-      `Invoice: ${invoice.invoiceNumber}`,
-      `Issue Date: ${invoice.issueDate}`,
-      `Seller: ${invoice.seller.name}`,
-      `Buyer: ${invoice.buyer.name}`,
-      `Currency: ${invoice.currency}`,
-      '',
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
-      '',
-      `Subtotal,${invoice.lineExtensionAmount.toFixed(2)}`,
-      `Tax Inclusive Total,${invoice.taxInclusiveAmount.toFixed(2)}`,
-      `Amount Due,${invoice.payableAmount.toFixed(2)}`,
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
     ].join('\n');
 
     downloadFile(csv, `${invoice.invoiceNumber}.csv`, 'text/csv');

@@ -62,6 +62,10 @@ export function FinanceTable({ onSelectTask }: Props) {
     });
 
     const tasks: WHTask[] = tasksData?.data ?? [];
+    // True backend count — `per_page: 100` above is the server's hard cap (TaskController::index),
+    // so a tenant with more tasks than that still gets truncated; read the real total from
+    // `pagination.total` rather than assuming `tasks.length` is the whole tenant.
+    const trueTotal = tasksData?.pagination?.total ?? tasks.length;
     const rate = settings?.default_hourly_rate ?? 0;
     const currency = settings?.currency ?? 'EUR';
     const taxPct = settings?.tax_percent ?? 19;
@@ -307,7 +311,12 @@ export function FinanceTable({ onSelectTask }: Props) {
             </Card>
 
             <p className="text-caption text-muted-foreground">
-                Showing all tasks across all statuses. Invoices are auto-generated from dual-signed completion records.
+                {trueTotal > tasks.length ? (
+                    <>Showing {tasks.length} of {trueTotal} tasks — refine filters to see more. </>
+                ) : (
+                    <>Showing all {trueTotal} tasks across all statuses. </>
+                )}
+                Invoices are auto-generated from dual-signed completion records.
                 Rate: {fmt(rate)}/h · VAT: {taxPct}% · Dual-signed done tasks are immediately billable.
             </p>
         </div>

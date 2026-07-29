@@ -56,25 +56,11 @@ class RbacFilter implements FilterInterface
                 return response()->setJSON(['error' => 'Authentication required'])->setStatusCode(401);
             }
 
-            // 2. Skip RBAC for super-admin users.
-            //    Primary check: user_roles → roles.is_super_admin = 1 (RBAC table)
-            //    Fallback: users.role = 'admin' (legacy column, covers newly created tenants
-            //              whose user_roles entry may not exist yet or seeding hasn't run)
-            $db          = \Config\Database::connect();
-            $isSuperAdmin = $db->table('user_roles')
-                ->join('roles', 'roles.id = user_roles.role_id')
-                ->where('user_roles.user_id', (int) $userId)
-                ->where('roles.is_super_admin', 1)
-                ->countAllResults() > 0;
-
-            if (!$isSuperAdmin) {
-                $userRow = $db->table('users')->select('role')->where('id', (int) $userId)->get()->getRow();
-                if ($userRow && $userRow->role === 'admin') {
-                    $isSuperAdmin = true;
-                }
-            }
-
-            if ($isSuperAdmin) {
+            // 2. Skip RBAC for super-admin users — see UserModel::isEffectiveSuperAdmin()
+            //    for the canonical definition (RBAC-table is_super_admin=1, or the legacy
+            //    users.role admin/owner fallback).
+            $userModel = new UserModel();
+            if ($userModel->isEffectiveSuperAdmin((int) $userId)) {
                 return; // Super-admin: unrestricted access
             }
 
@@ -85,7 +71,6 @@ class RbacFilter implements FilterInterface
 
             // 4. Check specific right via user_roles → roles → role_rights → rights
             $requiredRight = $arguments[0];
-            $userModel     = new UserModel();
             if (!$userModel->hasRight($userId, $requiredRight)) {
                 return response()->setJSON(['error' => 'Access denied: Missing right ' . $requiredRight])->setStatusCode(403);
             }

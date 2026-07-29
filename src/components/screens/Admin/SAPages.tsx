@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminCmsService } from '../../../services/adminApi';
 import type { CmsNavItem } from '../../../services/adminApi';
@@ -24,6 +24,7 @@ import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '../../ui/dialog';
 import { ConfirmDeleteDialog } from '../../ui/ConfirmDeleteDialog';
+import { SplitPaneGroup, SplitPane, SplitPaneHandle, type ImperativePanelHandle } from '../../ui/split-pane';
 import { CmsVersionPanel } from '../../cms/CmsVersionPanel';
 import { CmsMediaLibrary } from '../../cms/CmsMediaLibrary';
 import {
@@ -96,6 +97,7 @@ function NavSortableRow({ item, isSelected, onClick }: { item: CmsNavItem; isSel
 
 export function SAPages() {
     const queryClient = useQueryClient();
+    const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
     const [selectedSlug, setSelectedSlug] = useState<string>(() => {
         const saved = sessionStorage.getItem('cms_edit_slug');
         if (saved) { sessionStorage.removeItem('cms_edit_slug'); return saved; }
@@ -438,9 +440,10 @@ export function SAPages() {
 
     return (
         <>
-        <div className="flex h-[calc(100vh-10rem)] gap-6">
+        <SplitPaneGroup storageKey="sa-pages-layout" direction="horizontal" className="h-[calc(100vh-10rem)]">
             {/* Sidebar */}
-            <div className="w-64 flex flex-col gap-2 shrink-0 overflow-y-auto">
+            <SplitPane ref={sidebarPanelRef} defaultSize={22} minSize={14} collapsible collapsedSize={4}>
+            <div className="flex flex-col gap-2 h-full overflow-y-auto pr-4">
 
                 {/* ── Navigation section ── */}
                 <div>
@@ -565,9 +568,13 @@ export function SAPages() {
                     </Button>
                 </div>
             </div>
+            </SplitPane>
+
+            <SplitPaneHandle targetPanelRef={sidebarPanelRef} label="Pages sidebar" />
 
             {/* Editor Area */}
-            <div className="flex-1 overflow-auto pr-2">
+            <SplitPane defaultSize={78} minSize={40}>
+            <div className="h-full overflow-auto px-2">
                 {selectedPage ? (
                     <form onSubmit={handleSave} className="space-y-6 pb-12">
                         {/* Header */}
@@ -712,7 +719,7 @@ export function SAPages() {
                                                 )}
                                             </div>
                                             {scheduledAt && (
-                                                <p className="text-micro text-amber-600">
+                                                <p className="text-micro text-amber-700 font-medium">
                                                     Will go live: {new Date(scheduledAt).toLocaleString()}
                                                 </p>
                                             )}
@@ -1179,13 +1186,14 @@ export function SAPages() {
                     </div>
                 )}
             </div>
+            </SplitPane>
+        </SplitPaneGroup>
 
-            {/* Media Library modal — available globally within SAPages */}
-            <CmsMediaLibrary
-                open={mediaLibraryOpen}
-                onClose={() => setMediaLibraryOpen(false)}
-            />
-        </div>
+        {/* Media Library modal — available globally within SAPages */}
+        <CmsMediaLibrary
+            open={mediaLibraryOpen}
+            onClose={() => setMediaLibraryOpen(false)}
+        />
 
         {/* New Page Modal */}
         <Dialog open={showNewModal} onOpenChange={setShowNewModal}>

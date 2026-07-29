@@ -48,7 +48,7 @@ export function WorkHubMobileNav({ active, onNavigate, openTaskCount = 0, unread
                             )}
                             {badge !== null && (
                                 <span
-                                    className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-[#f08a3c] text-white text-[10px] flex items-center justify-center px-0.5"
+                                    className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-[#c2410c] text-white text-[10px] flex items-center justify-center px-0.5"
                                     aria-label={`${badge} unread items`}
                                 >
                                     {badge > 99 ? '99+' : badge}

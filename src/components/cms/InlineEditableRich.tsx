@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import { Check, X } from 'lucide-react';
 import { useInlineCms } from '../../contexts/InlineCmsContext';
 import { MenuBar, createEditorExtensions } from '../ui/RichTextEditor';
+import { sanitizeHtml } from '../../utils/sanitize-html';
 
 interface Props {
   slug: string;
@@ -77,7 +78,7 @@ export function InlineEditableRich({ slug, field, lang, value, className, onSave
     return (
       <div
         className={className}
-        dangerouslySetInnerHTML={{ __html: displayHtml }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayHtml) }}
       />
     );
   }
@@ -156,7 +157,7 @@ export function InlineEditableRich({ slug, field, lang, value, className, onSave
           Double-click to edit
         </span>
       )}
-      <div dangerouslySetInnerHTML={{ __html: displayHtml }} />
+      <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayHtml) }} />
     </div>
   );
 }

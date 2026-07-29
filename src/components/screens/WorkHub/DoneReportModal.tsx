@@ -374,7 +374,7 @@ export function DoneReportModal({ taskId, onClose, onSubmitted }: Props) {
                         ) : (
                             <Button
                                 type="button"
-                                className="bg-green-600 hover:bg-green-700 gap-1"
+                                className="bg-green-700 hover:bg-green-800 gap-1"
                                 disabled={
                                     submitMut.isPending ||
                                     uploadingCount > 0 ||

@@ -211,7 +211,7 @@ export function NewTaskModal({ onClose, onCreated, defaultProjectId }: Props) {
                         <div className="flex justify-end gap-2 pt-2">
                             <Button variant="outline" onClick={onClose}>Cancel</Button>
                             <Button
-                                className="bg-[#f08a3c] hover:bg-[#e07530] gap-1"
+                                className="bg-[#c2410c] hover:bg-[#9a3412] gap-1"
                                 disabled={!canNext}
                                 onClick={() => setStep(2)}
                             >
@@ -286,7 +286,7 @@ export function NewTaskModal({ onClose, onCreated, defaultProjectId }: Props) {
                                 <ChevronLeft className="w-4 h-4" /> Back
                             </Button>
                             <Button
-                                className="bg-[#f08a3c] hover:bg-[#e07530] gap-1"
+                                className="bg-[#c2410c] hover:bg-[#9a3412] gap-1"
                                 onClick={() => createMut.mutate()}
                                 disabled={createMut.isPending}
                             >

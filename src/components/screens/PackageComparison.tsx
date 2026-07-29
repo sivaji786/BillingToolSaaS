@@ -405,7 +405,7 @@ export function PackageComparison({ onBack, onSignup }: PackageComparisonProps) 
                     {/* Trust section — CMS editable */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12">
                         {[
-                            { icon: <Shield className="text-green-500" />, titleField: 'trust_1_title', descField: 'trust_1_desc', defaultTitle: 'Highly Secure', defaultDesc: 'Enterprise-grade encryption for all your data.' },
+                            { icon: <Shield className="text-green-500" />, titleField: 'trust_1_title', descField: 'trust_1_desc', defaultTitle: 'Highly Secure', defaultDesc: 'Your data is protected with modern security practices.' },
                             { icon: <Globe className="text-blue-500" />, titleField: 'trust_2_title', descField: 'trust_2_desc', defaultTitle: 'Go Global', defaultDesc: 'Multi-currency and multi-language support included.' },
                             { icon: <LayoutTemplate className="text-[#2a8fbd]" />, titleField: 'trust_3_title', descField: 'trust_3_desc', defaultTitle: 'Customizable', defaultDesc: 'Design templates that match your brand identity.' }
                         ].map((item, i) => (

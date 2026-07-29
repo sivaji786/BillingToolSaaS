@@ -11,6 +11,8 @@ import { HoverCard, HoverCardTrigger, HoverCardContent } from '../../ui/hover-ca
 
 interface Props {
     tasks: WHTask[];
+    /** True total task count from the backend (see TaskList's `total` prop for rationale). */
+    total?: number;
     workers?: WHWorker[];
     projects?: WHProject[];
     onSelectTask: (id: number) => void;
@@ -82,7 +84,7 @@ const STATUS_TRANSITIONS: Record<TaskStatus, TaskStatus | null> = {
 };
 
 export function KanbanBoard({
-    tasks, workers = [], projects = [], onSelectTask, onUpdated, readOnly = false, selectedProjectId = null, role = 'manager', isAdmin = false,
+    tasks, total, workers = [], projects = [], onSelectTask, onUpdated, readOnly = false, selectedProjectId = null, role = 'manager', isAdmin = false,
     datePreset = '', onDatePreset, customFrom = '', customTo = '', onCustomRange,
     workerFilter = '', onWorkerFilter, sortValue = DEFAULT_SORT, onSort,
 }: Props) {
@@ -109,6 +111,9 @@ export function KanbanBoard({
 
     // Server already applies worker/date filters + sort; `tasks` arrives pre-filtered and pre-ordered.
     const visibleTasks = tasks;
+    // True backend count — may exceed `visibleTasks.length` when the server-side page cap
+    // was hit; never display `.length` alone as if it were the true count.
+    const trueTotal = total ?? visibleTasks.length;
 
     const tasksByStatus = (status: TaskStatus) => visibleTasks.filter((t) => t.status === status);
 
@@ -171,12 +176,14 @@ export function KanbanBoard({
                     </select>
                 )}
                 <span className="text-caption text-[#3d5a80] ml-auto">
-                    {visibleTasks.length} task{visibleTasks.length !== 1 ? 's' : ''}
+                    {trueTotal > visibleTasks.length
+                        ? `Showing ${visibleTasks.length} of ${trueTotal} tasks — refine filters to see more`
+                        : `${trueTotal} task${trueTotal !== 1 ? 's' : ''}`}
                 </span>
                 {!readOnly && (
                     <button
                         onClick={() => setShowNew(true)}
-                        className="flex items-center gap-1.5 text-body font-medium px-3 py-1.5 rounded-lg bg-[#f08a3c] text-white hover:bg-[#e07530] transition-colors"
+                        className="flex items-center gap-1.5 text-body font-medium px-3 py-1.5 rounded-lg bg-[#c2410c] text-white hover:bg-[#9a3412] transition-colors"
                     >
                         <Plus className="w-4 h-4" />
                         New Task

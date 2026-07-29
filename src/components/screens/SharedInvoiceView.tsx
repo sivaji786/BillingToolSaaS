@@ -201,7 +201,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
           {/* Seller & Buyer */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
             <div>
-              <h3 className="text-micro font-medium text-gray-400 uppercase tracking-wide mb-2">From</h3>
+              <h3 className="text-micro font-medium text-gray-500 uppercase tracking-wide mb-2">From</h3>
               <div className="text-gray-900 font-medium">{invoice.seller.name}</div>
               {invoice.seller.vatId && <div className="text-body text-gray-500">VAT: {invoice.seller.vatId}</div>}
               {invoice.seller.address?.street && (
@@ -216,7 +216,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
               )}
             </div>
             <div>
-              <h3 className="text-micro font-medium text-gray-400 uppercase tracking-wide mb-2">To</h3>
+              <h3 className="text-micro font-medium text-gray-500 uppercase tracking-wide mb-2">To</h3>
               <div className="text-gray-900 font-medium">{invoice.buyer.name}</div>
               {invoice.buyer.vatId && <div className="text-body text-gray-500">VAT: {invoice.buyer.vatId}</div>}
               {invoice.buyer.address?.street && (
@@ -235,7 +235,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
           {/* Line items */}
           {invoice.lines && invoice.lines.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-micro font-medium text-gray-400 uppercase tracking-wide mb-3">Items</h3>
+              <h3 className="text-micro font-medium text-gray-500 uppercase tracking-wide mb-3">Items</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-body">
                   <thead>
@@ -296,7 +296,7 @@ export function SharedInvoiceView({ token }: SharedInvoiceViewProps) {
         </Card>
 
         {/* CTA footer */}
-        <p className="text-center text-body text-gray-400 mt-6">
+        <p className="text-center text-body text-gray-500 mt-6">
           Powered by{' '}
           <a href="/" className="text-[#2a8fbd] hover:underline font-medium">
             BillingTool

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
+import { TableEmptyState } from '../ui/TableEmptyState';
 import { Check, Download, Loader2, ShieldCheck, AlertTriangle, FileText, HardDrive, Zap } from 'lucide-react';
 import { formatCurrency } from '../../utils/invoice-calculations';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -18,7 +19,7 @@ function UsageBar({ label, icon: Icon, used, limit, unit = '' }: {
     const warning = !unlimited && pct >= 80 && pct < 100;
     const exceeded = !unlimited && pct >= 100;
 
-    const barColor = exceeded ? 'bg-red-500' : warning ? 'bg-amber-500' : 'bg-[#f0f6ff]0';
+    const barColor = exceeded ? 'bg-red-500' : warning ? 'bg-amber-500' : 'bg-blue-500';
     const trackColor = exceeded ? 'bg-red-100' : warning ? 'bg-amber-100' : 'bg-gray-100';
 
     return (
@@ -248,7 +249,9 @@ export const Billing = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
-                                {history.map((item) => (
+                                {history.length === 0 ? (
+                                    <TableEmptyState colSpan={5} isLoading={loading} emptyMessage={t('billing.noPaymentHistory')} />
+                                ) : history.map((item) => (
                                     <tr key={item.id} className="hover:bg-muted/50 transition-colors">
                                         <td className="px-4 py-3 font-medium">{item.id}</td>
                                         <td className="px-4 py-3">{item.date}</td>

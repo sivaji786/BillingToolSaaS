@@ -750,6 +750,11 @@ export function QuickAccessInvoice({ onLogin, onComplete, onNavigate }: QuickAcc
                                                                                 }`}
                                                                         >
                                                                             {line.description || <span className="text-gray-400 italic">{t('quickAccess.description')}</span>}
+                                                                            {/^Demo Service Item \d+$/.test(line.description) && (
+                                                                                <span className="ml-2 text-micro font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 shrink-0">
+                                                                                    {t('quickAccess.sampleItem') || 'Sample — replace me'}
+                                                                                </span>
+                                                                            )}
                                                                             <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-40 text-[#2a8fbd]" />
                                                                         </div>
                                                                     )}

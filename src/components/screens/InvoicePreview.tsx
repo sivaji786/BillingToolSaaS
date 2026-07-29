@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Invoice, InvoiceTemplate, InvoiceLine, CompanyProfile, Buyer } from '../../types/invoice';
 import { buyerService, companyProfileService } from '../../services/api';
+import { sanitizeHtml } from '../../utils/sanitize-html';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -344,7 +345,7 @@ export function InvoicePreview({
         className={`${className} inline-block ${!disabled ? 'cursor-pointer hover:bg-[#f0f6ff] dark:hover:bg-[#1e3a5f] rounded px-1 group relative' : ''} transition-colors`}
         title={!disabled ? "Double-click to edit" : ""}
       >
-        {(value !== undefined && value !== null && value !== '') ? value : <span className="text-gray-400 italic">{placeholder}</span>}
+        {(value !== undefined && value !== null && value !== '') ? value : <span className="text-gray-500 italic">{placeholder}</span>}
         {!disabled && <Edit2 className="h-3 w-3 absolute right-1 top-1 opacity-0 group-hover:opacity-50 text-[#2a8fbd]" />}
       </span>
     );
@@ -542,7 +543,7 @@ export function InvoicePreview({
               <div className="text-body text-gray-700 leading-relaxed min-h-[240px]">
                 {isInteractive
                   ? renderEditableField('body', editedInvoice.body || '', (val) => handleFieldChange('body', val), 'w-full min-h-[240px] text-body leading-relaxed', true, 'Letter content...', false)
-                  : <div dangerouslySetInnerHTML={{ __html: editedInvoice.body || '<p style="color:#9ca3af;font-style:italic">No content</p>' }} />
+                  : <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(editedInvoice.body || '<p style="color:#6b7280;font-style:italic">No content</p>') }} />
                 }
               </div>
               {/* Closing */}
@@ -573,7 +574,7 @@ export function InvoicePreview({
                     const lineTotal = line.quantity * line.unitPrice;
                     return (
                       <tr key={line.id} className="border-t hover:bg-gray-50 transition-colors">
-                        <td className="p-3 text-center text-gray-400 font-mono text-micro">{index + 1}</td>
+                        <td className="p-3 text-center text-gray-500 font-mono text-micro">{index + 1}</td>
                         <td className="p-3">
                           {renderEditableField(`line.${line.id}.description`, line.description || '', (val) => handleLineChange(line.id, 'description', val), 'min-h-[32px]', true, undefined, !isInteractive)}
                         </td>
@@ -676,8 +677,8 @@ export function InvoicePreview({
       if (el.type === 'header') {
         if (!effectiveHeaderHtml) return null;
         return (
-          <div key={key} className="w-full text-center text-micro text-gray-400 mb-6 italic">
-            <div dangerouslySetInnerHTML={{ __html: effectiveHeaderHtml }} />
+          <div key={key} className="w-full text-center text-micro text-gray-500 mb-6 italic">
+            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(effectiveHeaderHtml) }} />
           </div>
         );
       }
@@ -686,7 +687,7 @@ export function InvoicePreview({
         if (!effectiveNote) return null;
         return (
           <div key={key} className="pt-2 border-t border-gray-100 mt-6 w-full">
-            <p className="text-micro text-gray-400 uppercase tracking-wide mb-2">{t('previewModal.notes')}</p>
+            <p className="text-micro text-gray-500 uppercase tracking-wide mb-2">{t('previewModal.notes')}</p>
             <div className="text-body text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl italic">
               {renderEditableField('note', effectiveNote, (val) => handleFieldChange('note', val), 'italic', true, undefined, !isInteractive)}
             </div>
@@ -760,8 +761,8 @@ export function InvoicePreview({
       if (el.type === 'footer') {
         if (!effectiveFooterHtml) return null;
         return (
-          <div key={key} className="mt-12 pt-8 border-t border-gray-100 text-body text-gray-400 text-center leading-relaxed w-full">
-            <div dangerouslySetInnerHTML={{ __html: effectiveFooterHtml }} />
+          <div key={key} className="mt-12 pt-8 border-t border-gray-100 text-body text-gray-500 text-center leading-relaxed w-full">
+            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(effectiveFooterHtml) }} />
           </div>
         );
       }
@@ -770,7 +771,7 @@ export function InvoicePreview({
         return (
           <div key={key} className="mt-12 flex justify-end w-full">
             <div className="text-center w-48 border-t-2 border-[rgba(30,58,95,0.10)] pt-2">
-              <p className="text-body text-gray-400 uppercase font-medium tracking-widest mb-1">Signature</p>
+              <p className="text-body text-gray-500 uppercase font-medium tracking-widest mb-1">Signature</p>
               <div className="h-8"></div>
             </div>
           </div>
@@ -781,7 +782,7 @@ export function InvoicePreview({
         const buyer = editedInvoice.buyer;
         return (
           <div key={key} className="w-full mb-8">
-            <p className="text-body text-gray-400 uppercase font-medium tracking-widest mb-3 border-b border-gray-100 pb-2">{t('editor.buyer')}</p>
+            <p className="text-body text-gray-500 uppercase font-medium tracking-widest mb-3 border-b border-gray-100 pb-2">{t('editor.buyer')}</p>
             <div className="text-body space-y-1">
               <div className="text-heading-3 font-medium text-gray-900">
                 {renderEditableField('buyer.name', buyer.name || '', (val) => handleFieldChange('buyer.name', val), 'font-medium', false, t('previewModal.placeholderBuyerName'), !isInteractive)}
@@ -853,13 +854,13 @@ export function InvoicePreview({
             </div>
             {hasDatesEl && (
               <div className="text-right space-y-1 shrink-0 ml-6">
-                <p className="text-body text-gray-400 uppercase font-medium tracking-widest">{t('previewModal.issueDate')}</p>
+                <p className="text-body text-gray-500 uppercase font-medium tracking-widest">{t('previewModal.issueDate')}</p>
                 <div className="text-heading-2 text-gray-900">
                   {renderEditableField('issueDate', editedInvoice.issueDate || '', (val) => handleFieldChange('issueDate', val), '', false, t('previewModal.placeholderIssueDate'), !isInteractive)}
                 </div>
                 {editedInvoice.dueDate && (
                   <>
-                    <p className="text-body text-gray-400 uppercase font-medium tracking-widest mt-3">{t('previewModal.dueDate')}</p>
+                    <p className="text-body text-gray-500 uppercase font-medium tracking-widest mt-3">{t('previewModal.dueDate')}</p>
                     <div className="text-heading-2 text-gray-900">
                       {renderEditableField('dueDate', editedInvoice.dueDate || '', (val) => handleFieldChange('dueDate', val), '', false, t('previewModal.placeholderDueDate'), !isInteractive)}
                     </div>
@@ -883,7 +884,7 @@ export function InvoicePreview({
             {hasBuyerEl && (
               <div>
                 <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-                  <p className="text-body text-gray-400 uppercase font-medium tracking-widest">{isBusinessLetter ? (t('editor.recipient') || 'TO') : t('previewModal.billTo')}</p>
+                  <p className="text-body text-gray-500 uppercase font-medium tracking-widest">{isBusinessLetter ? (t('editor.recipient') || 'TO') : t('previewModal.billTo')}</p>
                   {isInteractive && buyers.length > 0 && (
                     <Select onValueChange={handleBuyerSelect}>
                       <SelectTrigger className="h-7 w-auto border-none bg-[#f0f6ff] text-[#1e3a5f] text-body font-medium uppercase py-0 px-2 gap-1.5 focus:ring-0 shadow-none hover:bg-[#f0f6ff] transition-colors">
@@ -918,7 +919,7 @@ export function InvoicePreview({
             )}
             {hasSellerEl && (
               <div>
-                <p className="text-body text-gray-400 uppercase font-medium tracking-widest mb-3">{t('previewModal.from')}</p>
+                <p className="text-body text-gray-500 uppercase font-medium tracking-widest mb-3">{t('previewModal.from')}</p>
                 <div className="space-y-1 text-body">
                   <div className="font-medium text-heading-2 text-gray-900">
                     {renderEditableField('seller.name2', effectiveSeller.name || '', (val) => handleFieldChange('seller.name', val), '', false, t('previewModal.placeholderSellerName'), !isInteractive)}

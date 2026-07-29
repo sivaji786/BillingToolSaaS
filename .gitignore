@@ -12,7 +12,10 @@ test-results/
 .playwright-mcp/
 
 # Local notes / temp files
-translations.md
+backup/translations.md
+backup/backlog_gaps.md
+backup/ui_backlog.md
+backup/changes.md
 
 # Production
 dist/
@@ -46,8 +49,8 @@ api/writable/ratelimits/*
 !api/writable/**/index.html
 api/public/uploads/tickets/*
 api/*.log
-scratch/
-tobe_delete/
+backup/scratch/
+backup/tobe_delete/
 .~lock.*
 mn-hospitality-bundle/
 

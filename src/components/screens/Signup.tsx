@@ -37,7 +37,7 @@ const DEFAULT_CMS = {
     feature_0:  'EN 16931 compliant invoices in seconds',
     feature_1:  'Real-time revenue & payment tracking',
     feature_2:  'Multi-user with role-based access control',
-    feature_3:  'Bank-grade security & full audit trail',
+    feature_3:  'Security and privacy built into every feature',
     badge_text: 'No credit card required',
 };
 

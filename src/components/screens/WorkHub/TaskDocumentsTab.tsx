@@ -10,13 +10,13 @@ import { toast } from 'sonner';
 
 type DocType = 'work-order' | 'completion-certificate' | 'timesheet' | 'project-status' | 'invoice' | 'consent-form';
 
-const DOCUMENT_TYPES: { type: DocType; label: string; requiresCompletion: boolean; requiresRight: string }[] = [
-    { type: 'work-order',              label: 'Work Order',              requiresCompletion: false, requiresRight: 'workhub.task.view' },
-    { type: 'completion-certificate',  label: 'Completion Certificate',  requiresCompletion: true,  requiresRight: 'workhub.reports.view' },
-    { type: 'timesheet',               label: 'Timesheet',               requiresCompletion: false, requiresRight: 'workhub.reports.view' },
-    { type: 'project-status',          label: 'Project Status',          requiresCompletion: false, requiresRight: 'workhub.reports.view' },
-    { type: 'invoice',                 label: 'Invoice',                 requiresCompletion: true,  requiresRight: 'workhub.billing.view' },
-    { type: 'consent-form',            label: 'Consent Form (GDPR)',     requiresCompletion: true,  requiresRight: 'workhub.reports.export' },
+const DOCUMENT_TYPES: { type: DocType; label: string; requiresCompletion: boolean }[] = [
+    { type: 'work-order',              label: 'Work Order',              requiresCompletion: false },
+    { type: 'completion-certificate',  label: 'Completion Certificate',  requiresCompletion: true },
+    { type: 'timesheet',               label: 'Timesheet',               requiresCompletion: false },
+    { type: 'project-status',          label: 'Project Status',          requiresCompletion: false },
+    { type: 'invoice',                 label: 'Invoice',                 requiresCompletion: true },
+    { type: 'consent-form',            label: 'Consent Form (GDPR)',     requiresCompletion: true },
 ];
 
 interface GeneratedDoc {
@@ -83,7 +83,7 @@ export function TaskDocumentsTab({ taskId, isDualSigned = false, hasCompletionRe
         <div className="space-y-2 p-1">
             <p className="text-caption text-muted-foreground mb-3">
                 <Lock className="inline h-3 w-3 mr-1" />
-                Requires <code>workhub.reports.export</code> right. Completion docs available after dual-signature.
+                Availability depends on your role and task completion. Completion docs unlock after dual-signature.
             </p>
 
             {DOCUMENT_TYPES.map((docDef) => {

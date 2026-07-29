@@ -679,12 +679,14 @@ export function SAsettings() {
                             <Button
                                 variant="outline"
                                 onClick={async () => {
-                                    const promise = adminSettingsService.migrateDatabase();
-                                    toast.promise(promise, {
-                                        loading: 'Running migrations...',
-                                        success: (data) => data.message,
-                                        error: 'Migration failed'
-                                    });
+                                    if (confirm('Are you sure you want to run pending migrations? This will change the database schema and cannot be undone automatically.')) {
+                                        const promise = adminSettingsService.migrateDatabase();
+                                        toast.promise(promise, {
+                                            loading: 'Running migrations...',
+                                            success: (data) => data.message,
+                                            error: 'Migration failed'
+                                        });
+                                    }
                                 }}
                             >
                                 Run Pending Migrations

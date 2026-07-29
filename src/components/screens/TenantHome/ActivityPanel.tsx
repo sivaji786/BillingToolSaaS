@@ -5,7 +5,7 @@ const INK       = '#1e3a5f';
 const INK_SOFT  = '#3d5a80';
 const PAPER     = '#ffffff';
 const ACCENT    = '#f08a3c';
-const GOLD      = '#2a8fbd';
+const GOLD      = '#1e6f96'; // >=4.5:1 on white (was #2a8fbd, ~3.64:1 — fails WCAG normal-text threshold)
 const RULE_SOFT = 'rgba(30,58,95,0.10)';
 const RULE_FAINT = 'rgba(30,58,95,0.065)';
 
@@ -76,7 +76,7 @@ export function ActivityPanel({ entries, onSeeAll }: ActivityPanelProps) {
               {' '}{ACTION_LABELS[entry.action] || entry.action}{' '}
               <strong style={{ color: INK, fontWeight: 500 }}>{entry.invoiceNumber}</strong>
             </div>
-            <div style={{ fontSize: 11, color: 'rgba(61,90,128,0.55)', flexShrink: 0 }}>
+            <div style={{ fontSize: 11, color: 'rgba(61,90,128,0.9)', flexShrink: 0 }}>
               {relativeTime(entry.timestamp)}
             </div>
           </div>

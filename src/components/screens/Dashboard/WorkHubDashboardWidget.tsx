@@ -17,9 +17,25 @@ export function WorkHubDashboardWidget({ onNavigate, onDismiss }: WorkHubDashboa
     const tenant = useAuthStore((s) => (s as any).tenant);
     const workhubEnabled = (tenant as any)?.plan_features?.workhub_enabled;
 
-    const { data: tasksData, isLoading } = useQuery({
+    // Per-status counts come from the backend's own `total` (each call scoped to one
+    // status, per_page=1 so it's cheap) rather than counting a single fetched page of
+    // tasks client-side — that page defaults to 20 rows, which would silently under-count
+    // any tenant with more open/in-progress/problem tasks than fit on one page.
+    const { data: counts, isLoading } = useQuery({
         queryKey: ['wh-tasks-summary'],
-        queryFn: () => taskService.list(),
+        queryFn: async () => {
+            const [open, inProgress, done, problem, all] = await Promise.all([
+                taskService.list({ status: 'open', per_page: 1 }),
+                taskService.list({ status: 'in_progress', per_page: 1 }),
+                taskService.list({ status: 'done', per_page: 1 }),
+                taskService.list({ status: 'problem', per_page: 1 }),
+                taskService.list({ per_page: 1 }),
+            ]);
+            return {
+                open: open.pagination.total, inProgress: inProgress.pagination.total,
+                done: done.pagination.total, problem: problem.pagination.total, all: all.pagination.total,
+            };
+        },
         refetchInterval: 60 * 1000,
         enabled: !!workhubEnabled,
         staleTime: 30 * 1000,
@@ -27,25 +43,17 @@ export function WorkHubDashboardWidget({ onNavigate, onDismiss }: WorkHubDashboa
 
     if (!workhubEnabled) return null;
 
-    const tasks = tasksData?.data ?? [];
-    const openCount       = tasks.filter((t) => t.status === 'open').length;
-    const inProgressCount = tasks.filter((t) => t.status === 'in_progress').length;
-    const doneThisWeek    = tasks.filter((t) => {
-        if (t.status !== 'done') return false;
-        const updatedAt = new Date((t as any).updated_at ?? '');
-        const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        return updatedAt >= oneWeekAgo;
-    }).length;
-    const problemCount = tasks.filter((t) => t.status === 'problem').length;
-
-    const totalDone  = tasks.filter((t) => t.status === 'done').length;
-    const totalTasks = tasks.length;
-    const completionRate = totalTasks > 0 ? Math.round((totalDone / totalTasks) * 100) : 0;
+    const openCount       = counts?.open ?? 0;
+    const inProgressCount = counts?.inProgress ?? 0;
+    const doneCount       = counts?.done ?? 0;
+    const problemCount    = counts?.problem ?? 0;
+    const totalTasks      = counts?.all ?? 0;
+    const completionRate  = totalTasks > 0 ? Math.round((doneCount / totalTasks) * 100) : 0;
 
     const stats = [
         { label: 'Open',        val: openCount,       icon: Clock,        colour: 'text-blue-600'   },
         { label: 'In Progress', val: inProgressCount, icon: Timer,        colour: 'text-amber-600'  },
-        { label: 'Done (7d)',   val: doneThisWeek,    icon: CheckCircle2, colour: 'text-green-600'  },
+        { label: 'Done',        val: doneCount,       icon: CheckCircle2, colour: 'text-green-600'  },
         { label: 'Problems',    val: problemCount,    icon: AlertTriangle, colour: 'text-red-600'   },
     ];
 

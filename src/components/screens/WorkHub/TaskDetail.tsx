@@ -8,6 +8,7 @@ import { taskService, timerService, WHTask, WHWorker, TaskStatus } from '../../.
 import { useWorkhubTimerStore } from '../../../stores/workhubTimerStore';
 import { DoneReportModal } from './DoneReportModal';
 import { TaskEditModal } from './TaskEditModal';
+import { TranslationToggle } from './TranslationToggle';
 import { TaskDocumentsTab } from './TaskDocumentsTab';
 import { BatchLocationPanel } from './BatchLocationPanel';
 import { toast } from 'sonner';
@@ -137,9 +138,9 @@ export function TaskDetail({ taskId, onBack, onUpdated, workers = [], canEdit = 
                     </CardContent>
                 </Card>
 
-                {/* Description */}
+                {/* Description — translatable on demand, since field teams may not share a language */}
                 {task.description ? (
-                    <div className="text-body text-foreground whitespace-pre-wrap">{task.description}</div>
+                    <TranslationToggle text={task.description} />
                 ) : (
                     <p className="text-caption text-muted-foreground italic">No description provided</p>
                 )}
@@ -198,7 +199,7 @@ export function TaskDetail({ taskId, onBack, onUpdated, workers = [], canEdit = 
                     {canStartTimer && !isTimerRunningForThis && (
                         <Button
                             size="sm"
-                            className="bg-green-600 hover:bg-green-700 gap-1"
+                            className="bg-green-700 hover:bg-green-800 gap-1"
                             onClick={() => startMut.mutate()}
                             disabled={startMut.isPending || (timer.state !== 'idle' && timer.activeTaskId !== taskId)}
                         >

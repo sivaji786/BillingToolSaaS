@@ -135,6 +135,15 @@ export const fr = {
         },
     },
 
+    // Espace de travail / gestionnaire de fichiers
+    workspace: {
+        showingCount: 'Affichage de {shown} sur {total}',
+        searchEverywhere: 'Rechercher partout',
+        searchEverywhereHint: 'Recherche dans tous les sous-dossiers et le contenu des fichiers, pas seulement ce dossier',
+        searchEverywhereActive: 'Résultats pour "{query}" dans tout votre espace de travail',
+        backToFolder: 'Retour au dossier',
+    },
+
     // Dashboard
     dashboard: {
         title: 'Tableau de bord des factures',
@@ -194,6 +203,7 @@ export const fr = {
         saveInvoice: 'Enregistrer la facture',
         preview: 'Aperçu',
         export: 'Exporter',
+        summarySidebar: 'Résumé',
         invoiceDetails: 'Détails de la facture',
         invoiceNumber: 'Numéro de facture',
         issueDate: "Date d'émission",
@@ -545,8 +555,19 @@ export const fr = {
         exported: 'Exporté',
         validated: 'Validé',
         sent: 'Envoyé',
+        deleted: 'Supprimé',
+        signed: 'Signé',
         noActivity: 'Aucune activité',
         noActivityDesc: "L'activité apparaîtra ici au fur et à mesure que vous travaillez sur les factures",
+        totalEvents: 'Total des événements',
+        signedInvoices: 'Factures signées',
+        exportsStat: 'Exports',
+        validationsStat: 'Validations',
+        showingCount: '{shown} sur {total} affichés',
+        loadMore: 'Charger plus',
+        by: 'par {user}',
+        complianceTitle: "Conformité EN 16931 & piste d'audit",
+        complianceText: "Toutes les opérations de facturation sont enregistrées avec horodatage et informations utilisateur pour maintenir une piste d'audit complète. Les signatures numériques sont suivies séparément avec leur date de signature pour la non-répudiation. Ce journal aide à assurer la conformité aux exigences EN 16931 et garantit la transparence à des fins comptables et juridiques.",
     },
 
     // Settings
@@ -871,9 +892,9 @@ export const fr = {
             editUser: "Modifier l'utilisateur",
             newUser: 'Nouvel utilisateur',
             assignRoles: 'Attribuer des rôles',
-            passwordRequired: 'Le mot de passe est obligatoire pour les nouveaux utilisateurs',
             passwordPlaceholder: 'Ne peut pas être vide pour les nouveaux utilisateurs',
             leaveBlank: 'Laisser vide pour ne pas modifier',
+            inviteEmailNotice: "Le nouvel utilisateur recevra un e-mail avec son nom d'utilisateur et un lien sécurisé pour définir son mot de passe.",
             userCreated: 'Utilisateur créé',
             userUpdated: 'Utilisateur mis à jour',
             failedToLoad: "Échec du chargement des données utilisateur",
@@ -890,6 +911,7 @@ export const fr = {
             permissions: 'Autorisations',
             noRoles: 'Aucun rôle trouvé',
             noPermissions: 'Aucune autorisation disponible',
+            template: 'Modèle',
             filterByType: "Filtrer par type",
             allTypes: "Tous les types d'entreprise",
             deleteConfirm: 'Êtes-vous sûr de vouloir supprimer ce rôle ?',
@@ -950,6 +972,7 @@ export const fr = {
         amount: 'Montant',
         status: 'Statut',
         action: 'Action',
+        noPaymentHistory: "Aucun paiement pour l'instant — votre historique de paiement apparaîtra ici une fois un cycle de facturation terminé.",
         failedToLoad: 'Échec du chargement des données de facturation',
         failedToLoadDetails: 'Échec du chargement des détails de facturation',
         upgradeSuccess: 'Forfait mis à niveau avec succès',
@@ -1088,8 +1111,8 @@ export const fr = {
         about: {
             desc1: 'BillingTool est une plateforme de facturation moderne conçue pour simplifier le processus de facturation pour les entreprises de toutes tailles. Nous croyons que la facturation professionnelle doit être accessible, sécurisée et conforme aux dernières normes.',
             desc2: 'Notre plateforme est construite en mettant l\'accent sur l\'expérience utilisateur et la conformité réglementaire, garantissant que vos factures ne sont pas seulement belles, mais répondent également à toutes les exigences légales telles que EN 16931 et UBL 2.1.',
-            activeUsers: 'Utilisateurs actifs',
-            invoicesSent: 'Factures envoyées',
+            activeUsers: 'Adopté par des entreprises en croissance',
+            invoicesSent: 'Factures livrées de manière fiable',
         },
         trustedBy: 'Approuvé par des entreprises innovantes dans le monde entier',
         testimonials: {
@@ -1097,7 +1120,7 @@ export const fr = {
             subtitle: 'Découvrez ce que nos clients disent de BillingTool.',
             t1: { name: 'Sivaji Kanchibhotla', role: 'PDG chez We4service', text: 'BillingTool a complètement transformé notre façon de gérer les e-factures. La prise en charge d\'UBL 2.1 a fait économiser des heures de travail par semaine à notre équipe comptable !' },
             t2: { name: 'Bernhard Hnida', role: 'PDG chez Medianet', text: 'Des designs de factures superbes et une facilité d\'utilisation incroyable. J\'ai testé 5 outils différents et c\'est de loin le plus intuitif.' },
-            t3: { name: 'Klaus Garms', role: 'PDG chez Voicepoint', text: 'Les fonctionnalités multi-tenant et la conformité instantanée aux normes européennes ont rendu notre transition totalement indolore.' }
+            t3: { name: 'Un client satisfait', role: 'Exemple illustratif', text: 'Les fonctionnalités multi-tenant et la conformité instantanée aux normes européennes ont rendu notre transition totalement indolore.' }
         },
         howItWorks: {
             tag: 'Comment ça fonctionne',
@@ -1210,6 +1233,7 @@ export const fr = {
     // Quick Access
     quickAccess: {
         title: 'Accès rapide',
+        sampleItem: 'Exemple — à remplacer',
         autoSavedLocally: 'Votre brouillon est automatiquement enregistré localement',
         guide: 'Guide',
         newInvoice: 'Nouvelle facture',
@@ -1309,6 +1333,7 @@ export const fr = {
             codeSent: 'Nous avons envoyé un code à 6 chiffres à {email}',
             demoMode: 'Mode démo – utiliser le code 123456',
             demoNoEmail: '(Aucun vrai e-mail envoyé – le backend est encore en cours de configuration)',
+            sendFailed: "Une erreur s'est produite lors de l'envoi de votre code. Veuillez réessayer.",
             enterFullCode: 'Veuillez saisir le code de vérification complet',
             invalidCode: 'Code de vérification invalide. Veuillez réessayer.',
             passwordTooShort: 'Le mot de passe doit comporter au moins 8 caractères',
@@ -1321,6 +1346,8 @@ export const fr = {
 
     // Quick Access Tour
     quickAccessTour: {
+        pause: "Mettre en pause l'avancement automatique",
+        resume: "Reprendre l'avancement automatique",
         sellerTitle: 'Bienvenue dans l\'accès rapide !',
         sellerDesc: 'Double-cliquez sur n\'importe quel champ pour commencer à modifier. Essayez ici pour définir le nom de votre entreprise.',
         invoiceNumTitle: 'Détails de la facture',
@@ -1393,8 +1420,10 @@ export const fr = {
         title: 'Maquettes',
         subtitle: "Parcourez des écrans d'exemple et des prototypes partagés par notre équipe.",
         empty: 'Aucune maquette disponible pour le moment.',
+        emptyFolder: 'Ce dossier est vide.',
         error: 'Impossible de charger les maquettes pour le moment. Veuillez réessayer plus tard.',
-        selectPrompt: 'Sélectionnez une maquette dans la liste pour la prévisualiser.',
+        opensNewTab: 'Ouvre un nouvel onglet',
+        disclaimer: "Il s'agit de livrables de démonstration/maquettes destinés à la prévisualisation client. Ils peuvent contenir des données fictives ou d'espace réservé et ne reflètent pas des données de production réelles.",
     },
 
     // Privacy Policy

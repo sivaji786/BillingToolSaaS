@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronRight, ChevronLeft, MousePointer2 } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, MousePointer2, Pause, Play } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -71,6 +71,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
     const [isVisible, setIsVisible] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+    const [isPaused, setIsPaused] = useState(false);
     const autoAdvanceTimer = useRef<NodeJS.Timeout | null>(null);
     const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
 
@@ -140,7 +141,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
     }, [currentStep]);
 
     useEffect(() => {
-        if (!isVisible) return;
+        if (!isVisible || isPaused) return;
 
         if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
 
@@ -151,7 +152,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
         return () => {
             if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
         };
-    }, [currentStep, isVisible, handleNext]);
+    }, [currentStep, isVisible, isPaused, handleNext]);
 
     const handlePrev = () => {
         if (currentStep > 0) {
@@ -292,10 +293,8 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                             ...getTooltipStyle(targetRect, step.placement)
                         }}
                         transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-                        onMouseEnter={() => {
-                            // Pause auto advance when hovering tooltip
-                            if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
-                        }}
+                        onMouseEnter={() => setIsPaused(true)}
+                        onMouseLeave={() => setIsPaused(false)}
                     >
                         <div className="flex justify-between items-start mb-3">
                             <h3 className="font-medium text-gray-800 flex items-center gap-2">
@@ -314,7 +313,7 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                         </p>
 
                         <div className="flex items-center justify-between">
-                            <div className="flex gap-1.5">
+                            <div className="flex items-center gap-1.5">
                                 {steps.map((_, i) => (
                                     <div
                                         key={i}
@@ -323,6 +322,16 @@ export function QuickAccessTour({ forceShow, onClose }: { forceShow?: boolean; o
                                 ))}
                             </div>
                             <div className="flex gap-1.5">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsPaused(p => !p)}
+                                    aria-label={isPaused ? (t('quickAccessTour.resume') || 'Resume auto-advance') : (t('quickAccessTour.pause') || 'Pause auto-advance')}
+                                    title={isPaused ? (t('quickAccessTour.resume') || 'Resume auto-advance') : (t('quickAccessTour.pause') || 'Pause auto-advance')}
+                                    className="h-8 w-8 p-0"
+                                >
+                                    {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                                </Button>
                                 <Button
                                     variant="ghost"
                                     size="sm"

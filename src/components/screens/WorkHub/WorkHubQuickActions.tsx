@@ -14,7 +14,7 @@ interface Props {
 /**
  * WH-074 — WorkHub quick-action launcher registered in the FloatingDock.
  *
- * Registers at order=4 (above Ticket widget at 1, AI at 2, EditMode at 3).
+ * Registers at order=5 (after Ticket widget at 1, AI at 2, EditMode at 3, Help bot at 4).
  * Shows only when WorkHub is enabled on the tenant plan.
  */
 export function WorkHubQuickActions({ onNavigate, onNewTask }: Props) {
@@ -62,7 +62,7 @@ export function WorkHubQuickActions({ onNavigate, onNewTask }: Props) {
         document.body,
     ) : null;
 
-    const ping = useDockSlot('workhub-quick-actions', 4, () => {
+    const ping = useDockSlot('workhub-quick-actions', 5, () => {
         if (!workhubEnabled) return null;
 
         return (

@@ -281,10 +281,42 @@ export const letterService = {
     },
 };
 
+export interface AuditLogParams {
+    limit?: number;
+    offset?: number;
+    module?: string;
+    action?: string;
+    search?: string;
+}
+
+export interface AuditLogCounts {
+    signed: number;
+    exported: number;
+    validated: number;
+}
+
+export interface AuditLogPage {
+    data: AuditLogEntry[];
+    total: number;
+    counts: AuditLogCounts;
+    limit: number;
+    offset: number;
+}
+
 export const auditLogService = {
-    getAll: async () => {
-        const response = await api.get<AuditLogEntry[]>('/audit-logs');
-        return response.data;
+    // Raw response uses the DB's snake_case `invoice_number`; mapped here to the
+    // frontend's `invoiceNumber` so every consumer (ActivityLog, TenantHome's
+    // ActivityPanel) gets a populated value instead of silently rendering blank.
+    getAll: async (params: AuditLogParams = {}): Promise<AuditLogPage> => {
+        const response = await api.get<{ data: any[]; total: number; counts?: AuditLogCounts; limit: number; offset: number }>('/audit-logs', { params });
+        const { data, total, counts, limit, offset } = response.data;
+        return {
+            data: data.map((entry) => ({ ...entry, invoiceNumber: entry.invoice_number ?? entry.invoiceNumber })),
+            total,
+            counts: counts ?? { signed: 0, exported: 0, validated: 0 },
+            limit,
+            offset,
+        };
     },
 };
 

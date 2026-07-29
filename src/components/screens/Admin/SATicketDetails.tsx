@@ -164,7 +164,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                 {/* Status + Priority row */}
                                 <div className="flex items-center gap-2">
                                     <div className="flex flex-col flex-1 px-2">
-                                        <span className="text-body font-medium text-slate-400 uppercase tracking-widest mb-1">{t('tickets.status.label')}</span>
+                                        <span className="text-body font-medium text-slate-500 uppercase tracking-widest mb-1">{t('tickets.status.label')}</span>
                                         <Select value={status} onValueChange={setStatus}>
                                             <SelectTrigger className="w-full h-9 border-none bg-transparent hover:bg-slate-50 transition-colors font-medium p-0 shadow-none focus:ring-0">
                                                 <SelectValue />
@@ -179,7 +179,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                     </div>
                                     <div className="w-px h-10 bg-slate-100" />
                                     <div className="flex flex-col flex-1 px-2">
-                                        <span className="text-body font-medium text-slate-400 uppercase tracking-widest mb-1">{t('tickets.priority.label')}</span>
+                                        <span className="text-body font-medium text-slate-500 uppercase tracking-widest mb-1">{t('tickets.priority.label')}</span>
                                         <Select value={priority} onValueChange={setPriority}>
                                             <SelectTrigger className="w-full h-9 border-none bg-transparent hover:bg-slate-50 transition-colors font-medium p-0 shadow-none focus:ring-0">
                                                 <SelectValue />
@@ -196,7 +196,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
 
                                 {/* Assignee row — S4-08 */}
                                 <div className="border-t border-slate-100 pt-3 px-2">
-                                    <span className="text-body font-medium text-slate-400 uppercase tracking-widest mb-1 block">{t('tickets.assignee')}</span>
+                                    <span className="text-body font-medium text-slate-500 uppercase tracking-widest mb-1 block">{t('tickets.assignee')}</span>
                                     <Select value={assignedTo} onValueChange={setAssignedTo}>
                                         <SelectTrigger className="w-full h-9 border border-slate-200 rounded-xl bg-white text-body font-medium focus:ring-2 focus:ring-primary/20">
                                             <UserCheck className="h-3.5 w-3.5 mr-2 text-slate-400" />
@@ -223,7 +223,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                             value={comment}
                                             onChange={(e) => setComment(e.target.value)}
                                         />
-                                        <div className="absolute bottom-2 right-3 flex items-center gap-1 text-caption text-slate-400 font-medium bg-slate-50 px-1.5 py-0.5 rounded border">
+                                        <div className="absolute bottom-2 right-3 flex items-center gap-1 text-caption text-slate-600 font-medium bg-slate-50 px-1.5 py-0.5 rounded border">
                                             <kbd className="opacity-70">Ctrl + Enter</kbd> to save
                                         </div>
                                     </div>
@@ -247,7 +247,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         {/* Description */}
                         <div className="space-y-8">
                             <div className="space-y-4">
-                                <h3 className="text-micro font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <h3 className="text-micro font-medium text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                     <MessageSquare className="h-3.5 w-3.5" />
                                     {t('tickets.columns.description')}
                                 </h3>
@@ -258,7 +258,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
 
                             {/* S4-09: SLA / Response time card */}
                             <div className="space-y-4">
-                                <h3 className="text-micro font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <h3 className="text-micro font-medium text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                     <Clock className="h-3.5 w-3.5" />
                                     {t('tickets.sla.title')}
                                 </h3>
@@ -270,7 +270,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                         <span className="text-body font-medium text-slate-800">
                                             {ticket.first_response_at && ticket.created_at
                                                 ? slaHours(ticket.created_at, ticket.first_response_at)
-                                                : <span className="italic text-slate-400">{t('tickets.sla.pending')}</span>}
+                                                : <span className="italic text-slate-600">{t('tickets.sla.pending')}</span>}
                                         </span>
                                     </div>
                                     <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
@@ -280,7 +280,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                         <span className="text-body font-medium text-slate-800">
                                             {ticket.resolved_at && ticket.created_at
                                                 ? slaHours(ticket.created_at, ticket.resolved_at)
-                                                : <span className="italic text-slate-400">{t('tickets.sla.notResolved')}</span>}
+                                                : <span className="italic text-slate-600">{t('tickets.sla.notResolved')}</span>}
                                         </span>
                                     </div>
                                 </div>
@@ -290,7 +290,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                         {/* Metadata */}
                         <div className="space-y-8 md:border-l md:pl-12 border-slate-100">
                             <div className="space-y-4">
-                                <h3 className="text-micro font-medium text-slate-400 uppercase tracking-widest flex items-center gap-2 opacity-70">
+                                <h3 className="text-micro font-medium text-slate-500 uppercase tracking-widest flex items-center gap-2 opacity-70">
                                     <User className="h-3.5 w-3.5" />
                                     {t('tickets.reporterInfo')}
                                 </h3>
@@ -308,7 +308,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                         <span className="text-body font-medium">
                                             {ticket.assigned_to
                                                 ? (adminStaff.find(a => a.id === ticket.assigned_to)?.name ?? t('tickets.notAvailable'))
-                                                : <span className="italic text-slate-400">{t('tickets.unassigned')}</span>}
+                                                : <span className="italic text-slate-600">{t('tickets.unassigned')}</span>}
                                         </span>
                                     </div>
                                 </div>
@@ -435,7 +435,7 @@ export function SATicketDetails({ ticketId, onNavigate }: SATicketDetailsProps) 
                                                         {item.old_value && (
                                                             <div className="flex items-center gap-3 text-slate-600 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
                                                                 <span className="text-micro font-medium uppercase tracking-widest opacity-60">{t('tickets.tracking.changedFrom')}:</span>
-                                                                <span className="line-through text-slate-400">{item.old_value}</span>
+                                                                <span className="line-through text-slate-600">{item.old_value}</span>
                                                                 <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                                                                 <span className="font-medium text-slate-900">{item.new_value}</span>
                                                             </div>

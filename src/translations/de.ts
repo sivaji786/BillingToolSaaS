@@ -135,6 +135,15 @@ export const de = {
         },
     },
 
+    // Workspace / Dateiverwaltung
+    workspace: {
+        showingCount: 'Zeige {shown} von {total}',
+        searchEverywhere: 'Überall suchen',
+        searchEverywhereHint: 'Durchsucht alle Unterordner und Dateiinhalte, nicht nur diesen Ordner',
+        searchEverywhereActive: 'Ergebnisse für "{query}" aus Ihrem gesamten Workspace',
+        backToFolder: 'Zurück zum Ordner',
+    },
+
     // Dashboard
     dashboard: {
         title: 'Rechnungs-Dashboard',
@@ -194,6 +203,7 @@ export const de = {
         saveInvoice: 'Rechnung speichern',
         preview: 'Vorschau',
         export: 'Exportieren',
+        summarySidebar: 'Zusammenfassung',
         invoiceDetails: 'Rechnungsdetails',
         invoiceNumber: 'Rechnungsnummer',
         issueDate: 'Ausstellungsdatum',
@@ -545,8 +555,19 @@ export const de = {
         exported: 'Exportiert',
         validated: 'Validiert',
         sent: 'Gesendet',
+        deleted: 'Gelöscht',
+        signed: 'Signiert',
         noActivity: 'Noch keine Aktivitäten',
         noActivityDesc: 'Aktivitäten erscheinen hier, während Sie mit Rechnungen arbeiten',
+        totalEvents: 'Ereignisse gesamt',
+        signedInvoices: 'Signierte Rechnungen',
+        exportsStat: 'Exporte',
+        validationsStat: 'Validierungen',
+        showingCount: '{shown} von {total} angezeigt',
+        loadMore: 'Mehr laden',
+        by: 'von {user}',
+        complianceTitle: 'EN-16931-Konformität & Audit-Trail',
+        complianceText: 'Alle Rechnungsvorgänge werden mit Zeitstempel und Benutzerinformationen protokolliert, um einen vollständigen Audit-Trail zu gewährleisten. Digitale Signaturen werden separat mit Signaturdatum zur Nichtabstreitbarkeit erfasst. Dieses Protokoll unterstützt die Einhaltung der EN-16931-Anforderungen und sorgt für Transparenz zu Buchhaltungs- und Rechtszwecken.',
     },
 
     // Settings
@@ -871,9 +892,9 @@ export const de = {
             editUser: 'Benutzer bearbeiten',
             newUser: 'Neuer Benutzer',
             assignRoles: 'Rollen zuweisen',
-            passwordRequired: 'Passwort ist für neue Benutzer erforderlich',
             passwordPlaceholder: 'Darf für neue Benutzer nicht leer sein',
             leaveBlank: 'Leer lassen, um unverändert zu lassen',
+            inviteEmailNotice: 'Der neue Benutzer erhält eine E-Mail mit seinem Benutzernamen und einem sicheren Link, um sein Passwort festzulegen.',
             userCreated: 'Benutzer erstellt',
             userUpdated: 'Benutzer aktualisiert',
             failedToLoad: 'Benutzerdaten konnten nicht geladen werden',
@@ -890,6 +911,7 @@ export const de = {
             permissions: 'Berechtigungen',
             noRoles: 'Keine Rollen gefunden',
             noPermissions: 'Keine Berechtigungen verfügbar',
+            template: 'Vorlage',
             filterByType: 'Nach Typ filtern',
             allTypes: 'Alle Unternehmenstypen',
             deleteConfirm: 'Sind Sie sicher, dass Sie diese Rolle löschen möchten?',
@@ -950,6 +972,7 @@ export const de = {
         amount: 'Betrag',
         status: 'Status',
         action: 'Aktion',
+        noPaymentHistory: 'Noch keine Zahlungen — Ihr Zahlungsverlauf erscheint hier, sobald ein Abrechnungszeitraum abgeschlossen ist.',
         failedToLoad: 'Abrechnungsdaten konnten nicht geladen werden',
         failedToLoadDetails: 'Abrechnungsdetails konnten nicht geladen werden',
         upgradeSuccess: 'Plan erfolgreich aktualisiert',
@@ -1088,8 +1111,8 @@ export const de = {
         about: {
             desc1: 'BillingTool ist eine moderne Plattform für die Rechnungsstellung, die den Abrechnungsprozess für Unternehmen jeder Größe vereinfacht. Wir glauben, dass professionelle Rechnungsstellung zugänglich, sicher und konform mit den neuesten Standards sein sollte.',
             desc2: 'Unsere Plattform wurde mit Fokus auf Benutzererfahrung und Einhaltung gesetzlicher Vorschriften entwickelt, um sicherzustellen, dass Ihre Rechnungen nicht nur gut aussehen, sondern auch alle gesetzlichen Anforderungen wie EN 16931 und UBL 2.1 erfüllen.',
-            activeUsers: 'Aktive Nutzer',
-            invoicesSent: 'Versendete Rechnungen',
+            activeUsers: 'Vertraut von wachsenden Unternehmen',
+            invoicesSent: 'Zuverlässig zugestellte Rechnungen',
         },
         trustedBy: 'Vertraut von innovativen Unternehmen weltweit',
         testimonials: {
@@ -1097,7 +1120,7 @@ export const de = {
             subtitle: 'Sehen Sie, was unsere Kunden über BillingTool sagen.',
             t1: { name: 'Sivaji Kanchibhotla', role: 'CEO bei We4service', text: 'BillingTool hat den Umgang mit E-Rechnungen komplett verändert. Die sofortige UBL 2.1 Unterstützung spart unserem Buchhaltungsteam jede Woche Stunden!' },
             t2: { name: 'Bernhard Hnida', role: 'CEO bei Medianet', text: 'Atemberaubende Rechnungsdesigns und eine wahnsinnig einfache Bedienung. Ich habe 5 verschiedene Tools getestet und dieses ist bei weitem das intuitivste.' },
-            t3: { name: 'Klaus Garms', role: 'CEO bei Voicepoint', text: 'Die mandantenfähigen Funktionen und die sofortige Einhaltung europäischer Standards machten unseren Wechsel völlig schmerzlos.' }
+            t3: { name: 'Ein zufriedener Kunde', role: 'Illustratives Beispiel', text: 'Die mandantenfähigen Funktionen und die sofortige Einhaltung europäischer Standards machten unseren Wechsel völlig schmerzlos.' }
         },
         howItWorks: {
             tag: 'So funktioniert es',
@@ -1210,6 +1233,7 @@ export const de = {
     // Quick Access
     quickAccess: {
         title: 'Schnellzugriff',
+        sampleItem: 'Beispiel — bitte ersetzen',
         autoSavedLocally: 'Ihr Entwurf wird automatisch lokal gespeichert',
         guide: 'Leitfaden',
         newInvoice: 'Neue Rechnung',
@@ -1309,6 +1333,7 @@ export const de = {
             codeSent: 'Wir haben einen 6-stelligen Code an {email} gesendet',
             demoMode: 'Demo-Modus – Code 123456 verwenden',
             demoNoEmail: '(Keine echte E-Mail gesendet – Backend-Endpunkt noch nicht aktiv)',
+            sendFailed: 'Beim Senden Ihres Codes ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
             enterFullCode: 'Bitte geben Sie den vollständigen Verifizierungscode ein',
             invalidCode: 'Ungültiger Verifizierungscode. Bitte versuchen Sie es erneut.',
             passwordTooShort: 'Das Passwort muss mindestens 8 Zeichen lang sein',
@@ -1321,6 +1346,8 @@ export const de = {
 
     // Quick Access Tour
     quickAccessTour: {
+        pause: 'Automatischen Ablauf pausieren',
+        resume: 'Automatischen Ablauf fortsetzen',
         sellerTitle: 'Willkommen beim Schnellzugriff!',
         sellerDesc: 'Doppelklicken Sie auf ein beliebiges Feld, um mit der Bearbeitung zu beginnen. Versuchen Sie es hier, um Ihren Firmennamen festzulegen.',
         invoiceNumTitle: 'Rechnungsdetails',
@@ -1393,8 +1420,10 @@ export const de = {
         title: 'Mockups',
         subtitle: 'Durchsuchen Sie Beispielbildschirme und Prototypen, die unser Team freigegeben hat.',
         empty: 'Noch keine Mockups verfügbar.',
+        emptyFolder: 'Dieser Ordner ist leer.',
         error: 'Mockups konnten derzeit nicht geladen werden. Bitte versuchen Sie es später erneut.',
-        selectPrompt: 'Wählen Sie ein Mockup aus der Liste aus, um es in der Vorschau anzuzeigen.',
+        opensNewTab: 'Öffnet in einem neuen Tab',
+        disclaimer: 'Dies sind Demo-/Mockup-Vorschauen für Kunden. Sie können fiktive oder Platzhalterdaten enthalten und spiegeln keine echten Produktivdaten wider.',
     },
 
     // Privacy Policy

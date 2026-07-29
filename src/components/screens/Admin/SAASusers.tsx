@@ -207,7 +207,7 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
                                                         {((user as any).saml_provider || 'saml').toUpperCase()}
                                                     </Badge>
                                                     {(user as any).sso_only && (
-                                                        <span className="text-[10px] text-amber-600 font-medium">SSO Only</span>
+                                                        <span className="text-caption text-amber-700 font-medium">SSO Only</span>
                                                     )}
                                                 </button>
                                             ) : (
@@ -263,27 +263,32 @@ export function SAASusers({ onNavigate }: SAASusersProps) {
             </Card>
 
             {/* Pagination */}
-            {usersData && usersData.pagination.totalPages > 1 && (
-                <div className="flex justify-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setFilters({ ...filters, page: (filters.page || 1) - 1 })}
-                        disabled={(filters.page || 1) <= 1}
-                    >
-                        Previous
-                    </Button>
-                    <span className="flex items-center px-4 text-body">
-                        Page {filters.page || 1} of {usersData.pagination.totalPages}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setFilters({ ...filters, page: (filters.page || 1) + 1 })}
-                        disabled={(filters.page || 1) >= usersData.pagination.totalPages}
-                    >
-                        Next
-                    </Button>
+            {usersData && usersData.pagination.totalItems > 0 && (
+                <div className="flex items-center justify-between">
+                    <p className="text-body text-muted-foreground">
+                        Showing {((usersData.pagination.currentPage - 1) * usersData.pagination.itemsPerPage) + 1} to {Math.min(usersData.pagination.currentPage * usersData.pagination.itemsPerPage, usersData.pagination.totalItems)} of {usersData.pagination.totalItems} entries
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFilters({ ...filters, page: (filters.page || 1) - 1 })}
+                            disabled={(filters.page || 1) <= 1}
+                        >
+                            Previous
+                        </Button>
+                        <span className="flex items-center px-4 text-body">
+                            Page {filters.page || 1} of {usersData.pagination.totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFilters({ ...filters, page: (filters.page || 1) + 1 })}
+                            disabled={(filters.page || 1) >= usersData.pagination.totalPages}
+                        >
+                            Next
+                        </Button>
+                    </div>
                 </div>
             )}
         {/* SSO-018: SAML config summary modal */}

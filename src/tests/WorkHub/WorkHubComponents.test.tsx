@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // ---- Mocks ----
 vi.mock('../../services/workhubApi', () => ({
-    taskService:       { list: vi.fn().mockResolvedValue({ data: [], total: 0, unread_inbox_count: 0 }), batchLocation: vi.fn().mockResolvedValue([]) },
+    taskService:       { list: vi.fn().mockResolvedValue({ data: [], unread_inbox_count: 0, pagination: { page: 1, per_page: 20, total: 0, last_page: 1 } }), batchLocation: vi.fn().mockResolvedValue([]) },
     inboxService:      { list: vi.fn().mockResolvedValue({ data: [] }), markRead: vi.fn(), unreadCount: vi.fn().mockResolvedValue(3) },
     printService:      { generate: vi.fn().mockResolvedValue(new Blob(['%PDF'], { type: 'application/pdf' })), listForTask: vi.fn().mockResolvedValue([]) },
     completionService: { submit: vi.fn(), customerSignature: vi.fn(), get: vi.fn() },
@@ -197,14 +197,22 @@ describe('BatchLocationPanel', () => {
 describe('WorkHubDashboardWidget', () => {
     it('renders stat tiles', async () => {
         const { taskService } = await import('../../services/workhubApi');
-        vi.mocked(taskService.list).mockResolvedValue({
-            data: [
-                { id: 1, tenant_id: 1, title: 'T1', status: 'open',        priority: 'low', created_at: '', updated_at: '' },
-                { id: 2, tenant_id: 1, title: 'T2', status: 'in_progress', priority: 'medium', created_at: '', updated_at: '' },
-                { id: 3, tenant_id: 1, title: 'T3', status: 'done',        priority: 'low', created_at: '', updated_at: '' },
-            ],
-            total: 3,
-            unread_inbox_count: 0,
+        const allTasks: import('../../services/workhubApi').WHTask[] = [
+            { id: 1, tenant_id: 1, title: 'T1', status: 'open',        priority: 'low',    created_at: '', updated_at: '' },
+            { id: 2, tenant_id: 1, title: 'T2', status: 'in_progress', priority: 'medium', created_at: '', updated_at: '' },
+            { id: 3, tenant_id: 1, title: 'T3', status: 'done',        priority: 'low',    created_at: '', updated_at: '' },
+        ];
+        // The widget issues one per_page:1 request per status (open/in_progress/done/problem)
+        // plus one unfiltered request, reading the true count from each response's
+        // `pagination.total` rather than counting a single fetched array client-side —
+        // so the mock must filter by the requested status like the real backend does.
+        vi.mocked(taskService.list).mockImplementation(async (params?: { status?: string }) => {
+            const filtered = params?.status ? allTasks.filter((t) => t.status === params.status) : allTasks;
+            return {
+                data: filtered,
+                unread_inbox_count: 0,
+                pagination: { page: 1, per_page: 1, total: filtered.length, last_page: 1 },
+            };
         });
 
         const { WorkHubDashboardWidget } = await import('../../components/screens/Dashboard/WorkHubDashboardWidget');

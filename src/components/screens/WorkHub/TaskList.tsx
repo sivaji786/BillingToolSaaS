@@ -50,6 +50,12 @@ const PRIORITY_LABEL: Record<string, string> = {
 
 interface Props {
     tasks: WHTask[];
+    /**
+     * True total task count from the backend (e.g. `pagination.total`), which may exceed
+     * `tasks.length` when the server-side page cap was hit. Never derive the displayed
+     * count from `tasks.length`/`filtered.length` alone — that's the truncation-lies bug.
+     */
+    total?: number;
     statusFilter: string;
     onStatusFilter: (s: string) => void;
     datePreset?: string;
@@ -68,7 +74,7 @@ interface Props {
 }
 
 export function TaskList({
-    tasks, statusFilter, onStatusFilter,
+    tasks, total, statusFilter, onStatusFilter,
     datePreset = '', onDatePreset,
     customFrom = '', customTo = '', onCustomRange,
     workers = [], workerFilter = '', onWorkerFilter,
@@ -84,8 +90,11 @@ export function TaskList({
         (t.location_tag ?? '').toLowerCase().includes(search.toLowerCase())
     );
 
+    // True backend count — falls back to the loaded array's length only when the caller
+    // didn't supply one (e.g. existing unit tests rendering TaskList standalone).
+    const trueTotal = total ?? tasks.length;
+
     const hasFilters = !!(statusFilter || datePreset || workerFilter);
-    const activeStatus = STATUS_OPTS.find(o => o.value === statusFilter);
     const activeDateLabel = DATE_OPTS.find(o => o.value === (datePreset || '__all__'))?.label ?? 'All time';
     const activeSortLabel = SORT_OPTS.find(o => o.value === sortValue)?.label ?? SORT_OPTS[0].label;
     const activeWorkerName = workers.find(w => Number(w.id) === Number(workerFilter))?.name;
@@ -120,7 +129,7 @@ export function TaskList({
                     {!readOnly && (
                         <Button
                             size="sm"
-                            className="bg-[#f08a3c] hover:bg-[#e07530] gap-1 shrink-0"
+                            className="bg-[#c2410c] hover:bg-[#9a3412] gap-1 shrink-0"
                             onClick={() => setShowNew(true)}
                         >
                             <Plus className="w-4 h-4" />
@@ -258,8 +267,13 @@ export function TaskList({
                 {/* Result count + clear */}
                 <div className="flex items-center justify-between">
                     <span className="text-caption text-muted-foreground">
-                        {filtered.length} task{filtered.length !== 1 ? 's' : ''}
-                        {search && ` matching "${search}"`}
+                        {search ? (
+                            <>{filtered.length} matching "{search}" (of {tasks.length} loaded)</>
+                        ) : trueTotal > tasks.length ? (
+                            <>Showing {tasks.length} of {trueTotal} tasks — refine filters to see more</>
+                        ) : (
+                            <>{trueTotal} task{trueTotal !== 1 ? 's' : ''}</>
+                        )}
                     </span>
                     {hasFilters && (
                         <button

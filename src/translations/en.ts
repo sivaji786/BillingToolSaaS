@@ -135,6 +135,15 @@ export const en = {
         },
     },
 
+    // Workspace / file manager screen
+    workspace: {
+        showingCount: 'Showing {shown} of {total}',
+        searchEverywhere: 'Search everywhere',
+        searchEverywhereHint: 'Search all subfolders and file contents, not just this folder',
+        searchEverywhereActive: 'Showing results for "{query}" from your entire workspace',
+        backToFolder: 'Back to folder',
+    },
+
     // Dashboard
     dashboard: {
         title: 'Invoice Dashboard',
@@ -194,6 +203,7 @@ export const en = {
         saveInvoice: 'Save Invoice',
         preview: 'Preview',
         export: 'Export',
+        summarySidebar: 'Summary',
         invoiceDetails: 'Invoice Details',
         invoiceNumber: 'Invoice Number',
         issueDate: 'Issue Date',
@@ -545,8 +555,19 @@ export const en = {
         exported: 'Exported',
         validated: 'Validated',
         sent: 'Sent',
+        deleted: 'Deleted',
+        signed: 'Signed',
         noActivity: 'No activity yet',
         noActivityDesc: 'Activity will appear here as you work with invoices',
+        totalEvents: 'Total Events',
+        signedInvoices: 'Signed Invoices',
+        exportsStat: 'Exports',
+        validationsStat: 'Validations',
+        showingCount: 'Showing {shown} of {total}',
+        loadMore: 'Load more',
+        by: 'by {user}',
+        complianceTitle: 'EN 16931 Compliance & Audit Trail',
+        complianceText: 'All invoice operations are logged with timestamps and user information to maintain a complete audit trail. Digital signatures are tracked separately with signature dates for non-repudiation. This log helps ensure compliance with EN 16931 requirements and provides transparency for accounting and legal purposes.',
     },
 
     // Settings
@@ -871,9 +892,9 @@ export const en = {
             editUser: 'Edit User',
             newUser: 'New User',
             assignRoles: 'Assign Roles',
-            passwordRequired: 'Password is required for new users',
             passwordPlaceholder: 'Cannot be empty for new users',
             leaveBlank: 'Leave blank to keep unchanged',
+            inviteEmailNotice: 'The new user will receive an email with their username and a secure link to set their password.',
             userCreated: 'User created',
             userUpdated: 'User updated',
             failedToLoad: 'Failed to load user data',
@@ -890,6 +911,7 @@ export const en = {
             permissions: 'Permissions',
             noRoles: 'No roles found',
             noPermissions: 'No permissions available',
+            template: 'Template',
             filterByType: 'Filter by Type',
             allTypes: 'All Company Types',
             deleteConfirm: 'Are you sure you want to delete this role?',
@@ -950,6 +972,7 @@ export const en = {
         amount: 'Amount',
         status: 'Status',
         action: 'Action',
+        noPaymentHistory: 'No payments yet — your payment history will appear here once a billing cycle completes.',
         failedToLoad: 'Failed to load billing data',
         failedToLoadDetails: 'Failed to load billing details',
         upgradeSuccess: 'Plan upgraded successfully',
@@ -1090,8 +1113,8 @@ export const en = {
         about: {
             desc1: 'BillingTool is a modern invoicing platform designed to simplify the billing process for businesses of all sizes. We believe that professional invoicing should be accessible, secure, and compliant with the latest standards.',
             desc2: 'Our platform is built with a focus on user experience and regulatory compliance, ensuring that your invoices not only look great but also meet all legal requirements like EN 16931 and UBL 2.1.',
-            activeUsers: 'Active Users',
-            invoicesSent: 'Invoices Sent',
+            activeUsers: 'Trusted by growing businesses',
+            invoicesSent: 'Invoices delivered reliably',
         },
         trustedBy: 'Trusted by innovative companies worldwide',
         testimonials: {
@@ -1099,7 +1122,7 @@ export const en = {
             subtitle: 'See what our customers have to say about BillingTool.',
             t1: { name: 'Sivaji kanchibhotla', role: 'CEO at We4service', text: 'BillingTool completely changed how we handle e-invoices. The UBL 2.1 support out-of-the-box saved our accounting team hours every week!' },
             t2: { name: 'Bernhard Hnida', role: 'CEO at Medianet', text: 'Stunning invoice designs and ridiculous ease of use. I tested 5 different tools and this is by far the most intuitive.' },
-            t3: { name: 'Klaus Garms', role: 'CEO at Voicepoint', text: 'The multi-tenant features and immediate compliance with European standards made our switch totally painless.' }
+            t3: { name: 'A Happy Customer', role: 'Illustrative example', text: 'The multi-tenant features and immediate compliance with European standards made our switch totally painless.' }
         },
         howItWorks: {
             tag: 'How it Works',
@@ -1212,6 +1235,7 @@ export const en = {
     // Quick Access
     quickAccess: {
         title: 'Quick Access',
+        sampleItem: 'Sample — replace me',
         autoSavedLocally: 'Your draft is auto-saved locally',
         guide: 'Guide',
         newInvoice: 'New Invoice',
@@ -1311,6 +1335,7 @@ export const en = {
             codeSent: 'We sent a 6-digit code to {email}',
             demoMode: 'Demo mode – use code 123456',
             demoNoEmail: '(No real email sent – backend endpoint not yet live)',
+            sendFailed: 'Something went wrong sending your code. Please try again.',
             enterFullCode: 'Please enter the full verification code',
             invalidCode: 'Invalid verification code. Please try again.',
             passwordTooShort: 'Password must be at least 8 characters',
@@ -1323,6 +1348,8 @@ export const en = {
 
     // Quick Access Tour
     quickAccessTour: {
+        pause: 'Pause auto-advance',
+        resume: 'Resume auto-advance',
         sellerTitle: 'Welcome to Quick Access!',
         sellerDesc: 'Double-click any field to start editing. Try it here to set your company name.',
         invoiceNumTitle: 'Invoice Details',
@@ -1395,8 +1422,10 @@ export const en = {
         title: 'Mockups',
         subtitle: 'Browse example screens and prototypes shared by our team.',
         empty: 'No mockups available yet.',
+        emptyFolder: 'This folder is empty.',
         error: "Couldn't load mockups right now. Please try again later.",
-        selectPrompt: 'Select a mockup from the list to preview it.',
+        opensNewTab: 'Opens in a new tab',
+        disclaimer: 'These are demo/mockup deliverables for client preview purposes only. They may contain fictional or placeholder data and do not reflect live production data.',
     },
 
     // Privacy Policy

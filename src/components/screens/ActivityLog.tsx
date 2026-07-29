@@ -1,7 +1,18 @@
-import { AuditLogEntry } from '../../types/invoice';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { auditLogService } from '../../services/api';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { ScrollArea } from '../ui/scroll-area';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 import {
   FileText,
   FileEdit,
@@ -11,98 +22,171 @@ import {
   Shield,
   Trash2,
   Clock,
+  Search,
+  Loader2,
 } from 'lucide-react';
 
-interface ActivityLogProps {
-  entries: AuditLogEntry[];
-}
+const PAGE_SIZE = 50;
 
-export function ActivityLog({ entries }: ActivityLogProps) {
-  const getActionIcon = (action: string) => {
-    const icons: Record<string, any> = {
-      created: FileText,
-      updated: FileEdit,
-      validated: CheckCircle,
-      exported: Download,
-      sent: Send,
-      signed: Shield,
-      deleted: Trash2,
-    };
-    return icons[action] || FileText;
-  };
+const ACTION_ICONS: Record<string, any> = {
+  created: FileText,
+  updated: FileEdit,
+  validated: CheckCircle,
+  exported: Download,
+  sent: Send,
+  signed: Shield,
+  deleted: Trash2,
+};
 
-  const getActionColor = (action: string) => {
-    const colors: Record<string, string> = {
-      created: 'text-blue-600',
-      updated: 'text-yellow-600',
-      validated: 'text-green-600',
-      exported: 'text-[#2a8fbd]',
-      sent: 'text-[#2a8fbd]',
-      signed: 'text-green-700',
-      deleted: 'text-red-600',
-    };
-    return colors[action] || 'text-gray-600';
-  };
+const ACTION_COLORS: Record<string, string> = {
+  created: 'text-blue-600',
+  updated: 'text-yellow-600',
+  validated: 'text-green-600',
+  exported: 'text-[#2a8fbd]',
+  sent: 'text-[#2a8fbd]',
+  signed: 'text-green-700',
+  deleted: 'text-red-600',
+};
+
+const LOCALE_TAGS: Record<string, string> = {
+  en: 'en-US', de: 'de-DE', fr: 'fr-FR', it: 'it-IT', pl: 'pl-PL', ar: 'ar-SA',
+};
+
+export function ActivityLog() {
+  const { t, language } = useLanguage();
+  const [search, setSearch] = useState('');
+  const [actionFilter, setActionFilter] = useState<string>('all');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ['audit-logs', 'full', search, actionFilter, visibleCount],
+    queryFn: () => auditLogService.getAll({
+      limit: visibleCount,
+      offset: 0,
+      search: search.trim() || undefined,
+      action: actionFilter !== 'all' ? actionFilter : undefined,
+    }),
+    staleTime: 30 * 1000,
+  });
+
+  const entries = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const counts = data?.counts ?? { signed: 0, exported: 0, validated: 0 };
+
+  const localeTag = LOCALE_TAGS[language] ?? 'en-US';
+  // The audit log doesn't store a per-actor timezone, so rather than fabricate one,
+  // every timestamp is labeled with the VIEWER's own timezone abbreviation — honest
+  // about which timezone the displayed time is in, per person+time-pairing rule.
+  const viewerTzAbbrev = useMemo(() => {
+    try {
+      return new Intl.DateTimeFormat(localeTag, { timeZoneName: 'short' })
+        .formatToParts(new Date())
+        .find((p) => p.type === 'timeZoneName')?.value ?? '';
+    } catch {
+      return '';
+    }
+  }, [localeTag]);
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return {
-      date: date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      }),
-      time: date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      date: date.toLocaleDateString(localeTag, { year: 'numeric', month: 'short', day: 'numeric' }),
+      time: date.toLocaleTimeString(localeTag, { hour: '2-digit', minute: '2-digit' }),
     };
   };
+
+  const actionOptions: { value: string; label: string }[] = [
+    { value: 'all', label: t('activity.allTypes') },
+    { value: 'created', label: t('activity.created') },
+    { value: 'updated', label: t('activity.updated') },
+    { value: 'validated', label: t('activity.validated') },
+    { value: 'exported', label: t('activity.exported') },
+    { value: 'sent', label: t('activity.sent') },
+    { value: 'signed', label: t('activity.signed') },
+    { value: 'deleted', label: t('activity.deleted') },
+  ];
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1>Activity Log</h1>
-        <p className="text-muted-foreground mt-2">
-          Audit trail of all invoice operations and digital signatures
-        </p>
+        <h1>{t('activity.title')}</h1>
+        <p className="text-muted-foreground mt-2">{t('activity.subtitle')}</p>
       </div>
 
-      {/* Stats */}
+      {/* Stats — signed/exports/validations reflect the SAME filters as the total,
+          not just the currently-loaded page, so they can never quietly mean something
+          different from the headline count. */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-body text-muted-foreground">Total Events</p>
-          <p className="text-heading-1 mt-1">{entries.length}</p>
+          <p className="text-body text-muted-foreground">{t('activity.totalEvents')}</p>
+          <p className="text-heading-1 mt-1">{total}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-body text-muted-foreground">Signed Invoices</p>
-          <p className="text-heading-1 mt-1">
-            {entries.filter((e) => e.signed).length}
-          </p>
+          <p className="text-body text-muted-foreground">{t('activity.signedInvoices')}</p>
+          <p className="text-heading-1 mt-1">{counts.signed}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-body text-muted-foreground">Exports</p>
-          <p className="text-heading-1 mt-1">
-            {entries.filter((e) => e.action === 'exported').length}
-          </p>
+          <p className="text-body text-muted-foreground">{t('activity.exportsStat')}</p>
+          <p className="text-heading-1 mt-1">{counts.exported}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-body text-muted-foreground">Validations</p>
-          <p className="text-heading-1 mt-1">
-            {entries.filter((e) => e.action === 'validated').length}
-          </p>
+          <p className="text-body text-muted-foreground">{t('activity.validationsStat')}</p>
+          <p className="text-heading-1 mt-1">{counts.validated}</p>
         </Card>
       </div>
+
+      {/* Filter bar — sits above the list and governs everything shown below it */}
+      <Card className="p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <Input
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setVisibleCount(PAGE_SIZE); }}
+              placeholder={t('activity.searchPlaceholder')}
+              className="pl-9"
+              aria-label={t('activity.searchPlaceholder')}
+            />
+          </div>
+          <Select
+            value={actionFilter}
+            onValueChange={(v) => { setActionFilter(v); setVisibleCount(PAGE_SIZE); }}
+          >
+            <SelectTrigger className="sm:w-56" aria-label={t('activity.filterType')}>
+              <SelectValue placeholder={t('activity.filterType')} />
+            </SelectTrigger>
+            <SelectContent>
+              {actionOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
 
       {/* Activity Timeline */}
       <Card className="p-6">
-        <h2 className="mb-4">Recent Activity</h2>
-        <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-4">
-            {entries.map((entry) => {
-              const Icon = getActionIcon(entry.action);
-              const iconColor = getActionColor(entry.action);
+        <div className="flex items-center justify-between mb-4">
+          <h2>{t('activity.title')}</h2>
+          <span className="text-body text-muted-foreground">
+            {t('activity.showingCount', { shown: String(entries.length), total: String(total) })}
+          </span>
+        </div>
+        <div className="space-y-4">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-body font-medium">{t('activity.noActivity')}</p>
+              <p className="text-body text-muted-foreground mt-1">{t('activity.noActivityDesc')}</p>
+            </div>
+          ) : (
+            entries.map((entry) => {
+              const Icon = ACTION_ICONS[entry.action] || FileText;
+              const iconColor = ACTION_COLORS[entry.action] || 'text-gray-600';
               const { date, time } = formatTimestamp(entry.timestamp);
 
               return (
@@ -123,7 +207,7 @@ export function ActivityLog({ entries }: ActivityLogProps) {
                       {entry.signed && (
                         <Badge variant="outline" className="gap-1">
                           <Shield className="h-3 w-3" />
-                          Signed
+                          {t('activity.signed')}
                         </Badge>
                       )}
                     </div>
@@ -137,27 +221,35 @@ export function ActivityLog({ entries }: ActivityLogProps) {
                     <div className="flex items-center gap-4 text-body text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {date} at {time}
+                        {date} {time} {viewerTzAbbrev}
                       </span>
-                      <span>by {entry.user}</span>
+                      <span>{t('activity.by', { user: entry.user })}</span>
                     </div>
                   </div>
                 </div>
               );
-            })}
+            })
+          )}
+        </div>
+
+        {!isLoading && entries.length < total && (
+          <div className="flex justify-center mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+              disabled={isFetching}
+            >
+              {isFetching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {t('activity.loadMore')}
+            </Button>
           </div>
-        </ScrollArea>
+        )}
       </Card>
 
       {/* Info */}
       <Card className="p-6 bg-muted/50">
-        <h3 className="mb-2">EN 16931 Compliance & Audit Trail</h3>
-        <p className="text-body text-muted-foreground">
-          All invoice operations are logged with timestamps and user information to maintain
-          a complete audit trail. Digital signatures are tracked separately with signature
-          dates for non-repudiation. This log helps ensure compliance with EN 16931
-          requirements and provides transparency for accounting and legal purposes.
-        </p>
+        <h3 className="mb-2">{t('activity.complianceTitle')}</h3>
+        <p className="text-body text-muted-foreground">{t('activity.complianceText')}</p>
       </Card>
     </div>
   );

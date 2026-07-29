@@ -5,6 +5,7 @@ import type { MockupItem } from '../../../services/adminApi';
 import { getMockupUrl } from '../../../utils/mockupUrl';
 import { Card, CardContent } from '../../ui/card';
 import { ScrollArea } from '../../ui/scroll-area';
+import { SplitPaneGroup, SplitPane, SplitPaneHandle, type ImperativePanelHandle } from '../../ui/split-pane';
 import { Input } from '../../ui/input';
 import { Search, ChevronRight, ChevronDown, FileText, Folder, FolderPlus, BookOpen, Clock, Download, Pencil, X, Save, FilePlus, Bold, Italic, List, ListOrdered, Code, Link2, Table, Minus, Quote, HelpCircle, Upload, Trash2, ExternalLink, LayoutTemplate } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -137,6 +138,7 @@ function MockupsPanel() {
     const [uploadTarget, setUploadTarget] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const renameInputRef = useRef<HTMLInputElement>(null);
+    const treePanelRef = useRef<ImperativePanelHandle>(null);
 
     const loadTree = useCallback(async () => {
         setLoading(true);
@@ -332,7 +334,7 @@ function MockupsPanel() {
                     {isExpanded && (
                         item.children && item.children.length > 0
                             ? <div>{renderTree(item.children, depth + 1)}</div>
-                            : <p className="text-micro text-slate-400 italic py-1" style={{ paddingLeft: pl + 28 }}>Empty</p>
+                            : <p className="text-micro text-slate-500 italic py-1" style={{ paddingLeft: pl + 28 }}>Empty</p>
                     )}
                 </div>
             );
@@ -369,7 +371,7 @@ function MockupsPanel() {
                             {item.name}
                         </p>
                         {item.size !== undefined && (
-                            <p className="text-micro text-slate-400">{formatBytes(item.size)}</p>
+                            <p className="text-micro text-slate-500">{formatBytes(item.size)}</p>
                         )}
                     </div>
                 )}
@@ -394,9 +396,10 @@ function MockupsPanel() {
     });
 
     return (
-        <div className="flex flex-1 min-h-0 gap-6 overflow-hidden">
+        <SplitPaneGroup storageKey="sa-wiki-mockups-layout" direction="horizontal" className="flex-1 min-h-0 overflow-hidden">
             {/* Left panel — tree */}
-            <div className="w-80 flex flex-col gap-3 border-r shrink-0 h-full pr-3">
+            <SplitPane ref={treePanelRef} defaultSize={28} minSize={16} collapsible collapsedSize={4}>
+            <div className="flex flex-col gap-3 h-full pr-3">
                 {/* Toolbar */}
                 <div className="flex items-center gap-2 shrink-0 pr-3">
                     <span className="flex-1 text-body font-medium text-slate-700">HTML Mockups</span>
@@ -454,23 +457,27 @@ function MockupsPanel() {
                         <div className="flex flex-col items-center justify-center gap-3 py-12 text-center px-4">
                             <LayoutTemplate className="h-10 w-10 text-slate-300" />
                             <p className="text-body text-slate-500">No mockups yet</p>
-                            <p className="text-micro text-slate-400">Upload an HTML file or create a folder</p>
+                            <p className="text-micro text-slate-500">Upload an HTML file or create a folder</p>
                         </div>
                     ) : (
                         <div className="space-y-0.5">{renderTree(tree)}</div>
                     )}
                 </ScrollArea>
             </div>
+            </SplitPane>
+
+            <SplitPaneHandle targetPanelRef={treePanelRef} label="Mockups tree" />
 
             {/* Right panel — preview */}
-            <div className="flex-1 h-full flex flex-col min-w-0 overflow-hidden">
+            <SplitPane defaultSize={72} minSize={30}>
+            <div className="h-full flex flex-col min-w-0 overflow-hidden pl-3">
                 {previewFile ? (
                     <>
                         <div className="flex items-center justify-between mb-3 shrink-0">
                             <div className="min-w-0">
                                 <h2 className="text-heading-2 font-medium text-slate-700 truncate">{previewFile.name}</h2>
                                 {previewFile.path.includes('/') && (
-                                    <p className="text-micro text-slate-400 truncate">{previewFile.path}</p>
+                                    <p className="text-micro text-slate-500 truncate">{previewFile.path}</p>
                                 )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0 ml-4">
@@ -506,12 +513,13 @@ function MockupsPanel() {
                         </div>
                         <div>
                             <p className="text-heading-3 font-medium text-slate-600 mb-1">No mockup selected</p>
-                            <p className="text-body text-slate-400">Select a file from the tree to preview it</p>
+                            <p className="text-body text-slate-500">Select a file from the tree to preview it</p>
                         </div>
                     </div>
                 )}
             </div>
-        </div>
+            </SplitPane>
+        </SplitPaneGroup>
     );
 }
 
@@ -535,6 +543,7 @@ export function SAWiki() {
     const [showCheatsheet, setShowCheatsheet] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const prevLanguage = useRef(language);
+    const docsSidebarRef = useRef<ImperativePanelHandle>(null);
 
     const insertMarkdown = (prefix: string, suffix = '', placeholder = 'text') => {
         const el = textareaRef.current;
@@ -981,9 +990,10 @@ export function SAWiki() {
 
             {activeTab === 'mockups' && <MockupsPanel />}
 
-            {activeTab === 'docs' && <div className="flex flex-1 gap-6 overflow-hidden min-h-0">
+            {activeTab === 'docs' && <SplitPaneGroup storageKey="sa-wiki-docs-layout" direction="horizontal" className="flex-1 overflow-hidden min-h-0">
             {/* Sidebar Navigation */}
-            <div className="w-80 flex flex-col gap-4 border-r pr-6 shrink-0 h-full overflow-hidden">
+            <SplitPane ref={docsSidebarRef} defaultSize={28} minSize={16} collapsible collapsedSize={4}>
+            <div className="flex flex-col gap-4 pr-6 h-full overflow-hidden">
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1063,9 +1073,13 @@ export function SAWiki() {
                     </div>
                 </div>
             </div>
+            </SplitPane>
+
+            <SplitPaneHandle targetPanelRef={docsSidebarRef} label="Documentation tree" />
 
             {/* Content Area */}
-            <div className="flex-1 h-full flex flex-col min-w-0 overflow-hidden">
+            <SplitPane defaultSize={72} minSize={35}>
+            <div className="h-full flex flex-col min-w-0 overflow-hidden pl-6">
                 {/* Content Header */}
                 <div className="flex items-center justify-between mb-3 shrink-0">
                     <h2 className="text-heading-2 font-medium text-slate-700 capitalize truncate">
@@ -1288,7 +1302,8 @@ export function SAWiki() {
                     </CardContent>
                 </Card>
             </div>
-            </div>}
+            </SplitPane>
+        </SplitPaneGroup>}
         </div>
     );
 }
